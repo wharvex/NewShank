@@ -1,0 +1,328 @@
+﻿namespace Shank {
+    public class Interpreter {
+        public static Dictionary<string, CallableNode> Functions = new ();
+
+        public static void InterpretFunction(FunctionNode fn, List<InterpreterDataType> ps)
+        {
+            var variables = new Dictionary<string, InterpreterDataType>();
+            if (ps.Count != fn.ParameterVariables.Count)
+                throw new Exception($"Function {fn.Name}, {ps.Count} parameters passed in, {fn.ParameterVariables.Count} required");
+            for (var i = 0;i<fn.ParameterVariables.Count;i++)
+            { // Create the parameters as "locals"
+                variables[fn.ParameterVariables[i].Name ?? string.Empty] = ps[i];
+            }
+
+            foreach (var l in fn.LocalVariables)
+            { // set up the declared variables as locals
+                variables[l.Name ?? string.Empty] = VariableNodeToActivationRecord(l);
+            }
+            
+            // Interpret instructions
+            InterpretBlock(fn.Statements, variables);
+        }
+
+        private static void InterpretBlock(List<StatementNode> fnStatements, Dictionary<string, InterpreterDataType> variables)
+        {
+            foreach (var stmt in fnStatements)
+            {
+                if (stmt is AssignmentNode an)
+                {
+                    var target = variables[an.target.Name];
+                    switch (target)
+                    {
+                        case IntDataType it:
+                            it.Value = ResolveInt(an.expression, variables);
+                            break;
+                        case FloatDataType ft:
+                            ft.Value = ResolveFloat(an.expression, variables);
+                            break;
+                        case StringDataType st:
+                            st.Value = ResolveString(an.expression, variables);
+                            break;
+                        case CharDataType ct:
+                            ct.Value = ResolveChar(an.expression, variables);
+                            break;
+                        case BooleanDataType bt:
+                            bt.Value = ResolveBool(an.expression, variables);
+                            break;
+                        default:
+                            throw new Exception("Unknown type in assignment");
+                    }
+                }
+                else if (stmt is FunctionCallNode fc)
+                {
+                    ProcessFunctionCall(variables, fc);
+                }
+                else if (stmt is IfNode ic)
+                {
+                    var theIc = ic;
+                    while (theIc?.Expression != null)
+                    {
+                        if (theIc.Expression != null && ResolveBool(theIc.Expression, variables) && theIc?.Children != null)
+                        {
+                            InterpretBlock(theIc.Children, variables);
+                            theIc = null;
+                        }
+                        else
+                            theIc = theIc?.NextIfNode;
+                    }
+                    if (theIc?.Children != null)
+                        InterpretBlock(theIc.Children, variables);
+                }
+                else if (stmt is WhileNode wn)
+                {
+                    while (ResolveBool(wn.Expression, variables))
+                    {
+                        InterpretBlock(wn.Children,variables);
+                    }
+                }
+                else if (stmt is RepeatNode rn)
+                {
+                    do
+                    {
+                        InterpretBlock(rn.Children, variables);
+                    } while (!ResolveBool(rn.Expression, variables));
+                }
+                else if (stmt is ForNode fn)
+                {
+                    var target = variables[fn.Variable.Name];
+                    if (target is not IntDataType index)
+                        throw new Exception( $"For loop has a non-integer index called {fn.Variable.Name}. This is not allowed.");
+                    var start = ResolveInt(fn.From, variables);
+                    var end = ResolveInt(fn.To, variables);
+                    for (var i = start; i < end; i++)
+                    {
+                        index.Value = i;
+                        InterpretBlock(fn.Children,variables);
+                    }
+                }
+            }
+        }
+
+        private static bool ResolveBool(ASTNode node, Dictionary<string, InterpreterDataType> variables)
+        {
+            if (node is BooleanExpressionNode ben)
+                return EvaluateBooleanExpressionNode(ben, variables);
+            else if (node is BoolNode bn)
+                return bn.Value;
+            else 
+                throw new ArgumentException(nameof(node));
+        }
+
+        private static void ProcessFunctionCall(Dictionary<string, InterpreterDataType> variables, FunctionCallNode fc)
+        {
+            var calledFunction = Functions[fc.Name]; // find the function
+            if (fc.Parameters.Count != calledFunction.ParameterVariables.Count
+                && calledFunction is BuiltInFunctionNode {IsVariadic: false}) // make sure that the counts match
+                throw new Exception($"Call of {calledFunction.Name}, parameter count doesn't match.");
+            // make the list of parameters
+            var passed = new List<InterpreterDataType>();
+            foreach (var fcp in fc.Parameters)
+            {
+                if (fcp.Variable != null)
+                {
+                    var name = fcp?.Variable?.Name ?? string.Empty;
+                    var value = variables[name];
+                    switch (value)
+                    {
+                        case IntDataType intVal:
+                            passed.Add(new IntDataType(intVal.Value));
+                            break;
+                        case FloatDataType floatVal:
+                            passed.Add(new FloatDataType(floatVal.Value));
+                            break;
+                        case StringDataType stringVal:
+                            passed.Add(new StringDataType(stringVal.Value));
+                            break;
+                        case CharDataType charVal:
+                            passed.Add(new CharDataType(charVal.Value));
+                            break;
+                        case BooleanDataType boolVal:
+                            passed.Add(new BooleanDataType(boolVal.Value));
+                            break;
+                    }
+                }
+                else
+                {
+                    var value = fcp.Constant;
+                    switch (value)
+                    {
+                        // is a constant
+                        case IntNode intVal:
+                            passed.Add(new IntDataType(intVal.Value));
+                            break;
+                        case FloatNode floatVal:
+                            passed.Add(new FloatDataType(floatVal.Value));
+                            break;
+                        case StringNode stringVal:
+                            passed.Add(new StringDataType(stringVal.Value));
+                            break;
+                        case CharNode charVal:
+                            passed.Add(new CharDataType(charVal.Value));
+                            break;
+                        case BoolNode boolVal:
+                            passed.Add(new BooleanDataType(boolVal.Value));
+                            break;
+                        default:
+                            throw new Exception($"Call of {calledFunction.Name}, constant parameter of unknown type.");
+                    }
+                }
+            }
+
+            calledFunction.Execute?.Invoke(passed);
+            // update the variable parameters and return
+            for (var i = 0; i < passed.Count; i++)
+            {
+                if (((calledFunction is BuiltInFunctionNode {IsVariadic: true})
+                     || !calledFunction.ParameterVariables[i].IsConstant) &&
+                    fc.Parameters[i].Variable != null && fc.Parameters[i].IsVariable)
+                {
+                    // if this parameter is a "var", then copy the new value back to the parameter holder
+                    variables[fc.Parameters[i]?.Variable?.Name ?? ""] = passed[i];
+                }
+            }
+        }
+
+        private static InterpreterDataType VariableNodeToActivationRecord(VariableNode vn)
+        {
+            switch (vn.Type)
+            {
+                case VariableNode.DataType.Real:
+                    return new FloatDataType(((vn.InitialValue as FloatNode)?.Value) ?? 0.0F);
+                case VariableNode.DataType.Integer:
+                    return new IntDataType(((vn.InitialValue as IntNode)?.Value) ?? 0);
+                case VariableNode.DataType.String:
+                    return new StringDataType(((vn.InitialValue as StringNode)?.Value) ?? "");
+                case VariableNode.DataType.Character:
+                    return new CharDataType(((vn.InitialValue as CharNode)?.Value) ?? ' ');
+                case VariableNode.DataType.Boolean:
+                    return new BooleanDataType(((vn.InitialValue as BoolNode)?.Value) ?? true);
+                default:
+                    throw new Exception("Unknown local variable type");
+            }
+        }
+
+        private static bool EvaluateBooleanExpressionNode(BooleanExpressionNode ben,
+            Dictionary<string, InterpreterDataType> variables)
+        {
+            try
+            {
+                var lf = ResolveFloat(ben.Left, variables);
+                var rf = ResolveFloat(ben.Right, variables);
+                return ben.Op switch {
+                    BooleanExpressionNode.OpType.lt => lf < rf,
+                    BooleanExpressionNode.OpType.le => lf <= rf,
+                    BooleanExpressionNode.OpType.gt => lf > rf,
+                    BooleanExpressionNode.OpType.ge => lf >= rf,
+                    BooleanExpressionNode.OpType.eq => lf == rf,
+                    BooleanExpressionNode.OpType.ne => lf != rf,
+                    _ => throw new Exception("Unknown boolean operation")
+                };
+            }
+            catch { } // It might not have been a float operation
+
+            try
+            { 
+                var lf = ResolveInt(ben.Left,variables);
+                var rf = ResolveInt(ben.Right,variables);
+                return ben.Op switch {
+                    BooleanExpressionNode.OpType.lt => lf < rf,
+                    BooleanExpressionNode.OpType.le => lf <= rf,
+                    BooleanExpressionNode.OpType.gt => lf > rf,
+                    BooleanExpressionNode.OpType.ge => lf >= rf,
+                    BooleanExpressionNode.OpType.eq => lf == rf,
+                    BooleanExpressionNode.OpType.ne => lf != rf,
+                    _ => throw new Exception("Unknown boolean operation")
+                };
+            }
+            catch { } // It might not have been an int operation
+
+            throw new Exception("Unable to calculate truth of expression.");
+
+        }
+
+        public static string ResolveString(ASTNode node,Dictionary<string, InterpreterDataType> variables)
+        {
+            if (node is MathOpNode mon)
+            {
+                var left = ResolveString(mon.Left,variables);
+                var right = ResolveString(mon.Right,variables);
+                switch (mon.Op)
+                {
+                    case MathOpNode.OpType.plus:
+                        return left + right;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
+            else if (node is StringNode fn) return fn.Value;
+            else if (node is CharNode cn) return "" + cn.Value;
+            else if (node is VariableReferenceNode vr)
+                return ((variables[vr.Name] as StringDataType)?.Value) ?? string.Empty;
+            else throw new ArgumentException(nameof(node));
+        }
+
+        public static char ResolveChar(ASTNode node,Dictionary<string, InterpreterDataType> variables)
+        {
+            if (node is CharNode cn) return cn.Value;
+            else if (node is VariableReferenceNode vr && variables.ContainsKey(vr.Name) &&
+                     variables[vr.Name] is CharDataType)
+                return ((variables[vr.Name] as CharDataType)?.Value) ?? '0';
+            else throw new ArgumentException(nameof(node));
+        }
+
+        public static float ResolveFloat(ASTNode node,Dictionary<string, InterpreterDataType> variables)
+        {
+            if (node is MathOpNode mon)
+            {
+                var left = ResolveFloat(mon.Left,variables);
+                var right = ResolveFloat(mon.Right,variables);
+                switch (mon.Op)
+                {
+                    case MathOpNode.OpType.plus:
+                        return left + right;
+                    case MathOpNode.OpType.minus:
+                        return left - right;
+                    case MathOpNode.OpType.times:
+                        return left * right;
+                    case MathOpNode.OpType.divide:
+                        return left / right;
+                    case MathOpNode.OpType.modulo:
+                        return left % right;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
+            else if (node is FloatNode fn) return fn.Value;
+            else if (node is VariableReferenceNode vr) return ((variables[vr.Name] as FloatDataType)?.Value)??0.0F;
+            else throw new ArgumentException(nameof(node));
+        }
+
+        public static int ResolveInt(ASTNode node,Dictionary<string, InterpreterDataType> variables)
+        {
+            if (node is MathOpNode mon)
+            {
+                var left = ResolveInt(mon.Left,variables);
+                var right = ResolveInt(mon.Right,variables);
+                switch (mon.Op)
+                {
+                    case MathOpNode.OpType.plus:
+                        return left + right;
+                    case MathOpNode.OpType.minus:
+                        return left - right;
+                    case MathOpNode.OpType.times:
+                        return left * right;
+                    case MathOpNode.OpType.divide:
+                        return left / right;
+                    case MathOpNode.OpType.modulo:
+                        return left % right;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
+            else if (node is IntNode fn) return fn.Value;
+            else if (node is VariableReferenceNode vr) return ((variables[vr.Name] as IntDataType)?.Value)??0;
+            else throw new ArgumentException(nameof(node));
+        }
+    }
+}
