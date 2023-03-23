@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using LLVMSharp.Interop;
 
 namespace Shank {
     public abstract class ASTNode {
@@ -14,7 +15,6 @@ namespace Shank {
 
         public override string ToString()
         {
-
             var b = new StringBuilder();
             b.AppendLine($"Function {Name}:");
             if (Parameters.Any())
@@ -47,10 +47,12 @@ namespace Shank {
         public bool IsVariable { get; init; }
         public override string ToString()
         {
+
             if (Variable != null)
                 return $"   {(IsVariable ? "var " : "")} {Variable.Name}";
             else
                 return $"   {Constant}";
+
         }
     }
 
@@ -170,6 +172,59 @@ namespace Shank {
             }
             return b.ToString();
         }
+
+        public void LLVMCompile()
+        {
+            // Setup context, etc
+            using var context = LLVMContextRef.Create();
+            using var module = context.CreateModuleWithName("main");
+            using var builder = context.CreateBuilder();
+
+            /*
+            // Create the puts function
+            var putsRetTy = context.Int32Type;
+            var putsParamTys = new LLVMTypeRef[] {
+                LLVMTypeRef.CreatePointer(context.Int8Type, 0)
+            };
+
+            var putsFnTy = LLVMTypeRef.CreateFunction(putsRetTy, putsParamTys);
+            var putsFn = module.AddFunction("puts", putsFnTy);*/
+
+            // Create the main function
+            var mainRetTy = context.VoidType;
+            var mainParamTys = new LLVMTypeRef[] { };
+            var mainFnTy = LLVMTypeRef.CreateFunction(mainRetTy, mainParamTys);
+            var mainFn = module.AddFunction("main", mainFnTy);
+            var mainBlock = mainFn.AppendBasicBlock("entry");
+
+            // Create the body of the main function
+            builder.PositionAtEnd(mainBlock);
+            builder.BuildRetVoid();
+
+            /*var message2 = builder.BuildGlobalStringPtr("Bye!");
+            builder.BuildCall2(putsFnTy, putsFn, new LLVMValueRef[] { message2 }, "");*/
+
+
+            foreach (var s in Statements)
+            {
+                Console.Write(s.ToString());
+                string[] arr = s.codeGen();
+
+                var message = builder.BuildGlobalStringPtr(arr[0]);
+                builder.BuildCall2(mainFnTy, mainFn, new LLVMValueRef[] { message }, "");
+                
+            }
+
+            
+            Console.WriteLine($"LLVM IR\n=========\n{module}");
+            
+            // Initialize LLVM
+            LLVM.InitializeAllTargetInfos();
+            LLVM.InitializeAllTargets();
+            LLVM.InitializeAllTargetMCs();
+            LLVM.InitializeAllAsmParsers();
+            LLVM.InitializeAllAsmPrinters();
+        }
     }
 
     public class VariableNode : ASTNode {
@@ -217,6 +272,12 @@ namespace Shank {
             var b = new StringBuilder();
             statements.ForEach(c => b.Append(Environment.NewLine + "\t" + c));
             return b.ToString();
+        }
+
+        virtual public string[] codeGen()
+        {
+            string[] arr={};
+            return arr;
         }
     }
 
@@ -353,6 +414,12 @@ namespace Shank {
 
         public VariableReferenceNode target { get; set; }
         public ASTNode expression { get; set; }
+
+        public override string[] codeGen()
+        {
+            string [] arr = {target.Name, expression.ToString()};
+            return arr;
+        }
 
         public override string ToString()
         {

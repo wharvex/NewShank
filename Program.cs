@@ -1,4 +1,6 @@
-﻿namespace Shank
+﻿using LLVMSharp.Interop;
+
+namespace Shank
 {
     public class Program
     {
@@ -9,8 +11,8 @@
             var l = new Lexer();
             tokens.AddRange(l.Lex(lines));
 
-            foreach (var t in tokens)
-                Console.WriteLine(t.ToString());
+            //foreach (var t in tokens)
+                //Console.WriteLine(t.ToString());
 
             var p = new Parser(tokens);
             var ir = new Interpreter();
@@ -19,8 +21,10 @@
                 var fb = p.Function();
                 if (fb != null)
                 {
-                    Console.WriteLine(fb.ToString());
+                    //Console.WriteLine(fb.ToString());
                     Interpreter.Functions.Add(fb.Name ?? string.Empty, fb);
+
+                    fb.LLVMCompile();
                 }
             }
             BuiltInFunctions.Register(Interpreter.Functions);
@@ -35,7 +39,6 @@
             //    if (exp != null)
             //        Console.WriteLine($" calculated: {ir.Resolve(exp)} ");
             //}
-
         }
     }
 }
