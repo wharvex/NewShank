@@ -1,7 +1,6 @@
 ### Last updated: 3/27
 
-In order to run (I have used VSCode), one must have the following line in .csproj file: 
-<PackageReference Include="LLVMSharp.Interop" Version="15.0.0-beta1" />
+In order to run (I have used VSCode), one must have the following line in .csproj file: <PackageReference Include="LLVMSharp.Interop" Version="15.0.0-beta1" />
 
 Origianl fibonacci.shank is not used. Rather, the below has been used: 
 
