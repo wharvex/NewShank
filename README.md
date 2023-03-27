@@ -14,3 +14,5 @@ Origianl fibonacci.shank is not used yet. Rather, the below has been used:
 -	 prev2:=start
 -	 write prev1
 -	 write prev2
+
+When running the above fibonacci.shank with the current version of code, the resulting IR is shown in fibonacci_output.txt
