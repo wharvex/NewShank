@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using LLVMSharp.Interop;
+using LLVMSharp;
 
 namespace Shank {
     public abstract class ASTNode {
@@ -13,6 +14,17 @@ namespace Shank {
             Name = name;
         }
 
+        public override string[] codeGen()
+        {
+            var b = new StringBuilder();
+            if (Parameters.Any())
+            {
+                Parameters.ForEach(p=>b.AppendLine($"   {p}"));
+            }
+            string [] arr = {Name, b.ToString()};
+            return arr;
+        }
+
         public override string ToString()
         {
             var b = new StringBuilder();
@@ -21,6 +33,8 @@ namespace Shank {
             {
                 b.AppendLine("Parameters:");
                 Parameters.ForEach(p=>b.AppendLine($"   {p}"));
+
+
             }
 
             return b.ToString();
@@ -48,6 +62,7 @@ namespace Shank {
         public override string ToString()
         {
 
+
             if (Variable != null)
                 return $"   {(IsVariable ? "var " : "")} {Variable.Name}";
             else
@@ -64,6 +79,7 @@ namespace Shank {
         public int Value;
         public override string ToString()
         {
+
             return $"{Value}";
         }
     }
@@ -76,6 +92,7 @@ namespace Shank {
         public float Value;
         public override string ToString()
         {
+
             return $"{Value}";
         }
     }
@@ -88,6 +105,7 @@ namespace Shank {
         public bool Value;
         public override string ToString()
         {
+
             return $"{Value}";
         }
     }
@@ -100,6 +118,7 @@ namespace Shank {
         public char Value;
         public override string ToString()
         {
+  
             return $"{Value}";
         }
     }
@@ -112,6 +131,7 @@ namespace Shank {
         public string Value;
         public override string ToString()
         {
+
             return $"{Value}";
         }
     }
@@ -152,6 +172,7 @@ namespace Shank {
 
         public override string ToString()
         {
+   
             var b = new StringBuilder();
             b.AppendLine($"Function {Name}:");
             if (ParameterVariables.Any())
@@ -180,15 +201,12 @@ namespace Shank {
             using var module = context.CreateModuleWithName("main");
             using var builder = context.CreateBuilder();
 
-            /*
+            
             // Create the puts function
-            var putsRetTy = context.Int32Type;
+            var putsRetTy = context.Int64Type;
             var putsParamTys = new LLVMTypeRef[] {
                 LLVMTypeRef.CreatePointer(context.Int8Type, 0)
             };
-
-            var putsFnTy = LLVMTypeRef.CreateFunction(putsRetTy, putsParamTys);
-            var putsFn = module.AddFunction("puts", putsFnTy);*/
 
             // Create the main function
             var mainRetTy = context.VoidType;
@@ -199,25 +217,57 @@ namespace Shank {
 
             // Create the body of the main function
             builder.PositionAtEnd(mainBlock);
-            builder.BuildRetVoid();
-
-            /*var message2 = builder.BuildGlobalStringPtr("Bye!");
-            builder.BuildCall2(putsFnTy, putsFn, new LLVMValueRef[] { message2 }, "");*/
-
+            //var message = builder.BuildGlobalStringPtr("Hello, World!");
+            //builder.BuildCall2(putsFnTy, putsFn, new LLVMValueRef[] { message }, "");
+            //builder.BuildRetVoid();
 
             foreach (var s in Statements)
             {
                 Console.Write(s.ToString());
                 string[] arr = s.codeGen();
 
-                var message = builder.BuildGlobalStringPtr(arr[0]);
-                builder.BuildCall2(mainFnTy, mainFn, new LLVMValueRef[] { message }, "");
-                
-            }
+                //if not a function
+                if (arr[0] ==""){
+                    var message = builder.BuildGlobalStringPtr(arr[2]);
+                    //builder.BuildCall2(putsFnTy, putsFn, new LLVMValueRef[] { message }, "");    
+                    //builder.BuildStore(message, message);
+                    var var_message = builder.BuildAlloca(putsRetTy);
+                    // Store the value of a in memory. message: value of a
+                    builder.BuildStore(message, var_message);
 
-            
+                    // Define an i32 integer type
+                    var intType = context.Int64Type;
+
+                    // Create a constant integer value with value 42
+                    var constInt = LLVMValueRef.CreateConstInt(intType, 42, false);
+
+                    /*
+                    // Allocate memory for variables 'a' and 'x'
+                    var a = builder.BuildAlloca(putsRetTy, "a");
+                    var x = builder.BuildAlloca(putsRetTy, "x");
+
+                    // Multiply 'a' by 5 and add 3
+                    var five = LLVM.ConstInt(context.Int64Type, 5);
+                    var three = LLVM.ConstInt(putsRetTy, 3ul, false);
+                    var aVal = builder.BuildLoad(a, "a_val");
+                    var aTimesFive = builder.BuildMul(aVal, five, "a_times_five");
+                    var xVal = builder.BuildAdd(aTimesFive, three, "x_val");
+                    */
+                }
+                else{
+                    var message = builder.BuildGlobalStringPtr(arr[1]);
+                    var FnTy = LLVMTypeRef.CreateFunction(putsRetTy, putsParamTys);
+                    var Fn = module.AddFunction(arr[0], FnTy);
+                    builder.BuildCall2(FnTy, Fn, new LLVMValueRef[] { message }, "");
+                    var x = builder.BuildAdd(message, message, "message");
+                }
+                
+                Console.Write("\n*********************\n");
+            }
+  
             Console.WriteLine($"LLVM IR\n=========\n{module}");
             
+            builder.BuildRetVoid();
             // Initialize LLVM
             LLVM.InitializeAllTargetInfos();
             LLVM.InitializeAllTargets();
@@ -262,6 +312,7 @@ namespace Shank {
 
         public override string ToString()
         {
+
             return $"({Left.ToString()} {Op} {Right.ToString()})";
         }
     }
@@ -297,6 +348,7 @@ namespace Shank {
         public ASTNode? Index { get; init; }
         public override string ToString()
         {
+
             return $"{Name}{(Index!= null? " Index:" + Index : string.Empty)}";
         }
     }
@@ -312,6 +364,7 @@ namespace Shank {
 
         public override string ToString()
         {
+
             return $" WHILE: {Expression} {StatementListToString(Children)}";
         }
     }
@@ -327,6 +380,7 @@ namespace Shank {
 
         public override string ToString()
         {
+
             return $" REPEAT: {Expression} {StatementListToString(Children)}";
         }
     }
@@ -351,6 +405,7 @@ namespace Shank {
         public IfNode? NextIfNode { get; init; }
         public override string ToString()
         {
+
             return $"If: {Expression} {StatementListToString(Children)} {((NextIfNode == null)?string.Empty : Environment.NewLine + NextIfNode)}";
         }
     }
@@ -361,6 +416,7 @@ namespace Shank {
         }
         public override string ToString()
         {
+
             return $" Else: {StatementListToString(Children)} {((NextIfNode == null)?string.Empty : NextIfNode)}";
         }
     }
@@ -380,6 +436,7 @@ namespace Shank {
         public List<StatementNode> Children { get; init; }
         public override string ToString()
         {
+
             return $" For: {Variable} From: {From} To: {To} {Environment.NewLine} {StatementListToString(Children)}";
         }
     }
@@ -400,6 +457,7 @@ namespace Shank {
 
         public override string ToString()
         {
+
             return $"({Left.ToString()} {Op} {Right.ToString()})";
         }
 
@@ -417,12 +475,14 @@ namespace Shank {
 
         public override string[] codeGen()
         {
-            string [] arr = {target.Name, expression.ToString()};
+            string [] arr = {"", target.Name, expression.ToString()};
+
             return arr;
         }
 
         public override string ToString()
         {
+
             return $"{target} := {expression}";
         }
     }
