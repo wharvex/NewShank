@@ -5,11 +5,11 @@
 
 - Origianl fibonacci.shank is not used. Rather, the below has been used: 
 
--define start()
--constants start = 1, end = 20
--variables i,prev1 : integer
--variables prev2,curr : integer
--	prev1:=start
--	prev2:=start
--	write prev1
--	write prev2
+- define start()
+- constants start = 1, end = 20
+- variables i,prev1 : integer
+- variables prev2,curr : integer
+-	 prev1:=start
+-	 prev2:=start
+-	 write prev1
+-	 write prev2
