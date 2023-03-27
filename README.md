@@ -4,7 +4,7 @@ In order to run (I have used VSCode), one must use LLVMSharp.Interop Version="15
 
 We should use integer i64 and not i32 as IPA runs on i64.
 
-Origianl fibonacci.shank is not used. Rather, the below has been used: 
+Origianl fibonacci.shank is not used yet. Rather, the below has been used: 
 
 - define start()
 - constants start = 1, end = 20
