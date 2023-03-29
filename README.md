@@ -1,6 +1,10 @@
 ### Last updated: 3/27
 
-In order to run (I have used VSCode), one must use LLVMSharp.Interop Version="15.0.0-beta1" by stating it .csproj file.
+In order to run (I have used VSCode), one one change is required in VSCode .csproj file. Add the following line:
+ - <ItemGroup>
+ -   <PackageReference Include="LLVMSharp.Interop" Version="15.0.0-beta1" />
+ -   <PackageReference Include="libLLVM.runtime.win-x64" Version="15.0.0" />
+ - </ItemGroup>
 
 We should use integer i64 and not i32 as IPA runs on i64.
 
