@@ -14,19 +14,20 @@ namespace Shank {
             Name = name;
         }
 
-        public override string[] codeGen()
+        public override object[] codeGen()
         {
             var b = new StringBuilder();
             if (Parameters.Any())
             {
                 Parameters.ForEach(p=>b.AppendLine($"   {p}"));
             }
-            string [] arr = {Name, b.ToString()};
+            object [] arr = {Name, b.ToString()};
             return arr;
         }
 
         public override string ToString()
         {
+
             var b = new StringBuilder();
             b.AppendLine($"Function {Name}:");
             if (Parameters.Any())
@@ -118,7 +119,7 @@ namespace Shank {
         public char Value;
         public override string ToString()
         {
-  
+
             return $"{Value}";
         }
     }
@@ -167,12 +168,15 @@ namespace Shank {
             Execute = (List<InterpreterDataType> paramList) =>Interpreter.InterpretFunction(this,paramList);
         }
 
-        public List<VariableNode> LocalVariables = new();
+        public List<VariableNode> LocalVariables = new(); 
+        //LocalVariables (scroll above) contain start, end, i, prev1
+        //alloca() for constatns and variables 
+        //store() for assignment (Currently, I did both. BUt I just need to use store())
         public List<StatementNode> Statements = new();
 
         public override string ToString()
         {
-   
+
             var b = new StringBuilder();
             b.AppendLine($"Function {Name}:");
             if (ParameterVariables.Any())
@@ -191,6 +195,7 @@ namespace Shank {
                 Statements.ForEach(p=>b.AppendLine($"   {p}"));
                 b.AppendLine("-------------------------------------");
             }
+
             return b.ToString();
         }
 
@@ -203,66 +208,93 @@ namespace Shank {
 
             
             // Create the puts function
-            var putsRetTy = context.Int64Type;
-            var putsParamTys = new LLVMTypeRef[] {
-                LLVMTypeRef.CreatePointer(context.Int8Type, 0)
-            };
+            var writeFnRetTy = context.VoidType;
+            var writeFnParamTys = new LLVMTypeRef[] {LLVMTypeRef.CreatePointer(context.Int64Type,0)};
+            var writeFnTy = LLVMTypeRef.CreateFunction(writeFnRetTy, writeFnParamTys);
+            var writeFn = module.AddFunction("write", writeFnTy);
 
             // Create the main function
             var mainRetTy = context.VoidType;
-            var mainParamTys = new LLVMTypeRef[] { };
+            var mainParamTys = new LLVMTypeRef[] {};
             var mainFnTy = LLVMTypeRef.CreateFunction(mainRetTy, mainParamTys);
-            var mainFn = module.AddFunction("main", mainFnTy);
+            var mainFn = module.AddFunction("start", mainFnTy);
             var mainBlock = mainFn.AppendBasicBlock("entry");
 
             // Create the body of the main function
             builder.PositionAtEnd(mainBlock);
-            //var message = builder.BuildGlobalStringPtr("Hello, World!");
-            //builder.BuildCall2(putsFnTy, putsFn, new LLVMValueRef[] { message }, "");
-            //builder.BuildRetVoid();
+
+            object[,] varArray = new object[LocalVariables.Count, 2];
+            if (LocalVariables.Any())
+            {
+
+                for (int i = 0; i < LocalVariables.Count; i++)
+                {
+                    if (LocalVariables[i].Type.ToString() == "Integer")
+                    {
+                        if (LocalVariables[i].InitialValue == null)
+                        {
+                            var avar = builder.BuildAlloca(context.Int64Type, LocalVariables[i].Name);
+                            avar.SetAlignment(4);
+                            varArray[i, 0] = avar;
+                            varArray[i, 1] = LocalVariables[i].Name;
+                        }
+                        else
+                        {
+                            var avar = builder.BuildAlloca(context.Int64Type, LocalVariables[i].Name);
+                            avar.SetAlignment(4);
+                            
+                            var cvar = LLVMValueRef.CreateConstInt(context.Int64Type, ulong.Parse(LocalVariables[i].InitialValue.ToString()), false);
+                            builder.BuildStore(cvar, avar);
+
+                            varArray[i, 0] = cvar;
+                            varArray[i, 1] = LocalVariables[i].Name;
+                        }
+                    }
+                }
+            }
 
             foreach (var s in Statements)
             {
-                Console.Write(s.ToString());
-                string[] arr = s.codeGen();
+                object[] arr = s.codeGen();
 
                 //if not a function
                 if (arr[0] ==""){
-                    var message = builder.BuildGlobalStringPtr(arr[2]);
-                    //builder.BuildCall2(putsFnTy, putsFn, new LLVMValueRef[] { message }, "");    
-                    //builder.BuildStore(message, message);
-                    var var_message = builder.BuildAlloca(putsRetTy);
-                    // Store the value of a in memory. message: value of a
-                    builder.BuildStore(message, var_message);
-
-                    // Define an i32 integer type
-                    var intType = context.Int64Type;
-
-                    // Create a constant integer value with value 42
-                    var constInt = LLVMValueRef.CreateConstInt(intType, 42, false);
-
                     /*
-                    // Allocate memory for variables 'a' and 'x'
-                    var a = builder.BuildAlloca(putsRetTy, "a");
-                    var x = builder.BuildAlloca(putsRetTy, "x");
-
-                    // Multiply 'a' by 5 and add 3
-                    var five = LLVM.ConstInt(context.Int64Type, 5);
-                    var three = LLVM.ConstInt(putsRetTy, 3ul, false);
-                    var aVal = builder.BuildLoad(a, "a_val");
-                    var aTimesFive = builder.BuildMul(aVal, five, "a_times_five");
-                    var xVal = builder.BuildAdd(aTimesFive, three, "x_val");
+                    var loadedValue = builder.BuildLoad((LLVMValueRef)varArray[0,0], "loadedValue");
+                    var var3 = builder.BuildAlloca(context.Int64Type, "var3");
+                    builder.BuildStore(loadedValue, var3);
                     */
+
+                    for (int i = 0; i < varArray.GetLength(0); i++)
+                    {
+                        if ((string)arr[2] == (string)varArray[i,1]) //ex. start
+                        {
+                            var cvar = varArray[i,0];
+
+                            for (int j = 0; j < varArray.GetLength(0); j++)
+                            {
+                                if ((string)arr[1] == (string)varArray[j,1]) //ex. prev1
+                                {
+                                    var avar = varArray[j,0];
+                                    builder.BuildStore((LLVMValueRef)cvar, (LLVMValueRef)avar);
+
+                                    varArray[j,0] = avar;
+                                }
+                            }
+                        }
+                    }
                 }
-                else{
-                    var message = builder.BuildGlobalStringPtr(arr[1]);
-                    var FnTy = LLVMTypeRef.CreateFunction(putsRetTy, putsParamTys);
-                    var Fn = module.AddFunction(arr[0], FnTy);
-                    builder.BuildCall2(FnTy, Fn, new LLVMValueRef[] { message }, "");
-                    var x = builder.BuildAdd(message, message, "message");
+                else
+                {
+                    for (int i = 0; i < varArray.GetLength(0); i++)
+                    {
+                        if (((string)arr[1]).Trim() == (string)varArray[i,1]) //ex. prev1
+                        {
+                            var cvar = (LLVMValueRef) varArray[i,0];
+                            builder.BuildCall2(writeFnTy, writeFn, new LLVMValueRef[] { cvar }, "");
+                        }
+                    }
                 }
-                
-                Console.Write("\n*********************\n");
             }
   
             Console.WriteLine($"LLVM IR\n=========\n{module}");
@@ -291,6 +323,7 @@ namespace Shank {
 
         public override string ToString()
         {
+
             return
                 $"{Name} : {Type} {(IsConstant ? "const" : string.Empty)} {(InitialValue == null ? string.Empty : InitialValue)}";
                 //$"{Name} : {(Type == DataType.Array ? "Array of " + ArrayType:Type)} {(IsConstant ? "const" : string.Empty)} {(InitialValue == null ? string.Empty : InitialValue)} {(From == null ? string.Empty : " From: "+ From)} {(To == null ? string.Empty : " To: "+ To)}";
@@ -320,14 +353,15 @@ namespace Shank {
     public class StatementNode : ASTNode {
         protected static string StatementListToString(List<StatementNode> statements)
         {
+
             var b = new StringBuilder();
             statements.ForEach(c => b.Append(Environment.NewLine + "\t" + c));
             return b.ToString();
         }
 
-        virtual public string[] codeGen()
+        virtual public object[] codeGen()
         {
-            string[] arr={};
+            object[] arr={};
             return arr;
         }
     }
@@ -434,9 +468,10 @@ namespace Shank {
         public ASTNode From { get; init; } 
         public ASTNode To{ get; init; }
         public List<StatementNode> Children { get; init; }
+
         public override string ToString()
         {
-
+ 
             return $" For: {Variable} From: {From} To: {To} {Environment.NewLine} {StatementListToString(Children)}";
         }
     }
@@ -473,9 +508,9 @@ namespace Shank {
         public VariableReferenceNode target { get; set; }
         public ASTNode expression { get; set; }
 
-        public override string[] codeGen()
+        public override object[] codeGen()
         {
-            string [] arr = {"", target.Name, expression.ToString()};
+            object [] arr = {"", target.Name, expression.ToString()};
 
             return arr;
         }
