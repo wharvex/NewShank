@@ -17,5 +17,5 @@ Origianl fibonacci.shank is not used yet. Rather, the below has been used:
 
 fibonacci_output.txt: When running the above fibonacci.shank with the current version of code, the resulting IR is shown in this file.
 
-riscv.txt: When converting the generated IR to RISC-V assembly through chat-gpt, the result is shown in this file.
+riscv1,2,3.png: When converting the generated IR to RISC-V assembly through chat-gpt, the result is shown in this file.
 
