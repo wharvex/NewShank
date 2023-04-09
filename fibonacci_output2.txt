@@ -1,0 +1,20 @@
+; ModuleID = 'main'
+source_filename = "main"
+
+declare void @write(ptr)
+
+define void @start() {
+entry:
+  %start = alloca i64, align 4
+  store i64 1, ptr %start, align 4
+  %end = alloca i64, align 4
+  store i64 20, ptr %end, align 4
+  %i = alloca i64, align 4
+  %prev1 = alloca i64, align 4
+  %prev2 = alloca i64, align 4
+  %curr = alloca i64, align 4
+  store i64 1, ptr %prev1, align 4
+  store i64 1, ptr %prev2, align 4
+  call void @write(ptr %prev1)
+  call void @write(ptr %prev2)
+}
