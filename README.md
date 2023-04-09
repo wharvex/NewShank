@@ -1,6 +1,6 @@
-### Last updated: 3/27
+### Last updated: 4/9
 
-Recommended IDE: VSCode. As .csproj states, LLVMSharp.INterop Version=15.0.0-beta1 is used.
+Recommended IDE: VSCode. As .csproj states, LLVMSharp.Interop Version=15.0.0-beta1 is used.
 
 We should use integer i64 and not i32 as IPA runs on i64.
 
@@ -15,4 +15,5 @@ Origianl fibonacci.shank is not used yet. Rather, the below has been used:
 -	 write prev1
 -	 write prev2
 
-When running the above fibonacci.shank with the current version of code, the resulting IR is shown in fibonacci_output.txt
+fibonacci_output.txt: When running the above fibonacci.shank with the current version of code, the resulting IR is shown in this file.
+riscv.txt: When converting the generated IR to RISC-V assembly through chat-gpt, the result is shown in this file.
