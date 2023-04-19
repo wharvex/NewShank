@@ -1,4 +1,6 @@
-### Last updated: 4/9
+### Last updated: 4/19
+
+- Experssion.cs: Loop can be generated, but needs revision.
 
 Recommended IDE: VSCode. As .csproj states, LLVMSharp.Interop Version=15.0.0-beta1 is used.
 
