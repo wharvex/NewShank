@@ -265,6 +265,44 @@ namespace Shank {
                     builder.BuildStore(loadedValue, var3);
                     */
 
+                    //********************************************************
+
+                    builder.PositionAtEnd(mainBlock);// Set IR builder will start from the end of the mainBlock
+
+                    // Create the loop
+                    var loopBlock = mainFn.AppendBasicBlock("loop");
+                    builder.BuildBr(loopBlock);
+
+                    builder.PositionAtEnd(loopBlock);
+
+                    // Create the loop counter variable
+                    var counter = builder.BuildAlloca(context.Int64Type, "counter");
+                    builder.BuildStore(LLVMValueRef.CreateConstInt(context.Int64Type, 0, false), counter);
+
+                    // Create the condition for the loop
+                    var currentCounter = counter;
+                    var condition = builder.BuildICmp(LLVMIntPredicate.LLVMIntSLT, currentCounter, LLVMValueRef.CreateConstInt(context.Int64Type, 10, false));
+                    var endBlock = mainFn.AppendBasicBlock("end");
+                    var conditionBlock = loopBlock;
+
+                    builder.BuildCondBr(condition, loopBlock, endBlock);
+
+                    // Add the loop 
+                    // As an experiment, print hi
+                    builder.PositionAtEnd(loopBlock);
+                    builder.BuildCall2(writeFnTy, writeFn, new LLVMValueRef[] { builder.BuildGlobalStringPtr("Hi") }, "");
+
+                    // Increment the loop counter
+                    var nextCounter = builder.BuildAdd(currentCounter, LLVMValueRef.CreateConstInt(context.Int64Type, 1, false), "nextCounter");
+                    builder.BuildStore(nextCounter, counter);
+
+                    builder.BuildBr(conditionBlock);
+
+                    builder.PositionAtEnd(endBlock);
+
+                    builder.BuildRetVoid();
+                    //********************************************************
+
                     for (int i = 0; i < varArray.GetLength(0); i++)
                     {
                         if ((string)arr[2] == (string)varArray[i,1]) //ex. start
@@ -468,6 +506,8 @@ namespace Shank {
         public ASTNode From { get; init; } 
         public ASTNode To{ get; init; }
         public List<StatementNode> Children { get; init; }
+
+
 
         public override string ToString()
         {
