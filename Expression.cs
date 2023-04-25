@@ -1,6 +1,8 @@
 ﻿using System.Text;
 using LLVMSharp.Interop;
 using LLVMSharp;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Shank {
     public abstract class ASTNode {
@@ -21,7 +23,7 @@ namespace Shank {
             {
                 Parameters.ForEach(p=>b.AppendLine($"   {p}"));
             }
-            object [] arr = {Name, b.ToString()};
+            object [] arr = {"FUNCTION", Name, b.ToString()};
             return arr;
         }
 
@@ -201,53 +203,59 @@ namespace Shank {
 
         public void LLVMCompile()
         {
-            // Setup context, etc
+            // Setup context, module, and builder
             using var context = LLVMContextRef.Create();
             using var module = context.CreateModuleWithName("main");
             using var builder = context.CreateBuilder();
 
-            
-            // Create the puts function
+            // Create the write() function
             var writeFnRetTy = context.VoidType;
-            var writeFnParamTys = new LLVMTypeRef[] {LLVMTypeRef.CreatePointer(context.Int64Type,0)};
+            var writeFnParamTys = new LLVMTypeRef[] {LLVMTypeRef.CreatePointer(context.Int64Type, 0)};
             var writeFnTy = LLVMTypeRef.CreateFunction(writeFnRetTy, writeFnParamTys);
             var writeFn = module.AddFunction("write", writeFnTy);
 
-            // Create the main function
+            // Create the main (or the start()) function
             var mainRetTy = context.VoidType;
             var mainParamTys = new LLVMTypeRef[] {};
             var mainFnTy = LLVMTypeRef.CreateFunction(mainRetTy, mainParamTys);
             var mainFn = module.AddFunction("start", mainFnTy);
-            var mainBlock = mainFn.AppendBasicBlock("entry");
+            var mainBlock = mainFn.AppendBasicBlock("entry"); //the entry block within the start() function
 
             // Create the body of the main function
             builder.PositionAtEnd(mainBlock);
 
+            /*
+            varArray will contain
+            1. If the variable is not initialized, then it will have (i) variable referencing to the allocated memory, and (ii) the variable name itself.
+            2. If the variable is initialized, then it will have (i) variable referencing to the value stored in the allocated memory, and (ii) the variable name itself.
+            */
             object[,] varArray = new object[LocalVariables.Count, 2];
+
             if (LocalVariables.Any())
             {
-
                 for (int i = 0; i < LocalVariables.Count; i++)
                 {
-                    if (LocalVariables[i].Type.ToString() == "Integer")
+                    if (LocalVariables[i].Type.ToString() == "Integer") 
                     {
-                        if (LocalVariables[i].InitialValue == null)
+                        if (LocalVariables[i].InitialValue == null) //if the local variable is declared but not initialized
                         {
-                            var avar = builder.BuildAlloca(context.Int64Type, LocalVariables[i].Name);
-                            avar.SetAlignment(4);
-                            varArray[i, 0] = avar;
+                            var allocated = builder.BuildAlloca(context.Int64Type, LocalVariables[i].Name);
+                            allocated.SetAlignment(4);
+                            varArray[i, 0] = allocated;
                             varArray[i, 1] = LocalVariables[i].Name;
                         }
-                        else
+                        else //if the local variable is both declared and initialized
                         {
-                            var avar = builder.BuildAlloca(context.Int64Type, LocalVariables[i].Name);
-                            avar.SetAlignment(4);
                             
-                            var cvar = LLVMValueRef.CreateConstInt(context.Int64Type, ulong.Parse(LocalVariables[i].InitialValue.ToString()), false);
-                            builder.BuildStore(cvar, avar);
+                            var allocated = builder.BuildAlloca(context.Int64Type, LocalVariables[i].Name);
+                            allocated.SetAlignment(4);
+                            
+                            var allocated_value = LLVMValueRef.CreateConstInt(context.Int64Type, ulong.Parse(LocalVariables[i].InitialValue.ToString()), false);
+                            builder.BuildStore(allocated_value, allocated);
 
-                            varArray[i, 0] = cvar;
+                            varArray[i, 0] = allocated_value;
                             varArray[i, 1] = LocalVariables[i].Name;
+
                         }
                     }
                 }
@@ -257,15 +265,49 @@ namespace Shank {
             {
                 object[] arr = s.codeGen();
 
-                //if not a function
-                if (arr[0] ==""){
-                    /*
-                    var loadedValue = builder.BuildLoad((LLVMValueRef)varArray[0,0], "loadedValue");
-                    var var3 = builder.BuildAlloca(context.Int64Type, "var3");
-                    builder.BuildStore(loadedValue, var3);
-                    */
+                //if not a function, i.e. if assignment node
+                if (arr[0] == ""){
 
-                    //********************************************************
+                    for (int i = 0; i < varArray.GetLength(0); i++)
+                    {
+                        if ((string)arr[2] == (string)varArray[i,1]) //ex. arr[2] is start in prev1 = start
+                        {
+                            var allocated_left = varArray[i,0];
+
+                            for (int j = 0; j < varArray.GetLength(0); j++)
+                            {
+                                if ((string)arr[1] == (string)varArray[j,1]) //ex. prev1 in prev1 = start. Searching for allocated memory through BuildAlloca() for prev1 during the variable declaration which is stored in varArray.
+                                {
+                                    var allocated_right = varArray[j,0];
+                                    builder.BuildStore((LLVMValueRef)allocated_left, (LLVMValueRef)allocated_right);
+
+                                    varArray[j,0] = allocated_right; //Before, a variable referencing to allocated memory was stored in varArray[j,0]. Now we replace with allocated_right which stores the value of allocated_left.
+                                }
+                            }
+                        }
+                    }
+                }
+                else if (arr[0] == "FUNCTION") //if it is a function node, such as write()
+                {
+                    for (int i = 0; i < varArray.GetLength(0); i++)
+                    {
+                        if (((string)arr[2]).Trim() == (string)varArray[i,1]) //ex. prev1
+                        {
+                            var allocated = (LLVMValueRef) varArray[i,0];
+                            builder.BuildCall2(writeFnTy, writeFn, new LLVMValueRef[] { allocated }, "");
+                        }
+                    }
+                }
+                else
+                {
+                    /*
+                    arr[0]: For
+                    arr[1]: i
+                    arr[2]: start
+                    arr[3]: end
+                    arr[4]: entire for loop body
+                    for i from start to end
+                    */
 
                     builder.PositionAtEnd(mainBlock);// Set IR builder will start from the end of the mainBlock
 
@@ -277,61 +319,59 @@ namespace Shank {
 
                     // Create the loop counter variable
                     var counter = builder.BuildAlloca(context.Int64Type, "counter");
-                    builder.BuildStore(LLVMValueRef.CreateConstInt(context.Int64Type, 0, false), counter);
+                    counter.SetAlignment(4);
+                    ulong start_index=0;
+                    ulong.TryParse(arr[2].ToString(), out start_index);
+                    builder.BuildStore(LLVMValueRef.CreateConstInt(context.Int64Type, start_index, false), counter);
 
                     // Create the condition for the loop
-                    var currentCounter = counter;
-                    var condition = builder.BuildICmp(LLVMIntPredicate.LLVMIntSLT, currentCounter, LLVMValueRef.CreateConstInt(context.Int64Type, 10, false));
+                    ulong end_index=0;
+                    ulong.TryParse(arr[3].ToString(), out end_index);
+                    var endValue = LLVMValueRef.CreateConstInt(context.Int64Type, end_index, false);
+                    var condition = builder.BuildICmp(LLVMIntPredicate.LLVMIntSLT, counter, endValue, "condition");
                     var endBlock = mainFn.AppendBasicBlock("end");
-                    var conditionBlock = loopBlock;
 
                     builder.BuildCondBr(condition, loopBlock, endBlock);
 
-                    // Add the loop 
-                    // As an experiment, print hi
+                    // Add the loop body
                     builder.PositionAtEnd(loopBlock);
-                    builder.BuildCall2(writeFnTy, writeFn, new LLVMValueRef[] { builder.BuildGlobalStringPtr("Hi") }, "");
+
+                    builder.BuildCall2(writeFnTy, writeFn, new LLVMValueRef[] { (LLVMValueRef) varArray[0,0] }, "");
+
+                    /*
+
+                    List<StatementNode> for_statements = (List<StatementNode>)arr[4];
+
+                    foreach (var statement in for_statements)
+                    {
+                        object[] for_arr = statement.codeGen();
+                    }
+                    
+                    //Should be something like below. But make it general:
+                    LLVMValueRef prev1 = (LLVMValueRef)varArray[2, 0];
+                    LLVMValueRef prev2 = (LLVMValueRef)varArray[3, 0];
+
+                    // curr := prev1 + prev2 statement
+                    var curr = builder.BuildAdd(prev1, prev2, "curr");
+
+                    // write curr statement
+                    builder.BuildCall2(writeFnTy, writeFn, new LLVMValueRef[] { curr }, "");
+
+                    // prev2 := prev1 statement
+                    prev2 = prev1;
+
+                    // prev1 := curr statement
+                    prev1 = curr;
 
                     // Increment the loop counter
-                    var nextCounter = builder.BuildAdd(currentCounter, LLVMValueRef.CreateConstInt(context.Int64Type, 1, false), "nextCounter");
-                    builder.BuildStore(nextCounter, counter);
+                    var one = LLVMValueRef.CreateConstInt(context.Int64Type, 1, false);
+                    var nextCounterValue = builder.BuildAdd(builder.BuildLoad(context.Int64Type, counter), one, "nextCounter");
+                    builder.BuildStore(nextCounterValue, counter);
 
-                    builder.BuildBr(conditionBlock);
+                    builder.BuildBr(loopBlock);
 
                     builder.PositionAtEnd(endBlock);
-
-                    builder.BuildRetVoid();
-                    //********************************************************
-
-                    for (int i = 0; i < varArray.GetLength(0); i++)
-                    {
-                        if ((string)arr[2] == (string)varArray[i,1]) //ex. start
-                        {
-                            var cvar = varArray[i,0];
-
-                            for (int j = 0; j < varArray.GetLength(0); j++)
-                            {
-                                if ((string)arr[1] == (string)varArray[j,1]) //ex. prev1
-                                {
-                                    var avar = varArray[j,0];
-                                    builder.BuildStore((LLVMValueRef)cvar, (LLVMValueRef)avar);
-
-                                    varArray[j,0] = avar;
-                                }
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    for (int i = 0; i < varArray.GetLength(0); i++)
-                    {
-                        if (((string)arr[1]).Trim() == (string)varArray[i,1]) //ex. prev1
-                        {
-                            var cvar = (LLVMValueRef) varArray[i,0];
-                            builder.BuildCall2(writeFnTy, writeFn, new LLVMValueRef[] { cvar }, "");
-                        }
-                    }
+                    */
                 }
             }
   
@@ -393,7 +433,7 @@ namespace Shank {
         {
 
             var b = new StringBuilder();
-            statements.ForEach(c => b.Append(Environment.NewLine + "\t" + c));
+            statements.ForEach(c => b.Append("\t" + c));
             return b.ToString();
         }
 
@@ -507,7 +547,11 @@ namespace Shank {
         public ASTNode To{ get; init; }
         public List<StatementNode> Children { get; init; }
 
-
+        public override object[] codeGen()
+        {
+            object [] arr = {"For", Variable, From, To, Children};
+            return arr;
+        }
 
         public override string ToString()
         {
