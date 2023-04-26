@@ -267,6 +267,7 @@
         private List<VariableNode>? GetVariables()
         {
             var names = new List<string>();
+            var isConstant = MatchAndRemove(Token.TokenType.Var) == null;
             var name = MatchAndRemove(Token.TokenType.Identifier);
             if (name == null) return null;
             names.Add(name.Value??string.Empty);
@@ -281,35 +282,35 @@
             if (MatchAndRemove(Token.TokenType.Integer) != null)
             {
                 var retVal =  names.Select(n => new VariableNode()
-                    {InitialValue = null, IsConstant = false, Type = VariableNode.DataType.Integer, Name = n}).ToList();
+                    {InitialValue = null, IsConstant = isConstant, Type = VariableNode.DataType.Integer, Name = n}).ToList();
                 CheckForRange(retVal);
                 return retVal;
             } 
             else if (MatchAndRemove(Token.TokenType.Real) != null)
             {
                 var retVal =  names.Select(n => new VariableNode()
-                    {InitialValue = null, IsConstant = false, Type = VariableNode.DataType.Real, Name = n}).ToList();
+                    {InitialValue = null, IsConstant = isConstant, Type = VariableNode.DataType.Real, Name = n}).ToList();
                 CheckForRange(retVal);
                 return retVal;
             }
             else if (MatchAndRemove(Token.TokenType.Boolean) != null)
             {
                 var retVal =  names.Select(n => new VariableNode()
-                    {InitialValue = null, IsConstant = false, Type = VariableNode.DataType.Boolean, Name = n}).ToList();
+                    {InitialValue = null, IsConstant = isConstant, Type = VariableNode.DataType.Boolean, Name = n}).ToList();
                 CheckForRange(retVal);
                 return retVal;
             }
             else if (MatchAndRemove(Token.TokenType.Character) != null)
             {
                 var retVal =  names.Select(n => new VariableNode()
-                    {InitialValue = null, IsConstant = false, Type = VariableNode.DataType.Character, Name = n}).ToList();
+                    {InitialValue = null, IsConstant = isConstant, Type = VariableNode.DataType.Character, Name = n}).ToList();
                 CheckForRange(retVal);
                 return retVal;
             }
             else if (MatchAndRemove(Token.TokenType.String) != null)
             {
                 var retVal =  names.Select(n => new VariableNode()
-                    {InitialValue = null, IsConstant = false, Type = VariableNode.DataType.String, Name = n}).ToList();
+                    {InitialValue = null, IsConstant = isConstant, Type = VariableNode.DataType.String, Name = n}).ToList();
                 CheckForRange(retVal);
                 return retVal;
             }
@@ -317,7 +318,7 @@
             else if (MatchAndRemove(Token.TokenType.Array) != null)
             {
                 var retVal =  names.Select(n => new VariableNode()
-                    {InitialValue = null, IsConstant = false, Type = VariableNode.DataType.Array, Name = n}).ToList();
+                    {InitialValue = null, IsConstant = isConstant, Type = VariableNode.DataType.Array, Name = n}).ToList();
                 CheckForRange(retVal);
                 if (MatchAndRemove(Token.TokenType.Of) == null)
                     throw new SyntaxErrorException($"In the declaration of the array for {retVal.First().Name}, no array type found.",Peek(0));
