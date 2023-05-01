@@ -6,7 +6,7 @@ namespace Shank
     {
         public static void Main(string[] args)
         {
-            var lines = File.ReadAllLines("fibonacci.shank");
+            var lines = File.ReadAllLines("Shank/fibonacci.shank");
             var tokens = new List<Token>();
             var l = new Lexer();
             tokens.AddRange(l.Lex(lines));
