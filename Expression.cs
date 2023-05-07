@@ -204,6 +204,172 @@ namespace Shank {
             return b.ToString();
         }
 
+        public Dictionary<string, LLVMValueRef> Exec_Assignment(LLVMBuilderRef builder, Dictionary<string, LLVMValueRef>hash_variables, object[] s_tokens, LLVMContextRef context)
+        {
+            var allocated_right = LLVMValueRef.CreateConstInt(context.Int64Type, 0, false);
+
+            try //if variable is being assigned
+            {
+                allocated_right = builder.BuildLoad2(context.Int64Type, hash_variables[(string)s_tokens[2]]); //value to be assigned, i.e. right side of equality. ex. s_tokens[2] is start in prev1 = start
+            }
+            catch (Exception ex) //if number is being assigned
+            {
+                allocated_right = LLVMValueRef.CreateConstInt(context.Int64Type, ulong.Parse(s_tokens[2].ToString()), false); 
+            }
+            var allocated_left = hash_variables[(string)s_tokens[1]]; //variable that will be assigned with a value, i.e. left side of equality. ex. prev1 in prev1:= start
+            builder.BuildStore(allocated_right, allocated_left); //stored allocated_right in allocated_left, as this is assignment node.
+            hash_variables[(string)s_tokens[1]] = allocated_left; //the value, i.e. allocated_value
+            
+            return hash_variables;
+        }
+
+        public void Exec_Function(LLVMBuilderRef builder, Dictionary<string, LLVMValueRef>hash_variables, object[] s_tokens, LLVMContextRef context, LLVMTypeRef writeFnTy, LLVMValueRef writeFn)
+        {
+            var allocated = builder.BuildLoad2(context.Int64Type,hash_variables[((string)s_tokens[2]).Trim()]); //ex. s_tokens[2] is prev1 and allocated is the stored value of prev1
+            builder.BuildCall2(writeFnTy, writeFn, new LLVMValueRef[] { allocated }, (s_tokens[1]).ToString());
+        }
+
+        public Dictionary<string, LLVMValueRef> Exec_For(LLVMBuilderRef builder, Dictionary<string, LLVMValueRef>hash_variables, object[] s_tokens, LLVMContextRef context, LLVMTypeRef writeFnTy, LLVMValueRef writeFn, LLVMValueRef mainFn)
+        {
+            /*
+            s_tokens[0]: For
+            s_tokens[1]: i
+            s_tokens[2]: start
+            s_tokens[3]: end
+            s_tokens[4]: entire for loop body
+            for i from start to end
+            */
+
+            //initialize i to start
+            var i = hash_variables[s_tokens[1].ToString()]; //variable that will be assigned with a value, i.e. i
+            try //if variable is being assigned
+            {
+                var start = builder.BuildLoad2(context.Int64Type, hash_variables[s_tokens[2].ToString()]); //value to be assigned, i.e. start
+                builder.BuildStore(start, i); //store i with a value of start
+                hash_variables[s_tokens[1].ToString()] = i; 
+            }
+            catch (Exception ex) //if number is being assigned
+            {
+                var start = LLVMValueRef.CreateConstInt(context.Int64Type, ulong.Parse(s_tokens[2].ToString()), false); 
+                builder.BuildStore(start, i); //store i with a value of start
+                hash_variables[s_tokens[1].ToString()] = i; 
+            }
+
+            //Create the for loop condition 
+            var loopCondBlock = mainFn. AppendBasicBlock("for.condition");
+            builder.BuildBr(loopCondBlock);
+
+            //Create the for loop body 
+            var loopBodyBlock = mainFn. AppendBasicBlock("for.body");
+            builder.PositionAtEnd(loopBodyBlock);
+
+            //For loop body contains statements. So like before, go through each statement
+            List<StatementNode> for_statements = (List<StatementNode>)s_tokens[4];
+
+            foreach (var statement in for_statements)
+            {
+                object[] for_tokens = statement.returnStatementTokens();
+                if (for_tokens[0] == ""){ //if not a function, i.e. assignment
+
+                    try //if the assignment value is only 1 value. ex.) prev1
+                    {
+                        hash_variables = Exec_Assignment(builder, hash_variables, for_tokens, context);
+                    } 
+                    catch (Exception ex) //if the assignment value is multiple. ex.) prev1 + prev2
+                    {
+                        string[] tokens = ((string)for_tokens[2].ToString()).Split(' ');
+                        var allocated_right = LLVMValueRef.CreateConstInt(context.Int64Type, 0, false); //initialize to 0
+                                
+                        switch (tokens[1])
+                        {            
+                            case "plus":
+                                try //if variable is being assigned
+                                {
+                                    allocated_right = builder.BuildAdd(builder.BuildLoad2(context.Int64Type,hash_variables[(string)tokens[0]]), builder.BuildLoad2(context.Int64Type,hash_variables[(string)tokens[2]]), "plus");
+                                }
+                                catch (Exception exception) //if number is being assigned
+                                {
+                                    allocated_right = builder.BuildAdd(LLVMValueRef.CreateConstInt(context.Int64Type, ulong.Parse(tokens[0].ToString())), builder.BuildLoad2(context.Int64Type,hash_variables[(string)tokens[2]]), "plus");
+                                }
+                                break;
+                                    
+                            case "minus":
+                                try //if variable is being assigned
+                                {
+                                    allocated_right = builder.BuildSub(builder.BuildLoad2(context.Int64Type,hash_variables[(string)tokens[0]]), builder.BuildLoad2(context.Int64Type,hash_variables[(string)tokens[2]]), "minus");
+                                }
+                                catch (Exception exception) //if number is being assigned
+                                {
+                                    allocated_right = builder.BuildSub(LLVMValueRef.CreateConstInt(context.Int64Type, ulong.Parse(tokens[0].ToString())), builder.BuildLoad2(context.Int64Type,hash_variables[(string)tokens[2]]), "minus");
+                                }
+                                break;
+
+                            case "times":
+                                try //if variable is being assigned
+                                {
+                                    allocated_right = builder.BuildMul(builder.BuildLoad2(context.Int64Type,hash_variables[(string)tokens[0]]), builder.BuildLoad2(context.Int64Type,hash_variables[(string)tokens[2]]), "times");
+                                }
+                                catch (Exception exception) //if number is being assigned
+                                {
+                                    allocated_right = builder.BuildMul(LLVMValueRef.CreateConstInt(context.Int64Type, ulong.Parse(tokens[0].ToString())), builder.BuildLoad2(context.Int64Type,hash_variables[(string)tokens[2]]), "times");
+                                }
+                                break;
+
+                            case "divide":
+                                try //if variable is being assigned
+                                {
+                                    allocated_right = builder.BuildSDiv(builder.BuildLoad2(context.Int64Type,hash_variables[(string)tokens[0]]), builder.BuildLoad2(context.Int64Type,hash_variables[(string)tokens[2]]), "divide");
+                                }
+                                catch (Exception exception) //if number is being assigned
+                                {
+                                    allocated_right = builder.BuildSDiv(LLVMValueRef.CreateConstInt(context.Int64Type, ulong.Parse(tokens[0].ToString())), builder.BuildLoad2(context.Int64Type,hash_variables[(string)tokens[2]]), "divide");
+                                }
+                                break;
+
+                            default:
+                                break;
+                        }
+
+                        var allocated_left_var = hash_variables[(string)for_tokens[1]];
+                        builder.BuildStore(allocated_right, allocated_left_var); 
+                        hash_variables[(string)for_tokens[1]] = allocated_left_var;
+                    }
+                }
+                else if (for_tokens[0] == "FUNCTION") //if it is a function node, such as write()
+                {
+                    Exec_Function(builder, hash_variables, for_tokens, context, writeFnTy, writeFn);
+                }
+                else
+                {
+                    hash_variables = Exec_For(builder, hash_variables, s_tokens, context, writeFnTy, writeFn, mainFn);
+                }
+                        
+            }
+
+            // Increment 'i'
+            var increment = LLVMValueRef.CreateConstInt(context.Int64Type, 1, false);
+            i = builder.BuildLoad2(context.Int64Type, hash_variables[s_tokens[1].ToString()]);
+            var incrementedValue = builder.BuildAdd(i, increment, "i");
+            var allocated_left = hash_variables[s_tokens[1].ToString()];
+            builder.BuildStore(incrementedValue, allocated_left);
+            hash_variables[s_tokens[1].ToString()] = allocated_left; //we store the pointer variable referencing the memory location for i
+
+            // Go back to the loop condition block, i.e. branch
+            builder.BuildBr(loopCondBlock);
+
+            builder.PositionAtEnd(loopCondBlock);
+
+            //hash_variables[s_tokens[3].ToString()] is 20 as can be seen in the generated IR.
+            var loopCond = builder.BuildICmp(LLVMIntPredicate.LLVMIntSLT, builder.BuildLoad2(context.Int64Type, hash_variables[s_tokens[1].ToString()]), builder.BuildLoad2(context.Int64Type, hash_variables[s_tokens[3].ToString()]), "loop.condition.cmp");
+            builder.BuildCondBr(loopCond, loopBodyBlock, mainFn.AppendBasicBlock("exit"));
+
+            // Build the exit block
+            builder.PositionAtEnd(mainFn.LastBasicBlock);
+            builder.BuildRet(LLVMValueRef.CreateConstInt(context.Int64Type, 0, false));
+
+            return hash_variables;
+        }
+
         public unsafe void LLVMCompile()
         {
             // Setup context, module, and builder
@@ -282,10 +448,7 @@ namespace Shank {
                     s_tokens[2]: expression.ToString(), ex) start
                     */
 
-                    var allocated_right = builder.BuildLoad2(context.Int64Type, hash_variables[(string)s_tokens[2]]); //value to be assigned, i.e. right side of equality. ex. s_tokens[2] is start in prev1 = start
-                    var allocated_left = hash_variables[(string)s_tokens[1]]; //variable that will be assigned with a value, i.e. left side of equality. ex. prev1 in prev1:= start
-                    builder.BuildStore(allocated_right, allocated_left); //stored allocated_right in allocated_left, as this is assignment node.
-                    hash_variables[(string)s_tokens[1]] = allocated_left; //the value, i.e. allocated_value
+                    hash_variables = Exec_Assignment(builder, hash_variables, s_tokens, context);
                 }
                 else if (s_tokens[0] == "FUNCTION") //if it is a function node, such as write()
                 {
@@ -295,99 +458,11 @@ namespace Shank {
                     s_tokens[2]: b.ToString(), ex) prev1
                     */
 
-                    var allocated = builder.BuildLoad2(context.Int64Type,hash_variables[((string)s_tokens[2]).Trim()]); //ex. s_tokens[2] is prev1 and allocated is the stored value of prev1
-                    builder.BuildCall2(writeFnTy, writeFn, new LLVMValueRef[] { allocated }, "write");
+                    Exec_Function(builder, hash_variables, s_tokens, context, writeFnTy, writeFn);
                 }
                 else //for loop
                 {
-                    /*
-                    s_tokens[0]: For
-                    s_tokens[1]: i
-                    s_tokens[2]: start
-                    s_tokens[3]: end
-                    s_tokens[4]: entire for loop body
-                    for i from start to end
-                    */
-
-                    //initialize i to start
-                    var start = builder.BuildLoad2(context.Int64Type, hash_variables[s_tokens[2].ToString()]); //value to be assigned, i.e. start
-                    var i = hash_variables[s_tokens[1].ToString()]; //variable that will be assigned with a value, i.e. i
-                    builder.BuildStore(start, i); //store i with a value of start
-                    hash_variables[s_tokens[1].ToString()] = i; 
-
-                    //Create the for loop condition 
-                    var loopCondBlock = mainFn. AppendBasicBlock("for.condition");
-                    builder.BuildBr(loopCondBlock);
-
-                    //Create the for loop body 
-                    var loopBodyBlock = mainFn. AppendBasicBlock("for.body");
-                    builder.PositionAtEnd(loopBodyBlock);
-
-                    //For loop body contains statements. So like before, go through each statement
-                    List<StatementNode> for_statements = (List<StatementNode>)s_tokens[4];
-
-                    foreach (var statement in for_statements)
-                    {
-                        object[] for_tokens = statement.returnStatementTokens();
-                        if (for_tokens[0] == ""){ //if not a function, i.e. assignment
-
-                            try //if the assignment value is only 1 value. ex.) prev1
-                            {
-                                var allocated_right = builder.BuildLoad2(context.Int64Type, hash_variables[(string)for_tokens[2]]);
-                                var allocated_left_var = hash_variables[(string)for_tokens[1]];
-                                builder.BuildStore(allocated_right, allocated_left_var); 
-                                hash_variables[(string)for_tokens[1]] = allocated_left_var;
-                            } 
-                            catch (Exception ex) //if the assignment value is multiple. ex.) prev1 + prev2
-                            {
-                                string[] tokens = ((string)for_tokens[2].ToString()).Split(' ');
-                                
-                                switch (tokens[1])
-                                {
-                                    case "plus":
-                                        var allocated_right = builder.BuildAdd(builder.BuildLoad2(context.Int64Type,hash_variables[(string)tokens[0]]), builder.BuildLoad2(context.Int64Type,hash_variables[(string)tokens[2]]), "plus");
-                                        var allocated_left_var = hash_variables[(string)for_tokens[1]];
-                                        builder.BuildStore(allocated_right, allocated_left_var); 
-                                        hash_variables[(string)for_tokens[1]] = allocated_left_var;
-                                        break;
-
-                                    default:
-                                        break;
-                                }
-                            }
-                        }
-                        else if (for_tokens[0] == "FUNCTION") //if it is a function node, such as write()
-                        {
-                            var allocated = builder.BuildLoad2(context.Int64Type,hash_variables[((string)for_tokens[2]).Trim()]); 
-                            builder.BuildCall2(writeFnTy, writeFn, new LLVMValueRef[] { allocated }, "write");
-                        }
-                        else
-                        {
-                            // for loop, i.e. for loop within a for loop
-                        }
-                        
-                    }
-
-                    // Increment 'i'
-                    var increment = LLVMValueRef.CreateConstInt(context.Int64Type, 1, false);
-                    i = builder.BuildLoad2(context.Int64Type, hash_variables[s_tokens[1].ToString()]);
-                    var incrementedValue = builder.BuildAdd(i, increment, "i");
-                    var allocated_left = hash_variables[s_tokens[1].ToString()];
-                    builder.BuildStore(incrementedValue, allocated_left);
-                    hash_variables[s_tokens[1].ToString()] = allocated_left; //we store the pointer variable referencing the memory location for i
-
-                    // Go back to the loop condition block, i.e. branch
-                    builder.BuildBr(loopCondBlock);
-
-                    builder.PositionAtEnd(loopCondBlock);
-
-                    //hash_variables[s_tokens[3].ToString()] is 20 as can be seen in the generated IR.
-                    var loopCond = builder.BuildICmp(LLVMIntPredicate.LLVMIntSLT, builder.BuildLoad2(context.Int64Type, hash_variables[s_tokens[1].ToString()]), builder.BuildLoad2(context.Int64Type, hash_variables[s_tokens[3].ToString()]), "loop.condition.cmp");
-                    builder.BuildCondBr(loopCond, loopBodyBlock, mainFn.AppendBasicBlock("exit"));
-
-                    // Build the exit block
-                    builder.PositionAtEnd(mainFn.LastBasicBlock);
-                    builder.BuildRet(LLVMValueRef.CreateConstInt(context.Int64Type, 0, false));
+                    hash_variables = Exec_For(builder, hash_variables, s_tokens, context, writeFnTy, writeFn, mainFn);
                 }
             }
             

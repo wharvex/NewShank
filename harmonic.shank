@@ -1,0 +1,11 @@
+define start()
+variables n, sum, i, div : integer
+	sum := 0
+	i := 1
+	n := 5
+	div := 0
+	for i from 1 to n
+		div := 1/i
+		write div
+		sum := sum + div
+	write sum
