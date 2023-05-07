@@ -1,5 +1,6 @@
-### Last updated: 5/1
+### Last updated: 5/7
 
 To generate RISC-V: llc -march=riscv64 output_ir_3.ll -o out3.s
 
-fibonacci.shank can be converted to RISC-V, but needs further changes such that other .shank files could be run.
+fibonacci.shank can be converted to RISC-V.
+harmonic.shank can be converted to IR but not to RISC-V. Few changes would require.
