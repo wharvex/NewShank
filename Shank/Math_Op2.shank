@@ -1,0 +1,9 @@
+define start()
+constants begin = 1, end = 5
+variables i, result : integer
+	for i from begin to end
+		result := 3 + 2
+		result := result / 5
+		result := 12 + 32
+		result := result * 2
+		write result
