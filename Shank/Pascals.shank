@@ -1,0 +1,20 @@
+define start()
+variables n,line,num,i,res,j: integer
+	n := 7
+	line := 0
+	num := 0
+	i := 0
+	res := 1
+	j := 0
+	for line from line to n
+		for i from i to line + 1
+			res := 1
+			if i > (line - i) then
+				i := line - i
+			for j from j to i
+				res := res * (line - j)
+				res := res / (j + 1)
+			write res
+			j := 0
+		i := 0
+		write ""

@@ -1,0 +1,21 @@
+define start()
+constants start = 1, end = 20
+variables i, index, val : integer
+variables curr : integer
+	val :=start
+    val := 3 * start + end / 10
+	write val
+
+	for i from start to end
+		curr := val + i * 4 / 2
+		curr := curr + val
+		write curr
+
+    index := 0
+
+    while index < end
+	    index := index + 1 * start
+		index := index + val
+		write index
+
+	
