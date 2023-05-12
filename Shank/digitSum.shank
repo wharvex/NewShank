@@ -1,8 +1,0 @@
-define start()
-variables n, total, i : integer
-	total := 0
-	n := 23
-	while n > 0
-		total := total + (n mod 10)
-		n := n / 10
-	write total
