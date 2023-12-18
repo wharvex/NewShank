@@ -1,9 +1,5 @@
-﻿using System.Text;
-using LLVMSharp.Interop;
-using LLVMSharp;
-using System.Collections.Generic;
-using System.Linq;
-using System.IO;
+﻿using LLVMSharp.Interop;
+using System.Text;
 
 //To compile to RISC-V: llc -march=riscv64 output_ir_3.ll -o out3.s
 

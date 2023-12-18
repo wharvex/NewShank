@@ -1,6 +1,4 @@
-﻿using LLVMSharp.Interop;
-
-namespace Shank
+﻿namespace Shank
 {
     public class Program
     {
@@ -14,7 +12,7 @@ namespace Shank
             tokens.AddRange(l.Lex(lines));
 
             //foreach (var t in tokens)
-                //Console.WriteLine(t.ToString());
+            //    Console.WriteLine(t.ToString());
 
             var p = new Parser(tokens);
             var ir = new Interpreter();
