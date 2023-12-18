@@ -6,7 +6,9 @@ namespace Shank
     {
         public static void Main(string[] args)
         {
-            var lines = File.ReadAllLines("Shank/fibonacci.shank");
+            //var fibPath = System.IO.Path.GetDirectoryName(AppContext.BaseDirectory);
+            //Console.WriteLine($"Using {fibPath}...");
+            var lines = File.ReadAllLines("C:\\Users\\tgudl\\OneDrive\\projects\\c-sharp\\ShankCompiler\\Shank\\fibonacci.shank");
             var tokens = new List<Token>();
             var l = new Lexer();
             tokens.AddRange(l.Lex(lines));

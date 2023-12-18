@@ -7,11 +7,14 @@ using System.IO;
 
 //To compile to RISC-V: llc -march=riscv64 output_ir_3.ll -o out3.s
 
-namespace Shank {
-    public abstract class ASTNode {
+namespace Shank
+{
+    public abstract class ASTNode
+    {
     }
 
-    public class FunctionCallNode : StatementNode {
+    public class FunctionCallNode : StatementNode
+    {
         public string Name;
         public List<ParameterNode> Parameters = new();
         public FunctionCallNode(string name)
@@ -24,9 +27,9 @@ namespace Shank {
             var b = new StringBuilder();
             if (Parameters.Any())
             {
-                Parameters.ForEach(p=>b.AppendLine($"   {p}"));
+                Parameters.ForEach(p => b.AppendLine($"   {p}"));
             }
-            object [] arr = {"FUNCTION", Name, b.ToString()};
+            object[] arr = { "FUNCTION", Name, b.ToString() };
             return arr;
         }
 
@@ -38,7 +41,7 @@ namespace Shank {
             if (Parameters.Any())
             {
                 b.AppendLine("Parameters:");
-                Parameters.ForEach(p=>b.AppendLine($"   {p}"));
+                Parameters.ForEach(p => b.AppendLine($"   {p}"));
 
 
             }
@@ -47,7 +50,8 @@ namespace Shank {
         }
     }
 
-    public class ParameterNode : ASTNode {
+    public class ParameterNode : ASTNode
+    {
         public ParameterNode(ASTNode constant)
         {
             IsVariable = false;
@@ -77,7 +81,8 @@ namespace Shank {
         }
     }
 
-    public class IntNode : ASTNode {
+    public class IntNode : ASTNode
+    {
         public IntNode(int value)
         {
             Value = value;
@@ -90,7 +95,8 @@ namespace Shank {
         }
     }
 
-    public class FloatNode : ASTNode {
+    public class FloatNode : ASTNode
+    {
         public FloatNode(float value)
         {
             Value = value;
@@ -103,7 +109,8 @@ namespace Shank {
         }
     }
 
-    public class BoolNode : ASTNode {
+    public class BoolNode : ASTNode
+    {
         public BoolNode(bool value)
         {
             Value = value;
@@ -116,7 +123,8 @@ namespace Shank {
         }
     }
 
-    public class CharNode : ASTNode {
+    public class CharNode : ASTNode
+    {
         public CharNode(char value)
         {
             Value = value;
@@ -129,7 +137,8 @@ namespace Shank {
         }
     }
 
-    public class StringNode : ASTNode {
+    public class StringNode : ASTNode
+    {
         public StringNode(string value)
         {
             Value = value;
@@ -142,7 +151,8 @@ namespace Shank {
         }
     }
 
-    public abstract class CallableNode : ASTNode {
+    public abstract class CallableNode : ASTNode
+    {
         public string Name { get; init; }
         public List<VariableNode> ParameterVariables = new();
 
@@ -162,18 +172,20 @@ namespace Shank {
 
     }
 
-    public class BuiltInFunctionNode : CallableNode {
-        public BuiltInFunctionNode(string name, BuiltInCall execute) : base(name,execute ) { }
+    public class BuiltInFunctionNode : CallableNode
+    {
+        public BuiltInFunctionNode(string name, BuiltInCall execute) : base(name, execute) { }
         public bool IsVariadic = false;
     }
 
-    public class FunctionNode : CallableNode {
+    public class FunctionNode : CallableNode
+    {
         public FunctionNode(string name) : base(name)
         {
-            Execute = (List<InterpreterDataType> paramList) =>Interpreter.InterpretFunction(this,paramList);
+            Execute = (List<InterpreterDataType> paramList) => Interpreter.InterpretFunction(this, paramList);
         }
 
-        public List<VariableNode> LocalVariables = new(); 
+        public List<VariableNode> LocalVariables = new();
         //LocalVariables (scroll above) contain start, end, i, prev1
         //alloca() for constatns and variables 
         //store() for assignment (Currently, I did both. BUt I just need to use store())
@@ -187,17 +199,17 @@ namespace Shank {
             if (ParameterVariables.Any())
             {
                 b.AppendLine("Parameters:");
-                ParameterVariables.ForEach(p=>b.AppendLine($"   {p}"));
+                ParameterVariables.ForEach(p => b.AppendLine($"   {p}"));
             }
             if (LocalVariables.Any())
             {
                 b.AppendLine("Local Variables:");
-                LocalVariables.ForEach(p=>b.AppendLine($"   {p}"));
+                LocalVariables.ForEach(p => b.AppendLine($"   {p}"));
             }
             if (Statements.Any())
             {
                 b.AppendLine("-------------------------------------");
-                Statements.ForEach(p=>b.AppendLine($"   {p}"));
+                Statements.ForEach(p => b.AppendLine($"   {p}"));
                 b.AppendLine("-------------------------------------");
             }
 
@@ -225,9 +237,9 @@ namespace Shank {
         /*
         When write() function is called
         */
-        public void Exec_Function(LLVMBuilderRef builder, Dictionary<string, LLVMValueRef>hash_variables, object[] s_tokens, LLVMContextRef context, LLVMTypeRef writeFnTy, LLVMValueRef writeFn)
+        public void Exec_Function(LLVMBuilderRef builder, Dictionary<string, LLVMValueRef> hash_variables, object[] s_tokens, LLVMContextRef context, LLVMTypeRef writeFnTy, LLVMValueRef writeFn)
         {
-            var allocated = builder.BuildLoad2(context.Int64Type,hash_variables[((string)s_tokens[2]).Trim()]); //ex. s_tokens[2] is prev1 and allocated is the stored value of prev1
+            var allocated = builder.BuildLoad2(context.Int64Type, hash_variables[((string)s_tokens[2]).Trim()]); //ex. s_tokens[2] is prev1 and allocated is the stored value of prev1
             builder.BuildCall2(writeFnTy, writeFn, new LLVMValueRef[] { allocated }, (s_tokens[1]).ToString());
         }
 
@@ -270,7 +282,7 @@ namespace Shank {
             }
         }
 
-        public Dictionary<string, LLVMValueRef> Exec_For(LLVMBuilderRef builder, Dictionary<string, LLVMValueRef>hash_variables, object[] s_tokens, LLVMContextRef context, LLVMTypeRef writeFnTy, LLVMValueRef writeFn, LLVMValueRef mainFn)
+        public Dictionary<string, LLVMValueRef> Exec_For(LLVMBuilderRef builder, Dictionary<string, LLVMValueRef> hash_variables, object[] s_tokens, LLVMContextRef context, LLVMTypeRef writeFnTy, LLVMValueRef writeFn, LLVMValueRef mainFn)
         {
             /*
             s_tokens[0]: For
@@ -285,24 +297,24 @@ namespace Shank {
             var i = hash_variables[s_tokens[1].ToString()]; //variable that will be assigned with a value, ex. i
 
             //if variable is being assigned
-            if (hash_variables.ContainsKey(s_tokens[2].ToString())) 
+            if (hash_variables.ContainsKey(s_tokens[2].ToString()))
             {
                 var start = builder.BuildLoad2(context.Int64Type, hash_variables[s_tokens[2].ToString()]); //value to be assigned, ex. start
                 builder.BuildStore(start, i); //store i with a value of start
             }
             else //if number is being assigned
             {
-                var start = LLVMValueRef.CreateConstInt(context.Int64Type, ulong.Parse(s_tokens[2].ToString()), false); 
+                var start = LLVMValueRef.CreateConstInt(context.Int64Type, ulong.Parse(s_tokens[2].ToString()), false);
                 builder.BuildStore(start, i); //store i with a value of start
             }
-            hash_variables[s_tokens[1].ToString()] = i; 
+            hash_variables[s_tokens[1].ToString()] = i;
 
             //Create the for loop condition 
-            var loopCondBlock = mainFn. AppendBasicBlock("for.condition");
+            var loopCondBlock = mainFn.AppendBasicBlock("for.condition");
             builder.BuildBr(loopCondBlock);
 
             //Create the for loop body 
-            var loopBodyBlock = mainFn. AppendBasicBlock("for.body");
+            var loopBodyBlock = mainFn.AppendBasicBlock("for.body");
             builder.PositionAtEnd(loopBodyBlock);
 
             //For loop body contains statements. So like before, go through each statement
@@ -327,7 +339,7 @@ namespace Shank {
                 {
                     hash_variables = Exec_For(builder, hash_variables, s_tokens, context, writeFnTy, writeFn, mainFn);
                 }
-                        
+
             }
 
             // Increment 'i'
@@ -392,25 +404,29 @@ namespace Shank {
             foreach (var statement in while_statements)
             {
                 var ws_tokens = statement.returnStatementTokens();
-                if (ws_tokens[0] == ""){
+                if (ws_tokens[0] == "")
+                {
                     hash_variables = Exec_Assignment(builder, hash_variables, ws_tokens, context);
                 }
-                else if (ws_tokens[0] == "FUNCTION"){
+                else if (ws_tokens[0] == "FUNCTION")
+                {
                     Exec_Function(builder, hash_variables, ws_tokens, context, writeFnTy, writeFn);
                 }
-                else if (ws_tokens[0] == "FOR"){
+                else if (ws_tokens[0] == "FOR")
+                {
                     hash_variables = Exec_For(builder, hash_variables, ws_tokens, context, writeFnTy, writeFn, mainFn);
                 }
-                else if (ws_tokens[0] == "WHILE"){
+                else if (ws_tokens[0] == "WHILE")
+                {
                     hash_variables = Exec_While(builder, hash_variables, ws_tokens, context, writeFnTy, writeFn, mainFn);
                 }
             }
 
             //increment the condition variable for the while loop
-            var increment = LLVMValueRef.CreateConstInt(context.Int64Type, 1, false); 
-            var incremented = builder.BuildAdd(increment, leftOpValue, "incre"); 
+            var increment = LLVMValueRef.CreateConstInt(context.Int64Type, 1, false);
+            var incremented = builder.BuildAdd(increment, leftOpValue, "incre");
             var allocated_left = hash_variables[s_tokens[1].ToString()];
-            builder.BuildStore(incremented, allocated_left); 
+            builder.BuildStore(incremented, allocated_left);
             hash_variables[s_tokens[1].ToString()] = allocated_left;
 
             builder.BuildBr(conditionBlock);
@@ -431,13 +447,13 @@ namespace Shank {
             // Create the write() function
             var writeFnRetTy = context.Int64Type;
             //Int8Type: for string type
-            var writeFnParamTys = new LLVMTypeRef[] {context.Int64Type};
+            var writeFnParamTys = new LLVMTypeRef[] { context.Int64Type };
             var writeFnTy = LLVMTypeRef.CreateFunction(writeFnRetTy, writeFnParamTys);
             var writeFn = module.AddFunction("write", writeFnTy);
 
             // Create the main (or the start()) function. For void return, I can use context.VoidType;
             var mainRetTy = context.Int64Type;
-            var mainParamTys = new LLVMTypeRef[] {};
+            var mainParamTys = new LLVMTypeRef[] { };
             var mainFnTy = LLVMTypeRef.CreateFunction(mainRetTy, mainParamTys);
             var mainFn = module.AddFunction("start", mainFnTy);
             var mainBlock = mainFn.AppendBasicBlock("entry"); //the entry block within the start() function
@@ -491,10 +507,11 @@ namespace Shank {
             //Go through each statement
             foreach (var s in Statements)
             {
-                object[] s_tokens = s.returnStatementTokens(); 
+                object[] s_tokens = s.returnStatementTokens();
 
                 //if not a function, i.e. if assignment node
-                if (s_tokens[0] == ""){
+                if (s_tokens[0] == "")
+                {
                     /*
                     s_tokens[0]: ""
                     s_tokens[1]: target.Name, ex) prev1 in prev1:=start
@@ -523,7 +540,7 @@ namespace Shank {
                     s_tokens[4]: Children
                     */
 
-                   hash_variables = Exec_While(builder, hash_variables, s_tokens, context, writeFnTy, writeFn, mainFn);
+                    hash_variables = Exec_While(builder, hash_variables, s_tokens, context, writeFnTy, writeFn, mainFn);
                 }
                 else //for loop
                 {
@@ -545,9 +562,9 @@ namespace Shank {
                     builder.BuildRet(LLVMValueRef.CreateConstInt(context.Int64Type, 0, false));
                 }
             }
-            
+
             Console.WriteLine($"LLVM IR\n=========\n{module}");
-            
+
             //builder.BuildRetVoid();
 
             LLVM.InitializeAllTargetInfos();
@@ -561,35 +578,38 @@ namespace Shank {
 
             Save generatedIR.ll file. Then, change every ptr occurrence to i64*
             */
-            module.PrintToFile("IR/generated_IR.ll");
-            string irContent = File.ReadAllText("IR/generated_IR.ll");
+            string outPath = "C:\\Users\\tgudl\\OneDrive\\projects\\c-sharp\\ShankCompiler\\IR\\generated_IR.ll";
+            module.PrintToFile(outPath);
+            string irContent = File.ReadAllText(outPath);
             string updatedIrContent = irContent.Replace("ptr", "i64*");
-            File.WriteAllText("IR/generated_IR.ll", updatedIrContent);
+            File.WriteAllText(outPath, updatedIrContent);
         }
     }
 
-    public class VariableNode : ASTNode {
+    public class VariableNode : ASTNode
+    {
         public string? Name;
 
         public enum DataType { Real, Integer, String, Character, Boolean/*, Array*/ };
 
         public DataType Type;
-//        public DataType ArrayType;
+        //        public DataType ArrayType;
         public bool IsConstant;
         public ASTNode? InitialValue;
- //       public ASTNode? From;
- //       public ASTNode? To;
+        //       public ASTNode? From;
+        //       public ASTNode? To;
 
         public override string ToString()
         {
 
             return
                 $"{Name} : {Type} {(IsConstant ? "const" : string.Empty)} {(InitialValue == null ? string.Empty : InitialValue)}";
-                //$"{Name} : {(Type == DataType.Array ? "Array of " + ArrayType:Type)} {(IsConstant ? "const" : string.Empty)} {(InitialValue == null ? string.Empty : InitialValue)} {(From == null ? string.Empty : " From: "+ From)} {(To == null ? string.Empty : " To: "+ To)}";
+            //$"{Name} : {(Type == DataType.Array ? "Array of " + ArrayType:Type)} {(IsConstant ? "const" : string.Empty)} {(InitialValue == null ? string.Empty : InitialValue)} {(From == null ? string.Empty : " From: "+ From)} {(To == null ? string.Empty : " To: "+ To)}";
         }
     }
 
-    public class MathOpNode : ASTNode {
+    public class MathOpNode : ASTNode
+    {
         public MathOpNode(ASTNode left, OpType op, ASTNode right)
         {
             Left = left;
@@ -609,7 +629,8 @@ namespace Shank {
         }
     }
 
-    public class StatementNode : ASTNode {
+    public class StatementNode : ASTNode
+    {
         protected static string StatementListToString(List<StatementNode> statements)
         {
 
@@ -620,14 +641,15 @@ namespace Shank {
 
         virtual public object[] returnStatementTokens()
         {
-            object[] arr={};
+            object[] arr = { };
             return arr;
         }
     }
 
-    public class VariableReferenceNode : ASTNode {
-        public VariableReferenceNode(string name) 
-        { 
+    public class VariableReferenceNode : ASTNode
+    {
+        public VariableReferenceNode(string name)
+        {
             Name = name;
             Index = null;
         }
@@ -642,11 +664,12 @@ namespace Shank {
         public override string ToString()
         {
 
-            return $"{Name}{(Index!= null? " Index:" + Index : string.Empty)}";
+            return $"{Name}{(Index != null ? " Index:" + Index : string.Empty)}";
         }
     }
 
-    public class WhileNode : StatementNode {
+    public class WhileNode : StatementNode
+    {
         public WhileNode(BooleanExpressionNode exp, List<StatementNode> children)
         {
             Expression = exp;
@@ -657,7 +680,7 @@ namespace Shank {
 
         public override object[] returnStatementTokens()
         {
-            object [] arr = {"WHILE", Expression.Left, Expression.Op, Expression.Right, Children};
+            object[] arr = { "WHILE", Expression.Left, Expression.Op, Expression.Right, Children };
 
             return arr;
         }
@@ -669,7 +692,8 @@ namespace Shank {
         }
     }
 
-    public class RepeatNode : StatementNode {
+    public class RepeatNode : StatementNode
+    {
         public RepeatNode(BooleanExpressionNode exp, List<StatementNode> children)
         {
             Expression = exp;
@@ -685,7 +709,8 @@ namespace Shank {
         }
     }
 
-    public class IfNode : StatementNode {
+    public class IfNode : StatementNode
+    {
         protected IfNode(List<StatementNode> children)
         {
             Expression = null;
@@ -706,22 +731,24 @@ namespace Shank {
         public override string ToString()
         {
 
-            return $"If: {Expression} {StatementListToString(Children)} {((NextIfNode == null)?string.Empty : Environment.NewLine + NextIfNode)}";
+            return $"If: {Expression} {StatementListToString(Children)} {((NextIfNode == null) ? string.Empty : Environment.NewLine + NextIfNode)}";
         }
     }
 
-    public class ElseNode : IfNode {
+    public class ElseNode : IfNode
+    {
         public ElseNode(List<StatementNode> children) : base(children)
         {
         }
         public override string ToString()
         {
 
-            return $" Else: {StatementListToString(Children)} {((NextIfNode == null)?string.Empty : NextIfNode)}";
+            return $" Else: {StatementListToString(Children)} {((NextIfNode == null) ? string.Empty : NextIfNode)}";
         }
     }
 
-    public class ForNode : StatementNode {
+    public class ForNode : StatementNode
+    {
         public ForNode(VariableReferenceNode variable, ASTNode from, ASTNode to, List<StatementNode> children)
         {
             Variable = variable;
@@ -729,27 +756,28 @@ namespace Shank {
             To = to;
             Children = children;
         }
-        
+
         public VariableReferenceNode Variable { get; init; }
-        public ASTNode From { get; init; } 
-        public ASTNode To{ get; init; }
+        public ASTNode From { get; init; }
+        public ASTNode To { get; init; }
         public List<StatementNode> Children { get; init; }
 
         public override object[] returnStatementTokens()
         {
-            object [] arr = {"For", Variable, From, To, Children};
+            object[] arr = { "For", Variable, From, To, Children };
             return arr;
         }
 
         public override string ToString()
         {
- 
+
             return $" For: {Variable} From: {From} To: {To} {Environment.NewLine} {StatementListToString(Children)}";
         }
     }
 
-    public class BooleanExpressionNode : ASTNode {
-        public BooleanExpressionNode (ASTNode left, OpType op, ASTNode right)
+    public class BooleanExpressionNode : ASTNode
+    {
+        public BooleanExpressionNode(ASTNode left, OpType op, ASTNode right)
         {
             Left = left;
             Op = op;
@@ -770,7 +798,8 @@ namespace Shank {
 
     }
 
-    public class AssignmentNode : StatementNode {
+    public class AssignmentNode : StatementNode
+    {
         public AssignmentNode(VariableReferenceNode target, ASTNode expression)
         {
             this.expression = expression;
@@ -782,7 +811,7 @@ namespace Shank {
 
         public override object[] returnStatementTokens()
         {
-            object [] arr = {"", target.Name, expression.ToString()};
+            object[] arr = { "", target.Name, expression.ToString() };
 
             return arr;
         }
@@ -793,5 +822,5 @@ namespace Shank {
             return $"{target} := {expression}";
         }
     }
-    
+
 }
