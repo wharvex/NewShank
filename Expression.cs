@@ -1,18 +1,17 @@
-﻿using LLVMSharp.Interop;
 using System.Text;
+using LLVMSharp.Interop;
 
 //To compile to RISC-V: llc -march=riscv64 output_ir_3.ll -o out3.s
 
 namespace Shank
 {
-    public abstract class ASTNode
-    {
-    }
+    public abstract class ASTNode { }
 
     public class FunctionCallNode : StatementNode
     {
         public string Name;
         public List<ParameterNode> Parameters = new();
+
         public FunctionCallNode(string name)
         {
             Name = name;
@@ -31,15 +30,12 @@ namespace Shank
 
         public override string ToString()
         {
-
             var b = new StringBuilder();
             b.AppendLine($"Function {Name}:");
             if (Parameters.Any())
             {
                 b.AppendLine("Parameters:");
                 Parameters.ForEach(p => b.AppendLine($"   {p}"));
-
-
             }
 
             return b.ToString();
@@ -65,15 +61,13 @@ namespace Shank
         public ASTNode? Constant { get; init; }
         public VariableReferenceNode? Variable { get; init; }
         public bool IsVariable { get; init; }
+
         public override string ToString()
         {
-
-
             if (Variable != null)
                 return $"   {(IsVariable ? "var " : "")} {Variable.Name}";
             else
                 return $"   {Constant}";
-
         }
     }
 
@@ -83,10 +77,11 @@ namespace Shank
         {
             Value = value;
         }
+
         public int Value;
+
         public override string ToString()
         {
-
             return $"{Value}";
         }
     }
@@ -97,10 +92,11 @@ namespace Shank
         {
             Value = value;
         }
+
         public float Value;
+
         public override string ToString()
         {
-
             return $"{Value}";
         }
     }
@@ -111,10 +107,11 @@ namespace Shank
         {
             Value = value;
         }
+
         public bool Value;
+
         public override string ToString()
         {
-
             return $"{Value}";
         }
     }
@@ -125,10 +122,11 @@ namespace Shank
         {
             Value = value;
         }
+
         public char Value;
+
         public override string ToString()
         {
-
             return $"{Value}";
         }
     }
@@ -139,10 +137,11 @@ namespace Shank
         {
             Value = value;
         }
+
         public string Value;
+
         public override string ToString()
         {
-
             return $"{Value}";
         }
     }
@@ -165,31 +164,34 @@ namespace Shank
 
         public delegate void BuiltInCall(List<InterpreterDataType> parameters);
         public BuiltInCall? Execute;
-
     }
 
     public class BuiltInFunctionNode : CallableNode
     {
-        public BuiltInFunctionNode(string name, BuiltInCall execute) : base(name, execute) { }
+        public BuiltInFunctionNode(string name, BuiltInCall execute)
+            : base(name, execute) { }
+
         public bool IsVariadic = false;
     }
 
     public class FunctionNode : CallableNode
     {
-        public FunctionNode(string name) : base(name)
+        public FunctionNode(string name)
+            : base(name)
         {
-            Execute = (List<InterpreterDataType> paramList) => Interpreter.InterpretFunction(this, paramList);
+            Execute = (List<InterpreterDataType> paramList) =>
+                Interpreter.InterpretFunction(this, paramList);
         }
 
         public List<VariableNode> LocalVariables = new();
+
         //LocalVariables (scroll above) contain start, end, i, prev1
-        //alloca() for constatns and variables 
+        //alloca() for constatns and variables
         //store() for assignment (Currently, I did both. BUt I just need to use store())
         public List<StatementNode> Statements = new();
 
         public override string ToString()
         {
-
             var b = new StringBuilder();
             b.AppendLine($"Function {Name}:");
             if (ParameterVariables.Any())
@@ -216,11 +218,21 @@ namespace Shank
         For assignment statemetn
         EvalExpression() is called is the RHS is an expression.
         */
-        public Dictionary<string, LLVMValueRef> Exec_Assignment(LLVMBuilderRef builder, Dictionary<string, LLVMValueRef> hash_variables, object[] s_tokens, LLVMContextRef context)
+        public Dictionary<string, LLVMValueRef> Exec_Assignment(
+            LLVMBuilderRef builder,
+            Dictionary<string, LLVMValueRef> hash_variables,
+            object[] s_tokens,
+            LLVMContextRef context
+        )
         {
             string[] rhsTokens = ((string)s_tokens[2]).Split(' ');
 
-            LLVMValueRef allocated_right = EvalExpression(builder, hash_variables, rhsTokens, context);
+            LLVMValueRef allocated_right = EvalExpression(
+                builder,
+                hash_variables,
+                rhsTokens,
+                context
+            );
 
             var allocated_left = hash_variables[(string)s_tokens[1]];
 
@@ -233,16 +245,36 @@ namespace Shank
         /*
         When write() function is called
         */
-        public void Exec_Function(LLVMBuilderRef builder, Dictionary<string, LLVMValueRef> hash_variables, object[] s_tokens, LLVMContextRef context, LLVMTypeRef writeFnTy, LLVMValueRef writeFn)
+        public void Exec_Function(
+            LLVMBuilderRef builder,
+            Dictionary<string, LLVMValueRef> hash_variables,
+            object[] s_tokens,
+            LLVMContextRef context,
+            LLVMTypeRef writeFnTy,
+            LLVMValueRef writeFn
+        )
         {
-            var allocated = builder.BuildLoad2(context.Int64Type, hash_variables[((string)s_tokens[2]).Trim()]); //ex. s_tokens[2] is prev1 and allocated is the stored value of prev1
-            builder.BuildCall2(writeFnTy, writeFn, new LLVMValueRef[] { allocated }, (s_tokens[1]).ToString());
+            var allocated = builder.BuildLoad2(
+                context.Int64Type,
+                hash_variables[((string)s_tokens[2]).Trim()]
+            ); //ex. s_tokens[2] is prev1 and allocated is the stored value of prev1
+            builder.BuildCall2(
+                writeFnTy,
+                writeFn,
+                new LLVMValueRef[] { allocated },
+                (s_tokens[1]).ToString()
+            );
         }
 
         /*
         This function is used to handle recursive case such that any expression can be assigned to a variable.
         */
-        private LLVMValueRef EvalExpression(LLVMBuilderRef builder, Dictionary<string, LLVMValueRef> hash_variables, string[] tokens, LLVMContextRef context)
+        private LLVMValueRef EvalExpression(
+            LLVMBuilderRef builder,
+            Dictionary<string, LLVMValueRef> hash_variables,
+            string[] tokens,
+            LLVMContextRef context
+        )
         {
             //Base case: if the tokens array has only one element, it's either a variable or a constant
             if (tokens.Length == 1)
@@ -253,14 +285,28 @@ namespace Shank
                 }
                 else // Constant
                 {
-                    return LLVMValueRef.CreateConstInt(context.Int64Type, ulong.Parse(tokens[0]), false);
+                    return LLVMValueRef.CreateConstInt(
+                        context.Int64Type,
+                        ulong.Parse(tokens[0]),
+                        false
+                    );
                 }
             }
             else //Recursive case: evaluate the first operand, then the rest of the expression
             {
-                LLVMValueRef firstOperand = EvalExpression(builder, hash_variables, new string[] { tokens[0] }, context);
+                LLVMValueRef firstOperand = EvalExpression(
+                    builder,
+                    hash_variables,
+                    new string[] { tokens[0] },
+                    context
+                );
                 string operation = tokens[1];
-                LLVMValueRef secondOperand = EvalExpression(builder, hash_variables, tokens.Skip(2).ToArray(), context);
+                LLVMValueRef secondOperand = EvalExpression(
+                    builder,
+                    hash_variables,
+                    tokens.Skip(2).ToArray(),
+                    context
+                );
 
                 switch (operation)
                 {
@@ -278,7 +324,15 @@ namespace Shank
             }
         }
 
-        public Dictionary<string, LLVMValueRef> Exec_For(LLVMBuilderRef builder, Dictionary<string, LLVMValueRef> hash_variables, object[] s_tokens, LLVMContextRef context, LLVMTypeRef writeFnTy, LLVMValueRef writeFn, LLVMValueRef mainFn)
+        public Dictionary<string, LLVMValueRef> Exec_For(
+            LLVMBuilderRef builder,
+            Dictionary<string, LLVMValueRef> hash_variables,
+            object[] s_tokens,
+            LLVMContextRef context,
+            LLVMTypeRef writeFnTy,
+            LLVMValueRef writeFn,
+            LLVMValueRef mainFn
+        )
         {
             /*
             s_tokens[0]: For
@@ -295,21 +349,28 @@ namespace Shank
             //if variable is being assigned
             if (hash_variables.ContainsKey(s_tokens[2].ToString()))
             {
-                var start = builder.BuildLoad2(context.Int64Type, hash_variables[s_tokens[2].ToString()]); //value to be assigned, ex. start
+                var start = builder.BuildLoad2(
+                    context.Int64Type,
+                    hash_variables[s_tokens[2].ToString()]
+                ); //value to be assigned, ex. start
                 builder.BuildStore(start, i); //store i with a value of start
             }
             else //if number is being assigned
             {
-                var start = LLVMValueRef.CreateConstInt(context.Int64Type, ulong.Parse(s_tokens[2].ToString()), false);
+                var start = LLVMValueRef.CreateConstInt(
+                    context.Int64Type,
+                    ulong.Parse(s_tokens[2].ToString()),
+                    false
+                );
                 builder.BuildStore(start, i); //store i with a value of start
             }
             hash_variables[s_tokens[1].ToString()] = i;
 
-            //Create the for loop condition 
+            //Create the for loop condition
             var loopCondBlock = mainFn.AppendBasicBlock("for.condition");
             builder.BuildBr(loopCondBlock);
 
-            //Create the for loop body 
+            //Create the for loop body
             var loopBodyBlock = mainFn.AppendBasicBlock("for.body");
             builder.PositionAtEnd(loopBodyBlock);
 
@@ -322,7 +383,12 @@ namespace Shank
                 if (for_tokens[0] == "") // Assignment statement
                 {
                     string[] tokens = ((string)for_tokens[2].ToString()).Split(' ');
-                    LLVMValueRef allocated_right = EvalExpression(builder, hash_variables, tokens, context);
+                    LLVMValueRef allocated_right = EvalExpression(
+                        builder,
+                        hash_variables,
+                        tokens,
+                        context
+                    );
                     LLVMValueRef alloca_left = hash_variables[(string)for_tokens[1]];
                     builder.BuildStore(allocated_right, alloca_left);
                     hash_variables[(string)for_tokens[1]] = alloca_left;
@@ -333,9 +399,16 @@ namespace Shank
                 }
                 else
                 {
-                    hash_variables = Exec_For(builder, hash_variables, s_tokens, context, writeFnTy, writeFn, mainFn);
+                    hash_variables = Exec_For(
+                        builder,
+                        hash_variables,
+                        s_tokens,
+                        context,
+                        writeFnTy,
+                        writeFn,
+                        mainFn
+                    );
                 }
-
             }
 
             // Increment 'i'
@@ -351,7 +424,12 @@ namespace Shank
 
             builder.PositionAtEnd(loopCondBlock);
 
-            var loopCond = builder.BuildICmp(LLVMIntPredicate.LLVMIntSLT, builder.BuildLoad2(context.Int64Type, hash_variables[s_tokens[1].ToString()]), builder.BuildLoad2(context.Int64Type, hash_variables[s_tokens[3].ToString()]), "loop.condition.cmp");
+            var loopCond = builder.BuildICmp(
+                LLVMIntPredicate.LLVMIntSLT,
+                builder.BuildLoad2(context.Int64Type, hash_variables[s_tokens[1].ToString()]),
+                builder.BuildLoad2(context.Int64Type, hash_variables[s_tokens[3].ToString()]),
+                "loop.condition.cmp"
+            );
             builder.BuildCondBr(loopCond, loopBodyBlock, mainFn.AppendBasicBlock("exit"));
 
             // Build the exit block
@@ -360,7 +438,15 @@ namespace Shank
             return hash_variables;
         }
 
-        public Dictionary<string, LLVMValueRef> Exec_While(LLVMBuilderRef builder, Dictionary<string, LLVMValueRef> hash_variables, object[] s_tokens, LLVMContextRef context, LLVMTypeRef writeFnTy, LLVMValueRef writeFn, LLVMValueRef mainFn)
+        public Dictionary<string, LLVMValueRef> Exec_While(
+            LLVMBuilderRef builder,
+            Dictionary<string, LLVMValueRef> hash_variables,
+            object[] s_tokens,
+            LLVMContextRef context,
+            LLVMTypeRef writeFnTy,
+            LLVMValueRef writeFn,
+            LLVMValueRef mainFn
+        )
         {
             // Create the condition and body basic blocks
             var conditionBlock = mainFn.AppendBasicBlock("while.cond");
@@ -378,17 +464,28 @@ namespace Shank
 
             // Check if the left operand is a variable or a number
             if (hash_variables.ContainsKey(s_tokens[1].ToString()))
-                leftOpValue = builder.BuildLoad2(context.Int64Type, hash_variables[s_tokens[1].ToString()]);
+                leftOpValue = builder.BuildLoad2(
+                    context.Int64Type,
+                    hash_variables[s_tokens[1].ToString()]
+                );
             else if (ulong.TryParse(s_tokens[1].ToString(), out ulong leftOpNum))
                 leftOpValue = LLVMValueRef.CreateConstInt(context.Int64Type, leftOpNum, false);
 
             // Check if the right operand is a variable or a number
             if (hash_variables.ContainsKey(s_tokens[3].ToString()))
-                rightOpValue = builder.BuildLoad2(context.Int64Type, hash_variables[s_tokens[3].ToString()]);
+                rightOpValue = builder.BuildLoad2(
+                    context.Int64Type,
+                    hash_variables[s_tokens[3].ToString()]
+                );
             else if (ulong.TryParse(s_tokens[3].ToString(), out ulong rightOpNum))
                 rightOpValue = LLVMValueRef.CreateConstInt(context.Int64Type, rightOpNum, false);
 
-            var condition = builder.BuildICmp(LLVMIntPredicate.LLVMIntSLT, leftOpValue, rightOpValue, "cond");
+            var condition = builder.BuildICmp(
+                LLVMIntPredicate.LLVMIntSLT,
+                leftOpValue,
+                rightOpValue,
+                "cond"
+            );
             builder.BuildCondBr(condition, bodyBlock, endBlock);
 
             // Generate the body
@@ -410,11 +507,27 @@ namespace Shank
                 }
                 else if (ws_tokens[0] == "FOR")
                 {
-                    hash_variables = Exec_For(builder, hash_variables, ws_tokens, context, writeFnTy, writeFn, mainFn);
+                    hash_variables = Exec_For(
+                        builder,
+                        hash_variables,
+                        ws_tokens,
+                        context,
+                        writeFnTy,
+                        writeFn,
+                        mainFn
+                    );
                 }
                 else if (ws_tokens[0] == "WHILE")
                 {
-                    hash_variables = Exec_While(builder, hash_variables, ws_tokens, context, writeFnTy, writeFn, mainFn);
+                    hash_variables = Exec_While(
+                        builder,
+                        hash_variables,
+                        ws_tokens,
+                        context,
+                        writeFnTy,
+                        writeFn,
+                        mainFn
+                    );
                 }
             }
 
@@ -431,7 +544,6 @@ namespace Shank
 
             return hash_variables;
         }
-
 
         public unsafe void LLVMCompile()
         {
@@ -459,7 +571,7 @@ namespace Shank
             //var int64PtrType = LLVMTypeRef.CreatePointer(context.Int64Type, 0); This can be used for pointer type
 
             /*
-            Store Local Variables to Memory through BuildAlloca() & BuildStore() 
+            Store Local Variables to Memory through BuildAlloca() & BuildStore()
 
             hash_variables will contain
             1. If the variable is not initialized, then it will have (i) the variable name itself, (ii) variable referencing to the allocated memory.
@@ -478,17 +590,27 @@ namespace Shank
                     {
                         if (LocalVariables[i].InitialValue == null) //if the local variable is declared but not initialized. Ex. variables i, j, result : integer
                         {
-                            var allocated = builder.BuildAlloca(context.Int64Type, LocalVariables[i].Name);
+                            var allocated = builder.BuildAlloca(
+                                context.Int64Type,
+                                LocalVariables[i].Name
+                            );
                             allocated.SetAlignment(4);
                             hash_variables.Add(LocalVariables[i].Name, allocated);
                         }
                         else //if the local variable is both declared and initialized. Ex. constants begin = 1, end = 5
                         {
-                            var allocated = builder.BuildAlloca(context.Int64Type, LocalVariables[i].Name);
+                            var allocated = builder.BuildAlloca(
+                                context.Int64Type,
+                                LocalVariables[i].Name
+                            );
                             allocated.SetAlignment(4);
 
                             //To create string: var stringExample = builder.BuildGlobalStringPtr("%d ", "str");
-                            var allocated_value = LLVMValueRef.CreateConstInt(context.Int64Type, ulong.Parse(LocalVariables[i].InitialValue.ToString()), false);
+                            var allocated_value = LLVMValueRef.CreateConstInt(
+                                context.Int64Type,
+                                ulong.Parse(LocalVariables[i].InitialValue.ToString()),
+                                false
+                            );
                             builder.BuildStore(allocated_value, allocated);
                             //Console.WriteLine("Data type of allocated_value is: {0}", allocated_value.GetType().Name);
 
@@ -520,7 +642,7 @@ namespace Shank
                 {
                     /*
                     s_tokens[0]: "FUNCTION"
-                    s_tokens[1]: Name, ex) write in write prev1 
+                    s_tokens[1]: Name, ex) write in write prev1
                     s_tokens[2]: b.ToString(), ex) prev1
                     */
 
@@ -536,7 +658,15 @@ namespace Shank
                     s_tokens[4]: Children
                     */
 
-                    hash_variables = Exec_While(builder, hash_variables, s_tokens, context, writeFnTy, writeFn, mainFn);
+                    hash_variables = Exec_While(
+                        builder,
+                        hash_variables,
+                        s_tokens,
+                        context,
+                        writeFnTy,
+                        writeFn,
+                        mainFn
+                    );
                 }
                 else //for loop
                 {
@@ -547,7 +677,15 @@ namespace Shank
                     s_tokens[3]: To
                     s_tokens[4]: Children
                     */
-                    hash_variables = Exec_For(builder, hash_variables, s_tokens, context, writeFnTy, writeFn, mainFn);
+                    hash_variables = Exec_For(
+                        builder,
+                        hash_variables,
+                        s_tokens,
+                        context,
+                        writeFnTy,
+                        writeFn,
+                        mainFn
+                    );
                 }
 
                 count++;
@@ -574,7 +712,8 @@ namespace Shank
 
             Save generatedIR.ll file. Then, change every ptr occurrence to i64*
             */
-            string outPath = "C:\\Users\\tgudl\\OneDrive\\projects\\c-sharp\\ShankCompiler\\IR\\generated_IR.ll";
+            string outPath =
+                "C:\\Users\\tgudl\\OneDrive\\projects\\c-sharp\\ShankCompiler\\IR\\generated_IR.ll";
             module.PrintToFile(outPath);
             string irContent = File.ReadAllText(outPath);
             string updatedIrContent = irContent.Replace("ptr", "i64*");
@@ -586,20 +725,27 @@ namespace Shank
     {
         public string? Name;
 
-        public enum DataType { Real, Integer, String, Character, Boolean/*, Array*/ };
+        public enum DataType
+        {
+            Real,
+            Integer,
+            String,
+            Character,
+            Boolean /*, Array*/
+        };
 
         public DataType Type;
+
         //        public DataType ArrayType;
         public bool IsConstant;
         public ASTNode? InitialValue;
+
         //       public ASTNode? From;
         //       public ASTNode? To;
 
         public override string ToString()
         {
-
-            return
-                $"{Name} : {Type} {(IsConstant ? "const" : string.Empty)} {(InitialValue == null ? string.Empty : InitialValue)}";
+            return $"{Name} : {Type} {(IsConstant ? "const" : string.Empty)} {(InitialValue == null ? string.Empty : InitialValue)}";
             //$"{Name} : {(Type == DataType.Array ? "Array of " + ArrayType:Type)} {(IsConstant ? "const" : string.Empty)} {(InitialValue == null ? string.Empty : InitialValue)} {(From == null ? string.Empty : " From: "+ From)} {(To == null ? string.Empty : " To: "+ To)}";
         }
     }
@@ -612,7 +758,15 @@ namespace Shank
             Op = op;
             Right = right;
         }
-        public enum OpType { plus, minus, times, divide, modulo };
+
+        public enum OpType
+        {
+            plus,
+            minus,
+            times,
+            divide,
+            modulo
+        };
 
         public OpType Op { get; init; }
         public ASTNode Left { get; init; }
@@ -620,7 +774,6 @@ namespace Shank
 
         public override string ToString()
         {
-
             return $"{Left.ToString()} {Op} {Right.ToString()}";
         }
     }
@@ -629,13 +782,12 @@ namespace Shank
     {
         protected static string StatementListToString(List<StatementNode> statements)
         {
-
             var b = new StringBuilder();
             statements.ForEach(c => b.Append("\t" + c));
             return b.ToString();
         }
 
-        virtual public object[] returnStatementTokens()
+        public virtual object[] returnStatementTokens()
         {
             object[] arr = { };
             return arr;
@@ -655,11 +807,12 @@ namespace Shank
             Name = name;
             Index = index;
         }
+
         public string Name { get; init; }
         public ASTNode? Index { get; init; }
+
         public override string ToString()
         {
-
             return $"{Name}{(Index != null ? " Index:" + Index : string.Empty)}";
         }
     }
@@ -671,6 +824,7 @@ namespace Shank
             Expression = exp;
             Children = children;
         }
+
         public BooleanExpressionNode Expression { get; init; }
         public List<StatementNode> Children;
 
@@ -683,7 +837,6 @@ namespace Shank
 
         public override string ToString()
         {
-
             return $" WHILE: {Expression} {StatementListToString(Children)}";
         }
     }
@@ -695,12 +848,12 @@ namespace Shank
             Expression = exp;
             Children = children;
         }
+
         public BooleanExpressionNode Expression { get; init; }
         public List<StatementNode> Children;
 
         public override string ToString()
         {
-
             return $" REPEAT: {Expression} {StatementListToString(Children)}";
         }
     }
@@ -714,7 +867,11 @@ namespace Shank
             NextIfNode = null;
         }
 
-        public IfNode(BooleanExpressionNode expression, List<StatementNode> children, IfNode? nextIfNode = null)
+        public IfNode(
+            BooleanExpressionNode expression,
+            List<StatementNode> children,
+            IfNode? nextIfNode = null
+        )
         {
             Expression = expression;
             Children = children;
@@ -724,28 +881,32 @@ namespace Shank
         public BooleanExpressionNode? Expression { get; init; }
         public List<StatementNode> Children { get; init; }
         public IfNode? NextIfNode { get; init; }
+
         public override string ToString()
         {
-
             return $"If: {Expression} {StatementListToString(Children)} {((NextIfNode == null) ? string.Empty : Environment.NewLine + NextIfNode)}";
         }
     }
 
     public class ElseNode : IfNode
     {
-        public ElseNode(List<StatementNode> children) : base(children)
-        {
-        }
+        public ElseNode(List<StatementNode> children)
+            : base(children) { }
+
         public override string ToString()
         {
-
             return $" Else: {StatementListToString(Children)} {((NextIfNode == null) ? string.Empty : NextIfNode)}";
         }
     }
 
     public class ForNode : StatementNode
     {
-        public ForNode(VariableReferenceNode variable, ASTNode from, ASTNode to, List<StatementNode> children)
+        public ForNode(
+            VariableReferenceNode variable,
+            ASTNode from,
+            ASTNode to,
+            List<StatementNode> children
+        )
         {
             Variable = variable;
             From = from;
@@ -766,7 +927,6 @@ namespace Shank
 
         public override string ToString()
         {
-
             return $" For: {Variable} From: {From} To: {To} {Environment.NewLine} {StatementListToString(Children)}";
         }
     }
@@ -780,7 +940,15 @@ namespace Shank
             Right = right;
         }
 
-        public enum OpType { lt, le, gt, ge, eq, ne };
+        public enum OpType
+        {
+            lt,
+            le,
+            gt,
+            ge,
+            eq,
+            ne
+        };
 
         public OpType Op { get; init; }
         public ASTNode Left { get; init; }
@@ -788,10 +956,8 @@ namespace Shank
 
         public override string ToString()
         {
-
             return $"({Left.ToString()} {Op} {Right.ToString()})";
         }
-
     }
 
     public class AssignmentNode : StatementNode
@@ -814,9 +980,7 @@ namespace Shank
 
         public override string ToString()
         {
-
             return $"{target} := {expression}";
         }
     }
-
 }
