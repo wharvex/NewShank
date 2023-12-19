@@ -6,7 +6,8 @@
         {
             //var fibPath = System.IO.Path.GetDirectoryName(AppContext.BaseDirectory);
             //Console.WriteLine($"Using {fibPath}...");
-            var lines = File.ReadAllLines("C:\\Users\\tgudl\\OneDrive\\projects\\c-sharp\\ShankCompiler\\Shank\\fibonacci.shank");
+            var lines = File.ReadAllLines(
+                "C:\\Users\\tgudl\\OneDrive\\projects\\c-sharp\\ShankCompiler\\Shank\\fibonacci.shank");
             var tokens = new List<Token>();
             var l = new Lexer();
             tokens.AddRange(l.Lex(lines));
@@ -27,10 +28,13 @@
                     fb.LLVMCompile();
                 }
             }
+
             BuiltInFunctions.Register(Interpreter.Functions);
-            if (Interpreter.Functions.ContainsKey("start") && Interpreter.Functions["start"] is FunctionNode s)
+            if (Interpreter.Functions.ContainsKey("start") &&
+                Interpreter.Functions["start"] is FunctionNode s)
             {
-                Interpreter.InterpretFunction(s, new List<InterpreterDataType>());
+                Interpreter.InterpretFunction(s,
+                    new List<InterpreterDataType>());
             }
             //while (tokens.Any())
             //{
