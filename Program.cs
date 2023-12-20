@@ -1,14 +1,16 @@
-﻿namespace Shank
+﻿using Microsoft.VisualBasic.FileIO;
+
+namespace Shank
 {
     public class Program
     {
         public static void Main(string[] args)
         {
-            //var fibPath = System.IO.Path.GetDirectoryName(AppContext.BaseDirectory);
-            //Console.WriteLine($"Using {fibPath}...");
-            var lines = File.ReadAllLines(
-                "C:\\Users\\tgudl\\OneDrive\\projects\\c-sharp\\ShankCompiler\\Shank\\fibonacci.shank"
-            );
+            const string timWinPath =
+                @"C:\Users\tgudl\OneDrive\projects\c-sharp\ShankCompiler\Shank\fibonacci.shank";
+            const string timLinuxPath =
+                "/home/tim/projects/c-sharp/ShankCompiler/Shank/fibonacci.shank";
+            var lines = File.ReadAllLines(timLinuxPath);
             var tokens = new List<Token>();
             var l = new Lexer();
             tokens.AddRange(l.Lex(lines));
@@ -45,6 +47,16 @@
             //    if (exp != null)
             //        Console.WriteLine($" calculated: {ir.Resolve(exp)} ");
             //}
+            //var fibPath = System.IO.Path.GetDirectoryName(AppContext.BaseDirectory);
+            var agnosticWorkingDir = Directory.GetCurrentDirectory();
+            var agnosticProjectDir = Directory
+                .GetParent(agnosticWorkingDir)
+                ?.Parent
+                ?.Parent
+                ?.FullName;
+            Console.WriteLine("Testing..." + agnosticProjectDir);
+            Console.WriteLine(string.Join('-', args));
+            Console.WriteLine(ProjectFolderPath.Value);
         }
     }
 }
