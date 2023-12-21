@@ -6,12 +6,8 @@ namespace Shank
     {
         public static void Main(string[] args)
         {
-            const string timWinPath =
-                @"C:\Users\tgudl\OneDrive\projects\c-sharp\ShankCompiler\Shank\fibonacci.shank";
-            const string timLinuxPath =
-                "/home/tim/projects/c-sharp/ShankCompiler/Shank/fibonacci.shank";
-            var pathToUse = timLinuxPath;
-            // pathToUse = timWinPath;
+            //var pathToUse = PathHelper.TimLinuxInPath;
+            var pathToUse = PathHelper.TimWinInPath;
             var lines = File.ReadAllLines(pathToUse);
             var tokens = new List<Token>();
             var l = new Lexer();
@@ -59,8 +55,7 @@ namespace Shank
                 ?.Parent
                 ?.FullName;
             Console.WriteLine("Testing..." + agnosticWorkingDir);
-            Console.WriteLine(string.Join('-', args));
-            Console.WriteLine(ProjectFolderPath.Value);
+            Console.WriteLine(PathHelper.ProjectFolderPath);
             var entries = Environment.GetEnvironmentVariables().Cast<DictionaryEntry>();
             var sortedEntries = entries.OrderBy(x => (string)x.Key);
             var fs = File.Create(
@@ -82,11 +77,13 @@ namespace Shank
             fw.Flush();
 
             // If the project is being run from the command line, use Directory.GetCurrentDirectory()
-            // If the project is being run from an IDE, use ProjectFolderPath.Value
+            // If the project is being run from an IDE, use PathHelper.ProjectFolderPath
             var isRunningInIDE = !string.IsNullOrEmpty(
                 Environment.GetEnvironmentVariable("DOTNET_HOTRELOAD_NAMEDPIPE_NAME")
             );
             Console.WriteLine("Is running in IDE: {0}", isRunningInIDE);
+            Console.WriteLine(string.Join('-', args));
+            Console.WriteLine(PathHelper.PathToUse);
         }
     }
 }

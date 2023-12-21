@@ -712,13 +712,9 @@ namespace Shank
 
             Save generatedIR.ll file. Then, change every ptr occurrence to i64*
             */
-            const string timWinOutPath =
-                @"C:\Users\tgudl\OneDrive\projects\c-sharp\ShankCompiler\IR\generated_IR.ll";
-            const string timLinuxOutPath =
-                "/home/tim/projects/c-sharp/ShankCompiler/IR/generated_IR.ll";
-            var pathToUse = timLinuxOutPath;
-            // pathToUse = timWinPath;
-            module.PrintToFile(pathToUse);
+            //var pathToUse = PathHelper.TimLinuxOutPath;
+            var pathToUse = PathHelper.TimWinOutPath;
+            module.PrintToFile((string)pathToUse);
             string irContent = File.ReadAllText(pathToUse);
             string updatedIrContent = irContent.Replace("ptr", "i64*");
             File.WriteAllText(pathToUse, updatedIrContent);
