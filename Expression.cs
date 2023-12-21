@@ -716,10 +716,12 @@ namespace Shank
                 @"C:\Users\tgudl\OneDrive\projects\c-sharp\ShankCompiler\IR\generated_IR.ll";
             const string timLinuxOutPath =
                 "/home/tim/projects/c-sharp/ShankCompiler/IR/generated_IR.ll";
-            module.PrintToFile(timLinuxOutPath);
-            string irContent = File.ReadAllText(timLinuxOutPath);
+            var pathToUse = timLinuxOutPath;
+            // pathToUse = timWinPath;
+            module.PrintToFile(pathToUse);
+            string irContent = File.ReadAllText(pathToUse);
             string updatedIrContent = irContent.Replace("ptr", "i64*");
-            File.WriteAllText(timLinuxOutPath, updatedIrContent);
+            File.WriteAllText(pathToUse, updatedIrContent);
         }
     }
 
