@@ -6,9 +6,7 @@ namespace Shank
     {
         public static void Main(string[] args)
         {
-            //var pathToUse = PathHelper.TimLinuxInPath;
-            var pathToUse = PathHelper.TimWinInPath;
-            var lines = File.ReadAllLines(pathToUse);
+            var lines = File.ReadAllLines(PathHelper.GetInPathToUse("fibonacci.shank"));
             var tokens = new List<Token>();
             var l = new Lexer();
             tokens.AddRange(l.Lex(lines));
@@ -46,44 +44,6 @@ namespace Shank
             //        Console.WriteLine($" calculated: {ir.Resolve(exp)} ");
             //}
             //var fibPath = System.IO.Path.GetDirectoryName(AppContext.BaseDirectory);
-
-
-            var agnosticWorkingDir = Directory.GetCurrentDirectory();
-            var agnosticProjectDir = Directory
-                .GetParent(agnosticWorkingDir)
-                ?.Parent
-                ?.Parent
-                ?.FullName;
-            Console.WriteLine("Testing..." + agnosticWorkingDir);
-            Console.WriteLine(PathHelper.ProjectFolderPath);
-            var entries = Environment.GetEnvironmentVariables().Cast<DictionaryEntry>();
-            var sortedEntries = entries.OrderBy(x => (string)x.Key);
-            var fs = File.Create(
-                Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                    "h47.txt"
-                )
-            );
-            var fw = new StreamWriter(fs);
-            // fw.WriteLine("From Rider");
-            fw.WriteLine("From shank2");
-            fw.Flush();
-            foreach (var y in sortedEntries)
-            {
-                var lineToWrite = $"Key = {y.Key}, Value = {y.Value}";
-                Console.WriteLine(lineToWrite);
-                fw.WriteLine(lineToWrite);
-            }
-            fw.Flush();
-
-            // If the project is being run from the command line, use Directory.GetCurrentDirectory()
-            // If the project is being run from an IDE, use PathHelper.ProjectFolderPath
-            var isRunningInIDE = !string.IsNullOrEmpty(
-                Environment.GetEnvironmentVariable("DOTNET_HOTRELOAD_NAMEDPIPE_NAME")
-            );
-            Console.WriteLine("Is running in IDE: {0}", isRunningInIDE);
-            Console.WriteLine(string.Join('-', args));
-            Console.WriteLine(PathHelper.PathToUse);
         }
     }
 }
