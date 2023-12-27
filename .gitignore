@@ -4,6 +4,7 @@
 ## Get latest from `dotnet new gitignore`
 
 IR/generated_IR.ll
+generatedIR.ll
 # dotenv files
 .env
 
@@ -484,3 +485,6 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Visual Studio Debug Settings for Setting Run Directory
+Properties/launchSettings.json

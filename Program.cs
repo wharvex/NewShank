@@ -6,7 +6,11 @@ namespace Shank
     {
         public static void Main(string[] args)
         {
-            var lines = File.ReadAllLines(PathHelper.GetInPathToUse("fibonacci.shank"));
+            var inPath = args.Length > 0 ? args[0] : Directory.GetCurrentDirectory();
+            if (!Directory.Exists(inPath))
+                throw new Exception("Directory does not exist");
+
+            var lines = File.ReadAllLines(Path.Combine(inPath, "fibonacci.shank"));
             var tokens = new List<Token>();
             var l = new Lexer();
             tokens.AddRange(l.Lex(lines));
@@ -36,6 +40,12 @@ namespace Shank
             {
                 Interpreter.InterpretFunction(s, new List<InterpreterDataType>());
             }
+            if (Directory.Exists(inPath))
+            {
+                Directory.GetFiles(inPath).ToList().ForEach(Console.WriteLine);
+            }
+            else
+                Console.WriteLine("Directory does not exist");
             //while (tokens.Any())
             //{
             //    var exp = p.ParseExpressionLine();
