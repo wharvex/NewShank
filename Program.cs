@@ -6,11 +6,42 @@ namespace Shank
     {
         public static void Main(string[] args)
         {
-            var inPath = args.Length > 0 ? args[0] : Directory.GetCurrentDirectory();
-            if (!Directory.Exists(inPath))
-                throw new Exception("Directory does not exist");
+            var inPaths = new List<string>();
+            if (args.Length < 1)
+            {
+                Directory
+                    .GetFiles(
+                        Directory.GetCurrentDirectory(),
+                        "*.shank",
+                        SearchOption.AllDirectories
+                    )
+                    .ToList()
+                    .ForEach(inPaths.Add);
+            }
+            else
+            {
+                if (Directory.Exists(args[0]))
+                {
+                    Directory
+                        .GetFiles(args[0], "*.shank", SearchOption.AllDirectories)
+                        .ToList()
+                        .ForEach(inPaths.Add);
+                }
+                else if (File.Exists(args[0]) && args[0].EndsWith(".shank"))
+                {
+                    inPaths.Add(args[0]);
+                }
+            }
 
-            var lines = File.ReadAllLines(Path.Combine(inPath, "fibonacci.shank"));
+            if (inPaths.Count < 1)
+            {
+                throw new Exception(
+                    "Please pass a valid path to a directory containing a *.shank file or to a *.shank file, or have a *.shank file in the current directory and pass no command line arguments"
+                );
+            }
+            var lines = File.ReadAllLines(
+                Path.Combine(Directory.GetCurrentDirectory(), "fibonacci.shank")
+            );
             var tokens = new List<Token>();
             var l = new Lexer();
             tokens.AddRange(l.Lex(lines));
@@ -40,12 +71,7 @@ namespace Shank
             {
                 Interpreter.InterpretFunction(s, new List<InterpreterDataType>());
             }
-            if (Directory.Exists(inPath))
-            {
-                Directory.GetFiles(inPath).ToList().ForEach(Console.WriteLine);
-            }
-            else
-                Console.WriteLine("Directory does not exist");
+            inPaths.ForEach(Console.WriteLine);
             //while (tokens.Any())
             //{
             //    var exp = p.ParseExpressionLine();
