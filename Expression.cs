@@ -148,7 +148,7 @@ namespace Shank
 
     public abstract class CallableNode : ASTNode
     {
-        public string Name { get; init; }
+        public string Name { get; set; }
         public List<VariableNode> ParameterVariables = new();
 
         protected CallableNode(string name)

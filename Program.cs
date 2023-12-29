@@ -39,39 +39,51 @@ namespace Shank
                     "Please pass a valid path to a directory containing a *.shank file or to a *.shank file, or have a *.shank file in the current directory and pass no command line arguments"
                 );
             }
-            var lines = File.ReadAllLines(
-                Path.Combine(Directory.GetCurrentDirectory(), "fibonacci.shank")
-            );
-            var tokens = new List<Token>();
-            var l = new Lexer();
-            tokens.AddRange(l.Lex(lines));
 
-            //foreach (var t in tokens)
-            //    Console.WriteLine(t.ToString());
-
-            var p = new Parser(tokens);
-            var ir = new Interpreter();
-            while (tokens.Any())
+            foreach (var inPath in inPaths)
             {
-                var fb = p.Function();
-                if (fb != null)
-                {
-                    //Console.WriteLine(fb.ToString());
-                    Interpreter.Functions.Add(fb.Name ?? string.Empty, fb);
+                var lines = File.ReadAllLines(inPath);
+                var tokens = new List<Token>();
+                var l = new Lexer();
+                tokens.AddRange(l.Lex(lines));
 
-                    fb.LLVMCompile();
+                //foreach (var t in tokens)
+                //    Console.WriteLine(t.ToString());
+
+                var p = new Parser(tokens);
+                while (tokens.Any())
+                {
+                    var fb = p.Function();
+                    if (fb != null)
+                    {
+                        //Console.WriteLine(fb.ToString());
+                        Console.WriteLine(
+                            Path.GetRelativePath(Directory.GetCurrentDirectory(), inPath)[
+                                ..^(".shank".Length)
+                            ]
+                                .Replace('\\', '_')
+                                .Replace('/', '_')
+                                + '_'
+                                + fb.Name
+                        );
+
+                        Interpreter.Functions.Add(fb.Name, fb);
+
+                        fb.LLVMCompile();
+                    }
+                }
+
+                BuiltInFunctions.Register(Interpreter.Functions);
+                if (
+                    Interpreter.Functions.ContainsKey("start")
+                    && Interpreter.Functions["start"] is FunctionNode s
+                )
+                {
+                    Interpreter.InterpretFunction(s, new List<InterpreterDataType>());
                 }
             }
-
-            BuiltInFunctions.Register(Interpreter.Functions);
-            if (
-                Interpreter.Functions.ContainsKey("start")
-                && Interpreter.Functions["start"] is FunctionNode s
-            )
-            {
-                Interpreter.InterpretFunction(s, new List<InterpreterDataType>());
-            }
             inPaths.ForEach(Console.WriteLine);
+
             //while (tokens.Any())
             //{
             //    var exp = p.ParseExpressionLine();
