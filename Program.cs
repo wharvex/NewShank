@@ -36,7 +36,10 @@ namespace Shank
             if (inPaths.Count < 1)
             {
                 throw new Exception(
-                    "Please pass a valid path to a directory containing a *.shank file or to a *.shank file, or have a *.shank file in the current directory and pass no command line arguments"
+                    "Options when calling shank from Command Line (CL): "
+                        + "1) pass a valid path to a *.shank file; "
+                        + "2) pass a valid path to a directory containing at least one *.shank file; "
+                        + "3) have at least one *.shank file in the current directory and pass no CL arguments"
                 );
             }
 
@@ -82,7 +85,79 @@ namespace Shank
                     Interpreter.InterpretFunction(s, new List<InterpreterDataType>());
                 }
             }
+
             inPaths.ForEach(Console.WriteLine);
+
+            var testPaths = Directory
+                .GetFiles(Directory.GetCurrentDirectory(), "*.shank", SearchOption.AllDirectories)
+                .ToList();
+
+            foreach (var testPath in testPaths)
+            {
+                var lines = File.ReadAllLines(testPath);
+                var tokens = new List<Token>();
+                var l = new Lexer();
+                tokens.AddRange(l.Lex(lines));
+
+                //foreach (var t in tokens)
+                //    Console.WriteLine(t.ToString());
+
+                var p = new Parser(tokens);
+                var brokeOutOfWhile = false;
+                while (tokens.Any())
+                {
+                    FunctionNode? fb = null;
+                    var errorOccurred = false;
+                    try
+                    {
+                        fb = p.Function();
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine($"Exception encountered in file {testPath}\n{e.Message}");
+                        errorOccurred = true;
+                    }
+
+                    if (errorOccurred)
+                    {
+                        brokeOutOfWhile = true;
+                        break;
+                    }
+
+                    if (fb == null)
+                    {
+                        continue;
+                    }
+
+                    // Prepend function name with the name of the file it is in
+                    // Technically, prepend function name with the path of the current file relative to the current directory
+                    var newFbName =
+                        Path.GetRelativePath(Directory.GetCurrentDirectory(), testPath)[
+                            ..^(".shank".Length)
+                        ]
+                            .Replace('\\', '_')
+                            .Replace('/', '_')
+                        + '_'
+                        + fb.Name;
+
+                    Console.WriteLine(newFbName);
+                    if (Interpreter.Functions.ContainsKey(newFbName))
+                    {
+                        Console.WriteLine($"Function {newFbName} already exists. Overwriting it.");
+                    }
+
+                    fb.Name = newFbName;
+
+                    Interpreter.Functions.Add(fb.Name, fb);
+
+                    fb.LLVMCompile();
+                }
+
+                if (brokeOutOfWhile)
+                {
+                    continue;
+                }
+            }
 
             //while (tokens.Any())
             //{
