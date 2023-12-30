@@ -53,7 +53,7 @@ namespace Shank
                 //foreach (var t in tokens)
                 //    Console.WriteLine(t.ToString());
 
-                var p = new Parser(tokens);
+                var p = new Parser(tokens, "");
                 while (tokens.Any())
                 {
                     var fb = p.Function();
@@ -102,7 +102,13 @@ namespace Shank
                 //foreach (var t in tokens)
                 //    Console.WriteLine(t.ToString());
 
-                var p = new Parser(tokens);
+                var newFbNameBase =
+                    Path.GetRelativePath(Directory.GetCurrentDirectory(), testPath)[
+                        ..^(".shank".Length)
+                    ]
+                        .Replace('\\', '_')
+                        .Replace('/', '_') + '_';
+                var p = new Parser(tokens, newFbNameBase);
                 var brokeOutOfWhile = false;
                 while (tokens.Any())
                 {
@@ -131,14 +137,7 @@ namespace Shank
 
                     // Prepend function name with the name of the file it is in
                     // Technically, prepend function name with the path of the current file relative to the current directory
-                    var newFbName =
-                        Path.GetRelativePath(Directory.GetCurrentDirectory(), testPath)[
-                            ..^(".shank".Length)
-                        ]
-                            .Replace('\\', '_')
-                            .Replace('/', '_')
-                        + '_'
-                        + fb.Name;
+                    var newFbName = newFbNameBase + fb.Name;
 
                     Console.WriteLine(newFbName);
                     if (Interpreter.Functions.ContainsKey(newFbName))
@@ -147,6 +146,7 @@ namespace Shank
                     }
 
                     fb.Name = newFbName;
+                    Console.WriteLine($"New name: {fb.Name}");
 
                     Interpreter.Functions.Add(fb.Name, fb);
 
