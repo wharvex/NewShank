@@ -548,8 +548,23 @@ namespace Shank
         public unsafe void LLVMCompile()
         {
             // Setup context, module, and builder
+
+            // "When declared in a using declaration, a local variable is disposed
+            // at the end of the scope in which it's declared"
+            // ~ https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/using
+
+            // "LLVMContextRef: The top-level container for all LLVM global data."
+            // ~ https://llvm.org/doxygen/group__LLVMCSupportTypes.html#ga9c43e01525516ff6b4feab5166c5b1da
             using var context = LLVMContextRef.Create();
+
+            // "LLVMModuleRef: The top-level container for all other LLVM Intermediate Representation (IR) objects."
+            // ~ https://llvm.org/doxygen/group__LLVMCSupportTypes.html#gad1d1bb5f901c903a0cf09c5a053c9c56
             using var module = context.CreateModuleWithName("main");
+
+            // "A basic block is simply a container of instructions that execute sequentially."
+            // ~ https://llvm.org/doxygen/classllvm_1_1BasicBlock.html#details
+            // "LLVMBuilderRef: Represents an LLVM basic block builder."
+            // ~ https://llvm.org/doxygen/group__LLVMCSupportTypes.html#gab13eecdec39366f9974f865d68011775
             using var builder = context.CreateBuilder();
 
             // Create the write() function
@@ -626,6 +641,7 @@ namespace Shank
             foreach (var s in Statements)
             {
                 object[] s_tokens = s.returnStatementTokens();
+                Console.WriteLine($"s_tokens[2]: {s_tokens[2]}");
 
                 //if not a function, i.e. if assignment node
                 if (s_tokens[0] == "")

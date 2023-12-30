@@ -99,9 +99,10 @@ namespace Shank
                 var l = new Lexer();
                 tokens.AddRange(l.Lex(lines));
 
-                //foreach (var t in tokens)
-                //    Console.WriteLine(t.ToString());
-
+                // Prepare to prepend any function name with the name of the file it is in.
+                // Technically, a function's name will be prepended with the path of the
+                // current file relative to the path of the current directory.
+                // This is to facilitate multi-file parsing/interpreting.
                 var newFbNameBase =
                     Path.GetRelativePath(Directory.GetCurrentDirectory(), testPath)[
                         ..^(".shank".Length)
@@ -109,6 +110,7 @@ namespace Shank
                         .Replace('\\', '_')
                         .Replace('/', '_') + '_';
                 var p = new Parser(tokens, newFbNameBase);
+
                 var brokeOutOfWhile = false;
                 while (tokens.Any())
                 {
@@ -135,19 +137,7 @@ namespace Shank
                         continue;
                     }
 
-                    // Prepend function name with the name of the file it is in
-                    // Technically, prepend function name with the path of the current file relative to the current directory
-                    var newFbName = newFbNameBase + fb.Name;
-
-                    Console.WriteLine(newFbName);
-                    if (Interpreter.Functions.ContainsKey(newFbName))
-                    {
-                        Console.WriteLine($"Function {newFbName} already exists. Overwriting it.");
-                    }
-
-                    fb.Name = newFbName;
-                    Console.WriteLine($"New name: {fb.Name}");
-
+                    Console.WriteLine($"Adding function {fb.Name} to Interpreter...");
                     Interpreter.Functions.Add(fb.Name, fb);
 
                     fb.LLVMCompile();

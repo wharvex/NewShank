@@ -59,7 +59,9 @@
             var name = MatchAndRemove(Token.TokenType.Identifier);
             if (name == null)
                 throw new SyntaxErrorException("Expected a name", Peek(0));
-            var funcNode = new FunctionNode(name.Value ?? "");
+            var funcNode = new FunctionNode(
+                name.Value != null ? _functionNameBase + name.Value : ""
+            );
 
             if (MatchAndRemove(Token.TokenType.LeftParen) == null)
                 throw new SyntaxErrorException("Expected a left paren", Peek(0));
@@ -167,7 +169,6 @@
             var retVal = new FunctionCallNode(
                 name.Value != null ? _functionNameBase + name.Value : string.Empty
             );
-            Console.WriteLine("Function call name: " + retVal.Name);
             retVal.Parameters.AddRange(parameters);
             return retVal;
         }
