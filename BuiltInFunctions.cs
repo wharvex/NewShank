@@ -1,43 +1,176 @@
-﻿namespace Shank {
-    public class BuiltInFunctions {
-        public static void  Register(Dictionary<string,CallableNode> functionList)
-        { // Note to the reader - this implementation is different than what I have the students writing in Java. 
-            // The concepts are the same, but this is more language appropriate. This would be too hard for 
+﻿namespace Shank
+{
+    public class BuiltInFunctions
+    {
+        public static void Register(
+            Dictionary<string, CallableNode> functionList,
+            string functionNameBase
+        )
+        { // Note to the reader - this implementation is different than what I have the students writing in Java.
+            // The concepts are the same, but this is more language appropriate. This would be too hard for
             // the students to do in Java.
-            var retVal = new List<BuiltInFunctionNode> {
-                MakeNode("write", new VariableNode[] {},Write, true),
-                MakeNode("read", new VariableNode[] {},Read, true),
-                MakeNode("squareRoot", new VariableNode[] {
-                    new VariableNode() {Name="value", Type=VariableNode.DataType.Real, IsConstant = true},
-                    new VariableNode() {Name="result", Type=VariableNode.DataType.Real, IsConstant = false},
-                },SquareRoot, false),
-                MakeNode("getRandom", new VariableNode[] {
-                    new VariableNode() {Name="result", Type=VariableNode.DataType.Integer, IsConstant = false},
-                },Random, false),
-                MakeNode("integerToReal", new VariableNode[] {
-                    new VariableNode() {Name="value", Type=VariableNode.DataType.Integer, IsConstant = true},
-                    new VariableNode() {Name="result", Type=VariableNode.DataType.Real, IsConstant = false},
-                },IntegerToReal, false),
-                MakeNode("realToInteger", new VariableNode[] {
-                    new VariableNode() {Name="value", Type=VariableNode.DataType.Real, IsConstant = true},
-                    new VariableNode() {Name="result", Type=VariableNode.DataType.Integer, IsConstant = false},
-                },RealToInteger, false),
-                MakeNode("left", new VariableNode[] {
-                    new VariableNode() {Name="value", Type=VariableNode.DataType.String, IsConstant = true},
-                    new VariableNode() {Name="amount", Type=VariableNode.DataType.Integer, IsConstant = true},
-                    new VariableNode() {Name="result", Type=VariableNode.DataType.String, IsConstant = false},
-                },Left, false),
-                MakeNode("right", new VariableNode[] {
-                    new VariableNode() {Name="value", Type=VariableNode.DataType.String, IsConstant = true},
-                    new VariableNode() {Name="amount", Type=VariableNode.DataType.Integer, IsConstant = true},
-                    new VariableNode() {Name="result", Type=VariableNode.DataType.String, IsConstant = false},
-                },Right, false),
-                MakeNode("substring", new VariableNode[] {
-                    new VariableNode() {Name="value", Type=VariableNode.DataType.String, IsConstant = true},
-                    new VariableNode() {Name="index", Type=VariableNode.DataType.Integer, IsConstant = true},
-                    new VariableNode() {Name="amount", Type=VariableNode.DataType.Integer, IsConstant = true},
-                    new VariableNode() {Name="result", Type=VariableNode.DataType.String, IsConstant = false},
-                },Substring, false),
+            var retVal = new List<BuiltInFunctionNode>
+            {
+                MakeNode(functionNameBase + "write", new VariableNode[] { }, Write, true),
+                MakeNode(functionNameBase + "read", new VariableNode[] { }, Read, true),
+                MakeNode(
+                    functionNameBase + "squareRoot",
+                    new VariableNode[]
+                    {
+                        new VariableNode()
+                        {
+                            Name = "value",
+                            Type = VariableNode.DataType.Real,
+                            IsConstant = true
+                        },
+                        new VariableNode()
+                        {
+                            Name = "result",
+                            Type = VariableNode.DataType.Real,
+                            IsConstant = false
+                        },
+                    },
+                    SquareRoot,
+                    false
+                ),
+                MakeNode(
+                    functionNameBase + "getRandom",
+                    new VariableNode[]
+                    {
+                        new VariableNode()
+                        {
+                            Name = "result",
+                            Type = VariableNode.DataType.Integer,
+                            IsConstant = false
+                        },
+                    },
+                    Random,
+                    false
+                ),
+                MakeNode(
+                    functionNameBase + "integerToReal",
+                    new VariableNode[]
+                    {
+                        new VariableNode()
+                        {
+                            Name = "value",
+                            Type = VariableNode.DataType.Integer,
+                            IsConstant = true
+                        },
+                        new VariableNode()
+                        {
+                            Name = "result",
+                            Type = VariableNode.DataType.Real,
+                            IsConstant = false
+                        },
+                    },
+                    IntegerToReal,
+                    false
+                ),
+                MakeNode(
+                    functionNameBase + "realToInteger",
+                    new VariableNode[]
+                    {
+                        new VariableNode()
+                        {
+                            Name = "value",
+                            Type = VariableNode.DataType.Real,
+                            IsConstant = true
+                        },
+                        new VariableNode()
+                        {
+                            Name = "result",
+                            Type = VariableNode.DataType.Integer,
+                            IsConstant = false
+                        },
+                    },
+                    RealToInteger,
+                    false
+                ),
+                MakeNode(
+                    functionNameBase + "left",
+                    new VariableNode[]
+                    {
+                        new VariableNode()
+                        {
+                            Name = "value",
+                            Type = VariableNode.DataType.String,
+                            IsConstant = true
+                        },
+                        new VariableNode()
+                        {
+                            Name = "amount",
+                            Type = VariableNode.DataType.Integer,
+                            IsConstant = true
+                        },
+                        new VariableNode()
+                        {
+                            Name = "result",
+                            Type = VariableNode.DataType.String,
+                            IsConstant = false
+                        },
+                    },
+                    Left,
+                    false
+                ),
+                MakeNode(
+                    functionNameBase + "right",
+                    new VariableNode[]
+                    {
+                        new VariableNode()
+                        {
+                            Name = "value",
+                            Type = VariableNode.DataType.String,
+                            IsConstant = true
+                        },
+                        new VariableNode()
+                        {
+                            Name = "amount",
+                            Type = VariableNode.DataType.Integer,
+                            IsConstant = true
+                        },
+                        new VariableNode()
+                        {
+                            Name = "result",
+                            Type = VariableNode.DataType.String,
+                            IsConstant = false
+                        },
+                    },
+                    Right,
+                    false
+                ),
+                MakeNode(
+                    functionNameBase + "substring",
+                    new VariableNode[]
+                    {
+                        new VariableNode()
+                        {
+                            Name = "value",
+                            Type = VariableNode.DataType.String,
+                            IsConstant = true
+                        },
+                        new VariableNode()
+                        {
+                            Name = "index",
+                            Type = VariableNode.DataType.Integer,
+                            IsConstant = true
+                        },
+                        new VariableNode()
+                        {
+                            Name = "amount",
+                            Type = VariableNode.DataType.Integer,
+                            IsConstant = true
+                        },
+                        new VariableNode()
+                        {
+                            Name = "result",
+                            Type = VariableNode.DataType.String,
+                            IsConstant = false
+                        },
+                    },
+                    Substring,
+                    false
+                ),
             };
             foreach (var f in retVal)
             {
@@ -45,9 +178,14 @@
             }
         }
 
-        public static BuiltInFunctionNode MakeNode(string name, VariableNode[] parameters, BuiltInFunctionNode.BuiltInCall call, bool isVariadic = false)
+        public static BuiltInFunctionNode MakeNode(
+            string name,
+            VariableNode[] parameters,
+            BuiltInFunctionNode.BuiltInCall call,
+            bool isVariadic = false
+        )
         {
-            var retVal = new BuiltInFunctionNode(name,call);
+            var retVal = new BuiltInFunctionNode(name, call);
             retVal.ParameterVariables.AddRange(parameters);
             retVal.IsVariadic = isVariadic;
             return retVal;
@@ -57,8 +195,11 @@
 
         public static void Left(List<InterpreterDataType> parameters)
         {
-            if (parameters[0] is StringDataType ss && parameters[1] is IntDataType len &&
-                parameters[2] is StringDataType dest)
+            if (
+                parameters[0] is StringDataType ss
+                && parameters[1] is IntDataType len
+                && parameters[2] is StringDataType dest
+            )
                 dest.Value = ss.Value.Substring(0, len.Value);
             else
                 throw new Exception("Left data types not correct");
@@ -66,18 +207,24 @@
 
         public static void Right(List<InterpreterDataType> parameters)
         {
-            if (parameters[0] is StringDataType ss && parameters[1] is IntDataType len &&
-                parameters[2] is StringDataType dest)
-                dest.Value = ss.Value.Substring(ss.Value.Length-len.Value, len.Value);
+            if (
+                parameters[0] is StringDataType ss
+                && parameters[1] is IntDataType len
+                && parameters[2] is StringDataType dest
+            )
+                dest.Value = ss.Value.Substring(ss.Value.Length - len.Value, len.Value);
             else
                 throw new Exception("Right data types not correct");
         }
 
         public static void Substring(List<InterpreterDataType> parameters)
         {
-            if (parameters[0] is StringDataType ss && parameters[1] is IntDataType index &&
-                parameters[2] is IntDataType len &&
-                parameters[3] is StringDataType dest)
+            if (
+                parameters[0] is StringDataType ss
+                && parameters[1] is IntDataType index
+                && parameters[2] is IntDataType len
+                && parameters[3] is StringDataType dest
+            )
                 dest.Value = ss.Value.Substring(index.Value, len.Value);
             else
                 throw new Exception("Substring data types not correct");

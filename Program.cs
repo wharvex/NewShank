@@ -50,63 +50,15 @@ namespace Shank
                 var l = new Lexer();
                 tokens.AddRange(l.Lex(lines));
 
-                //foreach (var t in tokens)
-                //    Console.WriteLine(t.ToString());
-
-                var p = new Parser(tokens, "");
-                while (tokens.Any())
-                {
-                    var fb = p.Function();
-                    if (fb != null)
-                    {
-                        //Console.WriteLine(fb.ToString());
-                        Console.WriteLine(
-                            Path.GetRelativePath(Directory.GetCurrentDirectory(), inPath)[
-                                ..^(".shank".Length)
-                            ]
-                                .Replace('\\', '_')
-                                .Replace('/', '_')
-                                + '_'
-                                + fb.Name
-                        );
-
-                        Interpreter.Functions.Add(fb.Name, fb);
-
-                        fb.LLVMCompile();
-                    }
-                }
-
-                BuiltInFunctions.Register(Interpreter.Functions);
-                if (
-                    Interpreter.Functions.ContainsKey("start")
-                    && Interpreter.Functions["start"] is FunctionNode s
-                )
-                {
-                    Interpreter.InterpretFunction(s, new List<InterpreterDataType>());
-                }
-            }
-
-            inPaths.ForEach(Console.WriteLine);
-
-            var testPaths = Directory
-                .GetFiles(Directory.GetCurrentDirectory(), "*.shank", SearchOption.AllDirectories)
-                .ToList();
-
-            foreach (var testPath in testPaths)
-            {
-                var lines = File.ReadAllLines(testPath);
-                var tokens = new List<Token>();
-                var l = new Lexer();
-                tokens.AddRange(l.Lex(lines));
-
                 // Prepare to prepend any function name with the name of the file it is in.
                 // Technically, a function's name will be prepended with the path of the
                 // current file relative to the path of the current directory.
                 // This is to facilitate multi-file parsing/interpreting.
                 var newFbNameBase =
-                    Path.GetRelativePath(Directory.GetCurrentDirectory(), testPath)[
+                    Path.GetRelativePath(Directory.GetCurrentDirectory(), inPath)[
                         ..^(".shank".Length)
                     ]
+                        .Replace('.', '_')
                         .Replace('\\', '_')
                         .Replace('/', '_') + '_';
                 var p = new Parser(tokens, newFbNameBase);
@@ -122,7 +74,9 @@ namespace Shank
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine($"Exception encountered in file {testPath}\n{e.Message}");
+                        Console.WriteLine(
+                            $"\nException encountered in file {inPath}:\n{e.Message}\nskipping..."
+                        );
                         errorOccurred = true;
                     }
 
@@ -136,27 +90,26 @@ namespace Shank
                     {
                         continue;
                     }
-
-                    Console.WriteLine($"Adding function {fb.Name} to Interpreter...");
                     Interpreter.Functions.Add(fb.Name, fb);
 
-                    fb.LLVMCompile();
+                    // fb.LLVMCompile();
                 }
 
                 if (brokeOutOfWhile)
                 {
                     continue;
                 }
-            }
 
-            //while (tokens.Any())
-            //{
-            //    var exp = p.ParseExpressionLine();
-            //    Console.WriteLine(exp?.ToString()??"<<<NULL>>>");
-            //    if (exp != null)
-            //        Console.WriteLine($" calculated: {ir.Resolve(exp)} ");
-            //}
-            //var fibPath = System.IO.Path.GetDirectoryName(AppContext.BaseDirectory);
+                Console.WriteLine($"\nOutput of {inPath}:\n");
+                BuiltInFunctions.Register(Interpreter.Functions, newFbNameBase);
+                if (
+                    Interpreter.Functions.ContainsKey(newFbNameBase + "start")
+                    && Interpreter.Functions[newFbNameBase + "start"] is FunctionNode s
+                )
+                {
+                    Interpreter.InterpretFunction(s, new List<InterpreterDataType>());
+                }
+            }
         }
     }
 }
