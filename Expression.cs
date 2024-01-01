@@ -215,8 +215,9 @@ namespace Shank
         }
 
         /*
-        For assignment statemetn
-        EvalExpression() is called is the RHS is an expression.
+        For assignment statement
+        EvalExpression() is called if the RHS is an expression.
+        TODO: What is RHS?
         */
         public Dictionary<string, LLVMValueRef> Exec_Assignment(
             LLVMBuilderRef builder,
@@ -568,72 +569,75 @@ namespace Shank
             using var builder = context.CreateBuilder();
 
             // Create the write() function
+
+            // Get write() return type
             var writeFnRetTy = context.Int64Type;
-            //Int8Type: for string type
-            var writeFnParamTys = new LLVMTypeRef[] { context.Int64Type };
+            // Get write() param types
+            var writeFnParamTys = new[] { context.Int64Type };
+            // Get write() function type by combining return and param types
             var writeFnTy = LLVMTypeRef.CreateFunction(writeFnRetTy, writeFnParamTys);
+            // Add write() function to module and save the function to a variable
             var writeFn = module.AddFunction("write", writeFnTy);
 
-            // Create the main (or the start()) function. For void return, I can use context.VoidType;
+            // Create the main (or the start()) function
+            // For void return, use context.VoidType
+
+            // Get start() return type
             var mainRetTy = context.Int64Type;
-            var mainParamTys = new LLVMTypeRef[] { };
+            // Get start() param types
+            var mainParamTys = Array.Empty<LLVMTypeRef>();
+            // Get start() function type by combining return and param types
             var mainFnTy = LLVMTypeRef.CreateFunction(mainRetTy, mainParamTys);
+            // Add start() function to module and save the function to a variable
             var mainFn = module.AddFunction("start", mainFnTy);
-            var mainBlock = mainFn.AppendBasicBlock("entry"); //the entry block within the start() function
+            // Add entry block to start() function and save the block to a variable
+            var mainBlock = mainFn.AppendBasicBlock("entry");
 
             // Create the body of the main function
             builder.PositionAtEnd(mainBlock);
-            //var int64PtrType = LLVMTypeRef.CreatePointer(context.Int64Type, 0); This can be used for pointer type
 
-            /*
-            Store Local Variables to Memory through BuildAlloca() & BuildStore()
+            // Use this for pointer type:
+            // var int64PtrType = LLVMTypeRef.CreatePointer(context.Int64Type, 0)
 
-            hash_variables will contain
-            1. If the variable is not initialized, then it will have (i) the variable name itself, (ii) variable referencing to the allocated memory.
-            2. If the variable is initialized, then it will have (i) the variable name itself, and (ii) variable referencing to the value stored in the allocated memory.
+            // Store local variables in memory with BuildAlloca() and BuildStore()
 
-            To use BuildLoad2(), which loads the value of the variable stored in memory, we utilize this hash_variables.
-            Although I tried various approaches, BuildLoad2() must be used.
-            */
+            // Contents of hash_variables:
+            //     If variable IS NOT initialized:
+            //         Variable name
+            //         Variable with the allocated memory
+            //     If variable IS initialized:
+            //         Variable name
+            //         Variable with the value stored in the allocated memory
+
+            // Purpose of hash_variables:
+            //     Needed to use BuildLoad2(), which loads the value of the variable stored in memory
             var hash_variables = new Dictionary<string, LLVMValueRef>();
 
-            if (LocalVariables.Any())
-            {
-                for (int i = 0; i < LocalVariables.Count; i++)
+            LocalVariables
+                .Where(localVar => localVar.Type == VariableNode.DataType.Integer)
+                .ToList()
+                .ForEach(localVar =>
                 {
-                    if (LocalVariables[i].Type.ToString() == "Integer")
+                    var allocated = builder.BuildAlloca(context.Int64Type, localVar.Name ?? "");
+                    allocated.SetAlignment(4);
+
+                    // 'if' statement passes if the local variable is declared but not initialized; for example:
+                    // variables i, j, result : integer
+                    // 'if' statement fails if the local variable is both declared and initialized; for example:
+                    // constants begin = 1, end = 5
+                    if (localVar.InitialValue == null)
                     {
-                        if (LocalVariables[i].InitialValue == null) //if the local variable is declared but not initialized. Ex. variables i, j, result : integer
-                        {
-                            var allocated = builder.BuildAlloca(
-                                context.Int64Type,
-                                LocalVariables[i].Name
-                            );
-                            allocated.SetAlignment(4);
-                            hash_variables.Add(LocalVariables[i].Name, allocated);
-                        }
-                        else //if the local variable is both declared and initialized. Ex. constants begin = 1, end = 5
-                        {
-                            var allocated = builder.BuildAlloca(
-                                context.Int64Type,
-                                LocalVariables[i].Name
-                            );
-                            allocated.SetAlignment(4);
-
-                            //To create string: var stringExample = builder.BuildGlobalStringPtr("%d ", "str");
-                            var allocated_value = LLVMValueRef.CreateConstInt(
-                                context.Int64Type,
-                                ulong.Parse(LocalVariables[i].InitialValue.ToString()),
-                                false
-                            );
-                            builder.BuildStore(allocated_value, allocated);
-                            //Console.WriteLine("Data type of allocated_value is: {0}", allocated_value.GetType().Name);
-
-                            hash_variables.Add(LocalVariables[i].Name, allocated);
-                        }
+                        hash_variables.Add(localVar.Name ?? "", allocated);
                     }
-                }
-            }
+                    var allocatedValue = LLVMValueRef.CreateConstInt(
+                        context.Int64Type,
+                        ulong.Parse(localVar.InitialValue?.ToString() ?? ""),
+                        false
+                    );
+                    builder.BuildStore(allocatedValue, allocated);
+
+                    hash_variables.Add(localVar.Name ?? "", allocated);
+                });
 
             int count = 0;
 
