@@ -631,8 +631,7 @@ namespace Shank
                     }
                     var allocatedValue = LLVMValueRef.CreateConstInt(
                         context.Int64Type,
-                        ulong.Parse(localVar.InitialValue?.ToString() ?? ""),
-                        false
+                        ulong.Parse(localVar.InitialValue?.ToString() ?? "")
                     );
                     builder.BuildStore(allocatedValue, allocated);
 

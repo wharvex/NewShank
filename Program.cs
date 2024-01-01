@@ -92,7 +92,7 @@ namespace Shank
                     }
                     Interpreter.Functions.Add(fb.Name, fb);
 
-                    // fb.LLVMCompile();
+                    //fb.LLVMCompile();
                 }
 
                 if (brokeOutOfWhile)
