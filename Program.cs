@@ -1,4 +1,4 @@
-﻿ using System.Collections;
+﻿using System.Collections;
 
 namespace Shank
 {
@@ -72,7 +72,7 @@ namespace Shank
                     {
                         fb = p.Function();
                     }
-                    catch (Exception e)
+                    catch (SyntaxErrorException e)
                     {
                         Console.WriteLine(
                             $"\nException encountered in file {inPath}:\n{e.Message}\nskipping..."
