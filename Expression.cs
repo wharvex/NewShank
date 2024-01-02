@@ -643,11 +643,10 @@ namespace Shank
             //Go through each statement
             foreach (var s in Statements)
             {
-                object[] s_tokens = s.returnStatementTokens();
-                Console.WriteLine($"s_tokens[2]: {s_tokens[2]}");
+                object[] statementTokens = s.returnStatementTokens();
 
                 //if not a function, i.e. if assignment node
-                if (s_tokens[0] == "")
+                if (statementTokens[0] == "")
                 {
                     /*
                     s_tokens[0]: ""
@@ -655,9 +654,14 @@ namespace Shank
                     s_tokens[2]: expression.ToString(), ex) start
                     */
 
-                    hash_variables = Exec_Assignment(builder, hash_variables, s_tokens, context);
+                    hash_variables = Exec_Assignment(
+                        builder,
+                        hash_variables,
+                        statementTokens,
+                        context
+                    );
                 }
-                else if (s_tokens[0] == "FUNCTION") //if it is a function node, such as write()
+                else if (statementTokens[0] == "FUNCTION") //if it is a function node, such as write()
                 {
                     /*
                     s_tokens[0]: "FUNCTION"
@@ -665,9 +669,16 @@ namespace Shank
                     s_tokens[2]: b.ToString(), ex) prev1
                     */
 
-                    Exec_Function(builder, hash_variables, s_tokens, context, writeFnTy, writeFn);
+                    Exec_Function(
+                        builder,
+                        hash_variables,
+                        statementTokens,
+                        context,
+                        writeFnTy,
+                        writeFn
+                    );
                 }
-                else if (s_tokens[0] == "WHILE")
+                else if (statementTokens[0] == "WHILE")
                 {
                     /*
                     s_tokens[0]: "WHILE"
@@ -680,7 +691,7 @@ namespace Shank
                     hash_variables = Exec_While(
                         builder,
                         hash_variables,
-                        s_tokens,
+                        statementTokens,
                         context,
                         writeFnTy,
                         writeFn,
@@ -699,7 +710,7 @@ namespace Shank
                     hash_variables = Exec_For(
                         builder,
                         hash_variables,
-                        s_tokens,
+                        statementTokens,
                         context,
                         writeFnTy,
                         writeFn,
