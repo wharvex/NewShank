@@ -51,6 +51,12 @@ namespace Shank
             Constant = constant;
         }
 
+        /**
+         * IsVariable: the param was preceded by the "var" keyword when it was passed in,
+         * meaning it can be changed in the function and its new value will persist in the
+         * caller's scope.
+         *
+         */
         public ParameterNode(VariableReferenceNode variable, bool isVariable)
         {
             IsVariable = isVariable;
