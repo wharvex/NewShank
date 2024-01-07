@@ -110,6 +110,9 @@ namespace Shank
                     Interpreter.InterpretFunction(s, new List<InterpreterDataType>());
                 }
             }
+
+            var codeGen = new IRGenerator();
+            codeGen.Exec("program");
         }
     }
 }

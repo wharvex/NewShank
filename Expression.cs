@@ -222,8 +222,7 @@ namespace Shank
 
         /*
         For assignment statement
-        EvalExpression() is called if the RHS is an expression.
-        TODO: What is RHS?
+        EvalExpression() is called if the Right Hand Side is an expression.
         */
         public Dictionary<string, LLVMValueRef> Exec_Assignment(
             LLVMBuilderRef builder,
