@@ -28,19 +28,41 @@ public class IRGenerator
         Console.WriteLine(this._module.PrintToString());
 
         // 3b. Save generated IR code to file.
-        this._module.PrintToFile(Path.Combine(Directory.GetCurrentDirectory(), "output4.ll"));
+        var outPath = Directory.CreateDirectory(
+            Path.Combine(Directory.GetCurrentDirectory(), "IR")
+        );
+        this._module.PrintToFile(Path.Combine(outPath.FullName, "output4.ll"));
+    }
+
+    private void SetupAndCallPrint(LLVMValueRef[] printArgs)
+    {
+        var bytePtrTy = LLVMTypeRef.CreatePointer(this._context.Int8Type, 0);
+        var printFType = LLVMTypeRef.CreateFunction(
+            this._context.VoidType,
+            new[] { bytePtrTy },
+            true
+        );
+        var printF = this._module.AddFunction("printf", printFType);
+        printF.Linkage = LLVMLinkage.LLVMExternalLinkage;
+        printF.VerifyFunction(LLVMVerifierFailureAction.LLVMPrintMessageAction);
+        this._builder.BuildCall2(printFType, printF, printArgs);
     }
 
     private void Compile()
     {
-        var func = this.GetOrCreateFunc(new FunctionNode("main"));
-        var result = Gen(func);
-        this._builder.BuildRet(result);
+        var mainFuncNode = new FunctionNode("main");
+        var mainRetNode = new VariableNode();
+        mainRetNode.Type = VariableNode.DataType.Integer;
+        mainFuncNode.ParameterVariables = new List<VariableNode> { mainRetNode };
+        var func = this.GetOrCreateFunc(mainFuncNode);
+        Gen(); // TODO: Pass in AST
+        this._builder.BuildRet(LLVMValueRef.CreateConstInt(this._context.Int32Type, 0));
     }
 
-    private LLVMValueRef Gen(LLVMValueRef func)
+    private void Gen()
     {
-        return LLVMValueRef.CreateConstInt(this._context.Int32Type, 47);
+        var myStr = this._builder.BuildGlobalStringPtr("Hello, World!\n");
+        this.SetupAndCallPrint(new[] { myStr });
     }
 
     private LLVMValueRef GetOrCreateFunc(CallableNode callNode)
@@ -53,24 +75,13 @@ public class IRGenerator
         return this.CreateFunc(new FunctionNode("blah"));
     }
 
-    private LLVMValueRef? GetFunc(string funcName)
-    {
-        try
-        {
-            return this._module.GetNamedFunction(funcName);
-        }
-        catch (Exception e)
-        {
-            return null;
-        }
-    }
-
     private LLVMValueRef CreateFunc(FunctionNode funcNode)
     {
         LLVMTypeRef[] paramTypes = this.GetParamTypes(funcNode.ParameterVariables);
 
-        // Find all of the function's non-constant parameter variables.
-        // These will be the ones marked with var that can be "returned".
+        // Find the LLVM types corresponding to the Shank types of all
+        // of the function's non-constant parameter variables.
+        // These will be the ones marked with "var" that can be "returned".
         List<LLVMTypeRef> returnTypes = funcNode
             .ParameterVariables.Where(paramVar => !paramVar.IsConstant)
             .Select(varVar => this.GetLLVMTypeFromShankType(varVar.Type))
@@ -78,12 +89,12 @@ public class IRGenerator
 
         // TODO: Handle multiple "return" types with var.
         // Maybe create multiple functions, one for each "return"?
-        LLVMTypeRef returnType = returnTypes.Count > 0 ? returnTypes[0] : this._context.Int32Type;
+        LLVMTypeRef returnType = returnTypes.Count > 0 ? returnTypes[0] : this._context.VoidType;
 
         LLVMTypeRef funcType = LLVMTypeRef.CreateFunction(returnType, paramTypes);
         LLVMValueRef func = this._module.AddFunction(funcNode.Name, funcType);
 
-        // Check the function for errors, print a message if one is found.
+        // Check the function for errors; print a message if one is found.
         func.VerifyFunction(LLVMVerifierFailureAction.LLVMPrintMessageAction);
 
         LLVMBasicBlockRef entryBlock = func.AppendBasicBlock("entry");
