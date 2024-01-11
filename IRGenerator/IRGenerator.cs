@@ -16,21 +16,14 @@ public class IRGenerator
         this.ModuleInit();
     }
 
-    public void Exec(string program)
+    public void GenerateIR(string program)
     {
-        // 1. Parse the program.
-        // ???
-
-        // 2. Compile to LLVM IR.
-        this.Compile();
-
-        // 3a. Print generated IR code to console.
         Console.WriteLine(this._module.PrintToString());
 
-        // 3b. Save generated IR code to file.
         var outPath = Directory.CreateDirectory(
             Path.Combine(Directory.GetCurrentDirectory(), "IR")
         );
+
         this._module.PrintToFile(Path.Combine(outPath.FullName, "output4.ll"));
     }
 
@@ -48,13 +41,9 @@ public class IRGenerator
         this._builder.BuildCall2(printFType, printF, printArgs);
     }
 
-    private void Compile()
+    private void CreateMainFunc()
     {
-        var mainFuncNode = new FunctionNode("main");
-        var mainRetNode = new VariableNode();
-        mainRetNode.Type = VariableNode.DataType.Integer;
-        mainFuncNode.ParameterVariables = new List<VariableNode> { mainRetNode };
-        var func = this.GetOrCreateFunc(mainFuncNode);
+        var func = this.GetFunc(Interpreter.Functions["start"]);
         Gen(); // TODO: Pass in AST
         this._builder.BuildRet(LLVMValueRef.CreateConstInt(this._context.Int32Type, 0));
     }
@@ -65,49 +54,125 @@ public class IRGenerator
         this.SetupAndCallPrint(new[] { myStr });
     }
 
-    private LLVMValueRef GetOrCreateFunc(CallableNode callNode)
+    private LLVMValueRef GetFunc(CallableNode callNode)
     {
         if (callNode is FunctionNode funcNode)
         {
             return this.CreateFunc(funcNode);
         }
+
         // TODO: Handle builtin functions.
         return this.CreateFunc(new FunctionNode("blah"));
     }
 
     private LLVMValueRef CreateFunc(FunctionNode funcNode)
     {
-        LLVMTypeRef[] paramTypes = this.GetParamTypes(funcNode.ParameterVariables);
+        var returnType = this.GetReturnType(funcNode.ParameterVariables);
 
-        // Find the LLVM types corresponding to the Shank types of all
-        // of the function's non-constant parameter variables.
-        // These will be the ones marked with "var" that can be "returned".
-        List<LLVMTypeRef> returnTypes = funcNode
-            .ParameterVariables.Where(paramVar => !paramVar.IsConstant)
-            .Select(varVar => this.GetLLVMTypeFromShankType(varVar.Type))
-            .ToList();
+        // TODO: How to tell if a FunctionNode accepts variadic arguments?
+        var funcType = LLVMTypeRef.CreateFunction(
+            returnType,
+            this.GetParamTypes(funcNode.ParameterVariables),
+            false
+        );
 
-        // TODO: Handle multiple "return" types with var.
-        // Maybe create multiple functions, one for each "return"?
-        LLVMTypeRef returnType = returnTypes.Count > 0 ? returnTypes[0] : this._context.VoidType;
+        var funcName = string.Equals(funcNode.Name, "start") ? "main" : funcNode.Name;
 
-        LLVMTypeRef funcType = LLVMTypeRef.CreateFunction(returnType, paramTypes);
-        LLVMValueRef func = this._module.AddFunction(funcNode.Name, funcType);
+        // TODO: Keep track of functions that have already been created.
+        // What happens if you try to create a function that already exists?
+        LLVMValueRef func = this._module.AddFunction(funcName, funcType);
 
-        // Check the function for errors; print a message if one is found.
-        func.VerifyFunction(LLVMVerifierFailureAction.LLVMPrintMessageAction);
+        // Make the function visible externally.
+        func.Linkage = LLVMLinkage.LLVMExternalLinkage;
 
         LLVMBasicBlockRef entryBlock = func.AppendBasicBlock("entry");
 
         // Specifies that created instructions should be appended to the end of the specified block.
         this._builder.PositionAtEnd(entryBlock);
 
+        // TODO: Keep track of where the builder is.
+        // Associate LLVM func name and block name with some kind of identifier of AST node groupings?
+        // Multiple AST nodes will go into one LLVM block.
+        // What should determine where to begin a new LLVM block?
+
+        // TODO: Create a switch method to build a return value based on returnType.
+
+        // Check the function for errors; print a message if one is found.
+        func.VerifyFunction(LLVMVerifierFailureAction.LLVMPrintMessageAction);
+
         return func;
     }
+
+    private LLVMValueRef CreateFunc(CallableNode callNode)
+    {
+        string funcName;
+        LLVMTypeRef[] paramTypes;
+        LLVMTypeRef returnType,
+            funcType;
+        if (callNode is FunctionNode funcNode)
+        {
+            returnType = this.GetReturnType(funcNode.ParameterVariables);
+            paramTypes = this.GetParamTypes(funcNode.ParameterVariables);
+            funcType = LLVMTypeRef.CreateFunction(returnType, paramTypes, false);
+        }
+        else
+        {
+            funcType = this._printfFnType;
+        }
+
+        // TODO: Keep track of functions that have already been created.
+        // What happens if you try to create a function that already exists?
+        LLVMValueRef func = this._module.AddFunction(callNode.Name, funcType);
+
+        // Make the function visible externally.
+        func.Linkage = LLVMLinkage.LLVMExternalLinkage;
+
+        if (true)
+        {
+            LLVMBasicBlockRef entryBlock = func.AppendBasicBlock("entry");
+
+            // Specifies that created instructions should be appended to the end of the specified block.
+            this._builder.PositionAtEnd(entryBlock);
+
+            // TODO: Keep track of where the builder is.
+            // Associate LLVM func name and block name with some kind of identifier of AST node groupings?
+            // Multiple AST nodes will go into one LLVM block.
+            // What should determine where to begin a new LLVM block?
+        }
+
+        return func;
+    }
+
+    private (LLVMTypeRef, bool) GetBuiltinTypeAndNativity(CallableNode builtin) =>
+        builtin.Name switch
+        {
+            "write" => (this._printfFnType, true),
+            _ => (this._printfFnType, true),
+        };
 
     private LLVMTypeRef[] GetParamTypes(List<VariableNode> varNodes)
     {
         return varNodes.Select(vn => this.GetLLVMTypeFromShankType(vn.Type)).ToArray();
+    }
+
+    /**
+     * GetReturnTypes
+     *
+     * Finds the LLVM types corresponding to the Shank types of all the
+     * function's non-constant parameter variables.
+     * These will be the ones marked with "var" that can be "returned".
+     */
+    private LLVMTypeRef GetReturnType(List<VariableNode> varNodes)
+    {
+        var returnTypes = varNodes
+            .Where(vn => !vn.IsConstant)
+            .Select(vn => this.GetLLVMTypeFromShankType(vn.Type))
+            .ToList();
+        if (returnTypes.Count < 1)
+        {
+            returnTypes.Add(this._context.VoidType);
+        }
+        return returnTypes[0];
     }
 
     private void ModuleInit()
@@ -115,12 +180,22 @@ public class IRGenerator
         this._context = LLVMContextRef.Create();
         this._module = _context.CreateModuleWithName("root");
         this._builder = _context.CreateBuilder();
+
+        this._printfFnType = LLVMTypeRef.CreateFunction(
+            _context.VoidType,
+            new[] { LLVMTypeRef.CreatePointer(this._context.Int8Type, 0) },
+            true
+        );
     }
 
     private LLVMTypeRef GetLLVMTypeFromShankType(VariableNode.DataType dataType) =>
         dataType switch
         {
-            VariableNode.DataType.Integer => this._context.Int32Type,
+            VariableNode.DataType.Integer => this._context.Int64Type,
+            VariableNode.DataType.Real => this._context.DoubleType,
+            VariableNode.DataType.String => LLVMTypeRef.CreatePointer(this._context.Int8Type, 0),
+            VariableNode.DataType.Boolean => this._context.Int1Type,
+            VariableNode.DataType.Character => this._context.Int8Type,
             _ => this._context.Int32Type,
         };
 
@@ -139,7 +214,7 @@ public class IRGenerator
      * LLVM module. Modules are the top level container of all other LLVM
      * Intermediate Representation (IR) objects. Each module directly contains a
      * list of global variables, a list of functions, a list of libraries (or
-     * other modules) this module depends on, a symbol table, and various data
+     * other modules) it depends on, a symbol table, and various data
      * about the target's characteristics.
      *
      * A module maintains a GlobalList object that is used to hold all
@@ -156,4 +231,6 @@ public class IRGenerator
      * specific iterator location in a block.
      */
     private LLVMBuilderRef _builder;
+
+    private LLVMTypeRef _printfFnType;
 }

@@ -5,8 +5,8 @@ source_filename = "root"
 
 define i32 @main(i32 %0) {
 entry:
-  call void (i8*, ...) @printf(i8* getelementptr inbounds ([15 x i8], [15 x i8]* @0, i32 0, i32 0))
+  call void (ptr, ...) @printf(ptr @0)
   ret i32 0
 }
 
-declare void @printf(i8*, ...)
+declare void @printf(ptr, ...)

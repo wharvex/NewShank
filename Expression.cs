@@ -42,6 +42,10 @@ namespace Shank
         }
     }
 
+    /**
+     * ParameterNodes are the arguments passed to a FunctionCallNode.
+     * For the parameters of FunctionNodes, see VariableNode.
+     */
     public class ParameterNode : ASTNode
     {
         public ParameterNode(ASTNode constant)

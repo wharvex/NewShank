@@ -54,23 +54,23 @@ namespace Shank
                 // Technically, a function's name will be prepended with the path of the
                 // current file relative to the path of the current directory.
                 // This is to facilitate multi-file parsing/interpreting.
-                var newFbNameBase =
+                var newFnNameBase =
                     Path.GetRelativePath(Directory.GetCurrentDirectory(), inPath)[
                         ..^(".shank".Length)
                     ]
                         .Replace('.', '_')
                         .Replace('\\', '_')
                         .Replace('/', '_') + '_';
-                var p = new Parser(tokens, newFbNameBase);
+                var p = new Parser(tokens, newFnNameBase);
 
                 var brokeOutOfWhile = false;
                 while (tokens.Any())
                 {
-                    FunctionNode? fb = null;
+                    FunctionNode? fn = null;
                     var errorOccurred = false;
                     try
                     {
-                        fb = p.Function();
+                        fn = p.Function();
                     }
                     catch (SyntaxErrorException e)
                     {
@@ -86,13 +86,11 @@ namespace Shank
                         break;
                     }
 
-                    if (fb == null)
+                    if (fn == null)
                     {
                         continue;
                     }
-                    Interpreter.Functions.Add(fb.Name, fb);
-
-                    //fb.LLVMCompile();
+                    Interpreter.Functions.Add(fn.Name, fn);
                 }
 
                 if (brokeOutOfWhile)
@@ -101,18 +99,18 @@ namespace Shank
                 }
 
                 Console.WriteLine($"\nOutput of {inPath}:\n");
-                BuiltInFunctions.Register(Interpreter.Functions, newFbNameBase);
+                BuiltInFunctions.Register(Interpreter.Functions, newFnNameBase);
                 if (
-                    Interpreter.Functions.ContainsKey(newFbNameBase + "start")
-                    && Interpreter.Functions[newFbNameBase + "start"] is FunctionNode s
+                    Interpreter.Functions.ContainsKey(newFnNameBase + "start")
+                    && Interpreter.Functions[newFnNameBase + "start"] is FunctionNode s
                 )
                 {
                     Interpreter.InterpretFunction(s, new List<InterpreterDataType>());
                 }
             }
 
-            var codeGen = new IRGenerator();
-            codeGen.Exec("program");
+            var gen = new IRGenerator();
+            gen.GenerateIR("program");
         }
     }
 }
