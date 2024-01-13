@@ -43,6 +43,7 @@ namespace Shank
                 );
             }
 
+            var count = 0;
             foreach (var inPath in inPaths)
             {
                 var lines = File.ReadAllLines(inPath);
@@ -107,10 +108,15 @@ namespace Shank
                 {
                     Interpreter.InterpretFunction(s, new List<InterpreterDataType>());
                 }
-            }
 
-            var gen = new IRGenerator();
-            gen.GenerateIR("program");
+                if (count < 1)
+                {
+                    var gen = new IRGenerator(newFnNameBase);
+                    gen.GenerateIR();
+                }
+
+                count++;
+            }
         }
     }
 }

@@ -11,13 +11,23 @@ namespace Shank;
 
 public class IRGenerator
 {
-    public IRGenerator()
+    public IRGenerator(string fnNameBase)
     {
         this.ModuleInit();
+        this._fnNameBase = fnNameBase;
     }
 
-    public void GenerateIR(string program)
+    public void GenerateIR()
     {
+        var mainFunc = this.CreateFunc(Interpreter.Functions[this._fnNameBase + "start"]);
+        var printfFunc = this.CreateFunc(Interpreter.Functions[this._fnNameBase + "write"]);
+        this.HelloWorld(printfFunc);
+
+        this._builder.BuildRetVoid();
+        mainFunc.VerifyFunction(LLVMVerifierFailureAction.LLVMPrintMessageAction);
+
+        Console.WriteLine("\nOutput of IRGenerator:\n");
+
         Console.WriteLine(this._module.PrintToString());
 
         var outPath = Directory.CreateDirectory(
@@ -27,107 +37,43 @@ public class IRGenerator
         this._module.PrintToFile(Path.Combine(outPath.FullName, "output4.ll"));
     }
 
-    private void SetupAndCallPrint(LLVMValueRef[] printArgs)
-    {
-        var bytePtrTy = LLVMTypeRef.CreatePointer(this._context.Int8Type, 0);
-        var printFType = LLVMTypeRef.CreateFunction(
-            this._context.VoidType,
-            new[] { bytePtrTy },
-            true
-        );
-        var printF = this._module.AddFunction("printf", printFType);
-        printF.Linkage = LLVMLinkage.LLVMExternalLinkage;
-        printF.VerifyFunction(LLVMVerifierFailureAction.LLVMPrintMessageAction);
-        this._builder.BuildCall2(printFType, printF, printArgs);
-    }
-
-    private void CreateMainFunc()
-    {
-        var func = this.GetFunc(Interpreter.Functions["start"]);
-        Gen(); // TODO: Pass in AST
-        this._builder.BuildRet(LLVMValueRef.CreateConstInt(this._context.Int32Type, 0));
-    }
-
-    private void Gen()
+    private void HelloWorld(LLVMValueRef printfFunc)
     {
         var myStr = this._builder.BuildGlobalStringPtr("Hello, World!\n");
-        this.SetupAndCallPrint(new[] { myStr });
-    }
-
-    private LLVMValueRef GetFunc(CallableNode callNode)
-    {
-        if (callNode is FunctionNode funcNode)
-        {
-            return this.CreateFunc(funcNode);
-        }
-
-        // TODO: Handle builtin functions.
-        return this.CreateFunc(new FunctionNode("blah"));
-    }
-
-    private LLVMValueRef CreateFunc(FunctionNode funcNode)
-    {
-        var returnType = this.GetReturnType(funcNode.ParameterVariables);
-
-        // TODO: How to tell if a FunctionNode accepts variadic arguments?
-        var funcType = LLVMTypeRef.CreateFunction(
-            returnType,
-            this.GetParamTypes(funcNode.ParameterVariables),
-            false
-        );
-
-        var funcName = string.Equals(funcNode.Name, "start") ? "main" : funcNode.Name;
-
-        // TODO: Keep track of functions that have already been created.
-        // What happens if you try to create a function that already exists?
-        LLVMValueRef func = this._module.AddFunction(funcName, funcType);
-
-        // Make the function visible externally.
-        func.Linkage = LLVMLinkage.LLVMExternalLinkage;
-
-        LLVMBasicBlockRef entryBlock = func.AppendBasicBlock("entry");
-
-        // Specifies that created instructions should be appended to the end of the specified block.
-        this._builder.PositionAtEnd(entryBlock);
-
-        // TODO: Keep track of where the builder is.
-        // Associate LLVM func name and block name with some kind of identifier of AST node groupings?
-        // Multiple AST nodes will go into one LLVM block.
-        // What should determine where to begin a new LLVM block?
-
-        // TODO: Create a switch method to build a return value based on returnType.
-
-        // Check the function for errors; print a message if one is found.
-        func.VerifyFunction(LLVMVerifierFailureAction.LLVMPrintMessageAction);
-
-        return func;
+        this._builder.BuildCall2(this._printfFuncType, printfFunc, new[] { myStr });
     }
 
     private LLVMValueRef CreateFunc(CallableNode callNode)
     {
-        string funcName;
-        LLVMTypeRef[] paramTypes;
-        LLVMTypeRef returnType,
-            funcType;
-        if (callNode is FunctionNode funcNode)
+        LLVMValueRef func;
+        var isNative = false;
+
+        // Builtin functions are only CallableNodes.
+        // Non-Builtin functions are FunctionNodes.
+        if (callNode is FunctionNode)
         {
-            returnType = this.GetReturnType(funcNode.ParameterVariables);
-            paramTypes = this.GetParamTypes(funcNode.ParameterVariables);
-            funcType = LLVMTypeRef.CreateFunction(returnType, paramTypes, false);
+            var returnType = this.GetReturnType(callNode.ParameterVariables);
+            var funcType = LLVMTypeRef.CreateFunction(
+                returnType,
+                this.GetParamTypes(callNode.ParameterVariables),
+                false
+            );
+
+            var funcName = callNode.Name.EndsWith("start") ? "main" : callNode.Name;
+
+            // TODO: Keep track of functions that have already been created.
+            // What happens if you try to create a function that already exists?
+            func = this._module.AddFunction(funcName, funcType);
         }
         else
         {
-            funcType = this._printfFnType;
+            (func, isNative) = this.CreateBuiltin(callNode);
         }
-
-        // TODO: Keep track of functions that have already been created.
-        // What happens if you try to create a function that already exists?
-        LLVMValueRef func = this._module.AddFunction(callNode.Name, funcType);
 
         // Make the function visible externally.
         func.Linkage = LLVMLinkage.LLVMExternalLinkage;
 
-        if (true)
+        if (!isNative)
         {
             LLVMBasicBlockRef entryBlock = func.AppendBasicBlock("entry");
 
@@ -138,16 +84,29 @@ public class IRGenerator
             // Associate LLVM func name and block name with some kind of identifier of AST node groupings?
             // Multiple AST nodes will go into one LLVM block.
             // What should determine where to begin a new LLVM block?
+
+            // TODO: Add statements.
+
+            // TODO: Call BuildRet on the struct ValueRef of the return values.
         }
+
+        // Check the function for errors; print a message if one is found.
 
         return func;
     }
 
-    private (LLVMTypeRef, bool) GetBuiltinTypeAndNativity(CallableNode builtin) =>
+    /**
+     * Creates the passed in Builtin function and adds it to the module.
+     * Returns the function and a boolean indicating whether the function is "native"
+     * to LLVM. For example, "printf" is native to LLVM because you can add it to the module
+     * and it automatically has the ability to print to stdout. This means you don't need
+     * to give it a basic block with statements.
+     */
+    private (LLVMValueRef, bool) CreateBuiltin(CallableNode builtin) =>
         builtin.Name switch
         {
-            "write" => (this._printfFnType, true),
-            _ => (this._printfFnType, true),
+            "write" => (this._module.AddFunction("printf", this._printfFuncType), true),
+            _ => (this._module.AddFunction("printf", this._printfFuncType), true)
         };
 
     private LLVMTypeRef[] GetParamTypes(List<VariableNode> varNodes)
@@ -161,6 +120,7 @@ public class IRGenerator
      * Finds the LLVM types corresponding to the Shank types of all the
      * function's non-constant parameter variables.
      * These will be the ones marked with "var" that can be "returned".
+     * TODO: Handle multiple returns (use a struct?).
      */
     private LLVMTypeRef GetReturnType(List<VariableNode> varNodes)
     {
@@ -181,8 +141,8 @@ public class IRGenerator
         this._module = _context.CreateModuleWithName("root");
         this._builder = _context.CreateBuilder();
 
-        this._printfFnType = LLVMTypeRef.CreateFunction(
-            _context.VoidType,
+        this._printfFuncType = LLVMTypeRef.CreateFunction(
+            this._context.VoidType,
             new[] { LLVMTypeRef.CreatePointer(this._context.Int8Type, 0) },
             true
         );
@@ -232,5 +192,7 @@ public class IRGenerator
      */
     private LLVMBuilderRef _builder;
 
-    private LLVMTypeRef _printfFnType;
+    private LLVMTypeRef _printfFuncType;
+    private LLVMTypeRef _printfRetType;
+    private string _fnNameBase;
 }

@@ -3,10 +3,10 @@ source_filename = "root"
 
 @0 = private unnamed_addr constant [15 x i8] c"Hello, World!\0A\00", align 1
 
-define i32 @main(i32 %0) {
+define void @main() {
 entry:
-  call void (ptr, ...) @printf(ptr @0)
-  ret i32 0
+  call void (i8*, ...) @printf(i8* getelementptr inbounds ([15 x i8], [15 x i8]* @0, i32 0, i32 0))
+  ret void
 }
 
-declare void @printf(ptr, ...)
+declare void @printf(i8*, ...)
