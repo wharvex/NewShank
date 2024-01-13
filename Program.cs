@@ -51,18 +51,18 @@ namespace Shank
                 var l = new Lexer();
                 tokens.AddRange(l.Lex(lines));
 
-                // Prepare to prepend any function name with the name of the file it is in.
+                // Prepare to prefix any function name with the name of the file it is in.
                 // Technically, a function's name will be prepended with the path of the
                 // current file relative to the path of the current directory.
                 // This is to facilitate multi-file parsing/interpreting.
-                var newFnNameBase =
+                var newFnNamePrefix =
                     Path.GetRelativePath(Directory.GetCurrentDirectory(), inPath)[
                         ..^(".shank".Length)
                     ]
                         .Replace('.', '_')
                         .Replace('\\', '_')
                         .Replace('/', '_') + '_';
-                var p = new Parser(tokens, newFnNameBase);
+                var p = new Parser(tokens, newFnNamePrefix);
 
                 var brokeOutOfWhile = false;
                 while (tokens.Any())
@@ -100,10 +100,10 @@ namespace Shank
                 }
 
                 Console.WriteLine($"\nOutput of {inPath}:\n");
-                BuiltInFunctions.Register(Interpreter.Functions, newFnNameBase);
+                BuiltInFunctions.Register(Interpreter.Functions, newFnNamePrefix);
                 if (
-                    Interpreter.Functions.ContainsKey(newFnNameBase + "start")
-                    && Interpreter.Functions[newFnNameBase + "start"] is FunctionNode s
+                    Interpreter.Functions.ContainsKey(newFnNamePrefix + "start")
+                    && Interpreter.Functions[newFnNamePrefix + "start"] is FunctionNode s
                 )
                 {
                     Interpreter.InterpretFunction(s, new List<InterpreterDataType>());
@@ -111,7 +111,7 @@ namespace Shank
 
                 if (count < 1)
                 {
-                    var gen = new IRGenerator(newFnNameBase);
+                    var gen = new IRGenerator(newFnNamePrefix);
                     gen.GenerateIR();
                 }
 

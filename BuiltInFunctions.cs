@@ -11,10 +11,11 @@
             // the students to do in Java.
             var retVal = new List<BuiltInFunctionNode>
             {
-                MakeNode(functionNameBase + "write", new VariableNode[] { }, Write, true),
-                MakeNode(functionNameBase + "read", new VariableNode[] { }, Read, true),
+                MakeNode(functionNameBase, "write", new VariableNode[] { }, Write, true),
+                MakeNode(functionNameBase, "read", new VariableNode[] { }, Read, true),
                 MakeNode(
-                    functionNameBase + "squareRoot",
+                    functionNameBase,
+                    "squareRoot",
                     new VariableNode[]
                     {
                         new VariableNode()
@@ -34,7 +35,8 @@
                     false
                 ),
                 MakeNode(
-                    functionNameBase + "getRandom",
+                    functionNameBase,
+                    "getRandom",
                     new VariableNode[]
                     {
                         new VariableNode()
@@ -48,7 +50,8 @@
                     false
                 ),
                 MakeNode(
-                    functionNameBase + "integerToReal",
+                    functionNameBase,
+                    "integerToReal",
                     new VariableNode[]
                     {
                         new VariableNode()
@@ -68,7 +71,8 @@
                     false
                 ),
                 MakeNode(
-                    functionNameBase + "realToInteger",
+                    functionNameBase,
+                    "realToInteger",
                     new VariableNode[]
                     {
                         new VariableNode()
@@ -88,7 +92,8 @@
                     false
                 ),
                 MakeNode(
-                    functionNameBase + "left",
+                    functionNameBase,
+                    "left",
                     new VariableNode[]
                     {
                         new VariableNode()
@@ -114,7 +119,8 @@
                     false
                 ),
                 MakeNode(
-                    functionNameBase + "right",
+                    functionNameBase,
+                    "right",
                     new VariableNode[]
                     {
                         new VariableNode()
@@ -140,7 +146,8 @@
                     false
                 ),
                 MakeNode(
-                    functionNameBase + "substring",
+                    functionNameBase,
+                    "substring",
                     new VariableNode[]
                     {
                         new VariableNode()
@@ -179,13 +186,14 @@
         }
 
         public static BuiltInFunctionNode MakeNode(
+            string namePrefix,
             string name,
             VariableNode[] parameters,
             BuiltInFunctionNode.BuiltInCall call,
             bool isVariadic = false
         )
         {
-            var retVal = new BuiltInFunctionNode(name, call);
+            var retVal = new BuiltInFunctionNode(name, namePrefix, call);
             retVal.ParameterVariables.AddRange(parameters);
             retVal.IsVariadic = isVariadic;
             return retVal;

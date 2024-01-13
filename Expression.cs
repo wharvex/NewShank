@@ -159,16 +159,19 @@ namespace Shank
     public abstract class CallableNode : ASTNode
     {
         public string Name { get; set; }
+        public string OrigName { get; set; }
         public List<VariableNode> ParameterVariables = new();
 
-        protected CallableNode(string name)
+        protected CallableNode(string name, string namePrefix)
         {
-            Name = name;
+            Name = namePrefix + name;
+            OrigName = name;
         }
 
-        protected CallableNode(string name, BuiltInCall execute)
+        protected CallableNode(string name, string namePrefix, BuiltInCall execute)
         {
-            Name = name;
+            Name = namePrefix + name;
+            OrigName = name;
             Execute = execute;
         }
 
@@ -178,16 +181,16 @@ namespace Shank
 
     public class BuiltInFunctionNode : CallableNode
     {
-        public BuiltInFunctionNode(string name, BuiltInCall execute)
-            : base(name, execute) { }
+        public BuiltInFunctionNode(string name, string namePrefix, BuiltInCall execute)
+            : base(name, namePrefix, execute) { }
 
         public bool IsVariadic = false;
     }
 
     public class FunctionNode : CallableNode
     {
-        public FunctionNode(string name)
-            : base(name)
+        public FunctionNode(string name, string namePrefix)
+            : base(name, namePrefix)
         {
             Execute = (List<InterpreterDataType> paramList) =>
                 Interpreter.InterpretFunction(this, paramList);

@@ -2,14 +2,14 @@
 {
     public class Parser
     {
-        public Parser(List<Token> tokens, string functionNameBase)
+        public Parser(List<Token> tokens, string functionNamePrefix)
         {
             _tokens = tokens;
-            _functionNameBase = functionNameBase;
+            _functionNamePrefix = functionNamePrefix;
         }
 
         private readonly List<Token> _tokens;
-        private readonly string _functionNameBase;
+        private readonly string _functionNamePrefix;
 
         private Token? MatchAndRemove(Token.TokenType t)
         {
@@ -59,9 +59,7 @@
             var name = MatchAndRemove(Token.TokenType.Identifier);
             if (name == null)
                 throw new SyntaxErrorException("Expected a name", Peek(0));
-            var funcNode = new FunctionNode(
-                name.Value != null ? _functionNameBase + name.Value : ""
-            );
+            var funcNode = new FunctionNode(name.Value ?? "", _functionNamePrefix);
 
             if (MatchAndRemove(Token.TokenType.LeftParen) == null)
                 throw new SyntaxErrorException("Expected a left paren", Peek(0));
@@ -167,7 +165,7 @@
             }
 
             var retVal = new FunctionCallNode(
-                name.Value != null ? _functionNameBase + name.Value : string.Empty
+                name.Value != null ? _functionNamePrefix + name.Value : string.Empty
             );
             retVal.Parameters.AddRange(parameters);
             return retVal;
