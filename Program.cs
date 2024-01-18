@@ -68,7 +68,7 @@ namespace Shank
                 while (tokens.Any())
                 {
                     FunctionNode? fn = null;
-                    var errorOccurred = false;
+                    var parserErrorOccurred = false;
                     try
                     {
                         fn = p.Function();
@@ -76,37 +76,58 @@ namespace Shank
                     catch (SyntaxErrorException e)
                     {
                         Console.WriteLine(
-                            $"\nException encountered in file {inPath}:\n{e}\nskipping..."
+                            $"\nParsing error encountered in file {inPath}:\n{e}\nskipping..."
                         );
-                        errorOccurred = true;
+                        parserErrorOccurred = true;
                     }
 
-                    if (errorOccurred)
+                    if (parserErrorOccurred)
                     {
                         brokeOutOfWhile = true;
                         break;
                     }
 
-                    if (fn == null)
+                    // TODO: Handle global variables here.
+                    if (fn is null)
                     {
                         continue;
                     }
+
                     Interpreter.Functions.Add(fn.Name, fn);
                 }
 
+                // Parser error occurred -- skip to next file.
                 if (brokeOutOfWhile)
                 {
                     continue;
                 }
 
+                // Begin program interpretation and output.
                 Console.WriteLine($"\nOutput of {inPath}:\n");
+
                 BuiltInFunctions.Register(Interpreter.Functions, newFnNamePrefix);
                 if (
                     Interpreter.Functions.ContainsKey(newFnNamePrefix + "start")
                     && Interpreter.Functions[newFnNamePrefix + "start"] is FunctionNode s
                 )
                 {
-                    Interpreter.InterpretFunction(s, new List<InterpreterDataType>());
+                    var interpreterErrorOccurred = false;
+                    try
+                    {
+                        Interpreter.InterpretFunction(s, new List<InterpreterDataType>());
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(
+                            $"\nInterpretation error encountered in file {inPath}:\n{e}\nskipping..."
+                        );
+                        interpreterErrorOccurred = true;
+                    }
+
+                    if (interpreterErrorOccurred)
+                    {
+                        continue;
+                    }
                 }
 
                 // if (count < 1)
