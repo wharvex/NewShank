@@ -1,4 +1,4 @@
-﻿﻿define start()
+﻿define start()
 constants start = 1, end = 20
 variables i,prev1 : integer
 variables prev2,curr : integer

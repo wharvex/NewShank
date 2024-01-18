@@ -772,22 +772,22 @@ namespace Shank
             Integer,
             String,
             Character,
-            Boolean /*, Array*/
+            Boolean,
+            Array
         };
 
         public DataType Type;
 
-        //        public DataType ArrayType;
+        public DataType ArrayType;
         public bool IsConstant;
         public ASTNode? InitialValue;
 
-        //       public ASTNode? From;
-        //       public ASTNode? To;
+        public ASTNode? From;
+        public ASTNode? To;
 
         public override string ToString()
         {
-            return $"{Name} : {Type} {(IsConstant ? "const" : string.Empty)} {(InitialValue == null ? string.Empty : InitialValue)}";
-            //$"{Name} : {(Type == DataType.Array ? "Array of " + ArrayType:Type)} {(IsConstant ? "const" : string.Empty)} {(InitialValue == null ? string.Empty : InitialValue)} {(From == null ? string.Empty : " From: "+ From)} {(To == null ? string.Empty : " To: "+ To)}";
+            return $"{Name} : {(Type == DataType.Array ? "Array of " + ArrayType : Type)} {(IsConstant ? "const" : string.Empty)} {(InitialValue == null ? string.Empty : InitialValue)} {(From == null ? string.Empty : " From: " + From)} {(To == null ? string.Empty : " To: " + To)}";
         }
     }
 

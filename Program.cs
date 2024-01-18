@@ -43,7 +43,7 @@ namespace Shank
                 );
             }
 
-            var count = 0;
+            // var count = 0;
             foreach (var inPath in inPaths)
             {
                 var lines = File.ReadAllLines(inPath);
@@ -76,7 +76,7 @@ namespace Shank
                     catch (SyntaxErrorException e)
                     {
                         Console.WriteLine(
-                            $"\nException encountered in file {inPath}:\n{e.Message}\nskipping..."
+                            $"\nException encountered in file {inPath}:\n{e}\nskipping..."
                         );
                         errorOccurred = true;
                     }
@@ -109,13 +109,13 @@ namespace Shank
                     Interpreter.InterpretFunction(s, new List<InterpreterDataType>());
                 }
 
-                if (count < 1)
-                {
-                    var gen = new IRGenerator(newFnNamePrefix);
-                    gen.GenerateIR();
-                }
+                // if (count < 1)
+                // {
+                //     var gen = new IRGenerator(newFnNamePrefix);
+                //     gen.GenerateIR();
+                // }
 
-                count++;
+                // count++;
             }
         }
     }

@@ -424,65 +424,86 @@
                 CheckForRange(retVal);
                 return retVal;
             }
-            /*
             else if (MatchAndRemove(Token.TokenType.Array) != null)
             {
-                var retVal =  names.Select(n => new VariableNode()
-                    {InitialValue = null, IsConstant = isConstant, Type = VariableNode.DataType.Array, Name = n}).ToList();
+                var retVal = names
+                    .Select(
+                        n =>
+                            new VariableNode()
+                            {
+                                InitialValue = null,
+                                IsConstant = isConstant,
+                                Type = VariableNode.DataType.Array,
+                                Name = n
+                            }
+                    )
+                    .ToList();
                 CheckForRange(retVal);
                 if (MatchAndRemove(Token.TokenType.Of) == null)
-                    throw new SyntaxErrorException($"In the declaration of the array for {retVal.First().Name}, no array type found.",Peek(0));
+                    throw new SyntaxErrorException(
+                        $"In the declaration of the array for {retVal.First().Name}, no array type found.",
+                        Peek(0)
+                    );
                 var arrayType = _tokens[0];
                 _tokens.RemoveAt(0);
                 switch (arrayType.Type)
                 {
                     case Token.TokenType.Integer:
-                        retVal.ForEach(d=>d.ArrayType = VariableNode.DataType.Integer); break;
+                        retVal.ForEach(d => d.ArrayType = VariableNode.DataType.Integer);
+                        break;
                     case Token.TokenType.Real:
-                        retVal.ForEach(d=>d.ArrayType = VariableNode.DataType.Real); break;
+                        retVal.ForEach(d => d.ArrayType = VariableNode.DataType.Real);
+                        break;
                     case Token.TokenType.Boolean:
-                        retVal.ForEach(d=>d.ArrayType = VariableNode.DataType.Boolean); break;
+                        retVal.ForEach(d => d.ArrayType = VariableNode.DataType.Boolean);
+                        break;
                     case Token.TokenType.Character:
-                        retVal.ForEach(d=>d.ArrayType = VariableNode.DataType.Character); break;
+                        retVal.ForEach(d => d.ArrayType = VariableNode.DataType.Character);
+                        break;
                     case Token.TokenType.String:
-                        retVal.ForEach(d=>d.ArrayType = VariableNode.DataType.String); break;
+                        retVal.ForEach(d => d.ArrayType = VariableNode.DataType.String);
+                        break;
                     default:
                         throw new SyntaxErrorException(
-                            $"In the declaration of the array for {retVal.First().Name}, invalid array type {arrayType.Type} found.",Peek(0));
+                            $"In the declaration of the array for {retVal.First().Name}, invalid array type {arrayType.Type} found.",
+                            Peek(0)
+                        );
                 }
                 return retVal;
             }
-            */
-
             else
                 throw new SyntaxErrorException("Unknown data type!", Peek(0));
         }
 
         private void CheckForRange(List<VariableNode> retVal)
         {
-            /*
             if (MatchAndRemove(Token.TokenType.From) == null)
                 return;
             var fromToken = _tokens[0];
             _tokens.RemoveAt(0);
             var fromNode = ProcessConstant(fromToken);
             if (fromToken.Type == Token.TokenType.Number)
-                retVal.ForEach(v=>v.From = fromNode);
+                retVal.ForEach(v => v.From = fromNode);
             else
                 throw new SyntaxErrorException(
-                $"In the declaration of {retVal.First().Name}, invalid from value {fromToken} found.",Peek(0));
+                    $"In the declaration of {retVal.First().Name}, invalid from value {fromToken} found.",
+                    Peek(0)
+                );
             if (MatchAndRemove(Token.TokenType.To) == null)
                 throw new SyntaxErrorException(
-                $"In the declaration of {retVal.First().Name}, no 'to' found.",Peek(0));
+                    $"In the declaration of {retVal.First().Name}, no 'to' found.",
+                    Peek(0)
+                );
             var toToken = _tokens[0];
             _tokens.RemoveAt(0);
             var toNode = ProcessConstant(toToken);
             if (toToken.Type == Token.TokenType.Number)
-                retVal.ForEach(v=>v.To = toNode);
+                retVal.ForEach(v => v.To = toNode);
             else
                 throw new SyntaxErrorException(
-                $"In the declaration of {retVal.First().Name}, invalid to value {toToken} found.",Peek(0));
-            */
+                    $"In the declaration of {retVal.First().Name}, invalid to value {toToken} found.",
+                    Peek(0)
+                );
         }
 
         private List<VariableNode> ProcessConstants()

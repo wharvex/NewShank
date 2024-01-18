@@ -105,4 +105,9 @@
             Value = input[0];
         }
     }
+
+    // public class ArrayDataType : InterpreterDataType
+    // {
+    //     public ArrayDataType()
+    // }
 }
