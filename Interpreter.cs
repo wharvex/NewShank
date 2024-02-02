@@ -227,8 +227,18 @@
                     return new CharDataType(((vn.InitialValue as CharNode)?.Value) ?? ' ');
                 case VariableNode.DataType.Boolean:
                     return new BooleanDataType(((vn.InitialValue as BoolNode)?.Value) ?? true);
+                case VariableNode.DataType.Array:
+                {
+                    if (vn.To is null)
+                        throw new ArgumentException(
+                            "Something went wrong internally. Every array variable declaration"
+                                + " should have a range expression, and the Parser should have"
+                                + " checked this already."
+                        );
+                    return new ArrayDataType(ResolveIntBeforeVarDecs(vn.To));
+                }
                 default:
-                    throw new Exception("Unknown local variable type");
+                    throw new Exception($"Unknown local variable type");
             }
         }
 
@@ -382,6 +392,41 @@
                 return ((variables[vr.Name] as IntDataType)?.Value) ?? 0;
             else
                 throw new ArgumentException(nameof(node));
+        }
+
+        public static int ResolveIntBeforeVarDecs(ASTNode node)
+        {
+            if (node is MathOpNode mon)
+            {
+                var left = ResolveIntBeforeVarDecs(mon.Left);
+                var right = ResolveIntBeforeVarDecs(mon.Right);
+                switch (mon.Op)
+                {
+                    case MathOpNode.OpType.plus:
+                        return left + right;
+                    case MathOpNode.OpType.minus:
+                        return left - right;
+                    case MathOpNode.OpType.times:
+                        return left * right;
+                    case MathOpNode.OpType.divide:
+                        return left / right;
+                    case MathOpNode.OpType.modulo:
+                        return left % right;
+                    default:
+                        throw new ArgumentOutOfRangeException(
+                            nameof(mon.Op),
+                            "Invalid operation type"
+                        );
+                }
+            }
+            else if (node is IntNode fn)
+                return fn.Value;
+            else if (node is VariableReferenceNode vr)
+                throw new Exception(
+                    "Variable references not allowed before all variables are declared"
+                );
+            else
+                throw new ArgumentException("Invalid node type for integer", nameof(node));
         }
     }
 }

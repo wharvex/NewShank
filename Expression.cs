@@ -850,6 +850,10 @@ namespace Shank
         }
 
         public string Name { get; init; }
+
+        /// <summary>
+        /// Holds the variable's array index expression if it exists.
+        /// </summary>
         public ASTNode? Index { get; init; }
 
         public override string ToString()

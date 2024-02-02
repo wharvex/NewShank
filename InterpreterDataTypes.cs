@@ -1,4 +1,6 @@
-﻿namespace Shank
+﻿using System.Collections;
+
+namespace Shank
 {
     public abstract class InterpreterDataType
     {
@@ -106,8 +108,30 @@
         }
     }
 
-    // public class ArrayDataType : InterpreterDataType
-    // {
-    //     public ArrayDataType()
-    // }
+    public class ArrayDataType : InterpreterDataType
+    {
+        private readonly List<object> _value;
+
+        public ArrayDataType(int to)
+        {
+            _value = new List<object>(new object[to]);
+        }
+
+        public void AddElement(object element, int idx)
+        {
+            _value.Insert(idx, element);
+        }
+
+        public object GetElement(int idx)
+        {
+            return _value[idx];
+        }
+
+        public override String ToString()
+        {
+            return "";
+        }
+
+        public override void FromString(string input) { }
+    }
 }
