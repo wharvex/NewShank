@@ -40,6 +40,43 @@
                         case IntDataType it:
                             it.Value = ResolveInt(an.expression, variables);
                             break;
+                        case ArrayDataType at:
+                            switch (at.ArrayContentsType)
+                            {
+                                case VariableNode.DataType.Integer:
+                                    at.AddElement(
+                                        ResolveInt(an.expression, variables),
+                                        ResolveInt(an.target, variables)
+                                    );
+                                    break;
+                                case VariableNode.DataType.Real:
+                                    at.AddElement(
+                                        ResolveFloat(an.expression, variables),
+                                        ResolveInt(an.target, variables)
+                                    );
+                                    break;
+                                case VariableNode.DataType.String:
+                                    at.AddElement(
+                                        ResolveString(an.expression, variables),
+                                        ResolveInt(an.target, variables)
+                                    );
+                                    break;
+                                case VariableNode.DataType.Character:
+                                    at.AddElement(
+                                        ResolveChar(an.expression, variables),
+                                        ResolveInt(an.target, variables)
+                                    );
+                                    break;
+                                case VariableNode.DataType.Boolean:
+                                    at.AddElement(
+                                        ResolveBool(an.expression, variables),
+                                        ResolveInt(an.target, variables)
+                                    );
+                                    break;
+                                default:
+                                    throw new Exception("Invalid ArrayContentsType");
+                            }
+                            break;
                         case FloatDataType ft:
                             ft.Value = ResolveFloat(an.expression, variables);
                             break;
@@ -163,6 +200,11 @@
                         case BooleanDataType boolVal:
                             passed.Add(new BooleanDataType(boolVal.Value));
                             break;
+                        case ArrayDataType arrayVal:
+                            passed.Add(
+                                new ArrayDataType(arrayVal.Value, arrayVal.ArrayContentsType)
+                            );
+                            break;
                     }
                 }
                 else
@@ -235,7 +277,7 @@
                                 + " should have a range expression, and the Parser should have"
                                 + " checked this already."
                         );
-                    return new ArrayDataType(ResolveIntBeforeVarDecs(vn.To));
+                    return new ArrayDataType(ResolveIntBeforeVarDecs(vn.To), vn.ArrayType);
                 }
                 default:
                     throw new Exception($"Unknown local variable type");

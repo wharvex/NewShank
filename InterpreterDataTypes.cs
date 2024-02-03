@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using Force.DeepCloner;
 
 namespace Shank
 {
@@ -110,24 +111,32 @@ namespace Shank
 
     public class ArrayDataType : InterpreterDataType
     {
-        private readonly List<object> _value;
+        public readonly List<object> Value;
+        public VariableNode.DataType ArrayContentsType { get; init; }
 
-        public ArrayDataType(int to)
+        public ArrayDataType(int to, VariableNode.DataType arrayContentsType)
         {
-            _value = new List<object>(new object[to]);
+            Value = new List<object>(new object[to]);
+            ArrayContentsType = arrayContentsType;
+        }
+
+        public ArrayDataType(List<object> val, VariableNode.DataType arrayContentsType)
+        {
+            Value = val;
+            ArrayContentsType = arrayContentsType;
         }
 
         public void AddElement(object element, int idx)
         {
-            _value.Insert(idx, element);
+            Value.Insert(idx, element);
         }
 
         public object GetElement(int idx)
         {
-            return _value[idx];
+            return Value[idx];
         }
 
-        public override String ToString()
+        public override string ToString()
         {
             return "";
         }
