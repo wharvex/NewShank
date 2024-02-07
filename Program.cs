@@ -35,11 +35,13 @@ namespace Shank
 
             if (inPaths.Count < 1)
             {
+                Console.Write(Directory.GetCurrentDirectory + " " + args[0]);
                 throw new Exception(
                     "Options when calling shank from Command Line (CL): "
                         + "1) pass a valid path to a *.shank file; "
                         + "2) pass a valid path to a directory containing at least one *.shank file; "
                         + "3) have at least one *.shank file in the current directory and pass no CL arguments"
+                        + Directory.GetDirectories(Directory.GetCurrentDirectory())
                 );
             }
 
@@ -67,11 +69,13 @@ namespace Shank
                 var brokeOutOfWhile = false;
                 while (tokens.Any())
                 {
-                    FunctionNode? fn = null;
+                    //FunctionNode? fn = null;
+                    ModuleNode module = null;
                     var parserErrorOccurred = false;
+
                     try
                     {
-                        fn = p.Function();
+                        module = p.Module();
                     }
                     catch (SyntaxErrorException e)
                     {
@@ -88,12 +92,12 @@ namespace Shank
                     }
 
                     // TODO: Handle global variables here.
-                    if (fn is null)
-                    {
-                        continue;
-                    }
+                    //if (fn is null)
+                    //{
+                    //    continue;
+                    //}
 
-                    Interpreter.Functions.Add(fn.Name, fn);
+                    Interpreter.Modules.Add(module.getName(), module);
                 }
 
                 // Parser error occurred -- skip to next file.
@@ -101,25 +105,30 @@ namespace Shank
                 {
                     continue;
                 }
+            }
+            Interpreter.handleExports();
+            Interpreter.handleImports();
+            //Interpreter.moduleSemanticAnalysis();
+            // Begin program interpretation and output.
+            foreach (KeyValuePair<string, ModuleNode> currentModulePair in Interpreter.Modules) {
+                var currentModule = currentModulePair.Value;
+                //Console.WriteLine($"\nOutput of {currentModule.getName()}:\n");
 
-                // Begin program interpretation and output.
-                Console.WriteLine($"\nOutput of {inPath}:\n");
-
-                BuiltInFunctions.Register(Interpreter.Functions, newFnNamePrefix);
+                BuiltInFunctions.Register(currentModule.getFunctions());
                 if (
-                    Interpreter.Functions.ContainsKey(newFnNamePrefix + "start")
-                    && Interpreter.Functions[newFnNamePrefix + "start"] is FunctionNode s
+                    currentModule.getFunctions().ContainsKey( "start")
+                    && currentModule.getFunctions()["start"] is FunctionNode s
                 )
                 {
                     var interpreterErrorOccurred = false;
                     try
                     {
-                        Interpreter.InterpretFunction(s, new List<InterpreterDataType>());
+                        Interpreter.InterpretFunction(s, new List<InterpreterDataType>(), currentModule);
                     }
                     catch (Exception e)
                     {
                         Console.WriteLine(
-                            $"\nInterpretation error encountered in file {inPath}:\n{e}\nskipping..."
+                            $"\nInterpretation error encountered in file {currentModulePair.Key}:\n{e}\nskipping..."
                         );
                         interpreterErrorOccurred = true;
                     }

@@ -19,30 +19,30 @@ public class IRGenerator
 
     public void GenerateIR()
     {
-        // Create all the functions.
-        if (
-            Interpreter.Functions.ContainsKey(this._fnNamePrefix + "start")
-            && Interpreter.Functions.ContainsKey(this._fnNamePrefix + "write")
-        )
-        {
-            var mainFunc = this.CreateFunc(Interpreter.Functions[this._fnNamePrefix + "start"]);
-            var printfFunc = this.CreateFunc(Interpreter.Functions[this._fnNamePrefix + "write"]);
+        //// Create all the functions.
+        //if (
+        //    Interpreter.Functions.ContainsKey(this._fnNamePrefix + "start")
+        //    && Interpreter.Functions.ContainsKey(this._fnNamePrefix + "write")
+        //)
+        //{
+        //    var mainFunc = this.CreateFunc(Interpreter.Functions[this._fnNamePrefix + "start"]);
+        //    var printfFunc = this.CreateFunc(Interpreter.Functions[this._fnNamePrefix + "write"]);
 
-            // Add all the statements.
-            LLVMBasicBlockRef entryBlock = mainFunc.AppendBasicBlock("entry");
-            this._builder.PositionAtEnd(entryBlock);
-            this.HelloWorld(printfFunc);
-            this._builder.BuildRetVoid();
+        //    // Add all the statements.
+        //    LLVMBasicBlockRef entryBlock = mainFunc.AppendBasicBlock("entry");
+        //    this._builder.PositionAtEnd(entryBlock);
+        //    this.HelloWorld(printfFunc);
+        //    this._builder.BuildRetVoid();
 
-            // Verify all the functions.
-            mainFunc.VerifyFunction(LLVMVerifierFailureAction.LLVMPrintMessageAction);
-        }
+        //    // Verify all the functions.
+        //    mainFunc.VerifyFunction(LLVMVerifierFailureAction.LLVMPrintMessageAction);
+        //}
 
-        // Output.
-        var outPath = Directory.CreateDirectory(
-            Path.Combine(Directory.GetCurrentDirectory(), "IR")
-        );
-        this._module.PrintToFile(Path.Combine(outPath.FullName, "output4.ll"));
+        //// Output.
+        //var outPath = Directory.CreateDirectory(
+        //    Path.Combine(Directory.GetCurrentDirectory(), "IR")
+        //);
+        //this._module.PrintToFile(Path.Combine(outPath.FullName, "output4.ll"));
     }
 
     private void HelloWorld(LLVMValueRef printfFunc)

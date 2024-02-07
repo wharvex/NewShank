@@ -2,11 +2,20 @@
 {
     public class Interpreter
     {
-        public static Dictionary<string, CallableNode> Functions = new();
+        //public static Dictionary<string, CallableNode> Functions = new();
+        public static Dictionary<string, ModuleNode> Modules = new Dictionary<string, ModuleNode>();
+        private static ModuleNode? startModule;
+        //public static void InterpretModule(Module module)
+        //{
 
-        public static void InterpretFunction(FunctionNode fn, List<InterpreterDataType> ps)
+        //}
+        public static void InterpretFunction(FunctionNode fn, List<InterpreterDataType> ps, ModuleNode? sModule)
         {
             var variables = new Dictionary<string, InterpreterDataType>();
+            if (sModule != null)
+            {
+                startModule = sModule;
+            }
             if (ps.Count != fn.ParameterVariables.Count)
                 throw new Exception(
                     $"Function {fn.Name}, {ps.Count} parameters passed in, {fn.ParameterVariables.Count} required"
@@ -22,12 +31,13 @@
             }
 
             // Interpret instructions
-            InterpretBlock(fn.Statements, variables);
+            InterpretBlock(fn.Statements, variables, fn);
         }
 
         private static void InterpretBlock(
             List<StatementNode> fnStatements,
-            Dictionary<string, InterpreterDataType> variables
+            Dictionary<string, InterpreterDataType> variables,
+            CallableNode callingFunction
         )
         {
             foreach (var stmt in fnStatements)
@@ -58,7 +68,7 @@
                 }
                 else if (stmt is FunctionCallNode fc)
                 {
-                    ProcessFunctionCall(variables, fc);
+                    ProcessFunctionCall(variables, fc, callingFunction);
                 }
                 else if (stmt is IfNode ic)
                 {
@@ -71,27 +81,27 @@
                             && theIc?.Children != null
                         )
                         {
-                            InterpretBlock(theIc.Children, variables);
+                            InterpretBlock(theIc.Children, variables, callingFunction);
                             theIc = null;
                         }
                         else
                             theIc = theIc?.NextIfNode;
                     }
                     if (theIc?.Children != null)
-                        InterpretBlock(theIc.Children, variables);
+                        InterpretBlock(theIc.Children, variables, callingFunction);
                 }
                 else if (stmt is WhileNode wn)
                 {
                     while (ResolveBool(wn.Expression, variables))
                     {
-                        InterpretBlock(wn.Children, variables);
+                        InterpretBlock(wn.Children, variables, callingFunction);
                     }
                 }
                 else if (stmt is RepeatNode rn)
                 {
                     do
                     {
-                        InterpretBlock(rn.Children, variables);
+                        InterpretBlock(rn.Children, variables, callingFunction);
                     } while (!ResolveBool(rn.Expression, variables));
                 }
                 else if (stmt is ForNode fn)
@@ -106,7 +116,7 @@
                     for (var i = start; i < end; i++)
                     {
                         index.Value = i;
-                        InterpretBlock(fn.Children, variables);
+                        InterpretBlock(fn.Children, variables, callingFunction);
                     }
                 }
             }
@@ -127,16 +137,36 @@
 
         private static void ProcessFunctionCall(
             Dictionary<string, InterpreterDataType> variables,
-            FunctionCallNode fc
-        )
+            FunctionCallNode fc,
+            CallableNode callingFunction
+            )
         {
-            var calledFunction = Functions[fc.Name]; // find the function
+            ASTNode? calledFunction;
+            if(startModule == null)
+            {
+                throw new Exception( "Interpreter error, when calling InterpretFunction" );
+            }
+            if (startModule.getFunctions().ContainsKey(fc.Name)) {
+                 calledFunction = startModule.getFunctions()[fc.Name]; // find the function
+            }
+            else if (startModule.getImports().ContainsKey(fc.Name))
+            {
+                calledFunction = startModule.getImports()[fc.Name];
+            } 
+            else
+            {
+                throw new Exception( "Could not find the function " + fc.Name + " in the module " + startModule);
+            }
+            if (!((CallableNode)calledFunction).IsPublic && !Modules[callingFunction.parentModuleName].getFunctions().ContainsKey(fc.Name))
+                    throw new Exception("Cannot access the private function " + ((CallableNode)calledFunction).Name
+                        + " from module " + callingFunction.parentModuleName
+                        );
             if (
-                fc.Parameters.Count != calledFunction.ParameterVariables.Count
+                fc.Parameters.Count != ((CallableNode)calledFunction).ParameterVariables.Count
                 && calledFunction is BuiltInFunctionNode { IsVariadic: false }
             ) // make sure that the counts match
                 throw new Exception(
-                    $"Call of {calledFunction.Name}, parameter count doesn't match."
+                    $"Call of {((CallableNode)calledFunction).Name}, parameter count doesn't match."
                 );
             // make the list of parameters
             var passed = new List<InterpreterDataType>();
@@ -188,20 +218,20 @@
                             break;
                         default:
                             throw new Exception(
-                                $"Call of {calledFunction.Name}, constant parameter of unknown type."
+                                $"Call of {((CallableNode)calledFunction).Name}, constant parameter of unknown type."
                             );
                     }
                 }
             }
 
-            calledFunction.Execute?.Invoke(passed);
+            ((CallableNode)calledFunction).Execute?.Invoke(passed);
             // update the variable parameters and return
             for (var i = 0; i < passed.Count; i++)
             {
                 if (
                     (
                         (calledFunction is BuiltInFunctionNode { IsVariadic: true })
-                        || !calledFunction.ParameterVariables[i].IsConstant
+                        || !((CallableNode)calledFunction).ParameterVariables[i].IsConstant
                     )
                     && fc.Parameters[i].Variable != null
                     && fc.Parameters[i].IsVariable
@@ -383,5 +413,31 @@
             else
                 throw new ArgumentException(nameof(node));
         }
+        public static void handleImports()
+        {
+            foreach(KeyValuePair<string, ModuleNode> currentModule in Modules)
+            {
+                foreach(string currentImport in currentModule.Value.getImportList())
+                {
+                    if (Modules.ContainsKey(currentImport)){
+                        currentModule.Value.updateImports(Modules[currentImport].getFunctions()
+                                                            , Modules[currentImport].getExports());
+                    } else
+                    {
+                        throw new Exception("Could not find " + currentImport + " in the list of modules.");
+                    }
+                }
+            }
+        }
+
+        public static void handleExports()
+        {
+            foreach(KeyValuePair<string, ModuleNode> currentModule in Modules) 
+            {
+                currentModule.Value.updateExports();
+            }
+        }
+
+       
     }
 }
