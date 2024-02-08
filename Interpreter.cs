@@ -6,6 +6,12 @@
         public static Dictionary<string, ModuleNode> Modules = new Dictionary<string, ModuleNode>();
         private static ModuleNode? startModule;
 
+        /// <summary>
+        /// Convert the given FunctionNode and its contents into their associated InterpreterDataTypes.
+        /// </summary>
+        /// <param name="fn">The FunctionNode being converted</param>
+        /// <param name="ps">Parameters passed in</param>
+        /// <exception cref="Exception"></exception>
         //public static void InterpretModule(Module module)
         //{
 
