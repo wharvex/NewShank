@@ -34,6 +34,7 @@
             {
                 if (stmt is AssignmentNode an)
                 {
+                    // target is the left side of the assignment statement
                     var target = variables[an.target.Name];
                     switch (target)
                     {
@@ -46,31 +47,31 @@
                                 case VariableNode.DataType.Integer:
                                     at.AddElement(
                                         ResolveInt(an.expression, variables),
-                                        ResolveInt(an.target, variables)
+                                        ResolveInt(an.target.Index, variables)
                                     );
                                     break;
                                 case VariableNode.DataType.Real:
                                     at.AddElement(
                                         ResolveFloat(an.expression, variables),
-                                        ResolveInt(an.target, variables)
+                                        ResolveInt(an.target.Index, variables)
                                     );
                                     break;
                                 case VariableNode.DataType.String:
                                     at.AddElement(
                                         ResolveString(an.expression, variables),
-                                        ResolveInt(an.target, variables)
+                                        ResolveInt(an.target.Index, variables)
                                     );
                                     break;
                                 case VariableNode.DataType.Character:
                                     at.AddElement(
                                         ResolveChar(an.expression, variables),
-                                        ResolveInt(an.target, variables)
+                                        ResolveInt(an.target.Index, variables)
                                     );
                                     break;
                                 case VariableNode.DataType.Boolean:
                                     at.AddElement(
                                         ResolveBool(an.expression, variables),
-                                        ResolveInt(an.target, variables)
+                                        ResolveInt(an.target.Index, variables)
                                     );
                                     break;
                                 default:
