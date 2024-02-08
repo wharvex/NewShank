@@ -159,20 +159,37 @@ namespace Shank
     public abstract class CallableNode : ASTNode
     {
         public string Name { get; set; }
+        public string parentModuleName { get; set; }
+        public bool IsPublic { get; set; }
         public string OrigName { get; set; }
         public List<VariableNode> ParameterVariables = new();
 
-        protected CallableNode(string name, string namePrefix)
+        protected CallableNode(string name)
         {
-            Name = namePrefix + name;
-            OrigName = name;
+            Name = name;
+            IsPublic = false;
         }
 
-        protected CallableNode(string name, string namePrefix, BuiltInCall execute)
+        protected CallableNode(string name, string moduleName)
         {
-            Name = namePrefix + name;
+            Name = name;
+            parentModuleName = moduleName;
+            IsPublic = false;
+        }
+
+        protected CallableNode(string name, BuiltInCall execute)
+        {
+            Name = name;
             OrigName = name;
             Execute = execute;
+            IsPublic = false;
+        }
+
+        protected CallableNode(string name, string moduleName, bool isPublicIn)
+        {
+            Name = name;
+            parentModuleName = moduleName;
+            IsPublic = isPublicIn;
         }
 
         public delegate void BuiltInCall(List<InterpreterDataType> parameters);
@@ -181,20 +198,34 @@ namespace Shank
 
     public class BuiltInFunctionNode : CallableNode
     {
-        public BuiltInFunctionNode(string name, string namePrefix, BuiltInCall execute)
-            : base(name, namePrefix, execute) { }
+        public BuiltInFunctionNode(string name, BuiltInCall execute)
+            : base(name, execute) { }
 
         public bool IsVariadic = false;
     }
 
     public class FunctionNode : CallableNode
     {
-        public FunctionNode(string name, string namePrefix)
-            : base(name, namePrefix)
+        public FunctionNode(string name, string moduleName, bool isPublic)
+            : base(name, moduleName, isPublic)
         {
             // This is a delegate instance, similar to an abstract method implementation in Java.
             Execute = (List<InterpreterDataType> paramList) =>
-                Interpreter.InterpretFunction(this, paramList);
+                Interpreter.InterpretFunction(this, paramList, null);
+        }
+
+        public FunctionNode(string name, string moduleName)
+            : base(name, moduleName)
+        {
+            Execute = (List<InterpreterDataType> paramList) =>
+                Interpreter.InterpretFunction(this, paramList, null);
+        }
+
+        public FunctionNode(string name)
+            : base(name)
+        {
+            Execute = (List<InterpreterDataType> paramList) =>
+                Interpreter.InterpretFunction(this, paramList, null);
         }
 
         public List<VariableNode> LocalVariables = new();
@@ -1035,5 +1066,123 @@ namespace Shank
         {
             return $"{target} := {expression}";
         }
+    }
+
+    public class ModuleNode
+    {
+        private string name;
+        private Dictionary<string, CallableNode> Functions;
+        private Dictionary<string, ASTNode?> Exports;
+        private Dictionary<string, ASTNode?> Imports;
+        private LinkedList<string> ImportTargetNames;
+        private LinkedList<string> ExportTargetNames;
+
+        public ModuleNode(string name)
+        {
+            this.name = name;
+            Functions = new Dictionary<string, CallableNode>();
+            Exports = new Dictionary<string, ASTNode?>();
+            Imports = new Dictionary<string, ASTNode?>();
+            ImportTargetNames = new LinkedList<string>();
+            ExportTargetNames = new LinkedList<string>();
+        }
+
+        public void updateImports(
+            Dictionary<string, CallableNode?> recievedFunctions,
+            Dictionary<string, ASTNode?> recievedExports
+        )
+        {
+            foreach (var function in recievedFunctions)
+            {
+                Imports.Add(function.Key, function.Value);
+                if (recievedExports.ContainsKey(function.Key))
+                {
+                    ((CallableNode)Imports[function.Key]).IsPublic = true;
+                }
+            }
+        }
+
+        public void updateExports()
+        {
+            foreach (var exportFunctionName in ExportTargetNames)
+            {
+                if (Functions.ContainsKey(exportFunctionName))
+                {
+                    Exports.Add(exportFunctionName, Functions[exportFunctionName]);
+                }
+                else
+                {
+                    throw new Exception(
+                        "Could not find "
+                            + exportFunctionName
+                            + " in the current list of functions in module "
+                            + name
+                    );
+                }
+            }
+        }
+
+        public void addFunction(CallableNode? function)
+        {
+            if (function != null)
+            {
+                Functions.Add(function.Name, function);
+            }
+        }
+
+        public void addExportName(string? name)
+        {
+            ExportTargetNames.AddLast(name);
+        }
+
+        public void addImportName(string? name)
+        {
+            ImportTargetNames.AddLast(name);
+        }
+
+        public LinkedList<string> getExportList()
+        {
+            return ExportTargetNames;
+        }
+
+        public LinkedList<string?> getImportList()
+        {
+            return ImportTargetNames;
+        }
+
+        public Dictionary<string, ASTNode?> getExports()
+        {
+            return Exports;
+        }
+
+        public Dictionary<string, ASTNode?> getImports()
+        {
+            return Imports;
+        }
+
+        public CallableNode? getFunction(string name)
+        {
+            if (Functions.ContainsKey(name))
+                return Functions[name];
+            else
+                return null;
+        }
+
+        public Dictionary<string, CallableNode> getFunctions()
+        {
+            return Functions;
+        }
+
+        public string getName()
+        {
+            return name;
+        }
+    }
+
+    public enum CrossFileInteraction
+    {
+        Module,
+        Export,
+        Import
     }
 }

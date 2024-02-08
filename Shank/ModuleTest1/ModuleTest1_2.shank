@@ -1,0 +1,5 @@
+module test2
+export add
+
+define add(a, b : integer; var c : integer)
+	c:= a + b

@@ -42,6 +42,9 @@ namespace Shank
                 { "string", Token.TokenType.String },
                 { "array", Token.TokenType.Array },
                 { "of", Token.TokenType.Of },
+                { "export", Token.TokenType.Export },
+                { "import", Token.TokenType.Import },
+                { "module", Token.TokenType.Module }
             };
 
         private void ModeChange(List<Token> retVal, StringBuilder currentBuffer, int lineNumber)

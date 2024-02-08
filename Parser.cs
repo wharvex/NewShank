@@ -1,4 +1,6 @@
-﻿namespace Shank
+﻿using System.Reflection.Metadata;
+
+namespace Shank
 {
     public class Parser
     {
@@ -51,15 +53,71 @@
             return null;
         }
 
-        public FunctionNode? Function()
+        public ModuleNode? Module()
         {
-            MatchAndRemove(Token.TokenType.EndOfLine);
-            if (MatchAndRemove(Token.TokenType.Define) == null)
-                return null;
+            ModuleNode module = null;
+            string moduleName;
+            if (MatchAndRemove(Token.TokenType.Module) == null)
+            {
+                moduleName = Directory.GetCurrentDirectory();
+            }
+            else
+            {
+                var token = MatchAndRemove(Token.TokenType.Identifier);
+                if (token == null || token.Value == null)
+                {
+                    throw new SyntaxErrorException(
+                        "A file declared as a module must be followed by an identifier, not ",
+                        Peek(0)
+                    );
+                }
+                moduleName = token.Value;
+                MatchAndRemove(Token.TokenType.EndOfLine);
+            }
+            module = new ModuleNode(moduleName);
+            while (_tokens.Count > 0)
+            {
+                if (MatchAndRemove(Token.TokenType.EndOfLine) != null)
+                {
+                    continue;
+                }
+                if (MatchAndRemove(Token.TokenType.Export) != null)
+                {
+                    module.addExportName(Export());
+                }
+                else if (MatchAndRemove(Token.TokenType.Import) != null)
+                {
+                    module.addImportName(Import());
+                }
+                else if (MatchAndRemove(Token.TokenType.Define) != null)
+                {
+                    module.addFunction(Function(moduleName));
+                }
+                else
+                {
+                    throw new SyntaxErrorException(
+                        "Any statement at indent zero must begin with the keywords import,"
+                            + " export, or function, the following is invalid",
+                        Peek(0)
+                    );
+                }
+            }
+            //if (MatchAndRemove(Token.TokenType.Module) != null)
+            //{
+            //    module = new Module();
+            //}
+            return module;
+        }
+
+        public FunctionNode? Function(string moduleName)
+        {
+            //MatchAndRemove(Token.TokenType.EndOfLine);
+            //if (MatchAndRemove(Token.TokenType.Define) == null)
+            //    return null;
             var name = MatchAndRemove(Token.TokenType.Identifier);
             if (name == null)
                 throw new SyntaxErrorException("Expected a name", Peek(0));
-            var funcNode = new FunctionNode(name.Value ?? "", _functionNamePrefix);
+            var funcNode = new FunctionNode(name.Value ?? "", moduleName);
 
             if (MatchAndRemove(Token.TokenType.LeftParen) == null)
                 throw new SyntaxErrorException("Expected a left paren", Peek(0));
@@ -164,9 +222,7 @@
                 MatchAndRemove(Token.TokenType.Comma);
             }
 
-            var retVal = new FunctionCallNode(
-                name.Value != null ? _functionNamePrefix + name.Value : string.Empty
-            );
+            var retVal = new FunctionCallNode(name.Value != null ? name.Value : string.Empty);
             retVal.Parameters.AddRange(parameters);
             return retVal;
         }
@@ -754,6 +810,29 @@
             if (token.Value.Contains("."))
                 return new FloatNode(float.Parse(token.Value));
             return new IntNode(int.Parse(token.Value));
+        }
+
+        private string? Export()
+        {
+            var token = MatchAndRemove(Token.TokenType.Identifier);
+            if (token == null || token.Value == null)
+                throw new SyntaxErrorException(
+                    "An export call must be followed by an identifier, not ",
+                    Peek(0)
+                );
+            //TODO: add handling for {} and [] from shank language definition
+            return token.Value;
+        }
+
+        private string? Import()
+        {
+            var token = MatchAndRemove(Token.TokenType.Identifier);
+            if (token == null || token.Value == null)
+                throw new SyntaxErrorException(
+                    "An import call must be followed by an identifier, not ",
+                    Peek(0)
+                );
+            return token.Value;
         }
     }
 }
