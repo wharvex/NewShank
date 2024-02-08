@@ -1,0 +1,11 @@
+define start()
+variables num, sum, i : integer
+	num := 28
+	sum := 0
+	for i from 1 to num
+		if num mod i = 0 then
+			sum := sum + i
+	if sum = num then
+		write "True!"
+	else
+		write "False!"

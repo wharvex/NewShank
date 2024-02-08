@@ -1,0 +1,14 @@
+define start()
+variables num, i, factorial: integer
+	num := 7
+	i := 1
+	factorial := 1
+	if num < 0 then
+		write "ERROR! FACTORIAL OF NEGATIVE NUMBER"
+	elsif num = 0 then
+		write "FACTORIAL IS 1"
+	else
+		for i from i to (num + 1)
+			factorial := factorial * i
+		write "FACTORIAL IS"
+		write factorial
