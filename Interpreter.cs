@@ -4,6 +4,12 @@
     {
         public static Dictionary<string, CallableNode> Functions = new();
 
+        /// <summary>
+        /// Convert the given FunctionNode and its contents into their associated InterpreterDataTypes.
+        /// </summary>
+        /// <param name="fn">The FunctionNode being converted</param>
+        /// <param name="ps">Parameters passed in</param>
+        /// <exception cref="Exception"></exception>
         public static void InterpretFunction(FunctionNode fn, List<InterpreterDataType> ps)
         {
             var variables = new Dictionary<string, InterpreterDataType>();

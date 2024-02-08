@@ -192,15 +192,13 @@ namespace Shank
         public FunctionNode(string name, string namePrefix)
             : base(name, namePrefix)
         {
+            // This is a delegate instance, similar to an abstract method implementation in Java.
             Execute = (List<InterpreterDataType> paramList) =>
                 Interpreter.InterpretFunction(this, paramList);
         }
 
         public List<VariableNode> LocalVariables = new();
 
-        //LocalVariables (scroll above) contain start, end, i, prev1
-        //alloca() for constatns and variables
-        //store() for assignment (Currently, I did both. BUt I just need to use store())
         public List<StatementNode> Statements = new();
 
         public override string ToString()
