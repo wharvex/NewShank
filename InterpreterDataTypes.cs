@@ -1,4 +1,7 @@
-﻿namespace Shank
+﻿using System.Collections;
+using Force.DeepCloner;
+
+namespace Shank
 {
     public abstract class InterpreterDataType
     {
@@ -106,8 +109,38 @@
         }
     }
 
-    // public class ArrayDataType : InterpreterDataType
-    // {
-    //     public ArrayDataType()
-    // }
+    public class ArrayDataType : InterpreterDataType
+    {
+        public readonly List<object> Value;
+        public VariableNode.DataType ArrayContentsType { get; init; }
+
+        public ArrayDataType(int to, VariableNode.DataType arrayContentsType)
+        {
+            Value = new List<object>(new object[to]);
+            ArrayContentsType = arrayContentsType;
+        }
+
+        public ArrayDataType(List<object> val, VariableNode.DataType arrayContentsType)
+        {
+            Value = val;
+            ArrayContentsType = arrayContentsType;
+        }
+
+        public void AddElement(object element, int idx)
+        {
+            Value.Insert(idx, element);
+        }
+
+        public object GetElement(int idx)
+        {
+            return Value[idx];
+        }
+
+        public override string ToString()
+        {
+            return "";
+        }
+
+        public override void FromString(string input) { }
+    }
 }

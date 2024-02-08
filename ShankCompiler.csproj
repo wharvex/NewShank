@@ -11,6 +11,7 @@
   </PropertyGroup>
    
   <ItemGroup>
+    <PackageReference Include="DeepCloner" Version="0.10.2" />
     <PackageReference Include="LLVMSharp.Interop" Version="15.0.0-beta1" />
     <PackageReference Include="libLLVM.runtime.win-x64" Version="15.0.0" />
   </ItemGroup>

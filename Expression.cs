@@ -879,6 +879,10 @@ namespace Shank
         }
 
         public string Name { get; init; }
+
+        /// <summary>
+        /// Holds the variable's array index expression if it exists.
+        /// </summary>
         public ASTNode? Index { get; init; }
 
         public override string ToString()
@@ -1030,6 +1034,9 @@ namespace Shank
         }
     }
 
+    /// <summary>
+    /// Models an assignment statement.
+    /// </summary>
     public class AssignmentNode : StatementNode
     {
         public AssignmentNode(VariableReferenceNode target, ASTNode expression)
@@ -1038,7 +1045,14 @@ namespace Shank
             this.target = target;
         }
 
+        /// <summary>
+        /// The variable to be assigned to.
+        /// </summary>
         public VariableReferenceNode target { get; set; }
+
+        /// <summary>
+        /// The expression to be assigned to the variable.
+        /// </summary>
         public ASTNode expression { get; set; }
 
         public override object[] returnStatementTokens()

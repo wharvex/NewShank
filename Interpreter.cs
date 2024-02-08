@@ -50,6 +50,43 @@
                         case IntDataType it:
                             it.Value = ResolveInt(an.expression, variables);
                             break;
+                        case ArrayDataType at:
+                            switch (at.ArrayContentsType)
+                            {
+                                case VariableNode.DataType.Integer:
+                                    at.AddElement(
+                                        ResolveInt(an.expression, variables),
+                                        ResolveInt(an.target, variables)
+                                    );
+                                    break;
+                                case VariableNode.DataType.Real:
+                                    at.AddElement(
+                                        ResolveFloat(an.expression, variables),
+                                        ResolveInt(an.target, variables)
+                                    );
+                                    break;
+                                case VariableNode.DataType.String:
+                                    at.AddElement(
+                                        ResolveString(an.expression, variables),
+                                        ResolveInt(an.target, variables)
+                                    );
+                                    break;
+                                case VariableNode.DataType.Character:
+                                    at.AddElement(
+                                        ResolveChar(an.expression, variables),
+                                        ResolveInt(an.target, variables)
+                                    );
+                                    break;
+                                case VariableNode.DataType.Boolean:
+                                    at.AddElement(
+                                        ResolveBool(an.expression, variables),
+                                        ResolveInt(an.target, variables)
+                                    );
+                                    break;
+                                default:
+                                    throw new Exception("Invalid ArrayContentsType");
+                            }
+                            break;
                         case FloatDataType ft:
                             ft.Value = ResolveFloat(an.expression, variables);
                             break;
@@ -193,6 +230,11 @@
                         case BooleanDataType boolVal:
                             passed.Add(new BooleanDataType(boolVal.Value));
                             break;
+                        case ArrayDataType arrayVal:
+                            passed.Add(
+                                new ArrayDataType(arrayVal.Value, arrayVal.ArrayContentsType)
+                            );
+                            break;
                     }
                 }
                 else
@@ -257,8 +299,18 @@
                     return new CharDataType(((vn.InitialValue as CharNode)?.Value) ?? ' ');
                 case VariableNode.DataType.Boolean:
                     return new BooleanDataType(((vn.InitialValue as BoolNode)?.Value) ?? true);
+                case VariableNode.DataType.Array:
+                {
+                    if (vn.To is null)
+                        throw new ArgumentException(
+                            "Something went wrong internally. Every array variable declaration"
+                                + " should have a range expression, and the Parser should have"
+                                + " checked this already."
+                        );
+                    return new ArrayDataType(ResolveIntBeforeVarDecs(vn.To), vn.ArrayType);
+                }
                 default:
-                    throw new Exception("Unknown local variable type");
+                    throw new Exception($"Unknown local variable type");
             }
         }
 
@@ -439,5 +491,40 @@
         }
 
        
+
+        public static int ResolveIntBeforeVarDecs(ASTNode node)
+        {
+            if (node is MathOpNode mon)
+            {
+                var left = ResolveIntBeforeVarDecs(mon.Left);
+                var right = ResolveIntBeforeVarDecs(mon.Right);
+                switch (mon.Op)
+                {
+                    case MathOpNode.OpType.plus:
+                        return left + right;
+                    case MathOpNode.OpType.minus:
+                        return left - right;
+                    case MathOpNode.OpType.times:
+                        return left * right;
+                    case MathOpNode.OpType.divide:
+                        return left / right;
+                    case MathOpNode.OpType.modulo:
+                        return left % right;
+                    default:
+                        throw new ArgumentOutOfRangeException(
+                            nameof(mon.Op),
+                            "Invalid operation type"
+                        );
+                }
+            }
+            else if (node is IntNode fn)
+                return fn.Value;
+            else if (node is VariableReferenceNode vr)
+                throw new Exception(
+                    "Variable references not allowed before all variables are declared"
+                );
+            else
+                throw new ArgumentException("Invalid node type for integer", nameof(node));
+        }
     }
 }
