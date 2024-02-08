@@ -12,7 +12,6 @@
         /// <param name="fn">The FunctionNode being converted</param>
         /// <param name="ps">Parameters passed in</param>
         /// <exception cref="Exception"></exception>
-        public static void InterpretFunction(FunctionNode fn, List<InterpreterDataType> ps)
         //public static void InterpretModule(Module module)
         //{
 
