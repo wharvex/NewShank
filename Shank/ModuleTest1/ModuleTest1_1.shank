@@ -5,3 +5,5 @@ define start()
 variables p : integer
 	add 1, 2, var p
 	write p
+	sub 17, 1, var p
+	write p

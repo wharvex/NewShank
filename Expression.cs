@@ -1069,11 +1069,7 @@ namespace Shank
             return $"{target} := {expression}";
         }
     }
-<<<<<<< Updated upstream
-=======
-<<<<<<< Updated upstream
-=======
->>>>>>> Stashed changes
+
 
     public class ModuleNode
     {
@@ -1137,17 +1133,15 @@ namespace Shank
             }
         }
 
-<<<<<<< Updated upstream
         public void addExportName(string? name)
         {
             ExportTargetNames.AddLast(name);
-=======
+        }
         public void addExportNames(LinkedList<string> names)
         {
             foreach (var name in names) {
                 ExportTargetNames.AddLast(name);
              }
->>>>>>> Stashed changes
         }
 
         public void addImportName(string? name)
@@ -1192,14 +1186,12 @@ namespace Shank
         {
             return name;
         }
-<<<<<<< Updated upstream
-=======
+
 
         public void setName(string nameIn)
         {
             name = nameIn;
         }
->>>>>>> Stashed changes
     }
 
     public enum CrossFileInteraction
@@ -1208,8 +1200,5 @@ namespace Shank
         Export,
         Import
     }
-<<<<<<< Updated upstream
-=======
->>>>>>> Stashed changes
->>>>>>> Stashed changes
+
 }

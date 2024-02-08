@@ -55,24 +55,12 @@ namespace Shank
 
         public ModuleNode? Module()
         {
-<<<<<<< Updated upstream
-            ModuleNode module = null;
-            string moduleName;
-            if (MatchAndRemove(Token.TokenType.Module) == null)
-            {
-                moduleName = Directory.GetCurrentDirectory();
-=======
-<<<<<<< Updated upstream
-            MatchAndRemove(Token.TokenType.EndOfLine);
-            if (MatchAndRemove(Token.TokenType.Define) == null)
-                return null;
-=======
+            
             ModuleNode? module = null;
             string? moduleName;
             if (MatchAndRemove(Token.TokenType.Module) == null)
             {
-                moduleName = 0.ToString();
->>>>>>> Stashed changes
+                moduleName = null;
             }
             else
             {
@@ -94,14 +82,8 @@ namespace Shank
                 {
                     continue;
                 }
-                if (MatchAndRemove(Token.TokenType.Export) != null)
+                else if (MatchAndRemove(Token.TokenType.Export) != null)
                 {
-<<<<<<< Updated upstream
-                    module.addExportName(Export());
-                }
-                else if (MatchAndRemove(Token.TokenType.Import) != null)
-                {
-=======
                     if(int.TryParse(moduleName, out _))
                     {
                         throw new SyntaxErrorException(
@@ -122,7 +104,6 @@ namespace Shank
                             Peek(0)
                             );
                     }
->>>>>>> Stashed changes
                     module.addImportName(Import());
                 }
                 else if (MatchAndRemove(Token.TokenType.Define) != null)
@@ -150,10 +131,7 @@ namespace Shank
             //MatchAndRemove(Token.TokenType.EndOfLine);
             //if (MatchAndRemove(Token.TokenType.Define) == null)
             //    return null;
-<<<<<<< Updated upstream
-=======
->>>>>>> Stashed changes
->>>>>>> Stashed changes
+
             var name = MatchAndRemove(Token.TokenType.Identifier);
             if (name == null)
                 throw new SyntaxErrorException("Expected a name", Peek(0));
@@ -851,15 +829,9 @@ namespace Shank
                 return new FloatNode(float.Parse(token.Value));
             return new IntNode(int.Parse(token.Value));
         }
-<<<<<<< Updated upstream
 
-        private string? Export()
-=======
-<<<<<<< Updated upstream
-=======
-
+        //private string? Export()
         private LinkedList<string> Export()
->>>>>>> Stashed changes
         {
             var token = MatchAndRemove(Token.TokenType.Identifier);
             if (token == null || token.Value == null)
@@ -867,10 +839,6 @@ namespace Shank
                     "An export call must be followed by an identifier, not ",
                     Peek(0)
                 );
-<<<<<<< Updated upstream
-            //TODO: add handling for {} and [] from shank language definition
-            return token.Value;
-=======
             LinkedList<string> exports = new LinkedList<string>();
             exports.AddLast(token.Value);
             while(MatchAndRemove(Token.TokenType.Comma) != null)
@@ -886,7 +854,6 @@ namespace Shank
             }
             //TODO: add handling for {} and [] from shank language definition
             return exports;
->>>>>>> Stashed changes
         }
 
         private string? Import()
@@ -899,9 +866,5 @@ namespace Shank
                 );
             return token.Value;
         }
-<<<<<<< Updated upstream
-=======
->>>>>>> Stashed changes
->>>>>>> Stashed changes
     }
 }
