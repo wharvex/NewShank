@@ -5,11 +5,16 @@
         //public static Dictionary<string, CallableNode> Functions = new();
         public static Dictionary<string, ModuleNode> Modules = new Dictionary<string, ModuleNode>();
         private static ModuleNode? startModule;
+
         //public static void InterpretModule(Module module)
         //{
 
         //}
-        public static void InterpretFunction(FunctionNode fn, List<InterpreterDataType> ps, ModuleNode? sModule)
+        public static void InterpretFunction(
+            FunctionNode fn,
+            List<InterpreterDataType> ps,
+            ModuleNode? sModule
+        )
         {
             var variables = new Dictionary<string, InterpreterDataType>();
             if (sModule != null)
@@ -177,28 +182,37 @@
             Dictionary<string, InterpreterDataType> variables,
             FunctionCallNode fc,
             CallableNode callingFunction
-            )
+        )
         {
             ASTNode? calledFunction;
-            if(startModule == null)
+            if (startModule == null)
             {
-                throw new Exception( "Interpreter error, when calling InterpretFunction" );
+                throw new Exception("Interpreter error, when calling InterpretFunction");
             }
-            if (startModule.getFunctions().ContainsKey(fc.Name)) {
-                 calledFunction = startModule.getFunctions()[fc.Name]; // find the function
+            if (startModule.getFunctions().ContainsKey(fc.Name))
+            {
+                calledFunction = startModule.getFunctions()[fc.Name]; // find the function
             }
             else if (startModule.getImports().ContainsKey(fc.Name))
             {
                 calledFunction = startModule.getImports()[fc.Name];
-            } 
+            }
             else
             {
-                throw new Exception( "Could not find the function " + fc.Name + " in the module " + startModule);
+                throw new Exception(
+                    "Could not find the function " + fc.Name + " in the module " + startModule
+                );
             }
-            if (!((CallableNode)calledFunction).IsPublic && !Modules[callingFunction.parentModuleName].getFunctions().ContainsKey(fc.Name))
-                    throw new Exception("Cannot access the private function " + ((CallableNode)calledFunction).Name
-                        + " from module " + callingFunction.parentModuleName
-                        );
+            if (
+                !((CallableNode)calledFunction).IsPublic
+                && !Modules[callingFunction.parentModuleName].getFunctions().ContainsKey(fc.Name)
+            )
+                throw new Exception(
+                    "Cannot access the private function "
+                        + ((CallableNode)calledFunction).Name
+                        + " from module "
+                        + callingFunction.parentModuleName
+                );
             if (
                 fc.Parameters.Count != ((CallableNode)calledFunction).ParameterVariables.Count
                 && calledFunction is BuiltInFunctionNode { IsVariadic: false }
@@ -466,18 +480,25 @@
             else
                 throw new ArgumentException(nameof(node));
         }
+
         public static void handleImports()
         {
-            foreach(KeyValuePair<string, ModuleNode> currentModule in Modules)
+            foreach (KeyValuePair<string, ModuleNode> currentModule in Modules)
             {
-                foreach(string currentImport in currentModule.Value.getImportList())
+                foreach (string currentImport in currentModule.Value.getImportList())
                 {
-                    if (Modules.ContainsKey(currentImport)){
-                        currentModule.Value.updateImports(Modules[currentImport].getFunctions()
-                                                            , Modules[currentImport].getExports());
-                    } else
+                    if (Modules.ContainsKey(currentImport))
                     {
-                        throw new Exception("Could not find " + currentImport + " in the list of modules.");
+                        currentModule.Value.updateImports(
+                            Modules[currentImport].getFunctions(),
+                            Modules[currentImport].getExports()
+                        );
+                    }
+                    else
+                    {
+                        throw new Exception(
+                            "Could not find " + currentImport + " in the list of modules."
+                        );
                     }
                 }
             }
@@ -485,13 +506,11 @@
 
         public static void handleExports()
         {
-            foreach(KeyValuePair<string, ModuleNode> currentModule in Modules) 
+            foreach (KeyValuePair<string, ModuleNode> currentModule in Modules)
             {
                 currentModule.Value.updateExports();
             }
         }
-
-       
 
         public static int ResolveIntBeforeVarDecs(ASTNode node)
         {

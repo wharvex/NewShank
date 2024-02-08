@@ -212,14 +212,16 @@ namespace Shank
             Execute = (List<InterpreterDataType> paramList) =>
                 Interpreter.InterpretFunction(this, paramList, null);
         }
+
         public FunctionNode(string name, string moduleName)
-         : base(name, moduleName)
+            : base(name, moduleName)
         {
             Execute = (List<InterpreterDataType> paramList) =>
                 Interpreter.InterpretFunction(this, paramList, null);
         }
+
         public FunctionNode(string name)
-           : base(name)
+            : base(name)
         {
             Execute = (List<InterpreterDataType> paramList) =>
                 Interpreter.InterpretFunction(this, paramList, null);
@@ -1067,26 +1069,31 @@ namespace Shank
             return $"{target} := {expression}";
         }
     }
+
     public class ModuleNode
     {
         private string name;
-        private  Dictionary<string, CallableNode> Functions;
+        private Dictionary<string, CallableNode> Functions;
         private Dictionary<string, ASTNode?> Exports;
         private Dictionary<string, ASTNode?> Imports;
         private LinkedList<string> ImportTargetNames;
         private LinkedList<string> ExportTargetNames;
 
-        public ModuleNode(string name) { 
+        public ModuleNode(string name)
+        {
             this.name = name;
             Functions = new Dictionary<string, CallableNode>();
-            Exports = new Dictionary<string, ASTNode?>(); 
+            Exports = new Dictionary<string, ASTNode?>();
             Imports = new Dictionary<string, ASTNode?>();
             ImportTargetNames = new LinkedList<string>();
             ExportTargetNames = new LinkedList<string>();
         }
 
-        public void updateImports(Dictionary<string, CallableNode?> recievedFunctions, Dictionary<string, ASTNode?> recievedExports)
-        { 
+        public void updateImports(
+            Dictionary<string, CallableNode?> recievedFunctions,
+            Dictionary<string, ASTNode?> recievedExports
+        )
+        {
             foreach (var function in recievedFunctions)
             {
                 Imports.Add(function.Key, function.Value);
@@ -1099,16 +1106,20 @@ namespace Shank
 
         public void updateExports()
         {
-            foreach(var exportFunctionName in ExportTargetNames)
+            foreach (var exportFunctionName in ExportTargetNames)
             {
                 if (Functions.ContainsKey(exportFunctionName))
                 {
                     Exports.Add(exportFunctionName, Functions[exportFunctionName]);
-                } 
+                }
                 else
                 {
-                    throw new Exception( "Could not find " + exportFunctionName +
-                        " in the current list of functions in module " + name);
+                    throw new Exception(
+                        "Could not find "
+                            + exportFunctionName
+                            + " in the current list of functions in module "
+                            + name
+                    );
                 }
             }
         }
@@ -1120,7 +1131,7 @@ namespace Shank
                 Functions.Add(function.Name, function);
             }
         }
-        
+
         public void addExportName(string? name)
         {
             ExportTargetNames.AddLast(name);
@@ -1130,6 +1141,7 @@ namespace Shank
         {
             ImportTargetNames.AddLast(name);
         }
+
         public LinkedList<string> getExportList()
         {
             return ExportTargetNames;
@@ -1150,18 +1162,17 @@ namespace Shank
             return Imports;
         }
 
-        public CallableNode ? getFunction(string name)
+        public CallableNode? getFunction(string name)
         {
             if (Functions.ContainsKey(name))
                 return Functions[name];
             else
-            
                 return null;
         }
 
-        public Dictionary<string, CallableNode> getFunctions() 
+        public Dictionary<string, CallableNode> getFunctions()
         {
-            return Functions; 
+            return Functions;
         }
 
         public string getName()
@@ -1169,6 +1180,7 @@ namespace Shank
             return name;
         }
     }
+
     public enum CrossFileInteraction
     {
         Module,

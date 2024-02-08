@@ -110,20 +110,25 @@ namespace Shank
             Interpreter.handleImports();
             //Interpreter.moduleSemanticAnalysis();
             // Begin program interpretation and output.
-            foreach (KeyValuePair<string, ModuleNode> currentModulePair in Interpreter.Modules) {
+            foreach (KeyValuePair<string, ModuleNode> currentModulePair in Interpreter.Modules)
+            {
                 var currentModule = currentModulePair.Value;
                 //Console.WriteLine($"\nOutput of {currentModule.getName()}:\n");
 
                 BuiltInFunctions.Register(currentModule.getFunctions());
                 if (
-                    currentModule.getFunctions().ContainsKey( "start")
+                    currentModule.getFunctions().ContainsKey("start")
                     && currentModule.getFunctions()["start"] is FunctionNode s
                 )
                 {
                     var interpreterErrorOccurred = false;
                     try
                     {
-                        Interpreter.InterpretFunction(s, new List<InterpreterDataType>(), currentModule);
+                        Interpreter.InterpretFunction(
+                            s,
+                            new List<InterpreterDataType>(),
+                            currentModule
+                        );
                     }
                     catch (Exception e)
                     {

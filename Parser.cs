@@ -1,5 +1,4 @@
-﻿
-using System.Reflection.Metadata;
+﻿using System.Reflection.Metadata;
 
 namespace Shank
 {
@@ -68,13 +67,12 @@ namespace Shank
                 if (token == null || token.Value == null)
                 {
                     throw new SyntaxErrorException(
-                            "A file declared as a module must be followed by an identifier, not ",
-                            Peek(0)
-                        );
+                        "A file declared as a module must be followed by an identifier, not ",
+                        Peek(0)
+                    );
                 }
                 moduleName = token.Value;
                 MatchAndRemove(Token.TokenType.EndOfLine);
-                  
             }
             module = new ModuleNode(moduleName);
             while (_tokens.Count > 0)
@@ -94,14 +92,14 @@ namespace Shank
                 else if (MatchAndRemove(Token.TokenType.Define) != null)
                 {
                     module.addFunction(Function(moduleName));
-                } 
+                }
                 else
                 {
                     throw new SyntaxErrorException(
-                            "Any statement at indent zero must begin with the keywords import," +
-                            " export, or function, the following is invalid",
-                            Peek(0)
-                        ) ;
+                        "Any statement at indent zero must begin with the keywords import,"
+                            + " export, or function, the following is invalid",
+                        Peek(0)
+                    );
                 }
             }
             //if (MatchAndRemove(Token.TokenType.Module) != null)
@@ -224,9 +222,7 @@ namespace Shank
                 MatchAndRemove(Token.TokenType.Comma);
             }
 
-            var retVal = new FunctionCallNode(
-                name.Value != null ? name.Value : string.Empty
-            );
+            var retVal = new FunctionCallNode(name.Value != null ? name.Value : string.Empty);
             retVal.Parameters.AddRange(parameters);
             return retVal;
         }
@@ -816,7 +812,6 @@ namespace Shank
             return new IntNode(int.Parse(token.Value));
         }
 
-
         private string? Export()
         {
             var token = MatchAndRemove(Token.TokenType.Identifier);
@@ -824,20 +819,19 @@ namespace Shank
                 throw new SyntaxErrorException(
                     "An export call must be followed by an identifier, not ",
                     Peek(0)
-                    );
+                );
             //TODO: add handling for {} and [] from shank language definition
             return token.Value;
         }
 
         private string? Import()
         {
-            
             var token = MatchAndRemove(Token.TokenType.Identifier);
             if (token == null || token.Value == null)
                 throw new SyntaxErrorException(
                     "An import call must be followed by an identifier, not ",
                     Peek(0)
-                    );
+                );
             return token.Value;
         }
     }

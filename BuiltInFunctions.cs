@@ -4,15 +4,15 @@
     {
         public static void Register(
             Dictionary<string, CallableNode> functionList
-            //string functionNameBase
+        //string functionNameBase
         )
         { // Note to the reader - this implementation is different than what I have the students writing in Java.
             // The concepts are the same, but this is more language appropriate. This would be too hard for
             // the students to do in Java.
             var retVal = new List<BuiltInFunctionNode>
             {
-                MakeNode( "write", new VariableNode[] { }, Write, true),
-                MakeNode( "read", new VariableNode[] { }, Read, true),
+                MakeNode("write", new VariableNode[] { }, Write, true),
+                MakeNode("read", new VariableNode[] { }, Read, true),
                 MakeNode(
                     "squareRoot",
                     new VariableNode[]

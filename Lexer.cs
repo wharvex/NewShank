@@ -42,7 +42,7 @@ namespace Shank
                 { "string", Token.TokenType.String },
                 { "array", Token.TokenType.Array },
                 { "of", Token.TokenType.Of },
-                { "export", Token.TokenType.Export},
+                { "export", Token.TokenType.Export },
                 { "import", Token.TokenType.Import },
                 { "module", Token.TokenType.Module }
             };
