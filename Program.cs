@@ -45,7 +45,7 @@ namespace Shank
                 );
             }
 
-            // var count = 0;
+            var unnamedModuleCount = 1;
             foreach (var inPath in inPaths)
             {
                 var lines = File.ReadAllLines(inPath);
@@ -75,7 +75,22 @@ namespace Shank
 
                     try
                     {
+<<<<<<< Updated upstream
                         module = p.Module();
+=======
+<<<<<<< Updated upstream
+                        fn = p.Function();
+=======
+                        module = p.Module();
+                        //if the file never declares itself as module, give it a unique digit name
+                        //the digit 
+                        if(module.getName() == "0")
+                        {
+                            module.setName(unnamedModuleCount.ToString());
+                            unnamedModuleCount++;
+                        }
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
                     }
                     catch (SyntaxErrorException e)
                     {
