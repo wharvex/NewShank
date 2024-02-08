@@ -1046,12 +1046,12 @@ namespace Shank
         }
 
         /// <summary>
-        /// The variable to be assigned to.
+        /// The variable to be assigned to (Left hand side of assignment statement).
         /// </summary>
         public VariableReferenceNode target { get; set; }
 
         /// <summary>
-        /// The expression to be assigned to the variable.
+        /// The expression to be assigned to the variable (Right hand side of assignment statement).
         /// </summary>
         public ASTNode expression { get; set; }
 
