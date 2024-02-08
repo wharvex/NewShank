@@ -77,8 +77,8 @@ namespace Shank
                     {
                         module = p.Module();
                         //if the file never declares itself as module, give it a unique digit name
-                        //the digit 
-                        if(module.getName() == null)
+                        //the digit
+                        if (module.getName() == null)
                         {
                             module.setName(unnamedModuleCount.ToString());
                             unnamedModuleCount++;

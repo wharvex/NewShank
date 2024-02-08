@@ -55,7 +55,6 @@ namespace Shank
 
         public ModuleNode? Module()
         {
-            
             ModuleNode? module = null;
             string? moduleName;
             if (MatchAndRemove(Token.TokenType.Module) == null)
@@ -84,13 +83,13 @@ namespace Shank
                 }
                 else if (MatchAndRemove(Token.TokenType.Export) != null)
                 {
-                    if(int.TryParse(moduleName, out _))
+                    if (int.TryParse(moduleName, out _))
                     {
                         throw new SyntaxErrorException(
-                            "Cannot import/export without declaring a module name. Names also must contain at least one " +
-                            "alphabetic character ",
+                            "Cannot import/export without declaring a module name. Names also must contain at least one "
+                                + "alphabetic character ",
                             Peek(0)
-                            );
+                        );
                     }
                     module.addExportNames(Export());
                 }
@@ -99,10 +98,10 @@ namespace Shank
                     if (int.TryParse(moduleName, out _))
                     {
                         throw new SyntaxErrorException(
-                            "Cannot import/export without declaring a module name. Names also must contain at least one " +
-                            "alphabetic character ",
+                            "Cannot import/export without declaring a module name. Names also must contain at least one "
+                                + "alphabetic character ",
                             Peek(0)
-                            );
+                        );
                     }
                     module.addImportName(Import());
                 }
@@ -841,16 +840,15 @@ namespace Shank
                 );
             LinkedList<string> exports = new LinkedList<string>();
             exports.AddLast(token.Value);
-            while(MatchAndRemove(Token.TokenType.Comma) != null)
+            while (MatchAndRemove(Token.TokenType.Comma) != null)
             {
                 token = MatchAndRemove(Token.TokenType.Identifier);
-                if(token == null || token.Value == null)
+                if (token == null || token.Value == null)
                     throw new SyntaxErrorException(
-                    "An comma in an export call must be followed by an identifer, ",
-                    Peek(0)
-                );
+                        "An comma in an export call must be followed by an identifer, ",
+                        Peek(0)
+                    );
                 exports.AddLast(token.Value);
-               
             }
             //TODO: add handling for {} and [] from shank language definition
             return exports;

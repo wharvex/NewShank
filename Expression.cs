@@ -1068,7 +1068,6 @@ namespace Shank
         }
     }
 
-
     public class ModuleNode
     {
         private string name;
@@ -1135,11 +1134,13 @@ namespace Shank
         {
             ExportTargetNames.AddLast(name);
         }
+
         public void addExportNames(LinkedList<string> names)
         {
-            foreach (var name in names) {
+            foreach (var name in names)
+            {
                 ExportTargetNames.AddLast(name);
-             }
+            }
         }
 
         public void addImportName(string? name)
@@ -1185,7 +1186,6 @@ namespace Shank
             return name;
         }
 
-
         public void setName(string nameIn)
         {
             name = nameIn;
@@ -1198,5 +1198,4 @@ namespace Shank
         Export,
         Import
     }
-
 }
