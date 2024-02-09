@@ -1135,6 +1135,14 @@ namespace Shank
             ExportTargetNames.AddLast(name);
         }
 
+        public void addExportNames(LinkedList<string> names)
+        {
+            foreach (var name in names)
+            {
+                ExportTargetNames.AddLast(name);
+            }
+        }
+
         public void addImportName(string? name)
         {
             ImportTargetNames.AddLast(name);
@@ -1176,6 +1184,11 @@ namespace Shank
         public string getName()
         {
             return name;
+        }
+
+        public void setName(string nameIn)
+        {
+            name = nameIn;
         }
     }
 

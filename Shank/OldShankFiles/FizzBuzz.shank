@@ -1,0 +1,11 @@
+﻿define start()
+variables i : integer
+	for i from 0 to 100
+		if i mod 15 = 0 then
+			write i,"Fizzbuzz"
+		elsif i mod 3 = 0 then
+			write i,"Fizz"
+		elsif i mod 5 = 0 then
+			write i,"Buzz"
+		else
+			write i,"NONE"

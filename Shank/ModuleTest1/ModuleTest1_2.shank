@@ -1,5 +1,8 @@
 module test2
-export add
+export add, sub
 
 define add(a, b : integer; var c : integer)
 	c:= a + b
+
+define sub(a, b : integer; var c : integer)
+	c:= a - b
