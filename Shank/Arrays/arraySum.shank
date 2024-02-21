@@ -1,23 +1,26 @@
 define start()
-variables arr1: array from 0 to 5 of integer
-variables arr2: array from 0 to 5 of integer
-variables arr3: array from 0 to 5 of integer
+variables arr1: array from 0 to 6 of integer
+variables arr2: array from 0 to 6 of integer
+variables arr3: array from 0 to 6 of integer
 	arr1[0] := 5
 	write "arr1[0]: ", arr1[0]
 	arr1[1] := 7
 	arr1[2] := 9
 	arr1[3] := 7
 	arr1[4] := 2
+	arr1[5] := 30
 	arr2[0] := 9
 	arr2[1] := 9
 	arr2[2] := 1
 	arr2[3] := 1
 	arr2[4] := 2
+	arr2[5] := 22
 	arr3[0] := 1
 	arr3[1] := 1
 	arr3[2] := 1
 	arr3[3] := 1
 	arr3[4] := 1
+	arr3[5] := 5
 	arraySum arr1, 5
 	arraySum arr2, 5
 	arraySum arr3, 5
@@ -29,4 +32,5 @@ variables total, num, i: integer
 	i := 0
 	for i from i to size
 		total := total + arr[i]
+	write "Expected total: ", arr[size + 1 - 1]
 	write total

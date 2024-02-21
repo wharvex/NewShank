@@ -112,6 +112,9 @@ namespace Shank
     public class ArrayDataType : InterpreterDataType
     {
         public readonly List<object> Value;
+
+        // TODO: Is this bad form since DataType is part of an AST node, and ArrayDataType is part
+        // of the interpreter?
         public VariableNode.DataType ArrayContentsType { get; init; }
 
         public ArrayDataType(int to, VariableNode.DataType arrayContentsType)

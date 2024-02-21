@@ -1068,11 +1068,12 @@ namespace Shank
         }
     }
 
-
     public class ModuleNode
     {
         private string name;
         private Dictionary<string, CallableNode> Functions;
+
+        // Why are we allowing null exports and imports?
         private Dictionary<string, ASTNode?> Exports;
         private Dictionary<string, ASTNode?> Imports;
         private Dictionary<string, LinkedList<string>> ImportTargetNames;
@@ -1148,11 +1149,13 @@ namespace Shank
         {
             ExportTargetNames.AddLast(name);
         }
+
         public void addExportNames(LinkedList<string> names)
         {
-            foreach (var name in names) {
+            foreach (var name in names)
+            {
                 ExportTargetNames.AddLast(name);
-             }
+            }
         }
 
         public void addImportName(string? name)
@@ -1202,7 +1205,6 @@ namespace Shank
             return name;
         }
 
-
         public void setName(string nameIn)
         {
             name = nameIn;
@@ -1215,5 +1217,4 @@ namespace Shank
         Export,
         Import
     }
-
 }

@@ -55,7 +55,6 @@ namespace Shank
 
         public ModuleNode? Module()
         {
-            
             ModuleNode? module = null;
             string? moduleName;
             if (MatchAndRemove(Token.TokenType.Module) == null)
@@ -84,13 +83,13 @@ namespace Shank
                 }
                 else if (MatchAndRemove(Token.TokenType.Export) != null)
                 {
-                    if(int.TryParse(moduleName, out _))
+                    if (int.TryParse(moduleName, out _))
                     {
                         throw new SyntaxErrorException(
-                            "Cannot import/export without declaring a module name. Names also must contain at least one " +
-                            "alphabetic character ",
+                            "Cannot import/export without declaring a module name. Names also must contain at least one "
+                                + "alphabetic character ",
                             Peek(0)
-                            );
+                        );
                     }
                     module.addExportNames(Export());
                 }
@@ -99,10 +98,10 @@ namespace Shank
                     if (int.TryParse(moduleName, out _))
                     {
                         throw new SyntaxErrorException(
-                            "Cannot import/export without declaring a module name. Names also must contain at least one " +
-                            "alphabetic character ",
+                            "Cannot import/export without declaring a module name. Names also must contain at least one "
+                                + "alphabetic character ",
                             Peek(0)
-                            );
+                        );
                     }
                     if(Peek(1).Type == Token.TokenType.LeftBracket)
                     {
@@ -119,8 +118,8 @@ namespace Shank
                 else
                 {
                     throw new SyntaxErrorException(
-                        "Any statement at indent zero must begin with the keywords import,"
-                            + " export, or function, the following is invalid",
+                        "Any statement at indent zero must begin with the keyword `import`,"
+                            + " `export`, `define`, or `record`. The following is invalid: ",
                         Peek(0)
                     );
                 }
@@ -847,21 +846,23 @@ namespace Shank
                 );
             LinkedList<string> exports = new LinkedList<string>();
             exports.AddLast(token.Value);
-            while(MatchAndRemove(Token.TokenType.Comma) != null)
+            while (MatchAndRemove(Token.TokenType.Comma) != null)
             {
                 token = MatchAndRemove(Token.TokenType.Identifier);
-                if(token == null || token.Value == null)
+                if (token == null || token.Value == null)
                     throw new SyntaxErrorException(
-                    "An comma in an export call must be followed by an identifer, ",
-                    Peek(0)
-                );
+                        "An comma in an export call must be followed by an identifer, ",
+                        Peek(0)
+                    );
                 exports.AddLast(token.Value);
-               
             }
             //TODO: add handling for {} and [] from shank language definition
             return exports;
         }
 
+        // TODO: This method cannot return null based on how it is implemented, but putting
+        // a question mark after the "string" type tells the CLR that this method returns
+        // Nullable<string> (i.e. that it can return a string or null).
         private string? Import()
         {
             var token = MatchAndRemove(Token.TokenType.Identifier);

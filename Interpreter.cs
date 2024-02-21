@@ -1,4 +1,6 @@
-﻿namespace Shank
+﻿using System.Net.Http.Headers;
+
+namespace Shank
 {
     public class Interpreter
     {
@@ -12,10 +14,6 @@
         /// <param name="fn">The FunctionNode being converted</param>
         /// <param name="ps">Parameters passed in</param>
         /// <exception cref="Exception"></exception>
-        //public static void InterpretModule(Module module)
-        //{
-
-        //}
         public static void InterpretFunction(
             FunctionNode fn,
             List<InterpreterDataType> ps
@@ -238,11 +236,7 @@
                         }
                     }
                 }
-                //if (fc.Name != )
-                if (
-                    //startModule.getImports().ContainsKey(fc.Name) ? !((CallableNode)startModule.getImports()[fc.Name]).IsPublic : true 
-                    !callingModuleCanAccessFunction
-                )
+                if (!callingModuleCanAccessFunction)
                     throw new Exception(
                         "Cannot access the private function "
                             + ((CallableNode)calledFunction).Name
@@ -263,7 +257,7 @@
             {
                 if (fcp.Variable != null)
                 {
-                    var name = fcp?.Variable?.Name ?? string.Empty;
+                    var name = fcp.Variable.Name;
                     var value = variables[name];
                     switch (value)
                     {
@@ -283,9 +277,47 @@
                             passed.Add(new BooleanDataType(boolVal.Value));
                             break;
                         case ArrayDataType arrayVal:
-                            passed.Add(
-                                new ArrayDataType(arrayVal.Value, arrayVal.ArrayContentsType)
-                            );
+                            // Check if fcp.Variable has an index. If it does, then we are passing
+                            // an element of the array. If it doesn't, then we are passing the
+                            // entire array.
+                            if (fcp.Variable.Index != null)
+                            {
+                                var index = ResolveInt(fcp.Variable.Index, variables);
+                                switch (arrayVal.ArrayContentsType)
+                                {
+                                    case VariableNode.DataType.Integer:
+                                        passed.Add(
+                                            new IntDataType((int)arrayVal.GetElement(index))
+                                        );
+                                        break;
+                                    case VariableNode.DataType.Real:
+                                        passed.Add(
+                                            new FloatDataType((float)arrayVal.GetElement(index))
+                                        );
+                                        break;
+                                    case VariableNode.DataType.String:
+                                        passed.Add(
+                                            new StringDataType((string)arrayVal.GetElement(index))
+                                        );
+                                        break;
+                                    case VariableNode.DataType.Character:
+                                        passed.Add(
+                                            new CharDataType((char)arrayVal.GetElement(index))
+                                        );
+                                        break;
+                                    case VariableNode.DataType.Boolean:
+                                        passed.Add(
+                                            new BooleanDataType((bool)arrayVal.GetElement(index))
+                                        );
+                                        break;
+                                    default:
+                                        throw new Exception("Invalid ArrayContentsType");
+                                }
+                            }
+                            else
+                                passed.Add(
+                                    new ArrayDataType(arrayVal.Value, arrayVal.ArrayContentsType)
+                                );
                             break;
                     }
                 }
@@ -430,7 +462,15 @@
             else if (node is CharNode cn)
                 return "" + cn.Value;
             else if (node is VariableReferenceNode vr)
+            {
+                if (vr.Index != null)
+                {
+                    var index = ResolveInt(vr.Index, variables);
+                    return ((variables[vr.Name] as ArrayDataType)?.GetElement(index))?.ToString()
+                        ?? string.Empty;
+                }
                 return ((variables[vr.Name] as StringDataType)?.Value) ?? string.Empty;
+            }
             else
                 throw new ArgumentException(nameof(node));
         }
@@ -442,12 +482,17 @@
         {
             if (node is CharNode cn)
                 return cn.Value;
-            else if (
-                node is VariableReferenceNode vr
-                && variables.ContainsKey(vr.Name)
-                && variables[vr.Name] is CharDataType
-            )
+            else if (node is VariableReferenceNode vr)
+            {
+                if (vr.Index != null)
+                {
+                    var index = ResolveInt(vr.Index, variables);
+                    return ((variables[vr.Name] as ArrayDataType)?.GetElement(index))
+                            ?.ToString()
+                            ?.ToCharArray()[0] ?? '0';
+                }
                 return ((variables[vr.Name] as CharDataType)?.Value) ?? '0';
+            }
             else
                 throw new ArgumentException(nameof(node));
         }
@@ -480,7 +525,14 @@
             else if (node is FloatNode fn)
                 return fn.Value;
             else if (node is VariableReferenceNode vr)
+            {
+                if (vr.Index != null)
+                {
+                    var index = ResolveInt(vr.Index, variables);
+                    return (float)(variables[vr.Name] as ArrayDataType)?.GetElement(index);
+                }
                 return ((variables[vr.Name] as FloatDataType)?.Value) ?? 0.0F;
+            }
             else
                 throw new ArgumentException(nameof(node));
         }
@@ -513,7 +565,14 @@
             else if (node is IntNode fn)
                 return fn.Value;
             else if (node is VariableReferenceNode vr)
+            {
+                if (vr.Index != null)
+                {
+                    var index = ResolveInt(vr.Index, variables);
+                    return (int)(variables[vr.Name] as ArrayDataType)?.GetElement(index);
+                }
                 return ((variables[vr.Name] as IntDataType)?.Value) ?? 0;
+            }
             else
                 throw new ArgumentException(nameof(node));
         }
