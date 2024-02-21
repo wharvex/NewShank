@@ -18,15 +18,10 @@
         //}
         public static void InterpretFunction(
             FunctionNode fn,
-            List<InterpreterDataType> ps,
-            ModuleNode? sModule
+            List<InterpreterDataType> ps
         )
         {
             var variables = new Dictionary<string, InterpreterDataType>();
-            if (sModule != null)
-            {
-                startModule = sModule;
-            }
             if (ps.Count != fn.ParameterVariables.Count)
                 throw new Exception(
                     $"Function {fn.Name}, {ps.Count} parameters passed in, {fn.ParameterVariables.Count} required"
@@ -193,7 +188,7 @@
             ASTNode? calledFunction;
             if (startModule == null)
             {
-                throw new Exception("Interpreter error, when calling InterpretFunction");
+                throw new Exception("Interpreter error, start function could not be found.");
             }
             if (startModule.getFunctions().ContainsKey(fc.Name))
             {
@@ -206,19 +201,55 @@
             else
             {
                 throw new Exception(
-                    "Could not find the function " + fc.Name + " in the module " + startModule
+                    "Could not find the function " + fc.Name + " in the module " + startModule.getName() +". It may not have been exported."
                 );
             }
-            if (
-                !((CallableNode)calledFunction).IsPublic
-                && !Modules[callingFunction.parentModuleName].getFunctions().ContainsKey(fc.Name)
-            )
-                throw new Exception(
-                    "Cannot access the private function "
-                        + ((CallableNode)calledFunction).Name
-                        + " from module "
-                        + callingFunction.parentModuleName
-                );
+            // TODO: fix single file calling another function causing parentModuleName to be null
+            if (callingFunction.parentModuleName != null)
+            {
+                bool callingModuleCanAccessFunction = false;
+                foreach (string? moduleName in Modules[callingFunction.parentModuleName].getImportDict().Keys)
+                {
+                    if (Modules[callingFunction.parentModuleName].getFunctions().ContainsKey(fc.Name))
+                    {
+                        callingModuleCanAccessFunction = true;
+                    }
+                    else if (Modules[callingFunction.parentModuleName].getImportDict().ContainsKey(moduleName))
+                    {
+                        if (Modules[callingFunction.parentModuleName].getImportDict()[moduleName].Contains(fc.Name))
+                        {
+                            callingModuleCanAccessFunction = true;
+                            break;
+                        }
+                        else
+                        {
+                            if (Modules[callingFunction.parentModuleName].getImportDict()[moduleName].Contains(fc.Name))
+                            {
+                                callingModuleCanAccessFunction = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (startModule.getFunctions().ContainsKey(fc.Name))
+                    {
+                        if (startModule.getFunctions()[fc.Name] is BuiltInFunctionNode)
+                        {
+                            callingModuleCanAccessFunction = true;
+                        }
+                    }
+                }
+                //if (fc.Name != )
+                if (
+                    //startModule.getImports().ContainsKey(fc.Name) ? !((CallableNode)startModule.getImports()[fc.Name]).IsPublic : true 
+                    !callingModuleCanAccessFunction
+                )
+                    throw new Exception(
+                        "Cannot access the private function "
+                            + ((CallableNode)calledFunction).Name
+                            + " from module "
+                            + callingFunction.parentModuleName
+                    );
+            }
             if (
                 fc.Parameters.Count != ((CallableNode)calledFunction).ParameterVariables.Count
                 && calledFunction is BuiltInFunctionNode { IsVariadic: false }
@@ -489,22 +520,62 @@
 
         public static void handleImports()
         {
-            foreach (KeyValuePair<string, ModuleNode> currentModule in Modules)
+            foreach (string currentImport in startModule.getImportDict().Keys)
             {
-                foreach (string currentImport in currentModule.Value.getImportList())
+                if (Modules.ContainsKey(currentImport))
                 {
-                    if (Modules.ContainsKey(currentImport))
+                    recursiveImportCheck(Modules[currentImport]);
+                }
+                else
+                {
+                    throw new Exception(
+                "Could not find " + currentImport + " in the list of modules."
+            );
+                }
+            }
+            foreach (var currentModule in startModule.getImportDict())
+            {
+                if (startModule.getImportDict()[currentModule.Key].Count == 0)
+                {
+                    var tempList = new LinkedList<string>();
+                    foreach (string s in Modules[currentModule.Key].getExportList())
                     {
-                        currentModule.Value.updateImports(
-                            Modules[currentImport].getFunctions(),
-                            Modules[currentImport].getExports()
-                        );
+                        tempList.AddLast(s);
                     }
-                    else
+                    startModule.getImportDict()[currentModule.Key] = tempList;
+                }
+            }
+
+        }
+        public static void recursiveImportCheck(ModuleNode m)
+        {
+
+            startModule.updateImports(
+                Modules[m.getName()].getFunctions(),
+                Modules[m.getName()].getExports()
+            );
+            
+            if (Modules[m.getName()].getImportDict().Count > 0)
+            {
+                foreach (string? moduleToBeImported in Modules[m.getName()].getImportDict().Keys)
+                {
+                    if (Modules.ContainsKey(moduleToBeImported))
                     {
-                        throw new Exception(
-                            "Could not find " + currentImport + " in the list of modules."
-                        );
+                        m.updateImports(Modules[moduleToBeImported].getFunctions(),
+                                        Modules[moduleToBeImported].getExports());
+                        foreach (var currentModule in m.getImportDict())
+                        {
+                            if (m.getImportDict()[currentModule.Key].Count == 0)
+                            {
+                                var tempList = new LinkedList<string>();
+                                foreach (string s in Modules[currentModule.Key].getExportList())
+                                {
+                                    tempList.AddLast(s);
+                                }
+                                m.getImportDict()[currentModule.Key] = tempList;
+                            }
+                        }
+                        recursiveImportCheck(Modules[moduleToBeImported]);
                     }
                 }
             }
@@ -515,6 +586,18 @@
             foreach (KeyValuePair<string, ModuleNode> currentModule in Modules)
             {
                 currentModule.Value.updateExports();
+              
+            }
+        }
+
+        public static void setStartModule()
+        {
+            foreach(KeyValuePair<string, ModuleNode> currentModule in Modules)
+            {
+                if (currentModule.Value.getFunctions().ContainsKey("start")){
+                    startModule = currentModule.Value;
+                    return;
+                }
             }
         }
 

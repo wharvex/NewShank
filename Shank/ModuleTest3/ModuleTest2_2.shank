@@ -1,0 +1,9 @@
+module test3
+export addFunc, doNothing
+
+define addFunc(a, b : integer; var c : integer)
+	c:= a + b
+
+define doNothing(a : integer)
+variables j : integer
+	j := 5

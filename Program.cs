@@ -113,6 +113,7 @@ namespace Shank
                     continue;
                 }
             }
+            Interpreter.setStartModule();
             Interpreter.handleExports();
             Interpreter.handleImports();
             //Interpreter.moduleSemanticAnalysis();
@@ -133,8 +134,7 @@ namespace Shank
                     {
                         Interpreter.InterpretFunction(
                             s,
-                            new List<InterpreterDataType>(),
-                            currentModule
+                            new List<InterpreterDataType>()
                         );
                     }
                     catch (Exception e)

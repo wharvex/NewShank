@@ -211,21 +211,21 @@ namespace Shank
         {
             // This is a delegate instance, similar to an abstract method implementation in Java.
             Execute = (List<InterpreterDataType> paramList) =>
-                Interpreter.InterpretFunction(this, paramList, null);
+                Interpreter.InterpretFunction(this, paramList);
         }
 
         public FunctionNode(string name, string moduleName)
             : base(name, moduleName)
         {
             Execute = (List<InterpreterDataType> paramList) =>
-                Interpreter.InterpretFunction(this, paramList, null);
+                Interpreter.InterpretFunction(this, paramList);
         }
 
         public FunctionNode(string name)
             : base(name)
         {
             Execute = (List<InterpreterDataType> paramList) =>
-                Interpreter.InterpretFunction(this, paramList, null);
+                Interpreter.InterpretFunction(this, paramList);
         }
 
         public List<VariableNode> LocalVariables = new();
@@ -1075,7 +1075,8 @@ namespace Shank
         private Dictionary<string, CallableNode> Functions;
         private Dictionary<string, ASTNode?> Exports;
         private Dictionary<string, ASTNode?> Imports;
-        private LinkedList<string> ImportTargetNames;
+        private Dictionary<string, LinkedList<string>> ImportTargetNames;
+        //private LinkedList<string> ImportTargetNames;
         private LinkedList<string> ExportTargetNames;
 
         public ModuleNode(string name)
@@ -1084,21 +1085,33 @@ namespace Shank
             Functions = new Dictionary<string, CallableNode>();
             Exports = new Dictionary<string, ASTNode?>();
             Imports = new Dictionary<string, ASTNode?>();
-            ImportTargetNames = new LinkedList<string>();
+            ImportTargetNames = new Dictionary<string, LinkedList<string>>();
+            //ImportTargetNames = new LinkedList<string>();
             ExportTargetNames = new LinkedList<string>();
         }
 
         public void updateImports(
-            Dictionary<string, CallableNode?> recievedFunctions,
+            Dictionary<string, CallableNode> recievedFunctions,
             Dictionary<string, ASTNode?> recievedExports
         )
         {
             foreach (var function in recievedFunctions)
             {
-                Imports.Add(function.Key, function.Value);
+                if(!Imports.ContainsKey(function.Key))
+                    Imports.Add(function.Key, function.Value);
                 if (recievedExports.ContainsKey(function.Key))
                 {
                     ((CallableNode)Imports[function.Key]).IsPublic = true;
+                }
+                if (ImportTargetNames.ContainsKey(function.Value.parentModuleName))
+                {
+                    if (ImportTargetNames[function.Value.parentModuleName] != null)
+                    {
+                        if (!ImportTargetNames[function.Value.parentModuleName].Contains(function.Key))
+                        {
+                            ((CallableNode)Imports[function.Key]).IsPublic = false;
+                        }
+                    }
                 }
             }
         }
@@ -1144,7 +1157,11 @@ namespace Shank
 
         public void addImportName(string? name)
         {
-            ImportTargetNames.AddLast(name);
+            ImportTargetNames.Add(name, new LinkedList<string>());
+        }
+        public void addImportName(string moduleName, LinkedList<string> functions)
+        {
+            ImportTargetNames.Add(moduleName, functions);
         }
 
         public LinkedList<string> getExportList()
@@ -1152,7 +1169,7 @@ namespace Shank
             return ExportTargetNames;
         }
 
-        public LinkedList<string?> getImportList()
+        public Dictionary<string, LinkedList<string>> getImportDict()
         {
             return ImportTargetNames;
         }
