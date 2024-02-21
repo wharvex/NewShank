@@ -1072,6 +1072,8 @@ namespace Shank
     {
         private string name;
         private Dictionary<string, CallableNode> Functions;
+
+        // Why are we allowing null exports and imports?
         private Dictionary<string, ASTNode?> Exports;
         private Dictionary<string, ASTNode?> Imports;
         private LinkedList<string> ImportTargetNames;

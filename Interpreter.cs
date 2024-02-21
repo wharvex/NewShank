@@ -207,16 +207,22 @@ namespace Shank
                     "Could not find the function " + fc.Name + " in the module " + startModule
                 );
             }
-            if (
-                !((CallableNode)calledFunction).IsPublic
-                && !Modules[callingFunction.parentModuleName].getFunctions().ContainsKey(fc.Name)
-            )
-                throw new Exception(
-                    "Cannot access the private function "
-                        + ((CallableNode)calledFunction).Name
-                        + " from module "
-                        + callingFunction.parentModuleName
-                );
+
+            if (callingFunction.parentModuleName != null)
+            {
+                if (
+                    !((CallableNode)calledFunction).IsPublic
+                    && !Modules[callingFunction.parentModuleName]
+                        .getFunctions()
+                        .ContainsKey(fc.Name)
+                )
+                    throw new Exception(
+                        "Cannot access the private function "
+                            + ((CallableNode)calledFunction).Name
+                            + " from module "
+                            + callingFunction.parentModuleName
+                    );
+            }
             if (
                 fc.Parameters.Count != ((CallableNode)calledFunction).ParameterVariables.Count
                 && calledFunction is BuiltInFunctionNode { IsVariadic: false }

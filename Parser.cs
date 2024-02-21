@@ -112,8 +112,8 @@ namespace Shank
                 else
                 {
                     throw new SyntaxErrorException(
-                        "Any statement at indent zero must begin with the keywords import,"
-                            + " export, or function, the following is invalid",
+                        "Any statement at indent zero must begin with the keyword `import`,"
+                            + " `export`, `define`, or `record`. The following is invalid: ",
                         Peek(0)
                     );
                 }
@@ -854,6 +854,9 @@ namespace Shank
             return exports;
         }
 
+        // TODO: This method cannot return null based on how it is implemented, but putting
+        // a question mark after the "string" type tells the CLR that this method returns
+        // Nullable<string> (i.e. that it can return a string or null).
         private string? Import()
         {
             var token = MatchAndRemove(Token.TokenType.Identifier);
