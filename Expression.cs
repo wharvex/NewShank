@@ -1077,6 +1077,7 @@ namespace Shank
         private Dictionary<string, ASTNode?> Exports;
         private Dictionary<string, ASTNode?> Imports;
         private Dictionary<string, LinkedList<string>> ImportTargetNames;
+
         //private LinkedList<string> ImportTargetNames;
         private LinkedList<string> ExportTargetNames;
 
@@ -1098,7 +1099,7 @@ namespace Shank
         {
             foreach (var function in recievedFunctions)
             {
-                if(!Imports.ContainsKey(function.Key))
+                if (!Imports.ContainsKey(function.Key))
                     Imports.Add(function.Key, function.Value);
                 if (recievedExports.ContainsKey(function.Key))
                 {
@@ -1108,7 +1109,11 @@ namespace Shank
                 {
                     if (ImportTargetNames[function.Value.parentModuleName] != null)
                     {
-                        if (!ImportTargetNames[function.Value.parentModuleName].Contains(function.Key))
+                        if (
+                            !ImportTargetNames[function.Value.parentModuleName].Contains(
+                                function.Key
+                            )
+                        )
                         {
                             ((CallableNode)Imports[function.Key]).IsPublic = false;
                         }
@@ -1162,6 +1167,7 @@ namespace Shank
         {
             ImportTargetNames.Add(name, new LinkedList<string>());
         }
+
         public void addImportName(string moduleName, LinkedList<string> functions)
         {
             ImportTargetNames.Add(moduleName, functions);

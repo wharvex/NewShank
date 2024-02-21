@@ -132,10 +132,7 @@ namespace Shank
                     var interpreterErrorOccurred = false;
                     try
                     {
-                        Interpreter.InterpretFunction(
-                            s,
-                            new List<InterpreterDataType>()
-                        );
+                        Interpreter.InterpretFunction(s, new List<InterpreterDataType>());
                     }
                     catch (Exception e)
                     {

@@ -14,10 +14,7 @@ namespace Shank
         /// <param name="fn">The FunctionNode being converted</param>
         /// <param name="ps">Parameters passed in</param>
         /// <exception cref="Exception"></exception>
-        public static void InterpretFunction(
-            FunctionNode fn,
-            List<InterpreterDataType> ps
-        )
+        public static void InterpretFunction(FunctionNode fn, List<InterpreterDataType> ps)
         {
             var variables = new Dictionary<string, InterpreterDataType>();
             if (ps.Count != fn.ParameterVariables.Count)
@@ -199,29 +196,53 @@ namespace Shank
             else
             {
                 throw new Exception(
-                    "Could not find the function " + fc.Name + " in the module " + startModule.getName() +". It may not have been exported."
+                    "Could not find the function "
+                        + fc.Name
+                        + " in the module "
+                        + startModule.getName()
+                        + ". It may not have been exported."
                 );
             }
             // TODO: fix single file calling another function causing parentModuleName to be null
             if (callingFunction.parentModuleName != null)
             {
                 bool callingModuleCanAccessFunction = false;
-                foreach (string? moduleName in Modules[callingFunction.parentModuleName].getImportDict().Keys)
+                foreach (
+                    string? moduleName in Modules[callingFunction.parentModuleName]
+                        .getImportDict()
+                        .Keys
+                )
                 {
-                    if (Modules[callingFunction.parentModuleName].getFunctions().ContainsKey(fc.Name))
+                    if (
+                        Modules[callingFunction.parentModuleName]
+                            .getFunctions()
+                            .ContainsKey(fc.Name)
+                    )
                     {
                         callingModuleCanAccessFunction = true;
                     }
-                    else if (Modules[callingFunction.parentModuleName].getImportDict().ContainsKey(moduleName))
+                    else if (
+                        Modules[callingFunction.parentModuleName]
+                            .getImportDict()
+                            .ContainsKey(moduleName)
+                    )
                     {
-                        if (Modules[callingFunction.parentModuleName].getImportDict()[moduleName].Contains(fc.Name))
+                        if (
+                            Modules[callingFunction.parentModuleName]
+                                .getImportDict()[moduleName]
+                                .Contains(fc.Name)
+                        )
                         {
                             callingModuleCanAccessFunction = true;
                             break;
                         }
                         else
                         {
-                            if (Modules[callingFunction.parentModuleName].getImportDict()[moduleName].Contains(fc.Name))
+                            if (
+                                Modules[callingFunction.parentModuleName]
+                                    .getImportDict()[moduleName]
+                                    .Contains(fc.Name)
+                            )
                             {
                                 callingModuleCanAccessFunction = true;
                                 break;
@@ -588,8 +609,8 @@ namespace Shank
                 else
                 {
                     throw new Exception(
-                "Could not find " + currentImport + " in the list of modules."
-            );
+                        "Could not find " + currentImport + " in the list of modules."
+                    );
                 }
             }
             foreach (var currentModule in startModule.getImportDict())
@@ -604,24 +625,25 @@ namespace Shank
                     startModule.getImportDict()[currentModule.Key] = tempList;
                 }
             }
-
         }
+
         public static void recursiveImportCheck(ModuleNode m)
         {
-
             startModule.updateImports(
                 Modules[m.getName()].getFunctions(),
                 Modules[m.getName()].getExports()
             );
-            
+
             if (Modules[m.getName()].getImportDict().Count > 0)
             {
                 foreach (string? moduleToBeImported in Modules[m.getName()].getImportDict().Keys)
                 {
                     if (Modules.ContainsKey(moduleToBeImported))
                     {
-                        m.updateImports(Modules[moduleToBeImported].getFunctions(),
-                                        Modules[moduleToBeImported].getExports());
+                        m.updateImports(
+                            Modules[moduleToBeImported].getFunctions(),
+                            Modules[moduleToBeImported].getExports()
+                        );
                         foreach (var currentModule in m.getImportDict())
                         {
                             if (m.getImportDict()[currentModule.Key].Count == 0)
@@ -645,15 +667,15 @@ namespace Shank
             foreach (KeyValuePair<string, ModuleNode> currentModule in Modules)
             {
                 currentModule.Value.updateExports();
-              
             }
         }
 
         public static void setStartModule()
         {
-            foreach(KeyValuePair<string, ModuleNode> currentModule in Modules)
+            foreach (KeyValuePair<string, ModuleNode> currentModule in Modules)
             {
-                if (currentModule.Value.getFunctions().ContainsKey("start")){
+                if (currentModule.Value.getFunctions().ContainsKey("start"))
+                {
                     startModule = currentModule.Value;
                     return;
                 }

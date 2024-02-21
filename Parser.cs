@@ -103,10 +103,11 @@ namespace Shank
                             Peek(0)
                         );
                     }
-                    if(Peek(1).Type == Token.TokenType.LeftBracket)
+                    if (Peek(1).Type == Token.TokenType.LeftBracket)
                     {
                         module.addImportName(Import(), checkForFunctions());
-                    } else
+                    }
+                    else
                     {
                         module.addImportName(Import());
                     }
@@ -878,7 +879,7 @@ namespace Shank
         {
             var functionsToImport = new LinkedList<string>();
             MatchAndRemove(Token.TokenType.LeftBracket);
-            while(MatchAndRemove(Token.TokenType.RightBracket) == null)
+            while (MatchAndRemove(Token.TokenType.RightBracket) == null)
             {
                 var token = MatchAndRemove(Token.TokenType.Identifier);
                 if (token == null || token.Value == null)
@@ -886,17 +887,17 @@ namespace Shank
                     throw new SyntaxErrorException(
                         "Expecting an identifer after a left bracket in an import statement, not ",
                         Peek(0)
-                        );
+                    );
                 }
                 functionsToImport.AddLast(token.Value);
-                if(Peek(1).Type == Token.TokenType.Identifier)
+                if (Peek(1).Type == Token.TokenType.Identifier)
                 {
-                    if(MatchAndRemove(Token.TokenType.Comma) == null)
+                    if (MatchAndRemove(Token.TokenType.Comma) == null)
                     {
                         throw new SyntaxErrorException(
                             "Expecting a comma in between identifiers in an import statment, not ",
                             Peek(0)
-                            );
+                        );
                     }
                 }
             }
