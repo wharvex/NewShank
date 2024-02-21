@@ -17,6 +17,7 @@
                     "squareRoot",
                     new VariableNode[]
                     {
+                        // TODO: Why are VariableNodes created this way? Why not use a constructor?
                         new VariableNode()
                         {
                             Name = "value",

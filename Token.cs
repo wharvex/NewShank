@@ -31,6 +31,7 @@
             Variables,
             Constants,
             Define,
+            Record,
             Assignment,
             If,
             Then,

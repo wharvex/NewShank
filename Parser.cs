@@ -4,14 +4,12 @@ namespace Shank
 {
     public class Parser
     {
-        public Parser(List<Token> tokens, string functionNamePrefix)
+        public Parser(List<Token> tokens)
         {
             _tokens = tokens;
-            _functionNamePrefix = functionNamePrefix;
         }
 
         private readonly List<Token> _tokens;
-        private readonly string _functionNamePrefix;
 
         private Token? MatchAndRemove(Token.TokenType t)
         {

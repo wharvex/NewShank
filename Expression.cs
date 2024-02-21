@@ -791,6 +791,11 @@ namespace Shank
         }
     }
 
+    public class RecordNode : ASTNode
+    {
+        public string Name;
+    }
+
     public class VariableNode : ASTNode
     {
         public string? Name;
@@ -1149,6 +1154,8 @@ namespace Shank
                 Functions.Add(function.Name, function);
             }
         }
+
+        public void AddRecord() { }
 
         public void addExportName(string? name)
         {

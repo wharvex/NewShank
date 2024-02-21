@@ -23,6 +23,7 @@ namespace Shank
                 { "variables", Token.TokenType.Variables },
                 { "constants", Token.TokenType.Constants },
                 { "define", Token.TokenType.Define },
+                { "record", Token.TokenType.Record },
                 { "if", Token.TokenType.If },
                 { "then", Token.TokenType.Then },
                 { "else", Token.TokenType.Else },

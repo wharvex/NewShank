@@ -53,18 +53,7 @@ namespace Shank
                 var l = new Lexer();
                 tokens.AddRange(l.Lex(lines));
 
-                // Prepare to prefix any function name with the name of the file it is in.
-                // Technically, a function's name will be prepended with the path of the
-                // current file relative to the path of the current directory.
-                // This is to facilitate multi-file parsing/interpreting.
-                var newFnNamePrefix =
-                    Path.GetRelativePath(Directory.GetCurrentDirectory(), inPath)[
-                        ..^(".shank".Length)
-                    ]
-                        .Replace('.', '_')
-                        .Replace('\\', '_')
-                        .Replace('/', '_') + '_';
-                var p = new Parser(tokens, newFnNamePrefix);
+                var p = new Parser(tokens);
 
                 var brokeOutOfWhile = false;
                 while (tokens.Any())
