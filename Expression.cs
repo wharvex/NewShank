@@ -1,3 +1,4 @@
+using System.Dynamic;
 using System.Text;
 using LLVMSharp.Interop;
 
@@ -791,9 +792,37 @@ namespace Shank
         }
     }
 
+    public class RecordMemberNode : ASTNode
+    {
+        public string Name { get; init; }
+        public VariableNode.DataType MemberType { get; init; }
+
+        public RecordMemberNode(string name, VariableNode.DataType memberType)
+        {
+            Name = name;
+            MemberType = memberType;
+        }
+    }
+
     public class RecordNode : ASTNode
     {
-        public string Name;
+        public string Name { get; init; }
+        private readonly List<RecordMemberNode> _members;
+
+        public RecordNode(string name, params RecordMemberNode[] members)
+        {
+            if (members.Contains(null) || !members.Any())
+            {
+                throw new ArgumentNullException(nameof(members));
+            }
+            Name = name;
+            _members = new List<RecordMemberNode>(members);
+        }
+
+        public RecordMemberNode GetMemberNodeByName(string name)
+        {
+            return _members.FirstOrDefault(m => m.Name.Equals(name), null);
+        }
     }
 
     public class VariableNode : ASTNode
@@ -812,6 +841,8 @@ namespace Shank
 
         public DataType Type;
 
+        // If Type is Array, then ArrayType is the type of its elements.
+        // If Type is not Array, then ArrayType should be null.
         public DataType ArrayType;
         public bool IsConstant;
         public ASTNode? InitialValue;
@@ -892,7 +923,7 @@ namespace Shank
 
         public override string ToString()
         {
-            return $"{Name}{(Index != null ? " Index:" + Index : string.Empty)}";
+            return $"{Name + (Index != null ? (", Index: " + Index) : string.Empty)}";
         }
     }
 

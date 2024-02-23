@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Shank
+﻿namespace Shank
 {
+    // TODO: This is the only internal class in the project. Why is it internal?
+    // Based on briefly reading about this keyword, it seems like it would only be useful if
+    // our project had more than one "assembly." Does our project have more than one assembly?
     internal class SyntaxErrorException : Exception
     {
         private Token? cause;
@@ -19,7 +16,12 @@ namespace Shank
         public override string ToString()
         {
             return Message
-                + $"\n at line {cause?.LineNumber ?? 0}, token: {cause?.Type ?? Token.TokenType.EndOfLine} {cause?.Value ?? string.Empty}";
+                + "\n at line "
+                + (cause?.LineNumber ?? 0)
+                + ", token: "
+                + (cause?.Type ?? Token.TokenType.EndOfLine)
+                + " "
+                + (cause?.Value ?? string.Empty);
         }
     }
 }

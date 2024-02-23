@@ -22,6 +22,8 @@ variables arr3: array from 0 to 6 of integer
 	arr3[4] := 1
 	arr3[5] := 5
 	arraySum arr1, 5
+
+
 	arraySum arr2, 5
 	arraySum arr3, 5
 	
