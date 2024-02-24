@@ -70,6 +70,8 @@ public class Parser
             moduleName = token.Value;
             MatchAndRemove(Token.TokenType.EndOfLine);
         }
+        // If a file is not declared as a module, then a ModuleNode object with a null name is created for it.
+        // This null name is later changed to a number in Main.
         module = new ModuleNode(moduleName);
         while (_tokens.Count > 0)
         {
@@ -112,6 +114,10 @@ public class Parser
             {
                 module.addFunction(Function(moduleName));
             }
+            else if (MatchAndRemove(Token.TokenType.Record) != null)
+            {
+                module.AddRecord();
+            }
             else
             {
                 throw new SyntaxErrorException(
@@ -130,6 +136,8 @@ public class Parser
 
     public FunctionNode? Function(string moduleName)
     {
+        // Process function name.
+
         var name = MatchAndRemove(Token.TokenType.Identifier);
         if (name == null)
             throw new SyntaxErrorException("Expected a function name", Peek(0));
@@ -165,14 +173,25 @@ public class Parser
         return funcNode;
     }
 
-    private RecordNode? Record()
+    private RecordNode? Record(string moduleName)
     {
+        var name = MatchAndRemove(Token.TokenType.Identifier);
+        if (name == null)
+        {
+            throw new SyntaxErrorException("Expected a record name", Peek(0));
+        }
+        var recNode = new RecordNode(name.Value ?? "", moduleName);
         return null;
     }
 
     private void BodyFunction(FunctionNode function)
     {
         Body(function.Statements);
+    }
+
+    private void BodyRecord(RecordNode record)
+    {
+        Body(record.Members);
     }
 
     private void Body(List<StatementNode> statements)
@@ -868,9 +887,6 @@ public class Parser
         return exports;
     }
 
-    // TODO: This method cannot return null based on how it is implemented, but putting
-    // a question mark after the "string" type tells the CLR that this method returns
-    // Nullable<string> (i.e. that it can return a string or null).
     private string? Import()
     {
         var token = MatchAndRemove(Token.TokenType.Identifier);

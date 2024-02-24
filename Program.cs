@@ -87,12 +87,6 @@ namespace Shank
                         break;
                     }
 
-                    // TODO: Handle global variables here.
-                    //if (fn is null)
-                    //{
-                    //    continue;
-                    //}
-
                     Interpreter.Modules.Add(module.getName(), module);
                 }
 

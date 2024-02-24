@@ -484,9 +484,12 @@ namespace Shank
                 return "" + cn.Value;
             else if (node is VariableReferenceNode vr)
             {
+                // This means the VariableReferenceNode is an array.
                 if (vr.Index != null)
                 {
                     var index = ResolveInt(vr.Index, variables);
+                    // If the index is out of range, the Interpreter fails silently because it is
+                    // the job of Semantic Analysis to declare this an error.
                     return ((variables[vr.Name] as ArrayDataType)?.GetElement(index))?.ToString()
                         ?? string.Empty;
                 }

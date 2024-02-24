@@ -134,7 +134,7 @@ namespace Shank
             Value.Insert(idx, element);
         }
 
-        public object GetElement(int idx)
+        public object? GetElement(int idx)
         {
             return Value[idx];
         }

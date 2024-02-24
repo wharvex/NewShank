@@ -792,7 +792,7 @@ namespace Shank
         }
     }
 
-    public class RecordMemberNode : ASTNode
+    public class RecordMemberNode : StatementNode
     {
         public string Name { get; init; }
         public VariableNode.DataType MemberType { get; init; }
@@ -807,21 +807,22 @@ namespace Shank
     public class RecordNode : ASTNode
     {
         public string Name { get; init; }
-        private readonly List<RecordMemberNode> _members;
+        public List<StatementNode> Members;
 
-        public RecordNode(string name, params RecordMemberNode[] members)
+        public RecordNode(string name, string moduleName)
         {
-            if (members.Contains(null) || !members.Any())
-            {
-                throw new ArgumentNullException(nameof(members));
-            }
             Name = name;
-            _members = new List<RecordMemberNode>(members);
+            Members = new List<StatementNode>();
         }
 
-        public RecordMemberNode GetMemberNodeByName(string name)
+        public RecordMemberNode? GetMemberNodeByName(string name)
         {
-            return _members.FirstOrDefault(m => m.Name.Equals(name), null);
+            // Need to do Two Casts!! Good grief...
+            return (RecordMemberNode?)
+                Members.FirstOrDefault(
+                    m => m != null && ((RecordMemberNode)m).Name.Equals(name),
+                    null
+                );
         }
     }
 
@@ -1109,7 +1110,6 @@ namespace Shank
         private string name;
         private Dictionary<string, CallableNode> Functions;
 
-        // Why are we allowing null exports and imports?
         private Dictionary<string, ASTNode?> Exports;
         private Dictionary<string, ASTNode?> Imports;
         private Dictionary<string, LinkedList<string>> ImportTargetNames;
