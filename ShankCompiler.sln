@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.2.32526.322
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shank", "Shank\Shank.csproj", "{9EB91A0B-9502-4790-9D18-CE79DBEBD54E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shank", "Shank\Shank.csproj", "{9EB91A0B-9502-4790-9D18-CE79DBEBD54E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShankUnitTests", "ShankUnitTests\ShankUnitTests.csproj", "{BB9C5832-C2A2-40F8-85FF-D24C5332BF98}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{9EB91A0B-9502-4790-9D18-CE79DBEBD54E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9EB91A0B-9502-4790-9D18-CE79DBEBD54E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9EB91A0B-9502-4790-9D18-CE79DBEBD54E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BB9C5832-C2A2-40F8-85FF-D24C5332BF98}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BB9C5832-C2A2-40F8-85FF-D24C5332BF98}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BB9C5832-C2A2-40F8-85FF-D24C5332BF98}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BB9C5832-C2A2-40F8-85FF-D24C5332BF98}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
