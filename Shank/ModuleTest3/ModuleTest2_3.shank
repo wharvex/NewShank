@@ -1,9 +1,0 @@
-module test4
-import test2
-export directoryOrderTest
-
-define directoryOrderTest(a : integer)
-variables p, s : integer
-	p:= 5
-	add a, p, var s
-	write s

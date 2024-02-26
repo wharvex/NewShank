@@ -1,9 +1,0 @@
-module test1
-import test2
-import test4
-
-define start()
-variables p, s : integer
-	p := 7
-	directoryOrderTest p
-	

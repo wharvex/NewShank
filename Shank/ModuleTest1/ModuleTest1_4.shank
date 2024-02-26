@@ -1,5 +1,0 @@
-define min(a, b : integer; var c : integer)
-	if a < b then
-		c := a
-	else
-		c := b
