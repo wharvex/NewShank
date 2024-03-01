@@ -719,5 +719,19 @@ namespace Shank
             else
                 throw new ArgumentException("Invalid node type for integer", nameof(node));
         }
+        //used for reseting the single static interpreter in between unit tests
+        public static void reset()
+        {
+            Modules = new Dictionary<string, ModuleNode>();
+            startModule = null;
+        }
+        public static void setModules(Dictionary<string, ModuleNode> modules)
+        {
+            Modules = modules;
+        }
+        public static Dictionary<string, ModuleNode> getModules()
+        {
+            return Modules;
+        }
     }
 }
