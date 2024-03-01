@@ -1,9 +1,0 @@
-{
-  "profiles": {
-    "Shank": {
-      "commandName": "Project",
-      "commandLineArgs": "dotShank/ModuleTest1",
-      "workingDirectory": "C:\\Users\\Bret Jempty\\source\\repos\\ShankCompiler\\Shank"
-    }
-  }
-}
