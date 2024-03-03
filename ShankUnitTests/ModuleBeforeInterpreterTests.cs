@@ -46,7 +46,9 @@ namespace ShankUnitTests
             list.AddFirst(file2);
             initializeInterpreter(list);
             Assert.AreEqual(Interpreter.getModules()["test2"].getExportedFunctions().Count, 1);
-            Assert.IsTrue(Interpreter.getModules()["test2"].getExportedFunctions().ContainsKey("add"));
+            Assert.IsTrue(
+                Interpreter.getModules()["test2"].getExportedFunctions().ContainsKey("add")
+            );
         }
 
         [TestMethod]
@@ -77,8 +79,12 @@ namespace ShankUnitTests
             Assert.AreEqual(Interpreter.getModules()["test1"].getExportedFunctions().Count, 1);
             Assert.AreEqual(Interpreter.getModules()["test2"].getExportedFunctions().Count, 1);
 
-            Assert.IsTrue(Interpreter.getModules()["test1"].getExportedFunctions().ContainsKey("sub"));
-            Assert.IsTrue(Interpreter.getModules()["test2"].getExportedFunctions().ContainsKey("add"));
+            Assert.IsTrue(
+                Interpreter.getModules()["test1"].getExportedFunctions().ContainsKey("sub")
+            );
+            Assert.IsTrue(
+                Interpreter.getModules()["test2"].getExportedFunctions().ContainsKey("add")
+            );
         }
 
         [TestMethod]
@@ -98,8 +104,12 @@ namespace ShankUnitTests
             initializeInterpreter(list);
             Assert.AreEqual(Interpreter.getModules()["test2"].getExportedFunctions().Count, 2);
 
-            Assert.IsTrue(Interpreter.getModules()["test2"].getExportedFunctions().ContainsKey("sub"));
-            Assert.IsTrue(Interpreter.getModules()["test2"].getExportedFunctions().ContainsKey("add"));
+            Assert.IsTrue(
+                Interpreter.getModules()["test2"].getExportedFunctions().ContainsKey("sub")
+            );
+            Assert.IsTrue(
+                Interpreter.getModules()["test2"].getExportedFunctions().ContainsKey("add")
+            );
         }
 
         [TestMethod]
@@ -129,8 +139,9 @@ namespace ShankUnitTests
 
             Assert.AreEqual(Interpreter.getModules()["test1"].getImportNames().Count, 1);
             Assert.AreEqual(Interpreter.getModules()["test1"].getImportNames()["test2"].Count, 1);
-            Assert.IsTrue(Interpreter.getModules()["test1"].getImportNames()["test2"].Contains("add"));
-
+            Assert.IsTrue(
+                Interpreter.getModules()["test1"].getImportNames()["test2"].Contains("add")
+            );
         }
 
         [TestMethod]
@@ -164,25 +175,35 @@ namespace ShankUnitTests
             Assert.AreEqual(Interpreter.getModules()["test1"].getImportNames().Count, 1);
             Assert.AreEqual(Interpreter.getModules()["test1"].getImportNames()["test2"].Count, 2);
 
-            Assert.IsTrue(Interpreter.getModules()["test1"].getImportNames()["test2"].Contains("add"));
-            Assert.IsTrue(Interpreter.getModules()["test1"].getImportNames()["test2"].Contains("sub"));
+            Assert.IsTrue(
+                Interpreter.getModules()["test1"].getImportNames()["test2"].Contains("add")
+            );
+            Assert.IsTrue(
+                Interpreter.getModules()["test1"].getImportNames()["test2"].Contains("sub")
+            );
         }
 
         [TestMethod]
         public void importSelectFunctions()
         {
-            string[] file1 = {"module test1\n",
-                             "import test2 [add]\n",
-                             "define start()\n",
-                             "variables p : integer\n",
-                                "\tp:=3\n",
-                                "\twrite p\n"};
-            string[] file2 = { "module test2\n",
-                              "export add, sub\n",
-                              "define add(a, b : integer; var c : integer)\n",
-                                 "\tc := a + b\n",
-                              "define sub(a,b : integer; var c : integer)\n",
-                                 "\tc := a - b\n" };
+            string[] file1 =
+            {
+                "module test1\n",
+                "import test2 [add]\n",
+                "define start()\n",
+                "variables p : integer\n",
+                "\tp:=3\n",
+                "\twrite p\n"
+            };
+            string[] file2 =
+            {
+                "module test2\n",
+                "export add, sub\n",
+                "define add(a, b : integer; var c : integer)\n",
+                "\tc := a + b\n",
+                "define sub(a,b : integer; var c : integer)\n",
+                "\tc := a - b\n"
+            };
 
             LinkedList<string[]> list = new LinkedList<string[]>();
             list.AddFirst(file1);
@@ -194,12 +215,20 @@ namespace ShankUnitTests
             Assert.AreEqual(Interpreter.getModules()["test1"].getImportNames()["test2"].Count, 1);
 
             //module test1 importNames should have add, and should not have sub
-            Assert.IsTrue(Interpreter.getModules()["test1"].getImportNames()["test2"].Contains("add"));
-            Assert.IsFalse(Interpreter.getModules()["test1"].getImportNames()["test2"].Contains("sub"));
+            Assert.IsTrue(
+                Interpreter.getModules()["test1"].getImportNames()["test2"].Contains("add")
+            );
+            Assert.IsFalse(
+                Interpreter.getModules()["test1"].getImportNames()["test2"].Contains("sub")
+            );
 
             //both add and sub should be present in the importedFunctions
-            Assert.IsTrue(Interpreter.getModules()["test1"].getImportedFunctions().ContainsKey("add"));
-            Assert.IsTrue(Interpreter.getModules()["test1"].getImportedFunctions().ContainsKey("sub"));
+            Assert.IsTrue(
+                Interpreter.getModules()["test1"].getImportedFunctions().ContainsKey("add")
+            );
+            Assert.IsTrue(
+                Interpreter.getModules()["test1"].getImportedFunctions().ContainsKey("sub")
+            );
         }
 
         [TestMethod]
@@ -245,13 +274,21 @@ namespace ShankUnitTests
 
             //test1 should only have add in its available functions to run from test2
             Assert.AreEqual(Interpreter.getModules()["test1"].getImportNames()["test2"].Count, 1);
-            Assert.IsTrue(Interpreter.getModules()["test1"].getImportNames()["test2"].Contains("add"));
-            Assert.IsFalse(Interpreter.getModules()["test1"].getImportNames()["test2"].Contains("addFunc"));
+            Assert.IsTrue(
+                Interpreter.getModules()["test1"].getImportNames()["test2"].Contains("add")
+            );
+            Assert.IsFalse(
+                Interpreter.getModules()["test1"].getImportNames()["test2"].Contains("addFunc")
+            );
 
             //test1 should have access to all functions in test2, but shouldn't be able to call any functions not located
             //in its import dictionary
-            Assert.IsTrue(Interpreter.getModules()["test1"].getImportedFunctions().ContainsKey("add"));
-            Assert.IsTrue(Interpreter.getModules()["test1"].getImportedFunctions().ContainsKey("addFunc"));
+            Assert.IsTrue(
+                Interpreter.getModules()["test1"].getImportedFunctions().ContainsKey("add")
+            );
+            Assert.IsTrue(
+                Interpreter.getModules()["test1"].getImportedFunctions().ContainsKey("addFunc")
+            );
         }
     }
 }
