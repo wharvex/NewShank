@@ -11,6 +11,7 @@ namespace ShankUnitTests
     {
         private int unnamedModuleCount = 0;
         private StringBuilder ConsoleOutput { get; set; }
+
         public Dictionary<string, ModuleNode> getModulesFromParser(LinkedList<string[]> list)
         {
             Dictionary<string, ModuleNode> Modules = new Dictionary<string, ModuleNode>();
@@ -23,11 +24,12 @@ namespace ShankUnitTests
                 {
                     m.setName(unnamedModuleCount.ToString());
                     unnamedModuleCount++;
-                } 
+                }
                 Modules.Add(m.getName(), m);
             }
             return Modules;
         }
+
         public void initializeInterpreter(LinkedList<string[]> files)
         {
             Interpreter.reset();
@@ -37,6 +39,7 @@ namespace ShankUnitTests
             Interpreter.handleExports();
             Interpreter.handleImports();
         }
+
         public void runInterpreter()
         {
             foreach (KeyValuePair<string, ModuleNode> currentModulePair in Interpreter.Modules)
@@ -78,15 +81,17 @@ namespace ShankUnitTests
                 // count++;
             }
         }
+
         [TestMethod]
         public void simpleInterpreterTest()
         {
-            string[] file1 = {
+            string[] file1 =
+            {
                 "define start()\n",
                 "variables p : integer\n",
-                    "\tp:=3\n",
-                    "\twrite p\n"
-                 };
+                "\tp:=3\n",
+                "\twrite p\n"
+            };
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddFirst(file1);
             initializeInterpreter(files);
@@ -96,16 +101,22 @@ namespace ShankUnitTests
         [TestMethod]
         public void simpleImportAndExport()
         {
-            string[] file1 = {"module test1\n",
-                              "import test2\n",
-                              "define start()\n",
-                              "variables p : integer\n",
-                                 "\tadd 1,2, var p\n",
-                                 "\twrite p\n"};
-            string[] file2 = { "module test2\n",
-                              "export add\n",
-                              "define add(a, b : integer; var c : integer)\n",
-                                 "\tc := a + b\n" };
+            string[] file1 =
+            {
+                "module test1\n",
+                "import test2\n",
+                "define start()\n",
+                "variables p : integer\n",
+                "\tadd 1,2, var p\n",
+                "\twrite p\n"
+            };
+            string[] file2 =
+            {
+                "module test2\n",
+                "export add\n",
+                "define add(a, b : integer; var c : integer)\n",
+                "\tc := a + b\n"
+            };
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddFirst(file1);
             initializeInterpreter(files);

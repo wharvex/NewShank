@@ -31,8 +31,8 @@ namespace ShankUnitTests
             {
                 "define start()\n",
                 "variables p : integer\n",
-                    "\tp:=3\n",
-                    "\twrite p\n"
+                "\tp:=3\n",
+                "\twrite p\n"
             };
             ModuleNode m = getModuleFromLexer(code);
             Assert.AreNotEqual(m, null);
