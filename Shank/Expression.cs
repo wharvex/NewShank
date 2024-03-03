@@ -1109,12 +1109,15 @@ namespace Shank
     {
         private string name;
         private Dictionary<string, CallableNode> Functions;
+
         //Dictionary associating names to something to be imported/exported
         //has a type of ASTNode? as references will later be added
         private Dictionary<string, ASTNode?> ExportedFunctions;
         private Dictionary<string, ASTNode?> ImportedFunctions;
+
         //ImportTargetNames holds a module and the list of functions that this module has imported
         private Dictionary<string, LinkedList<string>> ImportTargetNames;
+
         //the names of functions to be exported
         private LinkedList<string> ExportTargetNames;
 
