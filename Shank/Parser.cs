@@ -103,7 +103,7 @@ public class Parser
                 }
                 if (Peek(1).Type == Token.TokenType.LeftBracket)
                 {
-                    module.addImportName(Import(), checkForFunctions());
+                    module.addImportNames(Import(), checkForFunctions());
                 }
                 else
                 {

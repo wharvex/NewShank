@@ -1109,20 +1109,21 @@ namespace Shank
     {
         private string name;
         private Dictionary<string, CallableNode> Functions;
-
-        private Dictionary<string, ASTNode?> Exports;
-        private Dictionary<string, ASTNode?> Imports;
+        //Dictionary associating names to something to be imported/exported
+        //has a type of ASTNode? as references will later be added
+        private Dictionary<string, ASTNode?> ExportedFunctions;
+        private Dictionary<string, ASTNode?> ImportedFunctions;
+        //ImportTargetNames holds a module and the list of functions that this module has imported
         private Dictionary<string, LinkedList<string>> ImportTargetNames;
-
-        //private LinkedList<string> ImportTargetNames;
+        //the names of functions to be exported
         private LinkedList<string> ExportTargetNames;
 
         public ModuleNode(string name)
         {
             this.name = name;
             Functions = new Dictionary<string, CallableNode>();
-            Exports = new Dictionary<string, ASTNode?>();
-            Imports = new Dictionary<string, ASTNode?>();
+            ExportedFunctions = new Dictionary<string, ASTNode?>();
+            ImportedFunctions = new Dictionary<string, ASTNode?>();
             ImportTargetNames = new Dictionary<string, LinkedList<string>>();
             //ImportTargetNames = new LinkedList<string>();
             ExportTargetNames = new LinkedList<string>();
@@ -1135,11 +1136,11 @@ namespace Shank
         {
             foreach (var function in recievedFunctions)
             {
-                if (!Imports.ContainsKey(function.Key))
-                    Imports.Add(function.Key, function.Value);
+                if (!ImportedFunctions.ContainsKey(function.Key))
+                    ImportedFunctions.Add(function.Key, function.Value);
                 if (recievedExports.ContainsKey(function.Key))
                 {
-                    ((CallableNode)Imports[function.Key]).IsPublic = true;
+                    ((CallableNode)ImportedFunctions[function.Key]).IsPublic = true;
                 }
                 if (ImportTargetNames.ContainsKey(function.Value.parentModuleName))
                 {
@@ -1151,7 +1152,7 @@ namespace Shank
                             )
                         )
                         {
-                            ((CallableNode)Imports[function.Key]).IsPublic = false;
+                            ((CallableNode)ImportedFunctions[function.Key]).IsPublic = false;
                         }
                     }
                 }
@@ -1164,7 +1165,7 @@ namespace Shank
             {
                 if (Functions.ContainsKey(exportFunctionName))
                 {
-                    Exports.Add(exportFunctionName, Functions[exportFunctionName]);
+                    ExportedFunctions.Add(exportFunctionName, Functions[exportFunctionName]);
                 }
                 else
                 {
@@ -1206,29 +1207,29 @@ namespace Shank
             ImportTargetNames.Add(name, new LinkedList<string>());
         }
 
-        public void addImportName(string moduleName, LinkedList<string> functions)
+        public void addImportNames(string moduleName, LinkedList<string> functions)
         {
             ImportTargetNames.Add(moduleName, functions);
         }
 
-        public LinkedList<string> getExportList()
+        public LinkedList<string> getExportNames()
         {
             return ExportTargetNames;
         }
 
-        public Dictionary<string, LinkedList<string>> getImportDict()
+        public Dictionary<string, LinkedList<string>> getImportNames()
         {
             return ImportTargetNames;
         }
 
-        public Dictionary<string, ASTNode?> getExports()
+        public Dictionary<string, ASTNode?> getExportedFunctions()
         {
-            return Exports;
+            return ExportedFunctions;
         }
 
-        public Dictionary<string, ASTNode?> getImports()
+        public Dictionary<string, ASTNode?> getImportedFunctions()
         {
-            return Imports;
+            return ImportedFunctions;
         }
 
         public CallableNode? getFunction(string name)

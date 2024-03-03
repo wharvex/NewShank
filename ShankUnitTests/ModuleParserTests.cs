@@ -2,7 +2,7 @@ using System.Data;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shank;
 
-namespace ModuleUnitTests
+namespace ShankUnitTests
 {
     [TestClass]
     public class ModuleParserTests
@@ -31,8 +31,8 @@ namespace ModuleUnitTests
             {
                 "define start()\n",
                 "variables p : integer\n",
-                "\tp:=3\n",
-                "\twrite p\n"
+                    "\tp:=3\n",
+                    "\twrite p\n"
             };
             ModuleNode m = getModuleFromLexer(code);
             Assert.AreNotEqual(m, null);
@@ -69,8 +69,8 @@ namespace ModuleUnitTests
             ModuleNode m = getModuleFromLexer(code);
             //if imports don't have functions listed, they are added to the linked list in the dictonary with the key of their module name
             //between the parser and interpreter
-            Assert.IsTrue(m.getImportDict().ContainsKey("test2"));
-            Assert.AreEqual(m.getImportDict()["test2"].Count, 0);
+            Assert.IsTrue(m.getImportNames().ContainsKey("test2"));
+            Assert.AreEqual(m.getImportNames()["test2"].Count, 0);
         }
 
         [TestMethod]
@@ -88,8 +88,8 @@ namespace ModuleUnitTests
             ModuleNode m = getModuleFromLexer(code);
             //if imports don't have functions listed, they are added to the linked list in the dictonary with the key of their module name
             //between the parser and interpreter
-            Assert.IsTrue(m.getImportDict().ContainsKey("test2"));
-            Assert.AreEqual(m.getImportDict()["test2"].Count, 0);
+            Assert.IsTrue(m.getImportNames().ContainsKey("test2"));
+            Assert.AreEqual(m.getImportNames()["test2"].Count, 0);
         }
 
         //TODO: make sure import and export are followed by a check for an end of line
@@ -106,9 +106,9 @@ namespace ModuleUnitTests
                 "\twrite p\n"
             };
             ModuleNode m = getModuleFromLexer(code);
-            Assert.AreEqual(m.getImportDict().Count, 1);
-            Assert.IsTrue(m.getImportDict().ContainsKey("test2"));
-            Assert.AreEqual(m.getImportDict()["test2"].First.Value, "add");
+            Assert.AreEqual(m.getImportNames().Count, 1);
+            Assert.IsTrue(m.getImportNames().ContainsKey("test2"));
+            Assert.AreEqual(m.getImportNames()["test2"].First.Value, "add");
         }
 
         [TestMethod]
@@ -124,9 +124,9 @@ namespace ModuleUnitTests
                 "import test2[add]\n"
             };
             ModuleNode m = getModuleFromLexer(code);
-            Assert.AreEqual(m.getImportDict().Count, 1);
-            Assert.IsTrue(m.getImportDict().ContainsKey("test2"));
-            Assert.AreEqual(m.getImportDict()["test2"].First.Value, "add");
+            Assert.AreEqual(m.getImportNames().Count, 1);
+            Assert.IsTrue(m.getImportNames().ContainsKey("test2"));
+            Assert.AreEqual(m.getImportNames()["test2"].First.Value, "add");
         }
 
         [TestMethod]
@@ -142,11 +142,11 @@ namespace ModuleUnitTests
                 "\twrite p\n"
             };
             ModuleNode m = getModuleFromLexer(code);
-            Assert.AreEqual(m.getImportDict().Count, 1);
-            Assert.IsTrue(m.getImportDict().ContainsKey("test2"));
-            Assert.AreEqual(m.getImportDict()["test2"].Count, 2);
-            Assert.AreEqual(m.getImportDict()["test2"].First.Value, "add");
-            Assert.AreEqual(m.getImportDict()["test2"].Last.Value, "addFunc");
+            Assert.AreEqual(m.getImportNames().Count, 1);
+            Assert.IsTrue(m.getImportNames().ContainsKey("test2"));
+            Assert.AreEqual(m.getImportNames()["test2"].Count, 2);
+            Assert.AreEqual(m.getImportNames()["test2"].First.Value, "add");
+            Assert.AreEqual(m.getImportNames()["test2"].Last.Value, "addFunc");
         }
 
         [TestMethod]
@@ -162,11 +162,11 @@ namespace ModuleUnitTests
                 "import test2[add, addFunc]\n"
             };
             ModuleNode m = getModuleFromLexer(code);
-            Assert.AreEqual(m.getImportDict().Count, 1);
-            Assert.IsTrue(m.getImportDict().ContainsKey("test2"));
-            Assert.AreEqual(m.getImportDict()["test2"].Count, 2);
-            Assert.AreEqual(m.getImportDict()["test2"].First.Value, "add");
-            Assert.AreEqual(m.getImportDict()["test2"].Last.Value, "addFunc");
+            Assert.AreEqual(m.getImportNames().Count, 1);
+            Assert.IsTrue(m.getImportNames().ContainsKey("test2"));
+            Assert.AreEqual(m.getImportNames()["test2"].Count, 2);
+            Assert.AreEqual(m.getImportNames()["test2"].First.Value, "add");
+            Assert.AreEqual(m.getImportNames()["test2"].Last.Value, "addFunc");
         }
 
         [TestMethod]
@@ -180,8 +180,8 @@ namespace ModuleUnitTests
                 "\tc := a + b\n"
             };
             ModuleNode m = getModuleFromLexer(code);
-            Assert.AreEqual(m.getExportList().Count, 1);
-            Assert.IsTrue(m.getExportList().Contains("add"));
+            Assert.AreEqual(m.getExportNames().Count, 1);
+            Assert.IsTrue(m.getExportNames().Contains("add"));
         }
 
         [TestMethod]
@@ -195,8 +195,8 @@ namespace ModuleUnitTests
                 "export add\n"
             };
             ModuleNode m = getModuleFromLexer(code);
-            Assert.AreEqual(m.getExportList().Count, 1);
-            Assert.IsTrue(m.getExportList().Contains("add"));
+            Assert.AreEqual(m.getExportNames().Count, 1);
+            Assert.IsTrue(m.getExportNames().Contains("add"));
         }
 
         [TestMethod]
@@ -213,9 +213,9 @@ namespace ModuleUnitTests
                 "\t c := a + 3\n"
             };
             ModuleNode m = getModuleFromLexer(code);
-            Assert.AreEqual(m.getExportList().Count, 2);
-            Assert.IsTrue(m.getExportList().Contains("add"));
-            Assert.IsTrue(m.getExportList().Contains("addThree"));
+            Assert.AreEqual(m.getExportNames().Count, 2);
+            Assert.IsTrue(m.getExportNames().Contains("add"));
+            Assert.IsTrue(m.getExportNames().Contains("addThree"));
         }
 
         [TestMethod]
@@ -232,9 +232,9 @@ namespace ModuleUnitTests
                 "export add, addThree\n"
             };
             ModuleNode m = getModuleFromLexer(code);
-            Assert.AreEqual(m.getExportList().Count, 2);
-            Assert.IsTrue(m.getExportList().Contains("add"));
-            Assert.IsTrue(m.getExportList().Contains("addThree"));
+            Assert.AreEqual(m.getExportNames().Count, 2);
+            Assert.IsTrue(m.getExportNames().Contains("add"));
+            Assert.IsTrue(m.getExportNames().Contains("addThree"));
         }
     }
 }

@@ -189,9 +189,9 @@ namespace Shank
             {
                 calledFunction = startModule.getFunctions()[fc.Name]; // find the function
             }
-            else if (startModule.getImports().ContainsKey(fc.Name))
+            else if (startModule.getImportedFunctions().ContainsKey(fc.Name))
             {
-                calledFunction = startModule.getImports()[fc.Name];
+                calledFunction = startModule.getImportedFunctions()[fc.Name];
             }
             else
             {
@@ -209,7 +209,7 @@ namespace Shank
                 bool callingModuleCanAccessFunction = false;
                 foreach (
                     string? moduleName in Modules[callingFunction.parentModuleName]
-                        .getImportDict()
+                        .getImportNames()
                         .Keys
                 )
                 {
@@ -223,13 +223,13 @@ namespace Shank
                     }
                     else if (
                         Modules[callingFunction.parentModuleName]
-                            .getImportDict()
+                            .getImportNames()
                             .ContainsKey(moduleName)
                     )
                     {
                         if (
                             Modules[callingFunction.parentModuleName]
-                                .getImportDict()[moduleName]
+                                .getImportNames()[moduleName]
                                 .Contains(fc.Name)
                         )
                         {
@@ -240,7 +240,7 @@ namespace Shank
                         {
                             if (
                                 Modules[callingFunction.parentModuleName]
-                                    .getImportDict()[moduleName]
+                                    .getImportNames()[moduleName]
                                     .Contains(fc.Name)
                             )
                             {
@@ -603,7 +603,7 @@ namespace Shank
 
         public static void handleImports()
         {
-            foreach (string currentImport in startModule.getImportDict().Keys)
+            foreach (string currentImport in startModule.getImportNames().Keys)
             {
                 if (Modules.ContainsKey(currentImport))
                 {
@@ -616,16 +616,16 @@ namespace Shank
                     );
                 }
             }
-            foreach (var currentModule in startModule.getImportDict())
+            foreach (var currentModule in startModule.getImportNames())
             {
-                if (startModule.getImportDict()[currentModule.Key].Count == 0)
+                if (startModule.getImportNames()[currentModule.Key].Count == 0)
                 {
                     var tempList = new LinkedList<string>();
-                    foreach (string s in Modules[currentModule.Key].getExportList())
+                    foreach (string s in Modules[currentModule.Key].getExportNames())
                     {
                         tempList.AddLast(s);
                     }
-                    startModule.getImportDict()[currentModule.Key] = tempList;
+                    startModule.getImportNames()[currentModule.Key] = tempList;
                 }
             }
         }
@@ -634,29 +634,29 @@ namespace Shank
         {
             startModule.updateImports(
                 Modules[m.getName()].getFunctions(),
-                Modules[m.getName()].getExports()
+                Modules[m.getName()].getExportedFunctions()
             );
 
-            if (Modules[m.getName()].getImportDict().Count > 0)
+            if (Modules[m.getName()].getImportNames().Count > 0)
             {
-                foreach (string? moduleToBeImported in Modules[m.getName()].getImportDict().Keys)
+                foreach (string? moduleToBeImported in Modules[m.getName()].getImportNames().Keys)
                 {
                     if (Modules.ContainsKey(moduleToBeImported))
                     {
                         m.updateImports(
                             Modules[moduleToBeImported].getFunctions(),
-                            Modules[moduleToBeImported].getExports()
+                            Modules[moduleToBeImported].getExportedFunctions()
                         );
-                        foreach (var currentModule in m.getImportDict())
+                        foreach (var currentModule in m.getImportNames())
                         {
-                            if (m.getImportDict()[currentModule.Key].Count == 0)
+                            if (m.getImportNames()[currentModule.Key].Count == 0)
                             {
                                 var tempList = new LinkedList<string>();
-                                foreach (string s in Modules[currentModule.Key].getExportList())
+                                foreach (string s in Modules[currentModule.Key].getExportNames())
                                 {
                                     tempList.AddLast(s);
                                 }
-                                m.getImportDict()[currentModule.Key] = tempList;
+                                m.getImportNames()[currentModule.Key] = tempList;
                             }
                         }
                         recursiveImportCheck(Modules[moduleToBeImported]);
