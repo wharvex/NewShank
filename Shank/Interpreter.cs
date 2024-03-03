@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Headers;
+using System.Text;
 
 namespace Shank
 {
@@ -7,6 +8,7 @@ namespace Shank
         //public static Dictionary<string, CallableNode> Functions = new();
         public static Dictionary<string, ModuleNode> Modules = new Dictionary<string, ModuleNode>();
         private static ModuleNode? startModule;
+        public static StringBuilder testOutput = new StringBuilder();
 
         /// <summary>
         /// Convert the given FunctionNode and its contents into their associated InterpreterDataTypes.

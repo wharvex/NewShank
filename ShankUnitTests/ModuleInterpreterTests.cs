@@ -85,12 +85,14 @@ namespace ShankUnitTests
                 "define start()\n",
                 "variables p : integer\n",
                     "\tp:=3\n",
-                    "\twrite p\n"
+                    "\twriteToTest p\n"
                  };
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddFirst(file1);
             initializeInterpreter(files);
             runInterpreter();
+            int.TryParse(Interpreter.testOutput[0].ToString(), out int j);
+            Assert.AreEqual(j, 3);
         }
 
         [TestMethod]
@@ -108,6 +110,7 @@ namespace ShankUnitTests
                                  "\tc := a + b\n" };
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddFirst(file1);
+            files.AddLast(file2);
             initializeInterpreter(files);
             runInterpreter();
         }

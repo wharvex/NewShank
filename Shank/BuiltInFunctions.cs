@@ -13,6 +13,7 @@
             {
                 MakeNode("write", new VariableNode[] { }, Write, true),
                 MakeNode("read", new VariableNode[] { }, Read, true),
+                MakeNode("writeToTest", new VariableNode[] { }, WriteToTest, true),
                 MakeNode(
                     "squareRoot",
                     new VariableNode[]
@@ -268,6 +269,12 @@
             foreach (var p in parameters)
                 Console.Write(p.ToString() + " ");
             Console.WriteLine();
+        }
+
+        public static void WriteToTest(List<InterpreterDataType> parameters)
+        {
+            foreach (var p in parameters)
+                Interpreter.testOutput.Append(p.ToString() + " ");
         }
 
         public static void Read(List<InterpreterDataType> parameters)

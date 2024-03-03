@@ -45,14 +45,8 @@ namespace ShankUnitTests
             LinkedList<string[]> list = new LinkedList<string[]>();
             list.AddFirst(file2);
             initializeInterpreter(list);
-<<<<<<< HEAD
             Assert.AreEqual(Interpreter.getModules()["test2"].getExportedFunctions().Count, 1);
             Assert.IsTrue(Interpreter.getModules()["test2"].getExportedFunctions().ContainsKey("add"));
-
-=======
-            Assert.AreEqual(Interpreter.getModules()["test2"].getExports().Count, 1);
-            Assert.IsTrue(Interpreter.getModules()["test2"].getExports().ContainsKey("add"));
->>>>>>> c3a00a9ab5961a1a2cd16c553c2c459578f786e1
         }
 
         [TestMethod]
@@ -132,17 +126,11 @@ namespace ShankUnitTests
             list.AddLast(file2);
             initializeInterpreter(list);
             Interpreter.handleImports();
-<<<<<<< HEAD
+
             Assert.AreEqual(Interpreter.getModules()["test1"].getImportNames().Count, 1);
             Assert.AreEqual(Interpreter.getModules()["test1"].getImportNames()["test2"].Count, 1);
             Assert.IsTrue(Interpreter.getModules()["test1"].getImportNames()["test2"].Contains("add"));
-=======
-            Assert.AreEqual(Interpreter.getModules()["test1"].getImportDict().Count, 1);
-            Assert.AreEqual(Interpreter.getModules()["test1"].getImportDict()["test2"].Count, 1);
-            Assert.IsTrue(
-                Interpreter.getModules()["test1"].getImportDict()["test2"].Contains("add")
-            );
->>>>>>> c3a00a9ab5961a1a2cd16c553c2c459578f786e1
+
         }
 
         [TestMethod]
@@ -176,7 +164,6 @@ namespace ShankUnitTests
             Assert.AreEqual(Interpreter.getModules()["test1"].getImportNames().Count, 1);
             Assert.AreEqual(Interpreter.getModules()["test1"].getImportNames()["test2"].Count, 2);
 
-<<<<<<< HEAD
             Assert.IsTrue(Interpreter.getModules()["test1"].getImportNames()["test2"].Contains("add"));
             Assert.IsTrue(Interpreter.getModules()["test1"].getImportNames()["test2"].Contains("sub"));
         }
@@ -213,14 +200,6 @@ namespace ShankUnitTests
             //both add and sub should be present in the importedFunctions
             Assert.IsTrue(Interpreter.getModules()["test1"].getImportedFunctions().ContainsKey("add"));
             Assert.IsTrue(Interpreter.getModules()["test1"].getImportedFunctions().ContainsKey("sub"));
-=======
-            Assert.IsTrue(
-                Interpreter.getModules()["test1"].getImportDict()["test2"].Contains("add")
-            );
-            Assert.IsTrue(
-                Interpreter.getModules()["test1"].getImportDict()["test2"].Contains("sub")
-            );
->>>>>>> c3a00a9ab5961a1a2cd16c553c2c459578f786e1
         }
 
         [TestMethod]
@@ -264,7 +243,6 @@ namespace ShankUnitTests
             Assert.AreEqual(Interpreter.getModules()["test1"].getImportNames().Count, 1);
             Assert.AreEqual(Interpreter.getModules()["test1"].getImportedFunctions().Count, 2);
 
-<<<<<<< HEAD
             //test1 should only have add in its available functions to run from test2
             Assert.AreEqual(Interpreter.getModules()["test1"].getImportNames()["test2"].Count, 1);
             Assert.IsTrue(Interpreter.getModules()["test1"].getImportNames()["test2"].Contains("add"));
@@ -274,13 +252,6 @@ namespace ShankUnitTests
             //in its import dictionary
             Assert.IsTrue(Interpreter.getModules()["test1"].getImportedFunctions().ContainsKey("add"));
             Assert.IsTrue(Interpreter.getModules()["test1"].getImportedFunctions().ContainsKey("addFunc"));
-=======
-            Assert.IsTrue(
-                Interpreter.getModules()["test1"].getImportDict()["test2"].Contains("add")
-            );
-            Assert.IsTrue(Interpreter.getModules()["test1"].getImports().ContainsKey("add"));
-            Assert.IsTrue(Interpreter.getModules()["test1"].getImports().ContainsKey("addFunc"));
->>>>>>> c3a00a9ab5961a1a2cd16c553c2c459578f786e1
         }
     }
 }
