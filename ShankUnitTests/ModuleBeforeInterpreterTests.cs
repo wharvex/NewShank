@@ -35,32 +35,47 @@ namespace ShankUnitTests
         [TestMethod]
         public void simpleHandleExports()
         {
-            string[] file2 = { "module test2\n",
-                              "export add\n",
-                              "define add(a, b : integer; var c : integer)\n",
-                                    "\tc := a + b\n" };
+            string[] file2 =
+            {
+                "module test2\n",
+                "export add\n",
+                "define add(a, b : integer; var c : integer)\n",
+                "\tc := a + b\n"
+            };
             LinkedList<string[]> list = new LinkedList<string[]>();
             list.AddFirst(file2);
             initializeInterpreter(list);
+<<<<<<< HEAD
             Assert.AreEqual(Interpreter.getModules()["test2"].getExportedFunctions().Count, 1);
             Assert.IsTrue(Interpreter.getModules()["test2"].getExportedFunctions().ContainsKey("add"));
 
+=======
+            Assert.AreEqual(Interpreter.getModules()["test2"].getExports().Count, 1);
+            Assert.IsTrue(Interpreter.getModules()["test2"].getExports().ContainsKey("add"));
+>>>>>>> c3a00a9ab5961a1a2cd16c553c2c459578f786e1
         }
+
         [TestMethod]
         public void multipleHandleExports()
         {
-            string[] file1 = {"module test1\n",
-                             "export sub\n",
-                             "define start()\n",
-                             "variables p : integer\n",
-                                "\tp:=3\n",
-                                "\twrite p\n",
-                             "define sub(a,b : integer; var c : integer)\n",
-                                "\tc := a - b\n"};
-            string[] file2 = { "module test2\n",
-                              "export add\n",
-                              "define add(a, b : integer; var c : integer)\n",
-                                    "\tc := a + b\n" };
+            string[] file1 =
+            {
+                "module test1\n",
+                "export sub\n",
+                "define start()\n",
+                "variables p : integer\n",
+                "\tp:=3\n",
+                "\twrite p\n",
+                "define sub(a,b : integer; var c : integer)\n",
+                "\tc := a - b\n"
+            };
+            string[] file2 =
+            {
+                "module test2\n",
+                "export add\n",
+                "define add(a, b : integer; var c : integer)\n",
+                "\tc := a + b\n"
+            };
             LinkedList<string[]> list = new LinkedList<string[]>();
             list.AddFirst(file1);
             list.AddLast(file2);
@@ -71,15 +86,19 @@ namespace ShankUnitTests
             Assert.IsTrue(Interpreter.getModules()["test1"].getExportedFunctions().ContainsKey("sub"));
             Assert.IsTrue(Interpreter.getModules()["test2"].getExportedFunctions().ContainsKey("add"));
         }
+
         [TestMethod]
         public void exportinMultipleFunctions()
         {
-            string[] file2 = { "module test2\n",
-                              "export add, sub\n",
-                              "define add(a, b : integer; var c : integer)\n",
-                                    "\tc := a + b\n",
-                              "define sub(a,b : integer; var c : integer)\n",
-                                "\tc := a - b\n"};
+            string[] file2 =
+            {
+                "module test2\n",
+                "export add, sub\n",
+                "define add(a, b : integer; var c : integer)\n",
+                "\tc := a + b\n",
+                "define sub(a,b : integer; var c : integer)\n",
+                "\tc := a - b\n"
+            };
             LinkedList<string[]> list = new LinkedList<string[]>();
             list.AddLast(file2);
             initializeInterpreter(list);
@@ -88,43 +107,65 @@ namespace ShankUnitTests
             Assert.IsTrue(Interpreter.getModules()["test2"].getExportedFunctions().ContainsKey("sub"));
             Assert.IsTrue(Interpreter.getModules()["test2"].getExportedFunctions().ContainsKey("add"));
         }
+
         [TestMethod]
         public void simpleHandleImport()
         {
-            string[] file1 = {"module test1\n",
-                             "import test2\n",
-                             "define start()\n",
-                             "variables p : integer\n",
-                                "\tp:=3\n",
-                                "\twrite p\n"};
-            string[] file2 = { "module test2\n",
-                              "export add\n",
-                              "define add(a, b : integer; var c : integer)\n",
-                                    "\tc := a + b\n" };
+            string[] file1 =
+            {
+                "module test1\n",
+                "import test2\n",
+                "define start()\n",
+                "variables p : integer\n",
+                "\tp:=3\n",
+                "\twrite p\n"
+            };
+            string[] file2 =
+            {
+                "module test2\n",
+                "export add\n",
+                "define add(a, b : integer; var c : integer)\n",
+                "\tc := a + b\n"
+            };
             LinkedList<string[]> list = new LinkedList<string[]>();
             list.AddFirst(file1);
             list.AddLast(file2);
             initializeInterpreter(list);
             Interpreter.handleImports();
+<<<<<<< HEAD
             Assert.AreEqual(Interpreter.getModules()["test1"].getImportNames().Count, 1);
             Assert.AreEqual(Interpreter.getModules()["test1"].getImportNames()["test2"].Count, 1);
             Assert.IsTrue(Interpreter.getModules()["test1"].getImportNames()["test2"].Contains("add"));
+=======
+            Assert.AreEqual(Interpreter.getModules()["test1"].getImportDict().Count, 1);
+            Assert.AreEqual(Interpreter.getModules()["test1"].getImportDict()["test2"].Count, 1);
+            Assert.IsTrue(
+                Interpreter.getModules()["test1"].getImportDict()["test2"].Contains("add")
+            );
+>>>>>>> c3a00a9ab5961a1a2cd16c553c2c459578f786e1
         }
+
         [TestMethod]
         public void multipleHandleImport()
         {
-            string[] file1 = {"module test1\n",
-                             "import test2\n",
-                             "define start()\n",
-                             "variables p : integer\n",
-                                "\tp:=3\n",
-                                "\twrite p\n"};
-            string[] file2 = { "module test2\n",
-                              "export add, sub\n",
-                              "define add(a, b : integer; var c : integer)\n",
-                                 "\tc := a + b\n",
-                              "define sub(a,b : integer; var c : integer)\n",
-                                 "\tc := a - b\n" };
+            string[] file1 =
+            {
+                "module test1\n",
+                "import test2\n",
+                "define start()\n",
+                "variables p : integer\n",
+                "\tp:=3\n",
+                "\twrite p\n"
+            };
+            string[] file2 =
+            {
+                "module test2\n",
+                "export add, sub\n",
+                "define add(a, b : integer; var c : integer)\n",
+                "\tc := a + b\n",
+                "define sub(a,b : integer; var c : integer)\n",
+                "\tc := a - b\n"
+            };
 
             LinkedList<string[]> list = new LinkedList<string[]>();
             list.AddFirst(file1);
@@ -135,6 +176,7 @@ namespace ShankUnitTests
             Assert.AreEqual(Interpreter.getModules()["test1"].getImportNames().Count, 1);
             Assert.AreEqual(Interpreter.getModules()["test1"].getImportNames()["test2"].Count, 2);
 
+<<<<<<< HEAD
             Assert.IsTrue(Interpreter.getModules()["test1"].getImportNames()["test2"].Contains("add"));
             Assert.IsTrue(Interpreter.getModules()["test1"].getImportNames()["test2"].Contains("sub"));
         }
@@ -171,28 +213,45 @@ namespace ShankUnitTests
             //both add and sub should be present in the importedFunctions
             Assert.IsTrue(Interpreter.getModules()["test1"].getImportedFunctions().ContainsKey("add"));
             Assert.IsTrue(Interpreter.getModules()["test1"].getImportedFunctions().ContainsKey("sub"));
+=======
+            Assert.IsTrue(
+                Interpreter.getModules()["test1"].getImportDict()["test2"].Contains("add")
+            );
+            Assert.IsTrue(
+                Interpreter.getModules()["test1"].getImportDict()["test2"].Contains("sub")
+            );
+>>>>>>> c3a00a9ab5961a1a2cd16c553c2c459578f786e1
         }
 
         [TestMethod]
         public void chainHandleImports()
         {
-            string[] file1 = {"module test1\n",
-                             "import test2\n",
-                             "define start()\n",
-                             "variables p : integer\n",
-                                "\tp:=3\n",
-                                "\twrite p\n"};
-            string[] file2 = { "module test2\n",
-                              "export add\n",
-                              "import test3\n",
-                              "define add(a, b : integer; var c : integer)\n",
-                              "variables p : integer\n",
-                                 "\taddFunc a, b, var p\n",
-                                 "\tc := p\n"};
-            string[] file3 = {"module test3\n",
-                              "export addFunc\n",
-                              "define addFunc(a, b : integer; var c : integer)\n",
-                                 "\tc := a + b\n"};
+            string[] file1 =
+            {
+                "module test1\n",
+                "import test2\n",
+                "define start()\n",
+                "variables p : integer\n",
+                "\tp:=3\n",
+                "\twrite p\n"
+            };
+            string[] file2 =
+            {
+                "module test2\n",
+                "export add\n",
+                "import test3\n",
+                "define add(a, b : integer; var c : integer)\n",
+                "variables p : integer\n",
+                "\taddFunc a, b, var p\n",
+                "\tc := p\n"
+            };
+            string[] file3 =
+            {
+                "module test3\n",
+                "export addFunc\n",
+                "define addFunc(a, b : integer; var c : integer)\n",
+                "\tc := a + b\n"
+            };
 
             LinkedList<string[]> list = new LinkedList<string[]>();
             list.AddFirst(file1);
@@ -205,6 +264,7 @@ namespace ShankUnitTests
             Assert.AreEqual(Interpreter.getModules()["test1"].getImportNames().Count, 1);
             Assert.AreEqual(Interpreter.getModules()["test1"].getImportedFunctions().Count, 2);
 
+<<<<<<< HEAD
             //test1 should only have add in its available functions to run from test2
             Assert.AreEqual(Interpreter.getModules()["test1"].getImportNames()["test2"].Count, 1);
             Assert.IsTrue(Interpreter.getModules()["test1"].getImportNames()["test2"].Contains("add"));
@@ -214,7 +274,13 @@ namespace ShankUnitTests
             //in its import dictionary
             Assert.IsTrue(Interpreter.getModules()["test1"].getImportedFunctions().ContainsKey("add"));
             Assert.IsTrue(Interpreter.getModules()["test1"].getImportedFunctions().ContainsKey("addFunc"));
+=======
+            Assert.IsTrue(
+                Interpreter.getModules()["test1"].getImportDict()["test2"].Contains("add")
+            );
+            Assert.IsTrue(Interpreter.getModules()["test1"].getImports().ContainsKey("add"));
+            Assert.IsTrue(Interpreter.getModules()["test1"].getImports().ContainsKey("addFunc"));
+>>>>>>> c3a00a9ab5961a1a2cd16c553c2c459578f786e1
         }
-
     }
 }
