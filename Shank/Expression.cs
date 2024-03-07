@@ -1110,6 +1110,7 @@ namespace Shank
     {
         private string name;
         private Dictionary<string, CallableNode> Functions;
+        private Dictionary<string, RecordNode> Records;
 
         //Dictionary associating names to something to be imported/exported
         //has a type of ASTNode? as references will later be added
@@ -1207,7 +1208,10 @@ namespace Shank
             }
         }
 
-        public void AddRecord() { }
+        public void AddRecord(RecordNode record)
+        {
+            
+        }
 
         public void addExportName(string? name)
         {
