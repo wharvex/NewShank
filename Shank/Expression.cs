@@ -1208,10 +1208,7 @@ namespace Shank
             }
         }
 
-        public void AddRecord(RecordNode record)
-        {
-            
-        }
+        public void AddRecord(RecordNode record) { }
 
         public void addExportName(string? name)
         {
