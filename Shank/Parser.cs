@@ -79,7 +79,7 @@ public class Parser
                 continue;
             else if (MatchAndRemove(Token.TokenType.Export) != null)
             {
-                //if the name of the module is an integer, then it was never declared as a module so we throw an error 
+                //if the name of the module is an integer, then it was never declared as a module so we throw an error
                 //as it shouldn't be able to import or export
                 if (int.TryParse(moduleName, out _))
                 {
@@ -108,10 +108,8 @@ public class Parser
             }
             else if (MatchAndRemove(Token.TokenType.Define) != null)
                 module.addFunction(Function(moduleName));
-
             else if (MatchAndRemove(Token.TokenType.Record) != null)
                 module.AddRecord();
-
             else if (MatchAndRemove(Token.TokenType.Test) != null)
                 module.addTest(Test());
             else
@@ -927,27 +925,24 @@ public class Parser
     {
         TestNode test;
         Token? token;
-        if((token = MatchAndRemove(Token.TokenType.Identifier)) == null)
+        if ((token = MatchAndRemove(Token.TokenType.Identifier)) == null)
         {
             throw new SyntaxErrorException(
                 "Expected an identifier after 'test' token, not: ",
                 Peek(0)
-                );
+            );
         }
         string testName = token.Value;
         if (MatchAndRemove(Token.TokenType.For) == null)
         {
-            throw new SyntaxErrorException(
-                "Expected an for token after test name, not: ",
-                Peek(0)
-                );
+            throw new SyntaxErrorException("Expected an for token after test name, not: ", Peek(0));
         }
         if ((token = MatchAndRemove(Token.TokenType.Identifier)) == null)
         {
             throw new SyntaxErrorException(
                 "Expected an identifier after 'for' token in test statement, not: ",
                 Peek(0)
-                );
+            );
         }
         test = new TestNode(testName, token.Value);
         if (MatchAndRemove(Token.TokenType.LeftParen) == null)

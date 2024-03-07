@@ -1134,7 +1134,6 @@ namespace Shank
             //ImportTargetNames = new LinkedList<string>();
             ExportTargetNames = new LinkedList<string>();
             Tests = new Dictionary<string, TestNode>();
-
         }
 
         public void updateImports(
@@ -1186,10 +1185,11 @@ namespace Shank
                 }
             }
         }
+
         //merges two unnamed modules into one
         public void mergeModule(ModuleNode moduleIn)
         {
-            foreach(var function in moduleIn.getFunctions())
+            foreach (var function in moduleIn.getFunctions())
             {
                 Functions.Add(function.Key, function.Value);
             }
@@ -1279,6 +1279,7 @@ namespace Shank
         {
             Tests.Add(t.Name, t);
         }
+
         public Dictionary<string, TestNode> getTests()
         {
             return Tests;
@@ -1288,13 +1289,15 @@ namespace Shank
     public class TestNode : FunctionNode
     {
         public string targetFunctionName;
-        public TestNode(string name, string targetFnName) : base(name)
+
+        public TestNode(string name, string targetFnName)
+            : base(name)
         {
             Name = name;
             targetFunctionName = targetFnName;
             IsPublic = false;
             Execute = (List<InterpreterDataType> paramList) =>
-               Interpreter.InterpretFunction(this, paramList);
+                Interpreter.InterpretFunction(this, paramList);
         }
     }
 

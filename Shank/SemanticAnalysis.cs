@@ -7,11 +7,19 @@ namespace Shank
     public class SemanticAnalysis
     {
         private static Dictionary<string, ModuleNode> Modules;
-        public static void CheckAssignments(Dictionary<string, CallableNode> functions, ModuleNode parentModule)
+
+        public static void CheckAssignments(
+            Dictionary<string, CallableNode> functions,
+            ModuleNode parentModule
+        )
         {
             foreach (var f in functions.Values.Where(f => f is FunctionNode).Cast<FunctionNode>())
             {
-                CheckBlock(f.Statements, f.LocalVariables.Concat(f.ParameterVariables), parentModule);
+                CheckBlock(
+                    f.Statements,
+                    f.LocalVariables.Concat(f.ParameterVariables),
+                    parentModule
+                );
             }
         }
 
@@ -29,29 +37,38 @@ namespace Shank
                 {
                     var target = dict[an.target.Name];
                     CheckNode(target.Type, an.expression, dict);
-                } 
+                }
                 else if (s is FunctionCallNode fn)
                 {
                     if (parentModule.getFunctions().ContainsKey(fn.Name))
                         foundFunction = true;
                     else
                     {
-                        foreach(KeyValuePair<string, LinkedList<string>> import in parentModule.getImportNames())
+                        foreach (
+                            KeyValuePair<
+                                string,
+                                LinkedList<string>
+                            > import in parentModule.getImportNames()
+                        )
                         {
                             if (Modules[import.Key].getExportNames().Contains(fn.Name))
                                 foundFunction = true;
                         }
                     }
-                    if (Interpreter.getStartModule().getFunctions().ContainsKey((string)fn.Name)
-                        && Interpreter.getStartModule().getFunctions()[(string)fn.Name] is BuiltInFunctionNode)
+                    if (
+                        Interpreter.getStartModule().getFunctions().ContainsKey((string)fn.Name)
+                        && Interpreter.getStartModule().getFunctions()[(string)fn.Name]
+                            is BuiltInFunctionNode
+                    )
                         foundFunction = true;
                     if (!foundFunction)
                     {
-                        throw new Exception($"Could not find a definition for the function {fn.Name}." +
-                                                $" Make sure it was defined and properly exported if it was imported.");
+                        throw new Exception(
+                            $"Could not find a definition for the function {fn.Name}."
+                                + $" Make sure it was defined and properly exported if it was imported."
+                        );
                     }
                 }
-                
             }
         }
 
@@ -115,12 +132,13 @@ namespace Shank
                     throw new ArgumentOutOfRangeException(nameof(anExpression));
             }
         }
+
         public static void checkModules(Dictionary<string, ModuleNode> modules)
         {
             Modules = modules;
             foreach (KeyValuePair<string, ModuleNode> module in modules)
             {
-                if(module.Value.getName() == "default")
+                if (module.Value.getName() == "default")
                 {
                     if (module.Value.getImportNames().Any())
                         throw new Exception("Cannot import to an unnamed module.");
@@ -128,13 +146,17 @@ namespace Shank
                         throw new Exception("Cannot export from an unnamed module.");
                 }
                 //checking exports
-                foreach(string exportName in module.Value.getExportNames())
+                foreach (string exportName in module.Value.getExportNames())
                 {
                     if (!module.Value.getFunctions().ContainsKey(exportName))
-                        throw new Exception($"Cannot export {exportName} from the module {module.Key} as it wasn't defined in that file.");
+                        throw new Exception(
+                            $"Cannot export {exportName} from the module {module.Key} as it wasn't defined in that file."
+                        );
                 }
                 //checking imports
-                foreach(KeyValuePair<string, LinkedList<string>> import in module.Value.getImportNames())
+                foreach (
+                    KeyValuePair<string, LinkedList<string>> import in module.Value.getImportNames()
+                )
                 {
                     //checking that the target module exists
                     if (!modules.ContainsKey(import.Key))
@@ -147,9 +169,13 @@ namespace Shank
                         foreach (string s in import.Value)
                         {
                             if (!m.getFunctions().ContainsKey(s))
-                                throw new Exception($"The function {s} does not exist in module {import.Key}.");
+                                throw new Exception(
+                                    $"The function {s} does not exist in module {import.Key}."
+                                );
                             if (!m.getExportNames().Contains(s))
-                                throw new Exception($"The module {import.Key} doesn't export the function {s}.");
+                                throw new Exception(
+                                    $"The module {import.Key} doesn't export the function {s}."
+                                );
                         }
                     }
                 }
