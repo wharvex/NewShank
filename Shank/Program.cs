@@ -117,8 +117,8 @@ namespace Shank
                     && currentModule.getFunctions()["start"] is FunctionNode s
                 )
                 {
-                    SemanticAnalysis.checkModules(Interpreter.getModules());
                     Interpreter.setStartModule();
+                    SemanticAnalysis.checkModules(Interpreter.getModules());
                     Interpreter.handleExports();
                     Interpreter.handleImports();
                     var interpreterErrorOccurred = false;
