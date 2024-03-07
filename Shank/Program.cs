@@ -45,7 +45,6 @@ namespace Shank
                 );
             }
 
-            var unnamedModuleCount = 1;
             foreach (var inPath in inPaths)
             {
                 var lines = File.ReadAllLines(inPath);
@@ -69,8 +68,13 @@ namespace Shank
                         //the digit
                         if (module.getName() == null)
                         {
-                            module.setName(unnamedModuleCount.ToString());
-                            unnamedModuleCount++;
+                            if (Interpreter.getModules().ContainsKey("default"))
+                                Interpreter.getModules()["default"].mergeModule(module);
+                            else
+                            {
+                                module.setName("default");
+                                Interpreter.Modules.Add("default", module);
+                            }
                         }
                     }
                     catch (SyntaxErrorException e)
@@ -86,8 +90,8 @@ namespace Shank
                         brokeOutOfWhile = true;
                         break;
                     }
-
-                    Interpreter.Modules.Add(module.getName(), module);
+                    if(module.getName() != null && module.getName() != "default")
+                        Interpreter.Modules.Add(module.getName(), module);
                 }
 
                 // Parser error occurred -- skip to next file.
@@ -96,9 +100,10 @@ namespace Shank
                     continue;
                 }
             }
-            Interpreter.setStartModule();
-            Interpreter.handleExports();
-            Interpreter.handleImports();
+            //SemanticAnalysis.checkModules(Interpreter.getModules());
+            //Interpreter.setStartModule();
+            //Interpreter.handleExports();
+            //Interpreter.handleImports();
             //Interpreter.moduleSemanticAnalysis();
             // Begin program interpretation and output.
             foreach (KeyValuePair<string, ModuleNode> currentModulePair in Interpreter.Modules)
@@ -112,6 +117,10 @@ namespace Shank
                     && currentModule.getFunctions()["start"] is FunctionNode s
                 )
                 {
+                    SemanticAnalysis.checkModules(Interpreter.getModules());
+                    Interpreter.setStartModule();
+                    Interpreter.handleExports();
+                    Interpreter.handleImports();
                     var interpreterErrorOccurred = false;
                     try
                     {

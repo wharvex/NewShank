@@ -251,13 +251,11 @@ namespace Shank
                             }
                         }
                     }
-                    if (startModule.getFunctions().ContainsKey(fc.Name))
-                    {
-                        if (startModule.getFunctions()[fc.Name] is BuiltInFunctionNode)
-                        {
-                            callingModuleCanAccessFunction = true;
-                        }
-                    }
+                }
+                if (startModule.getFunctions().ContainsKey(fc.Name))
+                {
+                    if (startModule.getFunctions()[fc.Name] is BuiltInFunctionNode)
+                        callingModuleCanAccessFunction = true;
                 }
                 if (!callingModuleCanAccessFunction)
                     throw new Exception(
@@ -675,16 +673,22 @@ namespace Shank
             }
         }
 
-        public static void setStartModule()
+        public static ModuleNode? setStartModule()
         {
             foreach (KeyValuePair<string, ModuleNode> currentModule in Modules)
             {
                 if (currentModule.Value.getFunctions().ContainsKey("start"))
                 {
                     startModule = currentModule.Value;
-                    return;
+                    return startModule;
                 }
             }
+            return null;
+        }
+
+        public static ModuleNode? getStartModule()
+        {
+            return startModule;
         }
 
         public static int ResolveIntBeforeVarDecs(ASTNode node)
@@ -727,6 +731,7 @@ namespace Shank
         {
             Modules = new Dictionary<string, ModuleNode>();
             startModule = null;
+            testOutput = new StringBuilder();
         }
 
         public static void setModules(Dictionary<string, ModuleNode> modules)

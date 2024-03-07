@@ -1,4 +1,5 @@
 using System.Data;
+using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shank;
 
@@ -7,7 +8,7 @@ namespace ShankUnitTests
     [TestClass]
     public class ModuleParserTests
     {
-        public ModuleNode getModuleFromLexer(string[] code)
+        public static ModuleNode getModuleFromLexer(string[] code)
         {
             Lexer lexer = new Lexer();
             ModuleNode m;
@@ -235,6 +236,117 @@ namespace ShankUnitTests
             Assert.AreEqual(m.getExportNames().Count, 2);
             Assert.IsTrue(m.getExportNames().Contains("add"));
             Assert.IsTrue(m.getExportNames().Contains("addThree"));
+        }
+        [TestMethod]
+        public void mergeUnnamedModule()
+        {
+            string[] file1 = {
+                "define start()\n",
+                "variables p : integer\n",
+                    "\tp:=3\n",
+                    "\twrite p\n",
+            };
+            string[] file2 = {
+                "define add(a, b : integer; var c : integer)\n",
+                    "\tc := a + b\n",
+                "\n",
+                "define addThree(a : integer; var c : integer)\n",
+                    "\t c := a + 3\n"
+            };
+
+            ModuleNode module1 = getModuleFromLexer(file1);
+            ModuleNode module2 = getModuleFromLexer(file2);
+            module1.mergeModule(module2);
+
+            Assert.AreEqual(module1.getFunctions().Count, 3);
+            Assert.IsTrue(module1.getFunctions().ContainsKey("start"));
+            Assert.IsTrue(module1.getFunctions().ContainsKey("add"));
+            Assert.IsTrue(module1.getFunctions().ContainsKey("addThree"));
+        }
+        [TestMethod]
+        public void ProgramMergeModuleLogic()
+        {
+            Interpreter.reset();
+            string[] file1 = {
+                "define start()\n",
+                "variables p : integer\n",
+                    "\tp:=3\n",
+                    "\twrite p\n",
+            };
+            string[] file2 = {
+                "define add(a, b : integer; var c : integer)\n",
+                    "\tc := a + b\n",
+                "\n",
+                "define addThree(a : integer; var c : integer)\n",
+                    "\t c := a + 3\n"
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddLast(file1);
+            files.AddLast(file2);
+            foreach (var lines in files)
+            {
+
+                var tokens = new List<Token>();
+                var l = new Lexer();
+                tokens.AddRange(l.Lex(lines));
+
+                var p = new Parser(tokens);
+
+                var brokeOutOfWhile = false;
+                while (tokens.Any())
+                {
+                    //FunctionNode? fn = null;
+                    ModuleNode module = null;
+                    var parserErrorOccurred = false;
+
+                    try
+                    {
+                        module = p.Module();
+                        //if the file never declares itself as module, give it a unique digit name
+                        //the digit
+                        if (module.getName() == null)
+                        {
+                            if (Interpreter.getModules().ContainsKey("default"))
+                                Interpreter.getModules()["default"].mergeModule(module);
+                            else
+                            {
+                                module.setName("default");
+                                Interpreter.Modules.Add("default", module);
+                            }
+                        }
+                    }
+                    catch (SyntaxErrorException e)
+                    {
+                        Console.WriteLine(
+                            $"\nParsing error encountered in mergeModule unit test:\n{e}\nskipping..."
+                        );
+                        parserErrorOccurred = true;
+                    }
+
+                    if (parserErrorOccurred)
+                    {
+                        brokeOutOfWhile = true;
+                        break;
+                    }
+                    if (module.getName() != null && module.getName() != "default")
+                        Interpreter.Modules.Add(module.getName(), module);
+                }
+
+                // Parser error occurred -- skip to next file.
+                if (brokeOutOfWhile)
+                {
+                    continue;
+                }
+            }
+            Assert.AreEqual(Interpreter.getModules().Count, 1);
+
+            Assert.IsTrue(Interpreter.getModules().ContainsKey("default"));
+            Assert.AreEqual(Interpreter.getModules()["default"].getFunctions().Count, 3);
+
+            Assert.IsTrue(Interpreter.getModules()["default"].getFunctions().ContainsKey("start"));
+            Assert.IsTrue(Interpreter.getModules()["default"].getFunctions().ContainsKey("add"));
+            Assert.IsTrue(Interpreter.getModules()["default"].getFunctions().ContainsKey("addThree"));
+
         }
     }
 }

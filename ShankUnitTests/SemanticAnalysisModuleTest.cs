@@ -7,91 +7,27 @@ using System.Threading.Tasks;
 namespace ShankUnitTests
 {
     [TestClass]
-    public class ModuleInterpreterTests
+    public class SemanticAnalysisModuleTest
     {
-        private int unnamedModuleCount = 0;
-        public Dictionary<string, ModuleNode> getModulesFromParser(LinkedList<string[]> list)
-        {
-            Dictionary<string, ModuleNode> Modules = new Dictionary<string, ModuleNode>();
-            Lexer l = new Lexer();
-            foreach (string[] file in list)
-            {
-                Parser p = new Parser(l.Lex(file));
-                ModuleNode m = p.Module();
-                if (m.getName() == null)
-                {
-                    m.setName(unnamedModuleCount.ToString());
-                    unnamedModuleCount++;
-                }
-                Modules.Add(m.getName(), m);
-            }
-            return Modules;
-        }
-
         public void initializeInterpreter(LinkedList<string[]> files)
         {
-            Interpreter.reset();
-            Dictionary<string, ModuleNode> modules = getModulesFromParser(files);
-            Interpreter.setModules(modules);
-            Interpreter.setStartModule();
-            Interpreter.handleExports();
-            Interpreter.handleImports();
+            ModuleBeforeInterpreterTests.initializeInterpreter(files);
         }
-
-        public void runInterpreter()
-        {
-            foreach (KeyValuePair<string, ModuleNode> currentModulePair in Interpreter.Modules)
-            {
-                var currentModule = currentModulePair.Value;
-                //Console.WriteLine($"\nOutput of {currentModule.getName()}:\n");
-
-                BuiltInFunctions.Register(currentModule.getFunctions());
-                if (
-                    currentModule.getFunctions().ContainsKey("start")
-                    && currentModule.getFunctions()["start"] is FunctionNode s
-                )
-                {
-                    var interpreterErrorOccurred = false;
-                    try
-                    {
-                        Interpreter.InterpretFunction(s, new List<InterpreterDataType>());
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(
-                            $"\nInterpretation error encountered in file {currentModulePair.Key}:\n{e}\nskipping..."
-                        );
-                        interpreterErrorOccurred = true;
-                    }
-
-                    if (interpreterErrorOccurred)
-                    {
-                        continue;
-                    }
-                }
-            }
-        }
-
-        //ensuring the base case still works
         [TestMethod]
-        public void simpleInterpreterTest()
+        public void preliminaryTest()
         {
-            string[] file1 =
-            {
+            //write an interpreter test where a function in a different module from start() used a built in function
+            string[] code = {
                 "define start()\n",
                 "variables p : integer\n",
-                    "\tp:=3\n",
-                    "\twriteToTest p\n"
-                 };
+                "\tp:=3\n",
+                "\twrite p\n"
+            };
             LinkedList<string[]> files = new LinkedList<string[]>();
-            files.AddFirst(file1);
+            files.AddLast(code);
             initializeInterpreter(files);
-            runInterpreter();
-            int.TryParse(Interpreter.testOutput[0].ToString(), out int j);
-            Assert.AreEqual(j, 3);
+            SemanticAnalysis.checkModules(Interpreter.getModules());
         }
-
-        //one function export to a simple import
         [TestMethod]
         public void simpleImportAndExport()
         {
@@ -115,9 +51,7 @@ namespace ShankUnitTests
             files.AddFirst(file1);
             files.AddLast(file2);
             initializeInterpreter(files);
-            runInterpreter();
-            int.TryParse(Interpreter.testOutput[0].ToString(), out int j);
-            Assert.AreEqual(j, 6);
+            SemanticAnalysis.checkModules(Interpreter.getModules());
         }
 
         //importing from a module that also imports
@@ -155,9 +89,8 @@ namespace ShankUnitTests
             files.AddLast(file3);
 
             initializeInterpreter(files);
-            runInterpreter();
-            int.TryParse(Interpreter.testOutput[0].ToString(), out int j);
-            Assert.AreEqual(j, 6);
+            SemanticAnalysis.checkModules(Interpreter.getModules());
+
         }
         [TestMethod]
         //Passes the tests into the interpreter out of order. This simulates if the directory had file3, then file2, then file1.
@@ -190,11 +123,9 @@ namespace ShankUnitTests
             files.AddLast(file3);
             files.AddLast(file2);
             files.AddLast(file1);
-            
+
             initializeInterpreter(files);
-            runInterpreter();
-            int.TryParse(Interpreter.testOutput[0].ToString(), out int j);
-            Assert.AreEqual(j, 6);
+            SemanticAnalysis.checkModules(Interpreter.getModules());
         }
         [TestMethod]
         public void importDirectlyAndThroughChain()
@@ -233,11 +164,7 @@ namespace ShankUnitTests
             files.AddLast(file1);
 
             initializeInterpreter(files);
-            runInterpreter();
-            int.TryParse(Interpreter.testOutput[0].ToString(), out int j);
-            Assert.AreEqual(j, 6);
-            int.TryParse(Interpreter.testOutput[2].ToString(), out int f);
-            Assert.AreEqual(f, 4);
+            SemanticAnalysis.checkModules(Interpreter.getModules());
         }
         [TestMethod]
         public void callBuiltInFuncFromDifferentModule()
@@ -253,20 +180,132 @@ namespace ShankUnitTests
             string[] file2 ={
                 "module test2\n",
                 "export add\n",
-                "define add(a, b : integer; var c : integer)\n",           
+                "define add(a, b : integer; var c : integer)\n",
                     "\tc := a + b\n",
                     "\twriteToTest c\n"
             };
             LinkedList<string[]> files = new LinkedList<string[]>();
-            
             files.AddLast(file1);
             files.AddLast(file2);
             initializeInterpreter(files);
-            runInterpreter();
-            int.TryParse(Interpreter.testOutput[0].ToString(), out int j);
-            Assert.AreEqual(j, 6);
-            int.TryParse(Interpreter.testOutput[2].ToString(), out int f);
-            Assert.AreEqual(f, 6);
+            SemanticAnalysis.checkModules(Interpreter.getModules());
+        }
+
+        //CATCHING ERRORS TESTS
+        [TestMethod]
+        [ExpectedException (typeof(Exception),
+            "Could not find a definition for the function add. Make sure it was defined and properly exported if it was imported.")]
+        public void undefinedFunctionCall()
+        {
+            string[] file1 ={
+                "define start()\n",
+                "variables p, j : integer\n",
+                    "\tadd 4, 2, var p\n",
+                    "\twriteToTest p\n"
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddLast(file1);
+            initializeInterpreter(files);
+            SemanticAnalysis.checkModules(Interpreter.getModules());
+        }
+        [TestMethod]
+        [ExpectedException(typeof(Exception),
+            "Cannot export addFunc from the module test2 as it wasn't defined in that file.")]
+        public void catchBadExport()
+        {
+            string[] file1 = {
+                "module test1\n",
+                "import test2\n",
+                "define start()\n",
+                "variables p : integer\n",
+                    "\tadd 4,2, var p\n",
+                    "\twriteToTest p\n"
+            };
+            string[] file2 = {
+                "module test2\n",
+                "export addFunc\n",
+                "define add(a, b : integer; var c : integer)\n",
+                    "\tc := a + b\n"
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddLast(file1);
+            files.AddLast(file2);
+            initializeInterpreter(files);
+            SemanticAnalysis.checkModules(Interpreter.getModules());
+        }
+        [TestMethod]
+        [ExpectedException (typeof(Exception),
+            "Module test3 does not exist")]
+        public void catchBadImportWholeModule()
+        {
+            string[] file1 = {
+                "module test1\n",
+                "import test3\n",
+                "define start()\n",
+                "variables p : integer\n",
+                    "\tadd 4,2, var p\n",
+                    "\twriteToTest p\n"
+            };
+            string[] file2 = {
+                "module test2\n",
+                "export add\n",
+                "define add(a, b : integer; var c : integer)\n",
+                    "\tc := a + b\n"
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddLast(file1);
+            files.AddLast(file2);
+            initializeInterpreter(files);
+            SemanticAnalysis.checkModules(Interpreter.getModules());
+        }
+        [TestMethod]
+        [ExpectedException (typeof(Exception),
+            "The function addFunc does not exist in module test2.")]
+        public void catchBadImportSingleFunction()
+        {
+            string[] file1 = {
+                "module test1\n",
+                "import test2 [addFunc]\n",
+                "define start()\n",
+                "variables p : integer\n",
+                    "\tadd 4,2, var p\n",
+                    "\twriteToTest p\n"
+            };
+            string[] file2 = {
+                "module test2\n",
+                "export add\n",
+                "define add(a, b : integer; var c : integer)\n",
+                    "\tc := a + b\n"
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddLast(file1);
+            files.AddLast(file2);
+            initializeInterpreter(files);
+            SemanticAnalysis.checkModules(Interpreter.getModules());
+        }
+        [TestMethod]
+        [ExpectedException (typeof(Exception),
+            "The module test2 doesn't export the function add.")]
+        public void catchNotExported()
+        {
+            string[] file1 = {
+                "module test1\n",
+                "import test2 [add]\n",
+                "define start()\n",
+                "variables p : integer\n",
+                    "\tadd 4,2, var p\n",
+                    "\twriteToTest p\n"
+            };
+            string[] file2 = {
+                "module test2\n",
+                "define add(a, b : integer; var c : integer)\n",
+                    "\tc := a + b\n"
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddLast(file1);
+            files.AddLast(file2);
+            initializeInterpreter(files);
+            SemanticAnalysis.checkModules(Interpreter.getModules());
         }
     }
 }

@@ -1,4 +1,5 @@
 using System.Dynamic;
+using System.Runtime.CompilerServices;
 using System.Text;
 using LLVMSharp.Interop;
 
@@ -1121,6 +1122,8 @@ namespace Shank
         //the names of functions to be exported
         private LinkedList<string> ExportTargetNames;
 
+        private Dictionary<string, TestNode> Tests;
+
         public ModuleNode(string name)
         {
             this.name = name;
@@ -1130,6 +1133,8 @@ namespace Shank
             ImportTargetNames = new Dictionary<string, LinkedList<string>>();
             //ImportTargetNames = new LinkedList<string>();
             ExportTargetNames = new LinkedList<string>();
+            Tests = new Dictionary<string, TestNode>();
+
         }
 
         public void updateImports(
@@ -1180,6 +1185,18 @@ namespace Shank
                     );
                 }
             }
+        }
+        //merges two unnamed modules into one
+        public void mergeModule(ModuleNode moduleIn)
+        {
+            foreach(var function in moduleIn.getFunctions())
+            {
+                Functions.Add(function.Key, function.Value);
+            }
+            if (moduleIn.getImportNames().Any())
+                throw new Exception("An unnamed module cannot import.");
+            if (moduleIn.getExportNames().Any())
+                throw new Exception("An unnamed module cannot export.");
         }
 
         public void addFunction(CallableNode? function)
@@ -1256,6 +1273,28 @@ namespace Shank
         public void setName(string nameIn)
         {
             name = nameIn;
+        }
+
+        public void addTest(TestNode t)
+        {
+            Tests.Add(t.Name, t);
+        }
+        public Dictionary<string, TestNode> getTests()
+        {
+            return Tests;
+        }
+    }
+
+    public class TestNode : FunctionNode
+    {
+        public string targetFunctionName;
+        public TestNode(string name, string targetFnName) : base(name)
+        {
+            Name = name;
+            targetFunctionName = targetFnName;
+            IsPublic = false;
+            Execute = (List<InterpreterDataType> paramList) =>
+               Interpreter.InterpretFunction(this, paramList);
         }
     }
 

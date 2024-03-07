@@ -10,25 +10,33 @@ namespace ShankUnitTests
     [TestClass]
     public class ModuleBeforeInterpreterTests
     {
-        public Dictionary<string, ModuleNode> getModulesFromParser(LinkedList<string[]> list)
+        public static Dictionary<string, ModuleNode> getModulesFromParser(LinkedList<string[]> list)
         {
             Dictionary<string, ModuleNode> Modules = new Dictionary<string, ModuleNode>();
             Lexer l = new Lexer();
+            int unnamedModuleCount = 0;
             foreach (string[] file in list)
             {
                 Parser p = new Parser(l.Lex(file));
                 ModuleNode m = p.Module();
+                if (m.getName() == null)
+                {
+                    m.setName(unnamedModuleCount.ToString());
+                    unnamedModuleCount++;
+                }
                 Modules.Add(m.getName(), m);
             }
             return Modules;
         }
 
-        public void initializeInterpreter(LinkedList<string[]> files)
+        public static void initializeInterpreter(LinkedList<string[]> files)
         {
             Interpreter.reset();
             Dictionary<string, ModuleNode> modules = getModulesFromParser(files);
             Interpreter.setModules(modules);
-            Interpreter.setStartModule();
+            ModuleNode? startModule = Interpreter.setStartModule();
+            if(startModule != null)
+                BuiltInFunctions.Register(startModule.getFunctions());
             Interpreter.handleExports();
         }
 
@@ -89,9 +97,9 @@ namespace ShankUnitTests
                 "module test2\n",
                 "export add, sub\n",
                 "define add(a, b : integer; var c : integer)\n",
-                "\tc := a + b\n",
+                    "\tc := a + b\n",
                 "define sub(a,b : integer; var c : integer)\n",
-                "\tc := a - b\n"
+                    "\tc := a - b\n"
             };
             LinkedList<string[]> list = new LinkedList<string[]>();
             list.AddLast(file2);
@@ -203,6 +211,44 @@ namespace ShankUnitTests
         }
 
         [TestMethod]
+        public void exportOneFunctionButNotBoth()
+        {
+            string[] file1 = {
+                "module test1\n",
+                "import test2\n",
+                "define start()\n",
+                "variables p : integer\n",
+                    "\tp:=3\n",
+                    "\twrite p\n"
+            };
+            string[] file2 = {
+                "module test2\n",
+                "export add\n",
+                "define add(a, b : integer; var c : integer)\n",
+                "variables p : integer\n",
+                    "\taddFunc a, b, var p\n",
+                    "\tc := p\n",
+                "define addFunc(a,b : integer; var c : integer)\n",
+                    "\tc := a + b\n"
+            };
+            LinkedList<string[]> list = new LinkedList<string[]>();
+            list.AddFirst(file1);
+            list.AddLast(file2);
+            initializeInterpreter(list);
+            Interpreter.handleImports();
+
+            //the list of available functions from test2 should only be 1
+            Assert.AreEqual(Interpreter.getModules()["test1"].getImportNames()["test2"].Count, 1);
+
+            //module test1 importNames should have add, and should not have sub
+            Assert.IsTrue(Interpreter.getModules()["test1"].getImportNames()["test2"].Contains("add"));
+            Assert.IsFalse(Interpreter.getModules()["test1"].getImportNames()["test2"].Contains("addFunc"));
+
+            Assert.IsTrue(Interpreter.getModules()["test1"].getImportedFunctions().ContainsKey("add"));
+            Assert.IsTrue(Interpreter.getModules()["test1"].getImportedFunctions().ContainsKey("addFunc"));
+        }
+
+        [TestMethod]
         public void chainHandleImports()
         {
             string[] file1 =
@@ -211,8 +257,8 @@ namespace ShankUnitTests
                 "import test2\n",
                 "define start()\n",
                 "variables p : integer\n",
-                "\tp:=3\n",
-                "\twrite p\n"
+                    "\tp:=3\n",
+                    "\twrite p\n"
             };
             string[] file2 =
             {
@@ -221,15 +267,15 @@ namespace ShankUnitTests
                 "import test3\n",
                 "define add(a, b : integer; var c : integer)\n",
                 "variables p : integer\n",
-                "\taddFunc a, b, var p\n",
-                "\tc := p\n"
+                    "\taddFunc a, b, var p\n",
+                    "\tc := p\n"
             };
             string[] file3 =
             {
                 "module test3\n",
                 "export addFunc\n",
                 "define addFunc(a, b : integer; var c : integer)\n",
-                "\tc := a + b\n"
+                    "\tc := a + b\n"
             };
 
             LinkedList<string[]> list = new LinkedList<string[]>();
@@ -250,6 +296,57 @@ namespace ShankUnitTests
 
             //test1 should have access to all functions in test2, but shouldn't be able to call any functions not located
             //in its import dictionary
+            Assert.IsTrue(Interpreter.getModules()["test1"].getImportedFunctions().ContainsKey("add"));
+            Assert.IsTrue(Interpreter.getModules()["test1"].getImportedFunctions().ContainsKey("addFunc"));
+        }
+
+        [TestMethod]
+        public void chainImportWithDirectImport()
+        {
+            string[] file1 ={
+                "module test1\n",
+                "import test2\n",
+                "import test3 [addFunc]\n",
+                "define start()\n",
+                "variables p, j : integer\n",
+                    "\tadd 4, 2, var p\n",
+                    "\twriteToTest p\n"
+            };
+            string[] file2 ={
+                "module test2\n",
+                "export add\n",
+                "import test3 [addFunc]\n",
+                "define add(a, b : integer; var c : integer)\n",
+                "variables p : integer\n",
+                    "\taddFunc a, b, var p\n",
+                    "\tc := p\n"
+            };
+            string[] file3 = {
+                "module test3\n",
+                "export addFunc\n",
+                "define addFunc(a, b : integer; var c : integer)\n",
+                    "\tc := a + b\n"
+            };
+            LinkedList<string[]> list = new LinkedList<string[]>();
+            list.AddFirst(file1);
+            list.AddLast(file2);
+            list.AddLast(file3);
+            initializeInterpreter(list);
+            Interpreter.handleImports();
+
+            Assert.AreEqual(Interpreter.getModules()["test1"].getImportNames().Count, 2);
+            Assert.AreEqual(Interpreter.getModules()["test1"].getImportedFunctions().Count, 2);
+
+            Assert.AreEqual(Interpreter.getModules()["test1"].getImportNames()["test2"].Count, 1);
+            Assert.AreEqual(Interpreter.getModules()["test1"].getImportNames()["test3"].Count, 1);
+
+            Assert.IsTrue(Interpreter.getModules()["test1"].getImportNames()["test2"].Contains("add"));
+            Assert.IsTrue(Interpreter.getModules()["test1"].getImportNames()["test3"].Contains("addFunc"));
+            Assert.IsFalse(Interpreter.getModules()["test1"].getImportNames()["test2"].Contains("addFunc"));
+
+
+            //the c# dictonary class will throw an error if we try to add the
+            //function "addFunc" twice to module test1's imported function dictionary
             Assert.IsTrue(Interpreter.getModules()["test1"].getImportedFunctions().ContainsKey("add"));
             Assert.IsTrue(Interpreter.getModules()["test1"].getImportedFunctions().ContainsKey("addFunc"));
         }

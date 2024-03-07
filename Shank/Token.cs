@@ -63,7 +63,8 @@
             LeftBracket,
             RightBracket,
             CharContents,
-            StringContents
+            StringContents,
+            Test
         }
 
         public TokenType Type { get; init; }

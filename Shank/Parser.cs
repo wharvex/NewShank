@@ -76,11 +76,11 @@ public class Parser
         while (_tokens.Count > 0)
         {
             if (MatchAndRemove(Token.TokenType.EndOfLine) != null)
-            {
                 continue;
-            }
             else if (MatchAndRemove(Token.TokenType.Export) != null)
             {
+                //if the name of the module is an integer, then it was never declared as a module so we throw an error 
+                //as it shouldn't be able to import or export
                 if (int.TryParse(moduleName, out _))
                 {
                     throw new SyntaxErrorException(
@@ -102,22 +102,18 @@ public class Parser
                     );
                 }
                 if (Peek(1).Type == Token.TokenType.LeftBracket)
-                {
                     module.addImportNames(Import(), checkForFunctions());
-                }
                 else
-                {
                     module.addImportName(Import());
-                }
             }
             else if (MatchAndRemove(Token.TokenType.Define) != null)
-            {
                 module.addFunction(Function(moduleName));
-            }
+
             else if (MatchAndRemove(Token.TokenType.Record) != null)
-            {
                 module.AddRecord();
-            }
+
+            else if (MatchAndRemove(Token.TokenType.Test) != null)
+                module.addTest(Test());
             else
             {
                 throw new SyntaxErrorException(
@@ -925,5 +921,60 @@ public class Parser
             }
         }
         return functionsToImport;
+    }
+
+    private TestNode Test()
+    {
+        TestNode test;
+        Token? token;
+        if((token = MatchAndRemove(Token.TokenType.Identifier)) == null)
+        {
+            throw new SyntaxErrorException(
+                "Expected an identifier after 'test' token, not: ",
+                Peek(0)
+                );
+        }
+        string testName = token.Value;
+        if (MatchAndRemove(Token.TokenType.For) == null)
+        {
+            throw new SyntaxErrorException(
+                "Expected an for token after test name, not: ",
+                Peek(0)
+                );
+        }
+        if ((token = MatchAndRemove(Token.TokenType.Identifier)) == null)
+        {
+            throw new SyntaxErrorException(
+                "Expected an identifier after 'for' token in test statement, not: ",
+                Peek(0)
+                );
+        }
+        test = new TestNode(testName, token.Value);
+        if (MatchAndRemove(Token.TokenType.LeftParen) == null)
+            throw new SyntaxErrorException("Expected a left paren", Peek(0));
+        var done = false;
+        while (!done)
+        {
+            var vars = GetVariables();
+            done = vars == null;
+            if (vars != null)
+            {
+                test.ParameterVariables.AddRange(vars);
+                MatchAndRemove(Token.TokenType.Semicolon);
+            }
+        }
+        if (MatchAndRemove(Token.TokenType.RightParen) == null)
+            throw new SyntaxErrorException("Expected a right paren", Peek(0));
+        MatchAndRemove(Token.TokenType.EndOfLine);
+
+        // Process local variables.
+
+        test.LocalVariables.AddRange(ProcessConstants());
+        test.LocalVariables.AddRange(ProcessVariables());
+
+        // Process function body and return function node.
+
+        BodyFunction(test);
+        return test;
     }
 }
