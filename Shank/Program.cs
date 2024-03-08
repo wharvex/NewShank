@@ -6,6 +6,7 @@ namespace Shank
     {
         public static LinkedList<TestResult> unitTestResults = new LinkedList<TestResult>();
         public static bool testing = false;
+
         public static void Main(string[] args)
         {
             var inPaths = new List<string>();
@@ -47,11 +48,10 @@ namespace Shank
                 );
             }
             string interpreterMode = "";
-            if(args.Length == 2)
+            if (args.Length == 2)
                 interpreterMode = args[1];
             foreach (var inPath in inPaths)
             {
-                
                 var lines = File.ReadAllLines(inPath);
                 var tokens = new List<Token>();
                 var l = new Lexer();
@@ -155,9 +155,11 @@ namespace Shank
             //Unit test interpreter mode
             else
             {
-                if(interpreterMode != "-ut")
-                    throw new Exception($"The available interpreter run modes are the following: -ut. {interpreterMode} is invalid");
-                
+                if (interpreterMode != "-ut")
+                    throw new Exception(
+                        $"The available interpreter run modes are the following: -ut. {interpreterMode} is invalid"
+                    );
+
                 Interpreter.setStartModule();
                 SemanticAnalysis.checkModules(Interpreter.getModules());
                 Interpreter.handleTests();
@@ -166,27 +168,31 @@ namespace Shank
                 BuiltInFunctions.Register(Interpreter.getStartModule().getFunctions());
                 foreach (var module in Interpreter.Modules)
                 {
-                    foreach(var function in module.Value.getFunctions())
+                    foreach (var function in module.Value.getFunctions())
                     {
                         if (function.Value is BuiltInFunctionNode)
                             continue;
-                        foreach(var test in ((FunctionNode)function.Value).Tests)
+                        foreach (var test in ((FunctionNode)function.Value).Tests)
                         {
-                            Interpreter.InterpretFunction(test.Value, new List<InterpreterDataType>());
+                            Interpreter.InterpretFunction(
+                                test.Value,
+                                new List<InterpreterDataType>()
+                            );
                         }
                     }
-                    Console.WriteLine($"Tests from {module.Key}:" );
+                    Console.WriteLine($"Tests from {module.Key}:");
                     foreach (var testResult in unitTestResults)
                     {
                         Console.WriteLine($"  Test {testResult.testName} results:");
                         foreach (var assertResult in testResult.asserts)
                         {
-                            Console.WriteLine($"      {assertResult.parentTestName} assertIsEqual " +
-                                $"{assertResult.comparedValues} : {(assertResult.passed ? "passed" : "failed")}");
+                            Console.WriteLine(
+                                $"      {assertResult.parentTestName} assertIsEqual "
+                                    + $"{assertResult.comparedValues} : {(assertResult.passed ? "passed" : "failed")}"
+                            );
                         }
                     }
                 }
-                
             }
         }
     }

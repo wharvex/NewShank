@@ -28,7 +28,7 @@ namespace ShankUnitTests
                         Interpreter.Modules.Add("default", m);
                     }
                 }
-                if(m.getName() != null)
+                if (m.getName() != null)
                     Modules.Add(m.getName(), m);
             }
             return Modules;
