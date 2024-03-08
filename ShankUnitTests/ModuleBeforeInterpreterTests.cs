@@ -14,17 +14,22 @@ namespace ShankUnitTests
         {
             Dictionary<string, ModuleNode> Modules = new Dictionary<string, ModuleNode>();
             Lexer l = new Lexer();
-            int unnamedModuleCount = 0;
             foreach (string[] file in list)
             {
                 Parser p = new Parser(l.Lex(file));
                 ModuleNode m = p.Module();
                 if (m.getName() == null)
                 {
-                    m.setName(unnamedModuleCount.ToString());
-                    unnamedModuleCount++;
+                    if (Interpreter.getModules().ContainsKey("default"))
+                        Interpreter.getModules()["default"].mergeModule(m);
+                    else
+                    {
+                        m.setName("default");
+                        Interpreter.Modules.Add("default", m);
+                    }
                 }
-                Modules.Add(m.getName(), m);
+                if(m.getName() != null)
+                    Modules.Add(m.getName(), m);
             }
             return Modules;
         }

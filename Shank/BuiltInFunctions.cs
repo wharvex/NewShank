@@ -2,6 +2,7 @@
 {
     public class BuiltInFunctions
     {
+        public static int numberOfBuiltInFunctions = 0;
         public static void Register(
             Dictionary<string, CallableNode> functionList
         //string functionNameBase
@@ -172,11 +173,32 @@
                     Substring,
                     false
                 ),
+                MakeNode(
+                    "assertIsEqual",
+                    new VariableNode[]
+                    {
+                        new VariableNode()
+                        {
+                            Name = "actualValue",
+                            Type = VariableNode.DataType.Integer,
+                            IsConstant = true
+                        },
+                        new VariableNode()
+                        {
+                            Name = "targetValue",
+                            Type = VariableNode.DataType.Integer,
+                            IsConstant = true
+                        }
+                    },
+                    AssertIsEqual,
+                    false
+                    )
             };
             foreach (var f in retVal)
             {
                 functionList[f.Name] = f;
             }
+            numberOfBuiltInFunctions = retVal.Count;
         }
 
         public static BuiltInFunctionNode MakeNode(
@@ -288,6 +310,64 @@
                 var p = parameters[i];
                 p.FromString(items[i]);
             }
+        }
+        public static void AssertIsEqual(List<InterpreterDataType> parameters)
+        {
+
+            Object j;
+            Object i;
+            if(parameters.ElementAt(0) is IntDataType)
+            {
+                if(parameters.ElementAt(1) is not IntDataType)
+                    throw new Exception($"assertIsEqual cannot compare the types {parameters.ElementAt(0).GetType()} and {parameters.ElementAt(1).GetType()}.");
+                int.TryParse(parameters.ElementAt(0).ToString(), out int k);
+                int.TryParse(parameters.ElementAt(1).ToString(), out int f);
+                i = k;
+                j = f;
+
+            }
+            else if(parameters.ElementAt(0) is FloatDataType)
+            {
+                if (parameters.ElementAt(1) is not FloatDataType)
+                    throw new Exception($"assertIsEqual cannot compare the types {parameters.ElementAt(0).GetType()} and {parameters.ElementAt(1).GetType()}.");
+                float.TryParse(parameters.ElementAt(0).ToString(), out float k);
+                float.TryParse(parameters.ElementAt(0).ToString(), out float f);
+                i = k;
+                j = f;
+            }
+            else if (parameters.ElementAt(0) is BooleanDataType)
+            {
+                if (parameters.ElementAt(1) is not BooleanDataType)
+                    throw new Exception($"assertIsEqual cannot compare the types {parameters.ElementAt(0).GetType()} and {parameters.ElementAt(1).GetType()}.");
+                bool.TryParse(parameters.ElementAt(0).ToString(), out bool k);
+                bool.TryParse(parameters.ElementAt(0).ToString(), out bool f);
+                i = k;
+                j = f;
+            }
+            else if (parameters.ElementAt(0) is CharDataType)
+            {
+                if (parameters.ElementAt(1) is not CharDataType)
+                    throw new Exception($"assertIsEqual cannot compare the types {parameters.ElementAt(0).GetType()} and {parameters.ElementAt(1).GetType()}.");
+                i = parameters.ElementAt(0).ToString().ElementAt(0);
+                j = parameters.ElementAt(1).ToString().ElementAt(0);
+            }
+            else
+            {
+                if (parameters.ElementAt(0) is not StringDataType || parameters.ElementAt(1) is not StringDataType)
+                    throw new Exception($"assertIsEqual cannot compare the types {parameters.ElementAt(0).GetType()} and {parameters.ElementAt(1).GetType()}.");
+                i = parameters.ElementAt(0).ToString();
+                j = parameters.ElementAt(1).ToString();
+            }
+            //else if (parameters.ElementAt(0) is ArrayDataType)
+            //{
+
+            //}
+
+            if (i.Equals(j))
+                Program.unitTestResults.Last().asserts.Last().passed = true;
+            else
+                Program.unitTestResults.Last().asserts.Last().passed = false;
+            Program.unitTestResults.Last().asserts.Last().comparedValues = $"Expected<{i}>, Actual<{j}>";
         }
     }
 }

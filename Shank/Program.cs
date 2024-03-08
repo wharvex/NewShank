@@ -4,6 +4,8 @@ namespace Shank
 {
     public class Program
     {
+        public static LinkedList<TestResult> unitTestResults = new LinkedList<TestResult>();
+        public static bool testing = false;
         public static void Main(string[] args)
         {
             var inPaths = new List<string>();
@@ -33,7 +35,7 @@ namespace Shank
                 }
             }
 
-            if (inPaths.Count < 1)
+            if (inPaths.Count < 1 && args[1] != "-ut")
             {
                 Console.Write(Directory.GetCurrentDirectory + " " + args[0]);
                 throw new Exception(
@@ -44,9 +46,12 @@ namespace Shank
                         + Directory.GetDirectories(Directory.GetCurrentDirectory())
                 );
             }
-
+            string interpreterMode = "";
+            if(args.Length == 2)
+                interpreterMode = args[1];
             foreach (var inPath in inPaths)
             {
+                
                 var lines = File.ReadAllLines(inPath);
                 var tokens = new List<Token>();
                 var l = new Lexer();
@@ -100,53 +105,88 @@ namespace Shank
                     continue;
                 }
             }
-            //SemanticAnalysis.checkModules(Interpreter.getModules());
-            //Interpreter.setStartModule();
-            //Interpreter.handleExports();
-            //Interpreter.handleImports();
-            //Interpreter.moduleSemanticAnalysis();
-            // Begin program interpretation and output.
-            foreach (KeyValuePair<string, ModuleNode> currentModulePair in Interpreter.Modules)
+            if (interpreterMode == "")
             {
-                var currentModule = currentModulePair.Value;
-                //Console.WriteLine($"\nOutput of {currentModule.getName()}:\n");
-
-                BuiltInFunctions.Register(currentModule.getFunctions());
-                if (
-                    currentModule.getFunctions().ContainsKey("start")
-                    && currentModule.getFunctions()["start"] is FunctionNode s
-                )
+                // Begin program interpretation and output.
+                foreach (KeyValuePair<string, ModuleNode> currentModulePair in Interpreter.Modules)
                 {
-                    Interpreter.setStartModule();
-                    SemanticAnalysis.checkModules(Interpreter.getModules());
-                    Interpreter.handleExports();
-                    Interpreter.handleImports();
-                    var interpreterErrorOccurred = false;
-                    try
+                    var currentModule = currentModulePair.Value;
+                    //Console.WriteLine($"\nOutput of {currentModule.getName()}:\n");
+
+                    BuiltInFunctions.Register(currentModule.getFunctions());
+                    if (
+                        currentModule.getFunctions().ContainsKey("start")
+                        && currentModule.getFunctions()["start"] is FunctionNode s
+                    )
                     {
-                        Interpreter.InterpretFunction(s, new List<InterpreterDataType>());
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(
-                            $"\nInterpretation error encountered in file {currentModulePair.Key}:\n{e}\nskipping..."
-                        );
-                        interpreterErrorOccurred = true;
+                        Interpreter.setStartModule();
+                        SemanticAnalysis.checkModules(Interpreter.getModules());
+                        Interpreter.handleTests();
+                        Interpreter.handleExports();
+                        Interpreter.handleImports();
+                        var interpreterErrorOccurred = false;
+                        try
+                        {
+                            Interpreter.InterpretFunction(s, new List<InterpreterDataType>());
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(
+                                $"\nInterpretation error encountered in file {currentModulePair.Key}:\n{e}\nskipping..."
+                            );
+                            interpreterErrorOccurred = true;
+                        }
+
+                        if (interpreterErrorOccurred)
+                        {
+                            continue;
+                        }
                     }
 
-                    if (interpreterErrorOccurred)
+                    // if (count < 1)
+                    // {
+                    //     var gen = new IRGenerator(newFnNamePrefix);
+                    //     gen.GenerateIR();
+                    // }
+
+                    // count++;
+                }
+            }
+            //Unit test interpreter mode
+            else
+            {
+                if(interpreterMode != "-ut")
+                    throw new Exception($"The available interpreter run modes are the following: -ut. {interpreterMode} is invalid");
+                
+                Interpreter.setStartModule();
+                SemanticAnalysis.checkModules(Interpreter.getModules());
+                Interpreter.handleTests();
+                Interpreter.handleExports();
+                Interpreter.handleImports();
+                BuiltInFunctions.Register(Interpreter.getStartModule().getFunctions());
+                foreach (var module in Interpreter.Modules)
+                {
+                    foreach(var function in module.Value.getFunctions())
                     {
-                        continue;
+                        if (function.Value is BuiltInFunctionNode)
+                            continue;
+                        foreach(var test in ((FunctionNode)function.Value).Tests)
+                        {
+                            Interpreter.InterpretFunction(test.Value, new List<InterpreterDataType>());
+                        }
+                    }
+                    Console.WriteLine($"Tests from {module.Key}:" );
+                    foreach (var testResult in unitTestResults)
+                    {
+                        Console.WriteLine($"  Test {testResult.testName} results:");
+                        foreach (var assertResult in testResult.asserts)
+                        {
+                            Console.WriteLine($"      {assertResult.parentTestName} assertIsEqual " +
+                                $"{assertResult.comparedValues} : {(assertResult.passed ? "passed" : "failed")}");
+                        }
                     }
                 }
-
-                // if (count < 1)
-                // {
-                //     var gen = new IRGenerator(newFnNamePrefix);
-                //     gen.GenerateIR();
-                // }
-
-                // count++;
+                
             }
         }
     }

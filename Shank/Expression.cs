@@ -205,6 +205,19 @@ namespace Shank
 
         public bool IsVariadic = false;
     }
+    public class TestNode : FunctionNode
+    {
+        public string targetFunctionName;
+        public List<VariableNode> testingFunctionParameters = new ();
+        public TestNode(string name, string targetFnName) : base(name)
+        {
+            Name = name;
+            targetFunctionName = targetFnName;
+            IsPublic = false;
+            Execute = (List<InterpreterDataType> paramList) =>
+               Interpreter.InterpretFunction(this, paramList);
+        }
+    }
 
     public class FunctionNode : CallableNode
     {
@@ -233,6 +246,8 @@ namespace Shank
         public List<VariableNode> LocalVariables = new();
 
         public List<StatementNode> Statements = new();
+
+        public Dictionary<string, TestNode> Tests = new();
 
         public override string ToString()
         {
@@ -1285,18 +1300,33 @@ namespace Shank
         }
     }
 
-    public class TestNode : FunctionNode
+    public class AssertResult
     {
-        public string targetFunctionName;
-        public TestNode(string name, string targetFnName) : base(name)
+        public string parentTestName;
+        public string comparedValues;
+        public bool passed;
+        public AssertResult(string parentTestName, bool passed)
         {
-            Name = name;
-            targetFunctionName = targetFnName;
-            IsPublic = false;
-            Execute = (List<InterpreterDataType> paramList) =>
-               Interpreter.InterpretFunction(this, paramList);
+            this.parentTestName = parentTestName;
+            this.passed = passed;
+        }
+        public AssertResult(string parentTestName)
+        {
+            this.parentTestName = parentTestName;
         }
     }
+    public class TestResult
+    {
+        public string testName;
+        public string parentFunctionName;
+        public LinkedList<AssertResult> asserts = new LinkedList<AssertResult>();
+        public TestResult(string testName, string parentFunctionName)
+        {
+            this.testName = testName;
+            this.parentFunctionName = parentFunctionName;
+        }
+    }
+
 
     public enum CrossFileInteraction
     {

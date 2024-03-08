@@ -1,0 +1,11 @@
+define start()
+variables p : integer
+    p := 3
+
+test simpleTest for add(a, b : integer; var c : integer)
+variables j : integer
+    add 1, 2, var j
+    assertIsEqual 3, j
+
+define add(a, b : integer; var c : integer)
+    c := a + b

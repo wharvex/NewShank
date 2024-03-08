@@ -79,28 +79,10 @@ public class Parser
                 continue;
             else if (MatchAndRemove(Token.TokenType.Export) != null)
             {
-                //if the name of the module is an integer, then it was never declared as a module so we throw an error 
-                //as it shouldn't be able to import or export
-                if (int.TryParse(moduleName, out _))
-                {
-                    throw new SyntaxErrorException(
-                        "Cannot import/export without declaring a module name. Names also must contain at least one "
-                            + "alphabetic character ",
-                        Peek(0)
-                    );
-                }
                 module.addExportNames(Export());
             }
             else if (MatchAndRemove(Token.TokenType.Import) != null)
             {
-                if (int.TryParse(moduleName, out _))
-                {
-                    throw new SyntaxErrorException(
-                        "Cannot import/export without declaring a module name. Names also must contain at least one "
-                            + "alphabetic character ",
-                        Peek(0)
-                    );
-                }
                 if (Peek(1).Type == Token.TokenType.LeftBracket)
                     module.addImportNames(Import(), checkForFunctions());
                 else
@@ -959,7 +941,7 @@ public class Parser
             done = vars == null;
             if (vars != null)
             {
-                test.ParameterVariables.AddRange(vars);
+                test.testingFunctionParameters.AddRange(vars);
                 MatchAndRemove(Token.TokenType.Semicolon);
             }
         }
