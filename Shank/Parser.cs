@@ -11,18 +11,66 @@ public class Parser
 
     private Token? MatchAndRemove(Token.TokenType t)
     {
+        // If there are no Tokens left, return null.
         if (!_tokens.Any())
+        {
             return null;
+        }
+
+        // Get the next Token.
         var retVal = _tokens[0];
+
+        // If the TokenType does not match, return null.
         if (retVal.Type != t)
+        {
             return null;
+        }
+
+        // Remove the Token.
         _tokens.RemoveAt(0);
+
+        // Consume blank lines logic.
+        // We don't want MatchAndRemove to be the permanent home of this logic because we want to
+        // keep MAR simple. The eventual permanent fix will be to convert every
+        // "MatchAndRemove(EndOfLine)" call to an "ExpectsEndOfLine()" or a "RequiresEndOfLine()"
+        // call.
+        if (t == Token.TokenType.EndOfLine)
+        {
+            ConsumeBlankLines();
+        }
+
+        // Return the Token.
         return retVal;
     }
 
     private Token? Peek(int offset)
     {
         return _tokens.Count > offset ? _tokens[offset] : null;
+    }
+
+    private bool ExpectsEndOfLine()
+    {
+        var ret = MatchAndRemove(Token.TokenType.EndOfLine) is not null;
+
+        if (ret)
+        {
+            ConsumeBlankLines();
+        }
+
+        return ret;
+    }
+
+    private void ConsumeBlankLines()
+    {
+        while (MatchAndRemove(Token.TokenType.EndOfLine) is not null) { }
+    }
+
+    private void RequiresEndOfLine()
+    {
+        if (!ExpectsEndOfLine())
+        {
+            throw new SyntaxErrorException("Expected end of line", Peek(0));
+        }
     }
 
     private VariableReferenceNode? GetVariableReferenceNode()
@@ -79,6 +127,19 @@ public class Parser
                 continue;
             else if (MatchAndRemove(Token.TokenType.Export) != null)
             {
+<<<<<<< HEAD
+=======
+                //if the name of the module is an integer, then it was never declared as a module so we throw an error
+                //as it shouldn't be able to import or export
+                if (int.TryParse(moduleName, out _))
+                {
+                    throw new SyntaxErrorException(
+                        "Cannot import/export without declaring a module name. Names also must contain at least one "
+                            + "alphabetic character ",
+                        Peek(0)
+                    );
+                }
+>>>>>>> 8b91f59f1df5abf4199a7db97bd8504a60e65a6f
                 module.addExportNames(Export());
             }
             else if (MatchAndRemove(Token.TokenType.Import) != null)
@@ -90,10 +151,8 @@ public class Parser
             }
             else if (MatchAndRemove(Token.TokenType.Define) != null)
                 module.addFunction(Function(moduleName));
-
             else if (MatchAndRemove(Token.TokenType.Record) != null)
-                module.AddRecord();
-
+                module.AddRecord(Record(moduleName));
             else if (MatchAndRemove(Token.TokenType.Test) != null)
                 module.addTest(Test());
             else
@@ -151,15 +210,14 @@ public class Parser
         return funcNode;
     }
 
-    private RecordNode? Record(string moduleName)
+    private RecordNode Record(string moduleName)
     {
-        var name = MatchAndRemove(Token.TokenType.Identifier);
-        if (name == null)
-        {
-            throw new SyntaxErrorException("Expected a record name", Peek(0));
-        }
-        var recNode = new RecordNode(name.Value ?? "", moduleName);
-        return null;
+        var name =
+            MatchAndRemove(Token.TokenType.Identifier)
+            ?? throw new SyntaxErrorException("Expected a record name", Peek(0));
+
+        var recNode = new RecordNode(name.GetIdentifierValue(), moduleName);
+        return recNode;
     }
 
     private void BodyFunction(FunctionNode function)
@@ -174,12 +232,22 @@ public class Parser
 
     private void Body(List<StatementNode> statements)
     {
-        if (MatchAndRemove(Token.TokenType.Indent) == null)
-            throw new SyntaxErrorException("Expected an indent, but found: ", Peek(0));
+        if (MatchAndRemove(Token.TokenType.Indent) is null)
+        {
+            throw new SyntaxErrorException("Expected an indent", Peek(0));
+        }
+
+        // TODO: Why is this MatchAndRemove call here?
         MatchAndRemove(Token.TokenType.EndOfLine);
+
         Statements(statements);
-        if (MatchAndRemove(Token.TokenType.Dedent) == null)
-            throw new SyntaxErrorException("Expected a dedent, but found: ", Peek(0));
+
+        if (MatchAndRemove(Token.TokenType.Dedent) is null)
+        {
+            throw new SyntaxErrorException("Expected a dedent", Peek(0));
+        }
+
+        // TODO: Why is this MatchAndRemove call here?
         MatchAndRemove(Token.TokenType.EndOfLine);
     }
 
@@ -196,10 +264,6 @@ public class Parser
 
     private StatementNode? Statement()
     {
-        while (MatchAndRemove(Token.TokenType.EndOfLine) != null)
-        { // allow and ignore blank lines
-        }
-
         StatementNode? s;
         s = Assignment();
         if (s != null)
@@ -909,27 +973,24 @@ public class Parser
     {
         TestNode test;
         Token? token;
-        if((token = MatchAndRemove(Token.TokenType.Identifier)) == null)
+        if ((token = MatchAndRemove(Token.TokenType.Identifier)) == null)
         {
             throw new SyntaxErrorException(
                 "Expected an identifier after 'test' token, not: ",
                 Peek(0)
-                );
+            );
         }
         string testName = token.Value;
         if (MatchAndRemove(Token.TokenType.For) == null)
         {
-            throw new SyntaxErrorException(
-                "Expected an for token after test name, not: ",
-                Peek(0)
-                );
+            throw new SyntaxErrorException("Expected an for token after test name, not: ", Peek(0));
         }
         if ((token = MatchAndRemove(Token.TokenType.Identifier)) == null)
         {
             throw new SyntaxErrorException(
                 "Expected an identifier after 'for' token in test statement, not: ",
                 Peek(0)
-                );
+            );
         }
         test = new TestNode(testName, token.Value);
         if (MatchAndRemove(Token.TokenType.LeftParen) == null)

@@ -1125,6 +1125,7 @@ namespace Shank
     {
         private string name;
         private Dictionary<string, CallableNode> Functions;
+        private Dictionary<string, RecordNode> Records;
 
         //Dictionary associating names to something to be imported/exported
         //has a type of ASTNode? as references will later be added
@@ -1149,7 +1150,6 @@ namespace Shank
             //ImportTargetNames = new LinkedList<string>();
             ExportTargetNames = new LinkedList<string>();
             Tests = new Dictionary<string, TestNode>();
-
         }
 
         public void updateImports(
@@ -1201,10 +1201,11 @@ namespace Shank
                 }
             }
         }
+
         //merges two unnamed modules into one
         public void mergeModule(ModuleNode moduleIn)
         {
-            foreach(var function in moduleIn.getFunctions())
+            foreach (var function in moduleIn.getFunctions())
             {
                 Functions.Add(function.Key, function.Value);
             }
@@ -1222,7 +1223,7 @@ namespace Shank
             }
         }
 
-        public void AddRecord() { }
+        public void AddRecord(RecordNode record) { }
 
         public void addExportName(string? name)
         {
@@ -1294,6 +1295,7 @@ namespace Shank
         {
             Tests.Add(t.Name, t);
         }
+
         public Dictionary<string, TestNode> getTests()
         {
             return Tests;
@@ -1302,6 +1304,7 @@ namespace Shank
 
     public class AssertResult
     {
+<<<<<<< HEAD
         public string parentTestName;
         public string comparedValues;
         public bool passed;
@@ -1313,6 +1316,18 @@ namespace Shank
         public AssertResult(string parentTestName)
         {
             this.parentTestName = parentTestName;
+=======
+        public string targetFunctionName;
+
+        public TestNode(string name, string targetFnName)
+            : base(name)
+        {
+            Name = name;
+            targetFunctionName = targetFnName;
+            IsPublic = false;
+            Execute = (List<InterpreterDataType> paramList) =>
+                Interpreter.InterpretFunction(this, paramList);
+>>>>>>> 8b91f59f1df5abf4199a7db97bd8504a60e65a6f
         }
     }
     public class TestResult

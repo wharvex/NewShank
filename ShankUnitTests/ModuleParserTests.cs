@@ -237,21 +237,24 @@ namespace ShankUnitTests
             Assert.IsTrue(m.getExportNames().Contains("add"));
             Assert.IsTrue(m.getExportNames().Contains("addThree"));
         }
+
         [TestMethod]
         public void mergeUnnamedModule()
         {
-            string[] file1 = {
+            string[] file1 =
+            {
                 "define start()\n",
                 "variables p : integer\n",
-                    "\tp:=3\n",
-                    "\twrite p\n",
+                "\tp:=3\n",
+                "\twrite p\n",
             };
-            string[] file2 = {
+            string[] file2 =
+            {
                 "define add(a, b : integer; var c : integer)\n",
-                    "\tc := a + b\n",
+                "\tc := a + b\n",
                 "\n",
                 "define addThree(a : integer; var c : integer)\n",
-                    "\t c := a + 3\n"
+                "\t c := a + 3\n"
             };
 
             ModuleNode module1 = getModuleFromLexer(file1);
@@ -263,29 +266,31 @@ namespace ShankUnitTests
             Assert.IsTrue(module1.getFunctions().ContainsKey("add"));
             Assert.IsTrue(module1.getFunctions().ContainsKey("addThree"));
         }
+
         [TestMethod]
         public void ProgramMergeModuleLogic()
         {
             Interpreter.reset();
-            string[] file1 = {
+            string[] file1 =
+            {
                 "define start()\n",
                 "variables p : integer\n",
-                    "\tp:=3\n",
-                    "\twrite p\n",
+                "\tp:=3\n",
+                "\twrite p\n",
             };
-            string[] file2 = {
+            string[] file2 =
+            {
                 "define add(a, b : integer; var c : integer)\n",
-                    "\tc := a + b\n",
+                "\tc := a + b\n",
                 "\n",
                 "define addThree(a : integer; var c : integer)\n",
-                    "\t c := a + 3\n"
+                "\t c := a + 3\n"
             };
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file1);
             files.AddLast(file2);
             foreach (var lines in files)
             {
-
                 var tokens = new List<Token>();
                 var l = new Lexer();
                 tokens.AddRange(l.Lex(lines));
@@ -345,8 +350,9 @@ namespace ShankUnitTests
 
             Assert.IsTrue(Interpreter.getModules()["default"].getFunctions().ContainsKey("start"));
             Assert.IsTrue(Interpreter.getModules()["default"].getFunctions().ContainsKey("add"));
-            Assert.IsTrue(Interpreter.getModules()["default"].getFunctions().ContainsKey("addThree"));
-
+            Assert.IsTrue(
+                Interpreter.getModules()["default"].getFunctions().ContainsKey("addThree")
+            );
         }
     }
 }

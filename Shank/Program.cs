@@ -95,7 +95,7 @@ namespace Shank
                         brokeOutOfWhile = true;
                         break;
                     }
-                    if(module.getName() != null && module.getName() != "default")
+                    if (module.getName() != null && module.getName() != "default")
                         Interpreter.Modules.Add(module.getName(), module);
                 }
 

@@ -71,6 +71,26 @@
         public string? Value { get; init; }
         public int LineNumber { get; init; }
 
+        public string GetIdentifierValue()
+        {
+            // TODO: Convert this to a method that gets the non-null Value of a Token of any type
+            // for which something has gone wrong internally if Value is null.
+            if (Type != TokenType.Identifier)
+            {
+                throw new InvalidOperationException("This method is for Identifier Tokens only.");
+            }
+
+            if (Value is null)
+            {
+                throw new InvalidOperationException(
+                    "Something went wrong internally. A Token of type Identifier should not have a"
+                        + " null value."
+                );
+            }
+
+            return Value;
+        }
+
         public override string ToString()
         {
             return $"[{Type}]" + (Value is null ? "" : " : " + Value);
