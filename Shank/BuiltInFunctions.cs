@@ -376,17 +376,9 @@
 
             //}
 
-            if (i.Equals(j))
-                Program.unitTestResults.Last().Asserts.Last().passed = true;
-            else
-<<<<<<< HEAD
-                Program.unitTestResults.Last().Asserts.Last().passed = false;
-            Program.unitTestResults.Last().Asserts.Last().comparedValues = $"Expected<{i}>, Actual<{j}>";
-=======
-                Program.unitTestResults.Last().asserts.Last().passed = false;
-            Program.unitTestResults.Last().asserts.Last().comparedValues =
+            Program.unitTestResults.Last().Asserts.Last().passed = i.Equals(j);
+            Program.unitTestResults.Last().Asserts.Last().comparedValues =
                 $"Expected<{i}>, Actual<{j}>";
->>>>>>> a5cd865b83d2b921c82507e6a42eb3267f7ec1cb
         }
     }
 }

@@ -170,14 +170,7 @@ namespace Shank
                     {
                         if (function.Value is BuiltInFunctionNode)
                             continue;
-<<<<<<< HEAD
-                        //if (module.Value.getImportNames().ContainsKey(function.Value.parentModuleName))
-                        //    if (module.Value.getImportNames()[function.Value.parentModuleName].Contains(function.Key))
-                        //        continue;
-                        foreach(var test in ((FunctionNode)function.Value).Tests)
-=======
                         foreach (var test in ((FunctionNode)function.Value).Tests)
->>>>>>> a5cd865b83d2b921c82507e6a42eb3267f7ec1cb
                         {
                             Interpreter.InterpretFunction(
                                 test.Value,
