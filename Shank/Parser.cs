@@ -978,7 +978,7 @@ public class Parser
             );
         }
         test = new TestNode(testName, token.Value);
-        if(parentModuleName != null)
+        if (parentModuleName != null)
             test.parentModuleName = parentModuleName;
         else
             test.parentModuleName = "default";

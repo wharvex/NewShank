@@ -205,17 +205,20 @@ namespace Shank
 
         public bool IsVariadic = false;
     }
+
     public class TestNode : FunctionNode
     {
         public string targetFunctionName;
-        public List<VariableNode> testingFunctionParameters = new ();
-        public TestNode(string name, string targetFnName) : base(name)
+        public List<VariableNode> testingFunctionParameters = new();
+
+        public TestNode(string name, string targetFnName)
+            : base(name)
         {
             Name = name;
             targetFunctionName = targetFnName;
             IsPublic = false;
             Execute = (List<InterpreterDataType> paramList) =>
-               Interpreter.InterpretFunction(this, paramList);
+                Interpreter.InterpretFunction(this, paramList);
         }
     }
 
@@ -1307,29 +1310,31 @@ namespace Shank
         public string parentTestName;
         public string? comparedValues;
         public bool passed;
+
         public AssertResult(string parentTestName, bool passed)
         {
             this.parentTestName = parentTestName;
             this.passed = passed;
         }
+
         public AssertResult(string parentTestName)
         {
             this.parentTestName = parentTestName;
-
         }
     }
+
     public class TestResult
     {
         public string testName;
         public string parentFunctionName;
         public LinkedList<AssertResult> Asserts = new LinkedList<AssertResult>();
+
         public TestResult(string testName, string parentFunctionName)
         {
             this.testName = testName;
             this.parentFunctionName = parentFunctionName;
         }
     }
-
 
     public enum CrossFileInteraction
     {
