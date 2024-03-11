@@ -108,7 +108,10 @@ namespace Shank
                 case IntNode intNode:
                     if (targetType != VariableNode.DataType.Integer)
                         throw new Exception(
-                            "Integer numbers have to be assigned to integer variables"
+                            "Integer numbers have to be assigned to integer variables. Found "
+                                + targetType
+                                + " "
+                                + intNode.Value
                         );
                     break;
                 case MathOpNode mathOpNode:

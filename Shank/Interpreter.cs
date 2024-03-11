@@ -7,6 +7,7 @@ namespace Shank
     {
         //public static Dictionary<string, CallableNode> Functions = new();
         public static Dictionary<string, ModuleNode> Modules = new Dictionary<string, ModuleNode>();
+
         private static ModuleNode? startModule;
         public static StringBuilder testOutput = new StringBuilder();
 
@@ -24,12 +25,14 @@ namespace Shank
                     $"Function {fn.Name}, {ps.Count} parameters passed in, {fn.ParameterVariables.Count} required"
                 );
             for (var i = 0; i < fn.ParameterVariables.Count; i++)
-            { // Create the parameters as "locals"
+            {
+                // Create the parameters as "locals"
                 variables[fn.ParameterVariables[i].Name ?? string.Empty] = ps[i];
             }
 
             foreach (var l in fn.LocalVariables)
-            { // set up the declared variables as locals
+            {
+                // set up the declared variables as locals
                 variables[l.Name ?? string.Empty] = VariableNodeToActivationRecord(l);
             }
             if (fn is TestNode)
@@ -105,6 +108,7 @@ namespace Shank
                                 default:
                                     throw new Exception("Invalid ArrayContentsType");
                             }
+
                             break;
                         case FloatDataType ft:
                             ft.Value = ResolveFloat(an.expression, variables);
@@ -143,6 +147,7 @@ namespace Shank
                         else
                             theIc = theIc?.NextIfNode;
                     }
+
                     if (theIc?.Children != null)
                         InterpretBlock(theIc.Children, variables, callingFunction);
                 }
@@ -204,6 +209,7 @@ namespace Shank
             {
                 throw new Exception("Interpreter error, start function could not be found.");
             }
+
             if (startModule.getFunctions().ContainsKey(fc.Name))
             {
                 calledFunction = startModule.getFunctions()[fc.Name]; // find the function
@@ -239,6 +245,7 @@ namespace Shank
                     );
                 }
             }
+
             // TODO: fix single file calling another function causing parentModuleName to be null
             if (callingFunction.parentModuleName != null)
             {
@@ -265,12 +272,14 @@ namespace Shank
                         }
                     }
                 }
+
                 if (startModule.getFunctions().ContainsKey(fc.Name))
                 {
                     if (startModule.getFunctions()[fc.Name] is BuiltInFunctionNode)
                         callingModuleCanAccessFunction = true;
 
                 }
+
                 if (!callingModuleCanAccessFunction)
                     throw new Exception(
                         "Cannot access the private function "
@@ -279,6 +288,7 @@ namespace Shank
                             + callingFunction.parentModuleName
                     );
             }
+
             if (
                 fc.Parameters.Count != ((CallableNode)calledFunction).ParameterVariables.Count
                 && calledFunction is BuiltInFunctionNode { IsVariadic: false }
@@ -353,6 +363,7 @@ namespace Shank
                                 passed.Add(
                                     new ArrayDataType(arrayVal.Value, arrayVal.ArrayContentsType)
                                 );
+
                             break;
                     }
                 }
@@ -512,11 +523,10 @@ namespace Shank
                 if (vr.Index != null)
                 {
                     var index = ResolveInt(vr.Index, variables);
-                    // If the index is out of range, the Interpreter fails silently because it is
-                    // the job of Semantic Analysis to declare this an error.
                     return ((variables[vr.Name] as ArrayDataType)?.GetElement(index))?.ToString()
                         ?? string.Empty;
                 }
+
                 return ((variables[vr.Name] as StringDataType)?.Value) ?? string.Empty;
             }
             else
@@ -539,6 +549,7 @@ namespace Shank
                             ?.ToString()
                             ?.ToCharArray()[0] ?? '0';
                 }
+
                 return ((variables[vr.Name] as CharDataType)?.Value) ?? '0';
             }
             else
@@ -579,6 +590,7 @@ namespace Shank
                     var index = ResolveInt(vr.Index, variables);
                     return (float)(variables[vr.Name] as ArrayDataType)?.GetElement(index);
                 }
+
                 return ((variables[vr.Name] as FloatDataType)?.Value) ?? 0.0F;
             }
             else
@@ -619,6 +631,7 @@ namespace Shank
                     var index = ResolveInt(vr.Index, variables);
                     return (int)(variables[vr.Name] as ArrayDataType)?.GetElement(index);
                 }
+
                 return ((variables[vr.Name] as IntDataType)?.Value) ?? 0;
             }
             else
@@ -640,6 +653,7 @@ namespace Shank
                     );
                 }
             }
+
             foreach (var currentModule in startModule.getImportNames())
             {
                 if (startModule.getImportNames()[currentModule.Key].Count == 0)
@@ -649,6 +663,7 @@ namespace Shank
                     {
                         tempList.AddLast(s);
                     }
+
                     startModule.getImportNames()[currentModule.Key] = tempList;
                 }
             }
@@ -680,9 +695,11 @@ namespace Shank
                                 {
                                     tempList.AddLast(s);
                                 }
+
                                 m.getImportNames()[currentModule.Key] = tempList;
                             }
                         }
+
                         recursiveImportCheck(Modules[moduleToBeImported]);
                     }
                 }
@@ -732,6 +749,7 @@ namespace Shank
                     return startModule;
                 }
             }
+
             return null;
         }
 
