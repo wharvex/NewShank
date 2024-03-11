@@ -1304,9 +1304,8 @@ namespace Shank
 
     public class AssertResult
     {
-<<<<<<< HEAD
         public string parentTestName;
-        public string comparedValues;
+        public string? comparedValues;
         public bool passed;
         public AssertResult(string parentTestName, bool passed)
         {
@@ -1316,25 +1315,14 @@ namespace Shank
         public AssertResult(string parentTestName)
         {
             this.parentTestName = parentTestName;
-=======
-        public string targetFunctionName;
 
-        public TestNode(string name, string targetFnName)
-            : base(name)
-        {
-            Name = name;
-            targetFunctionName = targetFnName;
-            IsPublic = false;
-            Execute = (List<InterpreterDataType> paramList) =>
-                Interpreter.InterpretFunction(this, paramList);
->>>>>>> 8b91f59f1df5abf4199a7db97bd8504a60e65a6f
         }
     }
     public class TestResult
     {
         public string testName;
         public string parentFunctionName;
-        public LinkedList<AssertResult> asserts = new LinkedList<AssertResult>();
+        public LinkedList<AssertResult> Asserts = new LinkedList<AssertResult>();
         public TestResult(string testName, string parentFunctionName)
         {
             this.testName = testName;

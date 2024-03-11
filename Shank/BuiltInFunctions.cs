@@ -364,10 +364,10 @@
             //}
 
             if (i.Equals(j))
-                Program.unitTestResults.Last().asserts.Last().passed = true;
+                Program.unitTestResults.Last().Asserts.Last().passed = true;
             else
-                Program.unitTestResults.Last().asserts.Last().passed = false;
-            Program.unitTestResults.Last().asserts.Last().comparedValues = $"Expected<{i}>, Actual<{j}>";
+                Program.unitTestResults.Last().Asserts.Last().passed = false;
+            Program.unitTestResults.Last().Asserts.Last().comparedValues = $"Expected<{i}>, Actual<{j}>";
         }
     }
 }

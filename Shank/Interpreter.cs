@@ -194,7 +194,9 @@ namespace Shank
             CallableNode callingFunction
         )
         {
-            ASTNode? calledFunction;
+            ASTNode? calledFunction = null;
+            bool callingModuleCanAccessFunction = false;
+
             if (startModule == null)
             {
                 throw new Exception("Interpreter error, start function could not be found.");
@@ -209,54 +211,50 @@ namespace Shank
             }
             else
             {
-                throw new Exception(
-                    "Could not find the function "
-                        + fc.Name
-                        + " in the module "
-                        + startModule.getName()
-                        + ". It may not have been exported."
-                );
+                //this loop allows tests to search their own module for functions
+                if (callingFunction is TestNode)
+                {
+                    var module = Modules[callingFunction.parentModuleName];
+                        foreach (var function in module.getFunctions())
+                        {
+                            if (function.Key == fc.Name)
+                            {
+                                calledFunction = function.Value;
+                                callingModuleCanAccessFunction = true;
+                            }
+                        }
+                    
+                }
+                if (calledFunction == null)
+                {
+                    throw new Exception(
+                        "Could not find the function "
+                            + fc.Name
+                            + " in the module "
+                            + startModule.getName()
+                            + ". It may not have been exported."
+                    );
+                }
             }
             // TODO: fix single file calling another function causing parentModuleName to be null
             if (callingFunction.parentModuleName != null)
             {
-                bool callingModuleCanAccessFunction = false;
-                foreach (
-                    string? moduleName in Modules[callingFunction.parentModuleName]
-                        .getImportNames()
-                        .Keys
-                )
+                if (Modules[callingFunction.parentModuleName].getFunctions().ContainsKey(fc.Name))
                 {
-                    if (
-                        Modules[callingFunction.parentModuleName]
-                            .getFunctions()
-                            .ContainsKey(fc.Name)
-                    )
+                    callingModuleCanAccessFunction = true;
+                }
+                foreach (string? moduleName in Modules[callingFunction.parentModuleName].getImportNames().Keys)
+                {
+                    if ( Modules[callingFunction.parentModuleName].getImportNames().ContainsKey(moduleName))
                     {
-                        callingModuleCanAccessFunction = true;
-                    }
-                    else if (
-                        Modules[callingFunction.parentModuleName]
-                            .getImportNames()
-                            .ContainsKey(moduleName)
-                    )
-                    {
-                        if (
-                            Modules[callingFunction.parentModuleName]
-                                .getImportNames()[moduleName]
-                                .Contains(fc.Name)
-                        )
+                        if (Modules[callingFunction.parentModuleName].getImportNames()[moduleName].Contains(fc.Name))
                         {
                             callingModuleCanAccessFunction = true;
                             break;
                         }
                         else
                         {
-                            if (
-                                Modules[callingFunction.parentModuleName]
-                                    .getImportNames()[moduleName]
-                                    .Contains(fc.Name)
-                            )
+                            if (Modules[callingFunction.parentModuleName].getImportNames()[moduleName].Contains(fc.Name))
                             {
                                 callingModuleCanAccessFunction = true;
                                 break;
@@ -268,6 +266,7 @@ namespace Shank
                 {
                     if (startModule.getFunctions()[fc.Name] is BuiltInFunctionNode)
                         callingModuleCanAccessFunction = true;
+
                 }
                 if (!callingModuleCanAccessFunction)
                     throw new Exception(
@@ -385,7 +384,7 @@ namespace Shank
             if (fc.Name == "assertIsEqual")
             {
                 AssertResult ar = new AssertResult(callingFunction.Name);
-                Program.unitTestResults.ElementAt(Program.unitTestResults.Count - 1).asserts.AddLast(ar);
+                Program.unitTestResults.ElementAt(Program.unitTestResults.Count - 1).Asserts.AddLast(ar);
             }
             ((CallableNode)calledFunction).Execute?.Invoke(passed);
             // update the variable parameters and return

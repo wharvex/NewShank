@@ -69,8 +69,6 @@ namespace Shank
                     try
                     {
                         module = p.Module();
-                        //if the file never declares itself as module, give it a unique digit name
-                        //the digit
                         if (module.getName() == null)
                         {
                             if (Interpreter.getModules().ContainsKey("default"))
@@ -170,6 +168,9 @@ namespace Shank
                     {
                         if (function.Value is BuiltInFunctionNode)
                             continue;
+                        //if (module.Value.getImportNames().ContainsKey(function.Value.parentModuleName))
+                        //    if (module.Value.getImportNames()[function.Value.parentModuleName].Contains(function.Key))
+                        //        continue;
                         foreach(var test in ((FunctionNode)function.Value).Tests)
                         {
                             Interpreter.InterpretFunction(test.Value, new List<InterpreterDataType>());
@@ -179,7 +180,7 @@ namespace Shank
                     foreach (var testResult in unitTestResults)
                     {
                         Console.WriteLine($"  Test {testResult.testName} results:");
-                        foreach (var assertResult in testResult.asserts)
+                        foreach (var assertResult in testResult.Asserts)
                         {
                             Console.WriteLine($"      {assertResult.parentTestName} assertIsEqual " +
                                 $"{assertResult.comparedValues} : {(assertResult.passed ? "passed" : "failed")}");

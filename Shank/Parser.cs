@@ -118,8 +118,6 @@ public class Parser
             moduleName = token.Value;
             MatchAndRemove(Token.TokenType.EndOfLine);
         }
-        // If a file is not declared as a module, then a ModuleNode object with a null name is created for it.
-        // This null name is later changed to a number in Main.
         module = new ModuleNode(moduleName);
         while (_tokens.Count > 0)
         {
@@ -127,19 +125,6 @@ public class Parser
                 continue;
             else if (MatchAndRemove(Token.TokenType.Export) != null)
             {
-<<<<<<< HEAD
-=======
-                //if the name of the module is an integer, then it was never declared as a module so we throw an error
-                //as it shouldn't be able to import or export
-                if (int.TryParse(moduleName, out _))
-                {
-                    throw new SyntaxErrorException(
-                        "Cannot import/export without declaring a module name. Names also must contain at least one "
-                            + "alphabetic character ",
-                        Peek(0)
-                    );
-                }
->>>>>>> 8b91f59f1df5abf4199a7db97bd8504a60e65a6f
                 module.addExportNames(Export());
             }
             else if (MatchAndRemove(Token.TokenType.Import) != null)
@@ -154,7 +139,7 @@ public class Parser
             else if (MatchAndRemove(Token.TokenType.Record) != null)
                 module.AddRecord(Record(moduleName));
             else if (MatchAndRemove(Token.TokenType.Test) != null)
-                module.addTest(Test());
+                module.addTest(Test(moduleName));
             else
             {
                 throw new SyntaxErrorException(
@@ -969,7 +954,7 @@ public class Parser
         return functionsToImport;
     }
 
-    private TestNode Test()
+    private TestNode Test(string? parentModuleName)
     {
         TestNode test;
         Token? token;
@@ -993,6 +978,10 @@ public class Parser
             );
         }
         test = new TestNode(testName, token.Value);
+        if(parentModuleName != null)
+            test.parentModuleName = parentModuleName;
+        else
+            test.parentModuleName = "default";
         if (MatchAndRemove(Token.TokenType.LeftParen) == null)
             throw new SyntaxErrorException("Expected a left paren", Peek(0));
         var done = false;

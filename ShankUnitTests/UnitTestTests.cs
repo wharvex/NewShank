@@ -155,11 +155,11 @@ namespace ShankUnitTests
             initializeInterpreter(files);
             Program.Main(args);
             Assert.AreEqual(2, Program.unitTestResults.Count);
-            Assert.AreEqual(Program.unitTestResults.ElementAt(0).asserts.ElementAt(0).parentTestName, "simpleTest");
-            Assert.AreEqual(true, Program.unitTestResults.ElementAt(0).asserts.ElementAt(0).passed);
+            Assert.AreEqual(Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).parentTestName, "simpleTest");
+            Assert.AreEqual(true, Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).passed);
 
-            Assert.AreEqual(Program.unitTestResults.ElementAt(1).asserts.ElementAt(0).parentTestName, "subTest");
-            Assert.AreEqual(true, Program.unitTestResults.ElementAt(1).asserts.ElementAt(0).passed);
+            Assert.AreEqual(Program.unitTestResults.ElementAt(1).Asserts.ElementAt(0).parentTestName, "subTest");
+            Assert.AreEqual(true, Program.unitTestResults.ElementAt(1).Asserts.ElementAt(0).passed);
         }
         [TestMethod]
         public void testWithTwoAsserts()
@@ -186,11 +186,11 @@ namespace ShankUnitTests
             Program.Main(args);
 
             Assert.AreEqual(1, Program.unitTestResults.Count);
-            Assert.AreEqual(Program.unitTestResults.ElementAt(0).asserts.ElementAt(0).parentTestName, "simpleTest");
-            Assert.AreEqual(true, Program.unitTestResults.ElementAt(0).asserts.ElementAt(0).passed);
+            Assert.AreEqual(Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).parentTestName, "simpleTest");
+            Assert.AreEqual(true, Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).passed);
 
-            Assert.AreEqual(Program.unitTestResults.ElementAt(0).asserts.ElementAt(1).parentTestName, "simpleTest2");
-            Assert.AreEqual(true, Program.unitTestResults.ElementAt(0).asserts.ElementAt(1).passed);
+            Assert.AreEqual(Program.unitTestResults.ElementAt(0).Asserts.ElementAt(1).parentTestName, "simpleTest2");
+            Assert.AreEqual(true, Program.unitTestResults.ElementAt(0).Asserts.ElementAt(1).passed);
         }
         [TestMethod]
         public void builtInAssertIsEqualWithBool()
@@ -216,8 +216,106 @@ namespace ShankUnitTests
             Program.Main(args);
 
             Assert.AreEqual(1, Program.unitTestResults.Count);
-            Assert.AreEqual(Program.unitTestResults.ElementAt(0).asserts.ElementAt(0).parentTestName, "simpleTest");
-            Assert.AreEqual(true, Program.unitTestResults.ElementAt(0).asserts.ElementAt(0).passed);
+            Assert.AreEqual(Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).parentTestName, "simpleTest");
+            Assert.AreEqual(true, Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).passed);
+        }
+        [TestMethod]
+        public void multipleTestsAndMultipleFunctions()
+        {
+            string[] args = { "", "-ut" };
+            string[] file ={
+                "define start()\n",
+                "variables p : integer\n",
+                    "\tp := 3\n",
+                "define add(a, b : integer; var c : integer)\n",
+                    "\tc := a + b\n",
+                "define sub(a, b : integer; var c : integer)\n",
+                    "\tc := a - b\n",
+                "test addTest for add(a, b : integer; var c : integer)\n",
+                "variables j : integer\n",
+                "variables b : boolean\n",
+                    "\tadd 1, 2, var j\n",
+                    "\tassertIsEqual 3, j\n",
+                    "\tb := 3 = j\n",
+                    "\tassertIsEqual true, b\n",
+                "test addTest2 for add(a, b : integer; var c : integer)\n",
+                "variables f : integer\n",
+                    "\tadd -7, 4, var f\n",
+                    "\tassertIsEqual -3, f\n",
+                "test subTest for sub(a, b : integer; var c : integer)\n",
+                "variables f : integer\n",
+                    "\tsub 7, 4, var f\n",
+                    "\tassertIsEqual 3, f\n",
+                "test subTest2 for sub(a, b : integer; var c : integer)\n",
+                "variables f : integer\n",
+                    "\tsub -7, 4, var f\n",
+                    "\tassertIsEqual -11, f\n"
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddLast(file);
+            initializeInterpreter(files);
+            Program.Main(args);
+            Assert.AreEqual(2, Program.unitTestResults.Count);
+            Assert.AreEqual(3, Program.unitTestResults.ElementAt(0).Asserts.Count);
+            Assert.AreEqual(2, Program.unitTestResults.ElementAt(1).Asserts.Count);
+
+
+            Assert.AreEqual("addTest", Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).parentTestName);
+            Assert.AreEqual(true, Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).passed);
+
+            Assert.AreEqual("addTest", Program.unitTestResults.ElementAt(0).Asserts.ElementAt(1).parentTestName);
+            Assert.AreEqual(true, Program.unitTestResults.ElementAt(0).Asserts.ElementAt(1).passed);
+
+            Assert.AreEqual("addTest2", Program.unitTestResults.ElementAt(0).Asserts.ElementAt(2).parentTestName);
+            Assert.AreEqual(true, Program.unitTestResults.ElementAt(0).Asserts.ElementAt(2).passed);
+
+            Assert.AreEqual("subTest", Program.unitTestResults.ElementAt(1).Asserts.ElementAt(0).parentTestName);
+            Assert.AreEqual(true, Program.unitTestResults.ElementAt(1).Asserts.ElementAt(0).passed);
+
+            Assert.AreEqual("subTest2",Program.unitTestResults.ElementAt(1).Asserts.ElementAt(1).parentTestName);
+            Assert.AreEqual(true, Program.unitTestResults.ElementAt(1).Asserts.ElementAt(1).passed);
+
+        }
+        [TestMethod]
+        public void unitTestsInTwoDifferentModules()
+        {
+            string[] args = { "", "-ut" };
+            string[] file1 = {
+                "module test1\n",
+                "define start()\n",
+                "variables p : integer\n",
+                    "\tp := 3\n",
+                "\n",
+                "define add(a, b : integer; var c : integer)\n",
+                    "\tc := a + b\n",
+                "\n",
+                "test addTest for add(a, b : integer; var c : integer)\n",
+                "variables j : integer\n",
+                    "\tadd 1, 2, var j\n",
+                    "\tassertIsEqual 3, j\n"
+            };
+            string[] file2 = {
+                "module test2\n",
+                "define sub(a, b : integer; var c : integer)\n",
+                    "\tc := a - b\n",
+                "test subTest for sub(a, b : integer; var c : integer)\n",
+                "variables f : integer\n",
+                    "\tsub 7, 4, var f\n",
+                    "\tassertIsEqual 3, f\n",
+            };
+
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddLast(file1);
+            files.AddLast(file2);
+            initializeInterpreter(files);
+            Program.Main(args);
+
+            Assert.AreEqual(2, Program.unitTestResults.Count);
+            Assert.AreEqual(Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).parentTestName, "addTest");
+            Assert.AreEqual(true, Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).passed);
+
+            Assert.AreEqual(Program.unitTestResults.ElementAt(1).Asserts.ElementAt(0).parentTestName, "subTest");
+            Assert.AreEqual(true, Program.unitTestResults.ElementAt(1).Asserts.ElementAt(0).passed);
         }
     }
 }
