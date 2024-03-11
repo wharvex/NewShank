@@ -32,18 +32,21 @@ namespace Shank
             { // set up the declared variables as locals
                 variables[l.Name ?? string.Empty] = VariableNodeToActivationRecord(l);
             }
-            if(fn is TestNode)
+            if (fn is TestNode)
             {
                 bool foundTestResult = false;
                 foreach (var testResult in Program.unitTestResults)
                 {
                     if (testResult.parentFunctionName == (((TestNode)fn).targetFunctionName))
                     {
-                        foundTestResult = true; break;
+                        foundTestResult = true;
+                        break;
                     }
                 }
-                if(!foundTestResult)
-                    Program.unitTestResults.AddLast(new TestResult( ((TestNode)fn).Name, ((TestNode)fn).targetFunctionName));
+                if (!foundTestResult)
+                    Program.unitTestResults.AddLast(
+                        new TestResult(((TestNode)fn).Name, ((TestNode)fn).targetFunctionName)
+                    );
             }
             // Interpret instructions
             InterpretBlock(fn.Statements, variables, fn);
@@ -384,7 +387,13 @@ namespace Shank
             if (fc.Name == "assertIsEqual")
             {
                 AssertResult ar = new AssertResult(callingFunction.Name);
+<<<<<<< HEAD
                 Program.unitTestResults.ElementAt(Program.unitTestResults.Count - 1).Asserts.AddLast(ar);
+=======
+                Program
+                    .unitTestResults.ElementAt(Program.unitTestResults.Count - 1)
+                    .asserts.AddLast(ar);
+>>>>>>> a5cd865b83d2b921c82507e6a42eb3267f7ec1cb
             }
             ((CallableNode)calledFunction).Execute?.Invoke(passed);
             // update the variable parameters and return
@@ -687,18 +696,28 @@ namespace Shank
                 currentModule.Value.updateExports();
             }
         }
+
         public static void handleTests()
         {
-            foreach(KeyValuePair<string, ModuleNode> currentModule in Modules)
+            foreach (KeyValuePair<string, ModuleNode> currentModule in Modules)
             {
-                foreach(KeyValuePair<string, TestNode> test in currentModule.Value.getTests())
+                foreach (KeyValuePair<string, TestNode> test in currentModule.Value.getTests())
                 {
-                    if (currentModule.Value.getFunctions().ContainsKey(test.Value.targetFunctionName))
+                    if (
+                        currentModule
+                            .Value.getFunctions()
+                            .ContainsKey(test.Value.targetFunctionName)
+                    )
                     {
-                        ((FunctionNode)currentModule.Value.getFunctions()[test.Value.targetFunctionName]).Tests.Add(test.Key, test.Value);
+                        (
+                            (FunctionNode)
+                                currentModule.Value.getFunctions()[test.Value.targetFunctionName]
+                        ).Tests.Add(test.Key, test.Value);
                     }
                     else
-                        throw new Exception($"Could not find the function {test.Value.targetFunctionName} in the module {currentModule.Key} to be tested.");
+                        throw new Exception(
+                            $"Could not find the function {test.Value.targetFunctionName} in the module {currentModule.Key} to be tested."
+                        );
                 }
             }
         }
@@ -774,7 +793,5 @@ namespace Shank
         {
             return Modules;
         }
-
-
     }
 }

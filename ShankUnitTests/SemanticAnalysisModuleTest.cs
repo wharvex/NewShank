@@ -340,21 +340,24 @@ namespace ShankUnitTests
             initializeInterpreter(files);
             SemanticAnalysis.checkModules(Interpreter.getModules());
         }
+
         [TestMethod]
         public void mergeUnnamedModules()
         {
-            string[] file1 = {
+            string[] file1 =
+            {
                 "define start()\n",
                 "variables p : integer\n",
-                    "\tp:=3\n",
-                    "\twrite p\n",
+                "\tp:=3\n",
+                "\twrite p\n",
             };
-            string[] file2 = {
+            string[] file2 =
+            {
                 "define add(a, b : integer; var c : integer)\n",
-                    "\tc := a + b\n",
+                "\tc := a + b\n",
                 "\n",
                 "define addThree(a : integer; var c : integer)\n",
-                    "\t c := a + 3\n"
+                "\t c := a + 3\n"
             };
             Interpreter.reset();
             ModuleNode module1 = ModuleParserTests.getModuleFromLexer(file1);
@@ -365,7 +368,6 @@ namespace ShankUnitTests
             Interpreter.setStartModule();
             BuiltInFunctions.Register(Interpreter.getStartModule().getFunctions());
             SemanticAnalysis.checkModules(Interpreter.getModules());
-
         }
     }
 }
