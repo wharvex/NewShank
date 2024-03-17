@@ -36,7 +36,11 @@ namespace Shank
                 if (s is AssignmentNode an)
                 {
                     var target = dict[an.target.Name];
-                    CheckNode(target.Type, an.expression, dict);
+                    CheckNode(
+                        target.Type == VariableNode.DataType.Array ? target.ArrayType : target.Type,
+                        an.expression,
+                        dict
+                    );
                 }
                 else if (s is FunctionCallNode fn)
                 {

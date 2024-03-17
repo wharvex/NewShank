@@ -202,6 +202,7 @@ public class Parser
             ?? throw new SyntaxErrorException("Expected a record name", Peek(0));
 
         var recNode = new RecordNode(name.GetIdentifierValue(), moduleName);
+        BodyRecord(recNode);
         return recNode;
     }
 
@@ -222,18 +223,12 @@ public class Parser
             throw new SyntaxErrorException("Expected an indent", Peek(0));
         }
 
-        // TODO: Why is this MatchAndRemove call here?
-        MatchAndRemove(Token.TokenType.EndOfLine);
-
         Statements(statements);
 
         if (MatchAndRemove(Token.TokenType.Dedent) is null)
         {
             throw new SyntaxErrorException("Expected a dedent", Peek(0));
         }
-
-        // TODO: Why is this MatchAndRemove call here?
-        MatchAndRemove(Token.TokenType.EndOfLine);
     }
 
     private void Statements(ICollection<StatementNode> statements)

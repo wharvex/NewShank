@@ -66,7 +66,7 @@ public class IRGenerator
                 false
             );
 
-            var funcName = callableNode.OrigName.Equals("start") ? "main" : callableNode.Name;
+            var funcName = callableNode.Name.Equals("start") ? "main" : callableNode.Name;
 
             // What happens if you try to create a function that already exists?
             func = this._module.AddFunction(funcName, funcType);

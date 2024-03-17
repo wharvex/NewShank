@@ -163,7 +163,6 @@ namespace Shank
         public string Name { get; set; }
         public string parentModuleName { get; set; }
         public bool IsPublic { get; set; }
-        public string OrigName { get; set; }
         public List<VariableNode> ParameterVariables = new();
 
         protected CallableNode(string name)
@@ -182,7 +181,6 @@ namespace Shank
         protected CallableNode(string name, BuiltInCall execute)
         {
             Name = name;
-            OrigName = name;
             Execute = execute;
             IsPublic = false;
         }
@@ -826,20 +824,21 @@ namespace Shank
     public class RecordNode : ASTNode
     {
         public string Name { get; init; }
+        public string? ParentModuleName { get; set; }
         public List<StatementNode> Members;
 
         public RecordNode(string name, string moduleName)
         {
             Name = name;
-            Members = new List<StatementNode>();
+            ParentModuleName = moduleName;
+            Members = [];
         }
 
         public RecordMemberNode? GetMemberNodeByName(string name)
         {
-            // Need to do Two Casts!! Good grief...
             return (RecordMemberNode?)
                 Members.FirstOrDefault(
-                    m => m != null && ((RecordMemberNode)m).Name.Equals(name),
+                    m => m is not null && ((RecordMemberNode)m).Name.Equals(name),
                     null
                 );
         }

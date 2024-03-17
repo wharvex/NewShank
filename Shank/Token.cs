@@ -84,7 +84,7 @@
             {
                 throw new InvalidOperationException(
                     "Something went wrong internally. A Token of type Identifier should not have a"
-                        + " null value."
+                        + " null Value."
                 );
             }
 

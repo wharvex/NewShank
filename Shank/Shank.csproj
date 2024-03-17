@@ -22,6 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="dotShank\Records\" />
     <Folder Include="dotShank\UnitTestTests1\" />
   </ItemGroup>
 
