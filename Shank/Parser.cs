@@ -1,4 +1,6 @@
-﻿namespace Shank;
+﻿using LLVMSharp;
+
+namespace Shank;
 
 public class Parser
 {
@@ -32,8 +34,8 @@ public class Parser
         // Consume blank lines logic.
         // We don't want MatchAndRemove to be the permanent home of this logic because we want to
         // keep MAR simple. The eventual permanent fix will be to convert every
-        // "MatchAndRemove(EndOfLine)" call to an "ExpectsEndOfLine()" or a "RequiresEndOfLine()"
-        // call.
+        // "MatchAndRemove(EndOfLine)" call in the whole project to an "ExpectsEndOfLine()" or a
+        // "RequiresEndOfLine()" call (this will be a big undertaking).
         if (t == Token.TokenType.EndOfLine)
         {
             ConsumeBlankLines();
@@ -159,14 +161,14 @@ public class Parser
     public FunctionNode? Function(string moduleName)
     {
         // Process function name.
+        var name =
+            MatchAndRemove(Token.TokenType.Identifier)
+            ?? throw new SyntaxErrorException("Expected a function name", Peek(0));
 
-        var name = MatchAndRemove(Token.TokenType.Identifier);
-        if (name == null)
-            throw new SyntaxErrorException("Expected a function name", Peek(0));
-        var funcNode = new FunctionNode(name.Value ?? "", moduleName);
+        // Create the function node.
+        var funcNode = new FunctionNode(name.GetIdentifierValue(), moduleName);
 
         // Process parameter variables.
-
         if (MatchAndRemove(Token.TokenType.LeftParen) == null)
             throw new SyntaxErrorException("Expected a left paren", Peek(0));
         var done = false;
@@ -185,12 +187,10 @@ public class Parser
         MatchAndRemove(Token.TokenType.EndOfLine);
 
         // Process local variables.
-
         funcNode.LocalVariables.AddRange(ProcessConstants());
         funcNode.LocalVariables.AddRange(ProcessVariables());
 
         // Process function body and return function node.
-
         BodyFunction(funcNode);
         return funcNode;
     }
@@ -263,6 +263,25 @@ public class Parser
         s = FunctionCall();
         if (s != null)
             return s;
+
+        // Is the statement a record member?
+        s = RecordMember();
+        if (s is not null)
+        {
+            return s;
+        }
+
+        // There is no valid statement.
+        return null;
+    }
+
+    private Boolean IsShankTypeToken(Token t)
+    {
+        return true;
+    }
+
+    private StatementNode? RecordMember()
+    {
         return null;
     }
 
@@ -430,14 +449,6 @@ public class Parser
         {
             return null;
         }
-    }
-
-    // TODO: RecordMemberNode should subclass StatementNode.
-    // Model Record() after Function().
-    // Pass RecordNode.members into Body(List<StatementNode>).
-    private StatementNode? RecordMember()
-    {
-        return new StatementNode();
     }
 
     private List<VariableNode> ProcessVariables()

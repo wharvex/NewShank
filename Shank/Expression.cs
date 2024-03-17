@@ -834,7 +834,7 @@ namespace Shank
             Members = [];
         }
 
-        public RecordMemberNode? GetMemberNodeByName(string name)
+        public RecordMemberNode? GetFromMembersByName(string name)
         {
             return (RecordMemberNode?)
                 Members.FirstOrDefault(
@@ -855,14 +855,17 @@ namespace Shank
             String,
             Character,
             Boolean,
-            Array
+            Array,
+            Record
         };
 
         public DataType Type;
 
         // If Type is Array, then ArrayType is the type of its elements.
         // If Type is not Array, then ArrayType should be null.
-        public DataType ArrayType;
+        public DataType? ArrayType;
+
+        public RecordNode? RecordType;
         public bool IsConstant;
         public ASTNode? InitialValue;
 
@@ -871,7 +874,17 @@ namespace Shank
 
         public override string ToString()
         {
-            return $"{Name} : {(Type == DataType.Array ? "Array of " + ArrayType : Type)} {(IsConstant ? "const" : string.Empty)} {(InitialValue == null ? string.Empty : InitialValue)} {(From == null ? string.Empty : " From: " + From)} {(To == null ? string.Empty : " To: " + To)}";
+            return Name
+                + " : "
+                + (Type == DataType.Array ? "Array of " + ArrayType : Type)
+                + " "
+                + (IsConstant ? "const" : string.Empty)
+                + " "
+                + (InitialValue == null ? string.Empty : InitialValue)
+                + " "
+                + (From == null ? string.Empty : " From: " + From)
+                + " "
+                + (To == null ? string.Empty : " To: " + To);
         }
     }
 
