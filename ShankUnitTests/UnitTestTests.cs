@@ -432,7 +432,8 @@ namespace ShankUnitTests
         public void builtInAssertWithReal()
         {
             string[] args = { "", "-ut" };
-            string[] file ={
+            string[] file =
+            {
                 "define start()\n",
                 "variables p : real\n",
                 "\tp := 3.2\n",
@@ -451,16 +452,19 @@ namespace ShankUnitTests
             Assert.AreEqual(1, Program.unitTestResults.Count);
             Assert.AreEqual(1, Program.unitTestResults.ElementAt(0).Asserts.Count);
 
-            Assert.AreEqual(Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).parentTestName, "simpleTest");
+            Assert.AreEqual(
+                Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).parentTestName,
+                "simpleTest"
+            );
             Assert.IsTrue(Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).passed);
-
         }
 
         [TestMethod]
         public void builtInAssertIsEqualWithString()
         {
             string[] args = { "", "-ut" };
-            string[] file ={
+            string[] file =
+            {
                 "define start()\n",
                 "variables p : real\n",
                 "\tp := 3.2\n",
@@ -479,16 +483,19 @@ namespace ShankUnitTests
             Assert.AreEqual(1, Program.unitTestResults.Count);
             Assert.AreEqual(1, Program.unitTestResults.ElementAt(0).Asserts.Count);
 
-            Assert.AreEqual(Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).parentTestName, "simpleTest");
+            Assert.AreEqual(
+                Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).parentTestName,
+                "simpleTest"
+            );
             Assert.IsTrue(Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).passed);
-
         }
 
         [TestMethod]
         public void builtInAssertIsEqualWithChar()
         {
             string[] args = { "", "-ut" };
-            string[] file ={
+            string[] file =
+            {
                 "define start()\n",
                 "variables p : real\n",
                 "\tp := 3.2\n",
@@ -507,9 +514,11 @@ namespace ShankUnitTests
             Assert.AreEqual(1, Program.unitTestResults.Count);
             Assert.AreEqual(1, Program.unitTestResults.ElementAt(0).Asserts.Count);
 
-            Assert.AreEqual(Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).parentTestName, "simpleTest");
+            Assert.AreEqual(
+                Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).parentTestName,
+                "simpleTest"
+            );
             Assert.IsTrue(Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).passed);
-
         }
     }
 }

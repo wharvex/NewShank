@@ -411,7 +411,10 @@ public class Interpreter
             Program
                 .unitTestResults.ElementAt(Program.unitTestResults.Count - 1)
                 .Asserts.AddLast(ar);
-            Program.unitTestResults.ElementAt(Program.unitTestResults.Count - 1).Asserts.Last().lineNum = fc.LineNum;
+            Program
+                .unitTestResults.ElementAt(Program.unitTestResults.Count - 1)
+                .Asserts.Last()
+                .lineNum = fc.LineNum;
         }
         ((CallableNode)calledFunction).Execute?.Invoke(passed);
         // update the variable parameters and return

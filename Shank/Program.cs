@@ -181,7 +181,9 @@ namespace Shank
                     Console.WriteLine($"Tests from {module.Key}:");
                     foreach (var testResult in unitTestResults)
                     {
-                        Console.WriteLine($"  Test {testResult.testName} (line: {testResult.lineNum}) results:");
+                        Console.WriteLine(
+                            $"  Test {testResult.testName} (line: {testResult.lineNum}) results:"
+                        );
                         foreach (var assertResult in testResult.Asserts)
                         {
                             Console.WriteLine(
