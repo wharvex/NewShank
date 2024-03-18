@@ -419,13 +419,97 @@ namespace ShankUnitTests
                 Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).parentTestName,
                 "addTest"
             );
-            Assert.AreEqual(true, Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).passed);
+            Assert.IsTrue(Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).passed);
 
             Assert.AreEqual(
                 Program.unitTestResults.ElementAt(1).Asserts.ElementAt(0).parentTestName,
                 "subTest"
             );
-            Assert.AreEqual(true, Program.unitTestResults.ElementAt(1).Asserts.ElementAt(0).passed);
+            Assert.IsTrue(Program.unitTestResults.ElementAt(1).Asserts.ElementAt(0).passed);
+        }
+
+        [TestMethod]
+        public void builtInAssertWithReal()
+        {
+            string[] args = { "", "-ut" };
+            string[] file ={
+                "define start()\n",
+                "variables p : real\n",
+                "\tp := 3.2\n",
+                "define add(a, b : real; var c : real)\n",
+                "\tc := a + b\n",
+                "test simpleTest for add(a, b : real; var c : real)\n",
+                "variables f : real\n",
+                "\tadd 2.25, 2.25, var f\n",
+                "\tassertIsEqual 4.5, f\n"
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddLast(file);
+            initializeInterpreter(files);
+            Program.Main(args);
+
+            Assert.AreEqual(1, Program.unitTestResults.Count);
+            Assert.AreEqual(1, Program.unitTestResults.ElementAt(0).Asserts.Count);
+
+            Assert.AreEqual(Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).parentTestName, "simpleTest");
+            Assert.IsTrue(Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).passed);
+
+        }
+
+        [TestMethod]
+        public void builtInAssertIsEqualWithString()
+        {
+            string[] args = { "", "-ut" };
+            string[] file ={
+                "define start()\n",
+                "variables p : real\n",
+                "\tp := 3.2\n",
+                "define doSomething(var s : string)\n",
+                "\ts := \"hello\"\n",
+                "test simpleTest for doSomething(var s : string)\n",
+                "variables f : string\n",
+                "\tdoSomething var f\n",
+                "\tassertIsEqual \"hello\", f\n"
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddLast(file);
+            initializeInterpreter(files);
+            Program.Main(args);
+
+            Assert.AreEqual(1, Program.unitTestResults.Count);
+            Assert.AreEqual(1, Program.unitTestResults.ElementAt(0).Asserts.Count);
+
+            Assert.AreEqual(Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).parentTestName, "simpleTest");
+            Assert.IsTrue(Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).passed);
+
+        }
+
+        [TestMethod]
+        public void builtInAssertIsEqualWithChar()
+        {
+            string[] args = { "", "-ut" };
+            string[] file ={
+                "define start()\n",
+                "variables p : real\n",
+                "\tp := 3.2\n",
+                "define doSomething(var s : character)\n",
+                "\ts := 'c'\n",
+                "test simpleTest for doSomething(var s : character)\n",
+                "variables f : character\n",
+                "\tdoSomething var f\n",
+                "\tassertIsEqual 'c', f\n"
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddLast(file);
+            initializeInterpreter(files);
+            Program.Main(args);
+
+            Assert.AreEqual(1, Program.unitTestResults.Count);
+            Assert.AreEqual(1, Program.unitTestResults.ElementAt(0).Asserts.Count);
+
+            Assert.AreEqual(Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).parentTestName, "simpleTest");
+            Assert.IsTrue(Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).passed);
+
         }
     }
 }

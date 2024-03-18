@@ -182,6 +182,7 @@ public class Parser
         }
         if (MatchAndRemove(Token.TokenType.RightParen) == null)
             throw new SyntaxErrorException("Expected a right paren", Peek(0));
+        funcNode.LineNum = Peek(0).LineNumber;
         MatchAndRemove(Token.TokenType.EndOfLine);
 
         // Process local variables.
@@ -277,6 +278,7 @@ public class Parser
         if (name == null)
             return null;
         var parameters = new List<ParameterNode>();
+        int lineNum = name.LineNumber;
         while (MatchAndRemove(Token.TokenType.EndOfLine) == null)
         {
             var isVariable = MatchAndRemove(Token.TokenType.Var) != null;
@@ -299,6 +301,7 @@ public class Parser
 
         var retVal = new FunctionCallNode(name.Value != null ? name.Value : string.Empty);
         retVal.Parameters.AddRange(parameters);
+        retVal.LineNum = lineNum;
         return retVal;
     }
 

@@ -12,6 +12,7 @@ namespace Shank
     public class FunctionCallNode : StatementNode
     {
         public string Name;
+        public int LineNum;
         public List<ParameterNode> Parameters = new();
 
         public FunctionCallNode(string name)
@@ -164,6 +165,8 @@ namespace Shank
         public string parentModuleName { get; set; }
         public bool IsPublic { get; set; }
         public string OrigName { get; set; }
+        public int LineNum { get; set; }
+
         public List<VariableNode> ParameterVariables = new();
 
         protected CallableNode(string name)
@@ -1310,6 +1313,7 @@ namespace Shank
         public string parentTestName;
         public string? comparedValues;
         public bool passed;
+        public int lineNum;
 
         public AssertResult(string parentTestName, bool passed)
         {
@@ -1327,6 +1331,7 @@ namespace Shank
     {
         public string testName;
         public string parentFunctionName;
+        public int lineNum;
         public LinkedList<AssertResult> Asserts = new LinkedList<AssertResult>();
 
         public TestResult(string testName, string parentFunctionName)

@@ -47,9 +47,12 @@ public class Interpreter
                 }
             }
             if (!foundTestResult)
+            {
                 Program.unitTestResults.AddLast(
                     new TestResult(((TestNode)fn).Name, ((TestNode)fn).targetFunctionName)
                 );
+                Program.unitTestResults.Last().lineNum = fn.LineNum;
+            }
         }
         // Interpret instructions
         InterpretBlock(fn.Statements, variables, fn);
@@ -408,6 +411,7 @@ public class Interpreter
             Program
                 .unitTestResults.ElementAt(Program.unitTestResults.Count - 1)
                 .Asserts.AddLast(ar);
+            Program.unitTestResults.ElementAt(Program.unitTestResults.Count - 1).Asserts.Last().lineNum = fc.LineNum;
         }
         ((CallableNode)calledFunction).Execute?.Invoke(passed);
         // update the variable parameters and return
