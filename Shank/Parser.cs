@@ -4,6 +4,27 @@ namespace Shank;
 
 public class Parser
 {
+    private readonly Token.TokenType[] _shankTokenTypes =
+    {
+        Token.TokenType.Integer,
+        Token.TokenType.Real,
+        Token.TokenType.Boolean,
+        Token.TokenType.Character,
+        Token.TokenType.String,
+        Token.TokenType.Array
+    };
+
+    private readonly Token.TokenType[] _shankTokenTypesPlusIdentifier =
+    {
+        Token.TokenType.Integer,
+        Token.TokenType.Real,
+        Token.TokenType.Boolean,
+        Token.TokenType.Character,
+        Token.TokenType.String,
+        Token.TokenType.Array,
+        Token.TokenType.Identifier
+    };
+
     public Parser(List<Token> tokens)
     {
         _tokens = tokens;
@@ -37,6 +58,40 @@ public class Parser
         // "MatchAndRemove(EndOfLine)" call in the whole project to an "ExpectsEndOfLine()" or a
         // "RequiresEndOfLine()" call (this will be a big undertaking).
         if (t == Token.TokenType.EndOfLine)
+        {
+            ConsumeBlankLines();
+        }
+
+        // Return the Token.
+        return retVal;
+    }
+
+    private Token? MatchAndRemoveMultiple(params Token.TokenType[] t)
+    {
+        // If there are no Tokens left, return null.
+        if (!_tokens.Any())
+        {
+            return null;
+        }
+
+        // Get the next Token.
+        var retVal = _tokens[0];
+
+        // If the TokenType does not match, return null.
+        if (!t.Contains(retVal.Type))
+        {
+            return null;
+        }
+
+        // Remove the Token.
+        _tokens.RemoveAt(0);
+
+        // Consume blank lines logic.
+        // We don't want MatchAndRemove to be the permanent home of this logic because we want to
+        // keep MAR simple. The eventual permanent fix will be to convert every
+        // "MatchAndRemove(EndOfLine)" call in the whole project to an "ExpectsEndOfLine()" or a
+        // "RequiresEndOfLine()" call (this will be a big undertaking).
+        if (retVal.Type == Token.TokenType.EndOfLine)
         {
             ConsumeBlankLines();
         }
@@ -200,6 +255,7 @@ public class Parser
         var name =
             MatchAndRemove(Token.TokenType.Identifier)
             ?? throw new SyntaxErrorException("Expected a record name", Peek(0));
+        RequiresEndOfLine();
 
         var recNode = new RecordNode(name.GetIdentifierValue(), moduleName);
         BodyRecord(recNode);
@@ -256,15 +312,48 @@ public class Parser
             ?? (isRecord ? RecordMember() : FunctionCall());
     }
 
-    private bool IsShankTypeToken(Token t)
+    private bool IsTokenShankType(Token t)
     {
-        return true;
+        return _shankTokenTypes.Contains(t.Type);
     }
 
-    private StatementNode? RecordMember()
+    private RecordMemberNode? RecordMember()
     {
-        return null;
+        var typeToken = MatchAndRemoveMultiple(_shankTokenTypesPlusIdentifier);
+        if (typeToken is null)
+        {
+            return null;
+        }
+
+        var nameToken = MatchAndRemove(Token.TokenType.Identifier);
+        if (nameToken is null)
+        {
+            return null;
+        }
+        RequiresEndOfLine();
+        return IsTokenShankType(typeToken)
+            ? new RecordMemberNode(
+                nameToken.GetIdentifierValue(),
+                GetDataTypeFromTokenType(typeToken.Type)
+            )
+            : new RecordMemberNode(
+                nameToken.GetIdentifierValue(),
+                VariableNode.DataType.Record,
+                typeToken.GetIdentifierValue()
+            );
     }
+
+    private VariableNode.DataType GetDataTypeFromTokenType(Token.TokenType tt) =>
+        tt switch
+        {
+            Token.TokenType.Integer => VariableNode.DataType.Integer,
+            Token.TokenType.Real => VariableNode.DataType.Real,
+            Token.TokenType.Boolean => VariableNode.DataType.Boolean,
+            Token.TokenType.Character => VariableNode.DataType.Character,
+            Token.TokenType.String => VariableNode.DataType.String,
+            Token.TokenType.Array => VariableNode.DataType.Array,
+            _ => throw new InvalidOperationException("Bad TokenType for conversion into DataType"),
+        };
 
     private FunctionCallNode? FunctionCall()
     {

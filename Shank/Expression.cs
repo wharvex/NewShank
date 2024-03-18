@@ -812,12 +812,20 @@ namespace Shank
     public class RecordMemberNode : StatementNode
     {
         public string Name { get; init; }
-        public VariableNode.DataType MemberType { get; init; }
+        public VariableNode.DataType Type { get; init; }
+        public string? RecordType { get; init; }
 
-        public RecordMemberNode(string name, VariableNode.DataType memberType)
+        public RecordMemberNode(string name, VariableNode.DataType type)
         {
             Name = name;
-            MemberType = memberType;
+            Type = type;
+        }
+
+        public RecordMemberNode(string name, VariableNode.DataType type, string recordType)
+        {
+            Name = name;
+            Type = type;
+            RecordType = recordType;
         }
     }
 
@@ -1159,6 +1167,7 @@ namespace Shank
         {
             this.name = name;
             Functions = new Dictionary<string, CallableNode>();
+            Records = [];
             ExportedFunctions = new Dictionary<string, ASTNode?>();
             ImportedFunctions = new Dictionary<string, ASTNode?>();
             ImportTargetNames = new Dictionary<string, LinkedList<string>>();
@@ -1238,7 +1247,13 @@ namespace Shank
             }
         }
 
-        public void AddRecord(RecordNode record) { }
+        public void AddRecord(RecordNode? record)
+        {
+            if (record is not null)
+            {
+                Records.Add(record.Name, record);
+            }
+        }
 
         public void addExportName(string? name)
         {
