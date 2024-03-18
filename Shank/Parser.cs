@@ -213,17 +213,17 @@ public class Parser
 
     private void BodyRecord(RecordNode record)
     {
-        Body(record.Members);
+        Body(record.Members, true);
     }
 
-    private void Body(List<StatementNode> statements)
+    private void Body(List<StatementNode> statements, bool isRecord = false)
     {
         if (MatchAndRemove(Token.TokenType.Indent) is null)
         {
             throw new SyntaxErrorException("Expected an indent", Peek(0));
         }
 
-        Statements(statements);
+        Statements(statements, isRecord);
 
         if (MatchAndRemove(Token.TokenType.Dedent) is null)
         {
@@ -231,51 +231,32 @@ public class Parser
         }
     }
 
-    private void Statements(ICollection<StatementNode> statements)
+    private void Statements(ICollection<StatementNode> statements, bool isRecord = false)
     {
         StatementNode? s;
         do
         {
-            s = Statement();
+            s = Statement(isRecord);
             if (s != null)
                 statements.Add(s);
         } while (s != null);
     }
 
-    private StatementNode? Statement()
+    private StatementNode? Statement(bool isRecord = false)
     {
-        StatementNode? s;
-        s = Assignment();
-        if (s != null)
-            return s;
-        s = While();
-        if (s != null)
-            return s;
-        s = Repeat();
-        if (s != null)
-            return s;
-        s = For();
-        if (s != null)
-            return s;
-        s = If();
-        if (s != null)
-            return s;
-        s = FunctionCall();
-        if (s != null)
-            return s;
-
-        // Is the statement a record member?
-        s = RecordMember();
-        if (s is not null)
-        {
-            return s;
-        }
-
-        // There is no valid statement.
-        return null;
+        // Try to parse a statement as a record member declaration based on the value of an
+        // "isRecord" flag. We need to use this flag because two arbitrary identifiers in a row
+        // could be a record member declaration or a function call from the Parser's point of view,
+        // so we need to know the context.
+        return Assignment()
+            ?? While()
+            ?? Repeat()
+            ?? For()
+            ?? If()
+            ?? (isRecord ? RecordMember() : FunctionCall());
     }
 
-    private Boolean IsShankTypeToken(Token t)
+    private bool IsShankTypeToken(Token t)
     {
         return true;
     }
