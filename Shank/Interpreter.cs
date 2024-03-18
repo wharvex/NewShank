@@ -345,24 +345,24 @@ public class Interpreter
                             switch (arrayVal.ArrayContentsType)
                             {
                                 case VariableNode.DataType.Integer:
-                                    passed.Add(new IntDataType((int)arrayVal.GetElement(index)));
+                                    passed.Add(new IntDataType(arrayVal.GetElementInteger(index)));
                                     break;
                                 case VariableNode.DataType.Real:
-                                    passed.Add(
-                                        new FloatDataType((float)arrayVal.GetElement(index))
-                                    );
+                                    passed.Add(new FloatDataType(arrayVal.GetElementReal(index)));
                                     break;
                                 case VariableNode.DataType.String:
                                     passed.Add(
-                                        new StringDataType((string)arrayVal.GetElement(index))
+                                        new StringDataType(arrayVal.GetElementString(index))
                                     );
                                     break;
                                 case VariableNode.DataType.Character:
-                                    passed.Add(new CharDataType((char)arrayVal.GetElement(index)));
+                                    passed.Add(
+                                        new CharDataType(arrayVal.GetElementCharacter(index))
+                                    );
                                     break;
                                 case VariableNode.DataType.Boolean:
                                     passed.Add(
-                                        new BooleanDataType((bool)arrayVal.GetElement(index))
+                                        new BooleanDataType(arrayVal.GetElementBoolean(index))
                                     );
                                     break;
                                 default:
@@ -448,13 +448,15 @@ public class Interpreter
                 return new BooleanDataType(((vn.InitialValue as BoolNode)?.Value) ?? true);
             case VariableNode.DataType.Array:
             {
-                if (vn.To is null)
-                    throw new ArgumentException(
-                        "Something went wrong internally. Every array variable declaration"
-                            + " should have a range expression, and the Parser should have"
-                            + " checked this already."
-                    );
-                return new ArrayDataType(ResolveIntBeforeVarDecs(vn.To), vn.ArrayType);
+                if (vn.ArrayType is { } at)
+                {
+                    return new ArrayDataType(at);
+                }
+                throw new ArgumentException(
+                    "Something went wrong internally. Every array variable declaration"
+                        + " should have a range expression, and the Parser should have"
+                        + " checked this already."
+                );
             }
             default:
                 throw new Exception($"Unknown local variable type");
@@ -526,12 +528,12 @@ public class Interpreter
             return "" + cn.Value;
         else if (node is VariableReferenceNode vr)
         {
-            // This means the VariableReferenceNode is an array.
-            if (vr.Index != null)
+            // If Index is not null, it means the VariableReferenceNode is an array.
+            if (vr.Index is { } indexNode)
             {
-                var index = ResolveInt(vr.Index, variables);
-                return ((variables[vr.Name] as ArrayDataType)?.GetElement(index))?.ToString()
-                    ?? string.Empty;
+                var index = ResolveInt(indexNode, variables);
+                var adt = (ArrayDataType)variables[vr.Name];
+                return adt.GetElementString(index);
             }
 
             return ((variables[vr.Name] as StringDataType)?.Value) ?? string.Empty;

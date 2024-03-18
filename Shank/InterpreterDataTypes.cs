@@ -112,13 +112,15 @@ public class ArrayDataType : InterpreterDataType
 {
     public readonly List<object> Value;
 
-    // TODO: Is this bad form since DataType is part of an AST node, and ArrayDataType is part
-    // of the interpreter?
+    // TODO: Is this bad form since DataType is part of an AST node (VariableNode), and
+    // ArrayDataType is part of the Interpreter?
     public VariableNode.DataType ArrayContentsType { get; init; }
 
-    public ArrayDataType(int to, VariableNode.DataType arrayContentsType)
+    // We don't need 'from' or 'to' because Semantic Analysis should take care of error-checking
+    // issues with these.
+    public ArrayDataType(VariableNode.DataType arrayContentsType)
     {
-        Value = new List<object>(new object[to]);
+        Value = [];
         ArrayContentsType = arrayContentsType;
     }
 
@@ -133,9 +135,40 @@ public class ArrayDataType : InterpreterDataType
         Value.Insert(idx, element);
     }
 
-    public object? GetElement(int idx)
+    public object GetElement(int idx)
     {
-        return Value[idx];
+        var ret =
+            Value[idx]
+            ?? throw new InvalidOperationException(
+                "Something went wrong internally. No element of this List--which models a "
+                    + "Shank array--should be null, because there is no such thing as null in Shank"
+            );
+        return ret;
+    }
+
+    public float GetElementReal(int idx)
+    {
+        return (float)GetElement(idx);
+    }
+
+    public int GetElementInteger(int idx)
+    {
+        return (int)GetElement(idx);
+    }
+
+    public string GetElementString(int idx)
+    {
+        return (string)GetElement(idx);
+    }
+
+    public char GetElementCharacter(int idx)
+    {
+        return (char)GetElement(idx);
+    }
+
+    public bool GetElementBoolean(int idx)
+    {
+        return (bool)GetElement(idx);
     }
 
     public override string ToString()

@@ -36,7 +36,10 @@ namespace Shank
                 if (s is AssignmentNode an)
                 {
                     var target = dict[an.target.Name];
-                    CheckNode(target.Type, an.expression, dict);
+
+                    // If ArrayType is not null, then we should use it for this analysis because it
+                    // means target is an array. Otherwise, use Type.
+                    CheckNode(target.ArrayType ?? target.Type, an.expression, dict);
                 }
                 else if (s is FunctionCallNode fn)
                 {

@@ -185,7 +185,6 @@ namespace Shank
         protected CallableNode(string name, BuiltInCall execute)
         {
             Name = name;
-            OrigName = name;
             Execute = execute;
             IsPublic = false;
         }
@@ -817,32 +816,41 @@ namespace Shank
     public class RecordMemberNode : StatementNode
     {
         public string Name { get; init; }
-        public VariableNode.DataType MemberType { get; init; }
+        public VariableNode.DataType Type { get; init; }
+        public string? RecordType { get; init; }
 
-        public RecordMemberNode(string name, VariableNode.DataType memberType)
+        public RecordMemberNode(string name, VariableNode.DataType type)
         {
             Name = name;
-            MemberType = memberType;
+            Type = type;
+        }
+
+        public RecordMemberNode(string name, VariableNode.DataType type, string recordType)
+        {
+            Name = name;
+            Type = type;
+            RecordType = recordType;
         }
     }
 
     public class RecordNode : ASTNode
     {
         public string Name { get; init; }
+        public string? ParentModuleName { get; set; }
         public List<StatementNode> Members;
 
         public RecordNode(string name, string moduleName)
         {
             Name = name;
-            Members = new List<StatementNode>();
+            ParentModuleName = moduleName;
+            Members = [];
         }
 
-        public RecordMemberNode? GetMemberNodeByName(string name)
+        public RecordMemberNode? GetFromMembersByName(string name)
         {
-            // Need to do Two Casts!! Good grief...
             return (RecordMemberNode?)
                 Members.FirstOrDefault(
-                    m => m != null && ((RecordMemberNode)m).Name.Equals(name),
+                    m => m is not null && ((RecordMemberNode)m).Name.Equals(name),
                     null
                 );
         }
@@ -859,14 +867,17 @@ namespace Shank
             String,
             Character,
             Boolean,
-            Array
+            Array,
+            Record
         };
 
         public DataType Type;
 
         // If Type is Array, then ArrayType is the type of its elements.
         // If Type is not Array, then ArrayType should be null.
-        public DataType ArrayType;
+        public DataType? ArrayType;
+
+        public RecordNode? RecordType;
         public bool IsConstant;
         public ASTNode? InitialValue;
 
@@ -875,7 +886,17 @@ namespace Shank
 
         public override string ToString()
         {
-            return $"{Name} : {(Type == DataType.Array ? "Array of " + ArrayType : Type)} {(IsConstant ? "const" : string.Empty)} {(InitialValue == null ? string.Empty : InitialValue)} {(From == null ? string.Empty : " From: " + From)} {(To == null ? string.Empty : " To: " + To)}";
+            return Name
+                + " : "
+                + (Type == DataType.Array ? "Array of " + ArrayType : Type)
+                + " "
+                + (IsConstant ? "const" : string.Empty)
+                + " "
+                + (InitialValue == null ? string.Empty : InitialValue)
+                + " "
+                + (From == null ? string.Empty : " From: " + From)
+                + " "
+                + (To == null ? string.Empty : " To: " + To);
         }
     }
 
@@ -1150,6 +1171,7 @@ namespace Shank
         {
             this.name = name;
             Functions = new Dictionary<string, CallableNode>();
+            Records = [];
             ExportedFunctions = new Dictionary<string, ASTNode?>();
             ImportedFunctions = new Dictionary<string, ASTNode?>();
             ImportTargetNames = new Dictionary<string, LinkedList<string>>();
@@ -1229,7 +1251,13 @@ namespace Shank
             }
         }
 
-        public void AddRecord(RecordNode record) { }
+        public void AddRecord(RecordNode? record)
+        {
+            if (record is not null)
+            {
+                Records.Add(record.Name, record);
+            }
+        }
 
         public void addExportName(string? name)
         {

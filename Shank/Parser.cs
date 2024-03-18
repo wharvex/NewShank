@@ -1,7 +1,30 @@
-﻿namespace Shank;
+﻿using LLVMSharp;
+
+namespace Shank;
 
 public class Parser
 {
+    private readonly Token.TokenType[] _shankTokenTypes =
+    {
+        Token.TokenType.Integer,
+        Token.TokenType.Real,
+        Token.TokenType.Boolean,
+        Token.TokenType.Character,
+        Token.TokenType.String,
+        Token.TokenType.Array
+    };
+
+    private readonly Token.TokenType[] _shankTokenTypesPlusIdentifier =
+    {
+        Token.TokenType.Integer,
+        Token.TokenType.Real,
+        Token.TokenType.Boolean,
+        Token.TokenType.Character,
+        Token.TokenType.String,
+        Token.TokenType.Array,
+        Token.TokenType.Identifier
+    };
+
     public Parser(List<Token> tokens)
     {
         _tokens = tokens;
@@ -32,9 +55,43 @@ public class Parser
         // Consume blank lines logic.
         // We don't want MatchAndRemove to be the permanent home of this logic because we want to
         // keep MAR simple. The eventual permanent fix will be to convert every
-        // "MatchAndRemove(EndOfLine)" call to an "ExpectsEndOfLine()" or a "RequiresEndOfLine()"
-        // call.
+        // "MatchAndRemove(EndOfLine)" call in the whole project to an "ExpectsEndOfLine()" or a
+        // "RequiresEndOfLine()" call (this will be a big undertaking).
         if (t == Token.TokenType.EndOfLine)
+        {
+            ConsumeBlankLines();
+        }
+
+        // Return the Token.
+        return retVal;
+    }
+
+    private Token? MatchAndRemoveMultiple(params Token.TokenType[] t)
+    {
+        // If there are no Tokens left, return null.
+        if (!_tokens.Any())
+        {
+            return null;
+        }
+
+        // Get the next Token.
+        var retVal = _tokens[0];
+
+        // If the TokenType does not match, return null.
+        if (!t.Contains(retVal.Type))
+        {
+            return null;
+        }
+
+        // Remove the Token.
+        _tokens.RemoveAt(0);
+
+        // Consume blank lines logic.
+        // We don't want MatchAndRemove to be the permanent home of this logic because we want to
+        // keep MAR simple. The eventual permanent fix will be to convert every
+        // "MatchAndRemove(EndOfLine)" call in the whole project to an "ExpectsEndOfLine()" or a
+        // "RequiresEndOfLine()" call (this will be a big undertaking).
+        if (retVal.Type == Token.TokenType.EndOfLine)
         {
             ConsumeBlankLines();
         }
@@ -159,14 +216,14 @@ public class Parser
     public FunctionNode? Function(string moduleName)
     {
         // Process function name.
+        var name =
+            MatchAndRemove(Token.TokenType.Identifier)
+            ?? throw new SyntaxErrorException("Expected a function name", Peek(0));
 
-        var name = MatchAndRemove(Token.TokenType.Identifier);
-        if (name == null)
-            throw new SyntaxErrorException("Expected a function name", Peek(0));
-        var funcNode = new FunctionNode(name.Value ?? "", moduleName);
+        // Create the function node.
+        var funcNode = new FunctionNode(name.GetIdentifierValue(), moduleName);
 
         // Process parameter variables.
-
         if (MatchAndRemove(Token.TokenType.LeftParen) == null)
             throw new SyntaxErrorException("Expected a left paren", Peek(0));
         var done = false;
@@ -180,18 +237,16 @@ public class Parser
                 MatchAndRemove(Token.TokenType.Semicolon);
             }
         }
+        funcNode.LineNum = Peek(0).LineNumber;
         if (MatchAndRemove(Token.TokenType.RightParen) == null)
             throw new SyntaxErrorException("Expected a right paren", Peek(0));
-        funcNode.LineNum = Peek(0).LineNumber;
         MatchAndRemove(Token.TokenType.EndOfLine);
 
         // Process local variables.
-
         funcNode.LocalVariables.AddRange(ProcessConstants());
         funcNode.LocalVariables.AddRange(ProcessVariables());
 
         // Process function body and return function node.
-
         BodyFunction(funcNode);
         return funcNode;
     }
@@ -201,8 +256,10 @@ public class Parser
         var name =
             MatchAndRemove(Token.TokenType.Identifier)
             ?? throw new SyntaxErrorException("Expected a record name", Peek(0));
+        RequiresEndOfLine();
 
         var recNode = new RecordNode(name.GetIdentifierValue(), moduleName);
+        BodyRecord(recNode);
         return recNode;
     }
 
@@ -213,64 +270,91 @@ public class Parser
 
     private void BodyRecord(RecordNode record)
     {
-        Body(record.Members);
+        Body(record.Members, true);
     }
 
-    private void Body(List<StatementNode> statements)
+    private void Body(List<StatementNode> statements, bool isRecord = false)
     {
         if (MatchAndRemove(Token.TokenType.Indent) is null)
         {
             throw new SyntaxErrorException("Expected an indent", Peek(0));
         }
 
-        // TODO: Why is this MatchAndRemove call here?
-        MatchAndRemove(Token.TokenType.EndOfLine);
-
-        Statements(statements);
+        Statements(statements, isRecord);
 
         if (MatchAndRemove(Token.TokenType.Dedent) is null)
         {
             throw new SyntaxErrorException("Expected a dedent", Peek(0));
         }
-
-        // TODO: Why is this MatchAndRemove call here?
-        MatchAndRemove(Token.TokenType.EndOfLine);
     }
 
-    private void Statements(ICollection<StatementNode> statements)
+    private void Statements(ICollection<StatementNode> statements, bool isRecord = false)
     {
         StatementNode? s;
         do
         {
-            s = Statement();
+            s = Statement(isRecord);
             if (s != null)
                 statements.Add(s);
         } while (s != null);
     }
 
-    private StatementNode? Statement()
+    private StatementNode? Statement(bool isRecord = false)
     {
-        StatementNode? s;
-        s = Assignment();
-        if (s != null)
-            return s;
-        s = While();
-        if (s != null)
-            return s;
-        s = Repeat();
-        if (s != null)
-            return s;
-        s = For();
-        if (s != null)
-            return s;
-        s = If();
-        if (s != null)
-            return s;
-        s = FunctionCall();
-        if (s != null)
-            return s;
-        return null;
+        // Try to parse a statement as a record member declaration based on the value of an
+        // "isRecord" flag. We need to use this flag because two arbitrary identifiers in a row
+        // could be a record member declaration or a function call from the Parser's point of view,
+        // so we need to know the context.
+        return Assignment()
+            ?? While()
+            ?? Repeat()
+            ?? For()
+            ?? If()
+            ?? (isRecord ? RecordMember() : FunctionCall());
     }
+
+    private bool IsTokenShankType(Token t)
+    {
+        return _shankTokenTypes.Contains(t.Type);
+    }
+
+    private RecordMemberNode? RecordMember()
+    {
+        var typeToken = MatchAndRemoveMultiple(_shankTokenTypesPlusIdentifier);
+        if (typeToken is null)
+        {
+            return null;
+        }
+
+        var nameToken = MatchAndRemove(Token.TokenType.Identifier);
+        if (nameToken is null)
+        {
+            return null;
+        }
+        RequiresEndOfLine();
+        return IsTokenShankType(typeToken)
+            ? new RecordMemberNode(
+                nameToken.GetIdentifierValue(),
+                GetDataTypeFromTokenType(typeToken.Type)
+            )
+            : new RecordMemberNode(
+                nameToken.GetIdentifierValue(),
+                VariableNode.DataType.Record,
+                typeToken.GetIdentifierValue()
+            );
+    }
+
+    private VariableNode.DataType GetDataTypeFromTokenType(Token.TokenType tt) =>
+        tt switch
+        {
+            Token.TokenType.Integer => VariableNode.DataType.Integer,
+            Token.TokenType.Real => VariableNode.DataType.Real,
+            Token.TokenType.Boolean => VariableNode.DataType.Boolean,
+            Token.TokenType.Character => VariableNode.DataType.Character,
+            Token.TokenType.String => VariableNode.DataType.String,
+            Token.TokenType.Array => VariableNode.DataType.Array,
+            _ => throw new InvalidOperationException("Bad TokenType for conversion into DataType"),
+        };
 
     private FunctionCallNode? FunctionCall()
     {
@@ -438,14 +522,6 @@ public class Parser
         {
             return null;
         }
-    }
-
-    // TODO: RecordMemberNode should subclass StatementNode.
-    // Model Record() after Function().
-    // Pass RecordNode.members into Body(List<StatementNode>).
-    private StatementNode? RecordMember()
-    {
-        return new StatementNode();
     }
 
     private List<VariableNode> ProcessVariables()
@@ -1000,6 +1076,7 @@ public class Parser
         }
         if (MatchAndRemove(Token.TokenType.RightParen) == null)
             throw new SyntaxErrorException("Expected a right paren", Peek(0));
+        test.LineNum = Peek(0).LineNumber;
         MatchAndRemove(Token.TokenType.EndOfLine);
 
         // Process local variables.
