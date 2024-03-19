@@ -1,6 +1,7 @@
 using System.Dynamic;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json.Serialization;
 using LLVMSharp.Interop;
 
 //To compile to RISC-V: llc -march=riscv64 output_ir_3.ll -o out3.s
@@ -825,10 +826,10 @@ namespace Shank
             Type = type;
         }
 
-        public RecordMemberNode(string name, VariableNode.DataType type, string recordType)
+        public RecordMemberNode(string name, string recordType)
         {
             Name = name;
-            Type = type;
+            Type = VariableNode.DataType.Record;
             RecordType = recordType;
         }
     }
@@ -836,7 +837,7 @@ namespace Shank
     public class RecordNode : ASTNode
     {
         public string Name { get; init; }
-        public string? ParentModuleName { get; set; }
+        public string? ParentModuleName { get; init; }
         public List<StatementNode> Members;
 
         public RecordNode(string name, string moduleName)
@@ -1150,21 +1151,32 @@ namespace Shank
 
     public class ModuleNode
     {
+        [JsonInclude]
         private string name;
+
+        [JsonInclude]
         private Dictionary<string, CallableNode> Functions;
-        private Dictionary<string, RecordNode> Records;
+
+        [JsonInclude]
+        public Dictionary<string, RecordNode> Records { get; init; }
 
         //Dictionary associating names to something to be imported/exported
         //has a type of ASTNode? as references will later be added
+        [JsonInclude]
         private Dictionary<string, ASTNode?> ExportedFunctions;
+
+        [JsonInclude]
         private Dictionary<string, ASTNode?> ImportedFunctions;
 
         //ImportTargetNames holds a module and the list of functions that this module has imported
+        [JsonInclude]
         private Dictionary<string, LinkedList<string>> ImportTargetNames;
 
         //the names of functions to be exported
+        [JsonInclude]
         private LinkedList<string> ExportTargetNames;
 
+        [JsonInclude]
         private Dictionary<string, TestNode> Tests;
 
         public ModuleNode(string name)

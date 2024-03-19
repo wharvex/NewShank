@@ -331,17 +331,15 @@ public class Parser
         {
             return null;
         }
+
         RequiresEndOfLine();
+
         return IsTokenShankType(typeToken)
             ? new RecordMemberNode(
                 nameToken.GetIdentifierValue(),
                 GetDataTypeFromTokenType(typeToken.Type)
             )
-            : new RecordMemberNode(
-                nameToken.GetIdentifierValue(),
-                VariableNode.DataType.Record,
-                typeToken.GetIdentifierValue()
-            );
+            : new RecordMemberNode(nameToken.GetIdentifierValue(), typeToken.GetIdentifierValue());
     }
 
     private VariableNode.DataType GetDataTypeFromTokenType(Token.TokenType tt) =>
