@@ -1,4 +1,7 @@
-record a
-    string b
+record aardvark
+    string bokchoy
+	integer yes
+
 define start()
+variables a,b,c : integer
 	write "hello world"

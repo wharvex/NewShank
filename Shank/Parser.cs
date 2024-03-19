@@ -288,15 +288,20 @@ public class Parser
         }
     }
 
-    private void Statements(ICollection<StatementNode> statements, bool isRecord = false)
+    private void Statements(List<StatementNode> statements, bool isRecord = false)
     {
         StatementNode? s;
         do
         {
             s = Statement(isRecord);
-            if (s != null)
-                statements.Add(s);
-        } while (s != null);
+
+            if (s is null)
+            {
+                continue;
+            }
+
+            statements.Add(s);
+        } while (s is not null);
     }
 
     private StatementNode? Statement(bool isRecord = false)

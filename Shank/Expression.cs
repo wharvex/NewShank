@@ -160,15 +160,18 @@ namespace Shank
         }
     }
 
+    [JsonDerivedType(typeof(FunctionNode))]
     public abstract class CallableNode : ASTNode
     {
         public string Name { get; set; }
+
         public string parentModuleName { get; set; }
+
         public bool IsPublic { get; set; }
-        public string OrigName { get; set; }
+
         public int LineNum { get; set; }
 
-        public List<VariableNode> ParameterVariables = new();
+        public List<VariableNode> ParameterVariables { get; set; } = [];
 
         protected CallableNode(string name)
         {
@@ -249,7 +252,7 @@ namespace Shank
                 Interpreter.InterpretFunction(this, paramList);
         }
 
-        public List<VariableNode> LocalVariables = new();
+        public List<VariableNode> LocalVariables { get; set; } = [];
 
         public List<StatementNode> Statements = new();
 
@@ -817,7 +820,9 @@ namespace Shank
     public class RecordMemberNode : StatementNode
     {
         public string Name { get; init; }
+
         public VariableNode.DataType Type { get; init; }
+
         public string? RecordType { get; init; }
 
         public RecordMemberNode(string name, VariableNode.DataType type)
@@ -837,8 +842,10 @@ namespace Shank
     public class RecordNode : ASTNode
     {
         public string Name { get; init; }
+
         public string? ParentModuleName { get; init; }
-        public List<StatementNode> Members;
+
+        public List<StatementNode> Members { get; init; }
 
         public RecordNode(string name, string moduleName)
         {
@@ -859,7 +866,7 @@ namespace Shank
 
     public class VariableNode : ASTNode
     {
-        public string? Name;
+        public string? Name { get; set; }
 
         public enum DataType
         {
@@ -872,7 +879,7 @@ namespace Shank
             Record
         };
 
-        public DataType Type;
+        public DataType Type { get; set; }
 
         // If Type is Array, then ArrayType is the type of its elements.
         // If Type is not Array, then ArrayType should be null.
@@ -929,6 +936,7 @@ namespace Shank
         }
     }
 
+    [JsonDerivedType(typeof(RecordMemberNode))]
     public class StatementNode : ASTNode
     {
         protected static string StatementListToString(List<StatementNode> statements)
@@ -1149,34 +1157,26 @@ namespace Shank
         }
     }
 
-    public class ModuleNode
+    public class ModuleNode : ASTNode
     {
-        [JsonInclude]
         private string name;
 
-        [JsonInclude]
-        private Dictionary<string, CallableNode> Functions;
+        public Dictionary<string, CallableNode> Functions { get; init; }
 
-        [JsonInclude]
         public Dictionary<string, RecordNode> Records { get; init; }
 
         //Dictionary associating names to something to be imported/exported
         //has a type of ASTNode? as references will later be added
-        [JsonInclude]
         private Dictionary<string, ASTNode?> ExportedFunctions;
 
-        [JsonInclude]
         private Dictionary<string, ASTNode?> ImportedFunctions;
 
         //ImportTargetNames holds a module and the list of functions that this module has imported
-        [JsonInclude]
         private Dictionary<string, LinkedList<string>> ImportTargetNames;
 
         //the names of functions to be exported
-        [JsonInclude]
         private LinkedList<string> ExportTargetNames;
 
-        [JsonInclude]
         private Dictionary<string, TestNode> Tests;
 
         public ModuleNode(string name)

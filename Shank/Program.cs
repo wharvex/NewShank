@@ -110,7 +110,7 @@ namespace Shank
                 {
                     var currentModule = currentModulePair.Value;
                     //Console.WriteLine($"\nOutput of {currentModule.getName()}:\n");
-                    OutputHelper.DebugPrintJson(currentModule);
+                    OutputHelper.DebugPrint(OutputHelper.GetDebugJsonForModuleNode(currentModule));
 
                     BuiltInFunctions.Register(currentModule.getFunctions());
                     if (

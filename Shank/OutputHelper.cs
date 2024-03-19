@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Web;
 
@@ -11,6 +13,8 @@ namespace Shank;
 
 public class OutputHelper
 {
+    private static readonly JsonSerializerOptions Options = new() { WriteIndented = true };
+
     public static void DebugPrint(string output)
     {
         // If you're using windows, the value of docPath should be:
@@ -25,9 +29,12 @@ public class OutputHelper
         outputFile.WriteLine(output);
     }
 
-    public static void DebugPrintJson(object obj)
+    public static string GetDebugJsonForModuleNode(ModuleNode mn)
     {
-        var options = new JsonSerializerOptions { WriteIndented = true };
-        DebugPrint(JsonSerializer.Serialize(obj, options));
+        return JsonSerializer.Serialize(mn, ModuleNodeContext.Default.ModuleNode);
     }
 }
+
+[JsonSourceGenerationOptions(WriteIndented = true, UseStringEnumConverter = true)]
+[JsonSerializable(typeof(ModuleNode))]
+internal partial class ModuleNodeContext : JsonSerializerContext { }
