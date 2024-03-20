@@ -834,7 +834,7 @@ public class Parser
             var rt = Term();
             if (rt == null)
                 throw new SyntaxErrorException("Expected a term.", Peek(0));
-            lt = new MathOpNode(lt, MathOpNode.OpType.plus, rt);
+            lt = new MathOpNode(lt, MathOpNode.MathOpType.plus, rt);
             return ExpressionRHS(lt);
         }
         else if (MatchAndRemove(Token.TokenType.Minus) != null)
@@ -842,7 +842,7 @@ public class Parser
             var rt = Term();
             if (rt == null)
                 throw new SyntaxErrorException("Expected a term.", Peek(0));
-            lt = new MathOpNode(lt, MathOpNode.OpType.minus, rt);
+            lt = new MathOpNode(lt, MathOpNode.MathOpType.minus, rt);
             return ExpressionRHS(lt);
         }
         else if (MatchAndRemove(Token.TokenType.LessEqual) != null)
@@ -850,42 +850,66 @@ public class Parser
             var rt = Term();
             if (rt == null)
                 throw new SyntaxErrorException("Expected a term.", Peek(0));
-            return new BooleanExpressionNode(lt, BooleanExpressionNode.OpType.le, rt);
+            return new BooleanExpressionNode(
+                lt,
+                BooleanExpressionNode.BooleanExpressionOpType.le,
+                rt
+            );
         }
         else if (MatchAndRemove(Token.TokenType.LessThan) != null)
         {
             var rt = Term();
             if (rt == null)
                 throw new SyntaxErrorException("Expected a term.", Peek(0));
-            return new BooleanExpressionNode(lt, BooleanExpressionNode.OpType.lt, rt);
+            return new BooleanExpressionNode(
+                lt,
+                BooleanExpressionNode.BooleanExpressionOpType.lt,
+                rt
+            );
         }
         else if (MatchAndRemove(Token.TokenType.GreaterEqual) != null)
         {
             var rt = Term();
             if (rt == null)
                 throw new SyntaxErrorException("Expected a term.", Peek(0));
-            return new BooleanExpressionNode(lt, BooleanExpressionNode.OpType.ge, rt);
+            return new BooleanExpressionNode(
+                lt,
+                BooleanExpressionNode.BooleanExpressionOpType.ge,
+                rt
+            );
         }
         else if (MatchAndRemove(Token.TokenType.Greater) != null)
         {
             var rt = Term();
             if (rt == null)
                 throw new SyntaxErrorException("Expected a term.", Peek(0));
-            return new BooleanExpressionNode(lt, BooleanExpressionNode.OpType.gt, rt);
+            return new BooleanExpressionNode(
+                lt,
+                BooleanExpressionNode.BooleanExpressionOpType.gt,
+                rt
+            );
         }
         else if (MatchAndRemove(Token.TokenType.Equal) != null)
         {
             var rt = Term();
             if (rt == null)
                 throw new SyntaxErrorException("Expected a term.", Peek(0));
-            return new BooleanExpressionNode(lt, BooleanExpressionNode.OpType.eq, rt);
+            return new BooleanExpressionNode(
+                lt,
+                BooleanExpressionNode.BooleanExpressionOpType.eq,
+                rt
+            );
         }
         else if (MatchAndRemove(Token.TokenType.NotEqual) != null)
         {
             var rt = Term();
             if (rt == null)
                 throw new SyntaxErrorException("Expected a term.", Peek(0));
-            return new BooleanExpressionNode(lt, BooleanExpressionNode.OpType.ne, rt);
+            return new BooleanExpressionNode(
+                lt,
+                BooleanExpressionNode.BooleanExpressionOpType.ne,
+                rt
+            );
         }
         else
         {
@@ -908,7 +932,7 @@ public class Parser
             var rt = Factor();
             if (rt == null)
                 throw new SyntaxErrorException("Expected a factor.", Peek(0));
-            lt = new MathOpNode(lt, MathOpNode.OpType.times, rt);
+            lt = new MathOpNode(lt, MathOpNode.MathOpType.times, rt);
             return TermRHS(lt);
         }
         else if (MatchAndRemove(Token.TokenType.Divide) != null)
@@ -916,7 +940,7 @@ public class Parser
             var rt = Factor();
             if (rt == null)
                 throw new SyntaxErrorException("Expected a factor.", Peek(0));
-            lt = new MathOpNode(lt, MathOpNode.OpType.divide, rt);
+            lt = new MathOpNode(lt, MathOpNode.MathOpType.divide, rt);
             return TermRHS(lt);
         }
         else if (MatchAndRemove(Token.TokenType.Mod) != null)
@@ -924,7 +948,7 @@ public class Parser
             var rt = Factor();
             if (rt == null)
                 throw new SyntaxErrorException("Expected a factor.", Peek(0));
-            lt = new MathOpNode(lt, MathOpNode.OpType.modulo, rt);
+            lt = new MathOpNode(lt, MathOpNode.MathOpType.modulo, rt);
             return TermRHS(lt);
         }
         else

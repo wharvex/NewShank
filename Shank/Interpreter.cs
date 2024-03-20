@@ -477,12 +477,12 @@ public class Interpreter
             var rf = ResolveFloat(ben.Right, variables);
             return ben.Op switch
             {
-                BooleanExpressionNode.OpType.lt => lf < rf,
-                BooleanExpressionNode.OpType.le => lf <= rf,
-                BooleanExpressionNode.OpType.gt => lf > rf,
-                BooleanExpressionNode.OpType.ge => lf >= rf,
-                BooleanExpressionNode.OpType.eq => lf == rf,
-                BooleanExpressionNode.OpType.ne => lf != rf,
+                BooleanExpressionNode.BooleanExpressionOpType.lt => lf < rf,
+                BooleanExpressionNode.BooleanExpressionOpType.le => lf <= rf,
+                BooleanExpressionNode.BooleanExpressionOpType.gt => lf > rf,
+                BooleanExpressionNode.BooleanExpressionOpType.ge => lf >= rf,
+                BooleanExpressionNode.BooleanExpressionOpType.eq => lf == rf,
+                BooleanExpressionNode.BooleanExpressionOpType.ne => lf != rf,
                 _ => throw new Exception("Unknown boolean operation")
             };
         }
@@ -494,12 +494,12 @@ public class Interpreter
             var rf = ResolveInt(ben.Right, variables);
             return ben.Op switch
             {
-                BooleanExpressionNode.OpType.lt => lf < rf,
-                BooleanExpressionNode.OpType.le => lf <= rf,
-                BooleanExpressionNode.OpType.gt => lf > rf,
-                BooleanExpressionNode.OpType.ge => lf >= rf,
-                BooleanExpressionNode.OpType.eq => lf == rf,
-                BooleanExpressionNode.OpType.ne => lf != rf,
+                BooleanExpressionNode.BooleanExpressionOpType.lt => lf < rf,
+                BooleanExpressionNode.BooleanExpressionOpType.le => lf <= rf,
+                BooleanExpressionNode.BooleanExpressionOpType.gt => lf > rf,
+                BooleanExpressionNode.BooleanExpressionOpType.ge => lf >= rf,
+                BooleanExpressionNode.BooleanExpressionOpType.eq => lf == rf,
+                BooleanExpressionNode.BooleanExpressionOpType.ne => lf != rf,
                 _ => throw new Exception("Unknown boolean operation")
             };
         }
@@ -519,7 +519,7 @@ public class Interpreter
             var right = ResolveString(mon.Right, variables);
             switch (mon.Op)
             {
-                case MathOpNode.OpType.plus:
+                case MathOpNode.MathOpType.plus:
                     return left + right;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -576,15 +576,15 @@ public class Interpreter
             var right = ResolveFloat(mon.Right, variables);
             switch (mon.Op)
             {
-                case MathOpNode.OpType.plus:
+                case MathOpNode.MathOpType.plus:
                     return left + right;
-                case MathOpNode.OpType.minus:
+                case MathOpNode.MathOpType.minus:
                     return left - right;
-                case MathOpNode.OpType.times:
+                case MathOpNode.MathOpType.times:
                     return left * right;
-                case MathOpNode.OpType.divide:
+                case MathOpNode.MathOpType.divide:
                     return left / right;
-                case MathOpNode.OpType.modulo:
+                case MathOpNode.MathOpType.modulo:
                     return left % right;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -614,15 +614,15 @@ public class Interpreter
             var right = ResolveInt(mon.Right, variables);
             switch (mon.Op)
             {
-                case MathOpNode.OpType.plus:
+                case MathOpNode.MathOpType.plus:
                     return left + right;
-                case MathOpNode.OpType.minus:
+                case MathOpNode.MathOpType.minus:
                     return left - right;
-                case MathOpNode.OpType.times:
+                case MathOpNode.MathOpType.times:
                     return left * right;
-                case MathOpNode.OpType.divide:
+                case MathOpNode.MathOpType.divide:
                     return left / right;
-                case MathOpNode.OpType.modulo:
+                case MathOpNode.MathOpType.modulo:
                     return left % right;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -766,15 +766,15 @@ public class Interpreter
             var right = ResolveIntBeforeVarDecs(mon.Right);
             switch (mon.Op)
             {
-                case MathOpNode.OpType.plus:
+                case MathOpNode.MathOpType.plus:
                     return left + right;
-                case MathOpNode.OpType.minus:
+                case MathOpNode.MathOpType.minus:
                     return left - right;
-                case MathOpNode.OpType.times:
+                case MathOpNode.MathOpType.times:
                     return left * right;
-                case MathOpNode.OpType.divide:
+                case MathOpNode.MathOpType.divide:
                     return left / right;
-                case MathOpNode.OpType.modulo:
+                case MathOpNode.MathOpType.modulo:
                     return left % right;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(mon.Op), "Invalid operation type");
