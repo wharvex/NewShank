@@ -921,7 +921,7 @@ namespace Shank
         // If Type is Array, then ArrayType is the type of its elements.
         // If Type is not Array, then ArrayType should be null.
         public DataType? ArrayType { get; set; }
-        public RecordNode? RecordType { get; set; }
+        public string? RecordType { get; set; }
         public bool IsConstant { get; set; }
         public ASTNode? InitialValue { get; set; }
         public ASTNode? From { get; set; }
@@ -993,10 +993,21 @@ namespace Shank
             Index = null;
         }
 
-        public VariableReferenceNode(string name, ASTNode index)
+        public VariableReferenceNode(
+            string name,
+            ASTNode indexOrRecordMemberReference,
+            bool isRecord = false
+        )
         {
             Name = name;
-            Index = index;
+            if (isRecord)
+            {
+                RecordMemberReference = (VariableReferenceNode)indexOrRecordMemberReference;
+            }
+            else
+            {
+                Index = indexOrRecordMemberReference;
+            }
         }
 
         public string Name { get; init; }
@@ -1005,6 +1016,11 @@ namespace Shank
         /// Holds the variable's array index expression if it exists.
         /// </summary>
         public ASTNode? Index { get; init; }
+
+        /// <summary>
+        /// Holds the variable's record member reference if it exists.
+        /// </summary>
+        public VariableReferenceNode? RecordMemberReference { get; init; }
 
         public override string ToString()
         {

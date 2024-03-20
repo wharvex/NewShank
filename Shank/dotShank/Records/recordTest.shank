@@ -1,7 +1,9 @@
 record aardvark
     string bokchoy
 	integer yes
+	blah blahh
 
 define start()
 variables a,b,c : integer
-	write "hello world"
+variables myAardvark : aardvark
+	myAardvark.bokchoy := "hi"

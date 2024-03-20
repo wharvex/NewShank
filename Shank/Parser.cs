@@ -149,6 +149,16 @@ public class Parser
                     );
                 return new VariableReferenceNode(id.Value ?? string.Empty, exp);
             }
+            if (MatchAndRemove(Token.TokenType.Dot) is not null)
+            {
+                VariableReferenceNode? varRef = GetVariableReferenceNode();
+                if (varRef is null)
+                    throw new SyntaxErrorException(
+                        "Need a record member reference after the dot!",
+                        Peek(0)
+                    );
+                return new VariableReferenceNode(id.GetIdentifierValue(), varRef, true);
+            }
             return new VariableReferenceNode(id.Value ?? string.Empty);
         }
         return null;
@@ -504,7 +514,12 @@ public class Parser
 
     private StatementNode? Assignment()
     {
-        if (Peek(1)?.Type is Token.TokenType.Assignment or Token.TokenType.LeftBracket)
+        if (
+            Peek(1)?.Type
+            is Token.TokenType.Assignment
+                or Token.TokenType.LeftBracket
+                or Token.TokenType.Dot
+        )
         {
             var target = GetVariableReferenceNode();
             if (target == null)
@@ -687,6 +702,24 @@ public class Parser
                         Peek(0)
                     );
             }
+            return retVal;
+        }
+        else if (MatchAndRemove(Token.TokenType.Identifier) is { } id)
+        {
+            var retVal = names
+                .Select(
+                    n =>
+                        new VariableNode()
+                        {
+                            InitialValue = null,
+                            IsConstant = isConstant,
+                            Type = VariableNode.DataType.Record,
+                            RecordType = id.GetIdentifierValue(),
+                            Name = n
+                        }
+                )
+                .ToList();
+            CheckForRange(retVal);
             return retVal;
         }
         else

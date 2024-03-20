@@ -15,7 +15,7 @@ public class OutputHelper
 {
     private static readonly JsonSerializerOptions Options = new() { WriteIndented = true };
 
-    public static void DebugPrint(string output)
+    public static void DebugPrint(string output, int i)
     {
         // If you're using windows, the value of docPath should be:
         // C:\Users\[you]\AppData\Roaming
@@ -23,7 +23,7 @@ public class OutputHelper
         // $env:appdata
         var docPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         using var outputFile = new StreamWriter(
-            Path.Combine(docPath, "ShankDebugOutput.json"),
+            Path.Combine(docPath, $"ShankDebugOutput{i}.json"),
             true
         );
         outputFile.WriteLine(output);
@@ -33,8 +33,17 @@ public class OutputHelper
     {
         return JsonSerializer.Serialize(mn, ModuleNodeContext.Default.ModuleNode);
     }
+
+    public static string GetDebugJsonForTokenList(List<Token> tokenList)
+    {
+        return JsonSerializer.Serialize(tokenList, LexerContext.Default.ListToken);
+    }
 }
 
 [JsonSourceGenerationOptions(WriteIndented = true, UseStringEnumConverter = true)]
 [JsonSerializable(typeof(ModuleNode))]
 internal partial class ModuleNodeContext : JsonSerializerContext { }
+
+[JsonSourceGenerationOptions(WriteIndented = true, UseStringEnumConverter = true)]
+[JsonSerializable(typeof(List<Token>))]
+internal partial class LexerContext : JsonSerializerContext { }
