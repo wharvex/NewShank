@@ -171,7 +171,7 @@ public class Lexer
                         case >= 'A'
                         and <= 'Z'
                         or (>= 'a' and <= 'z')
-                        or (>= '0' and <= '9' or '.') when mode == modeType.Name:
+                        or (>= '0' and <= '9') when mode == modeType.Name:
                             currentBuffer.Append(character);
                             break;
                         case (>= '0' and <= '9' or '.')
@@ -188,6 +188,10 @@ public class Lexer
                                     lineNumber
                                 )
                             );
+                            break;
+                        case '.' when mode is modeType.Name:
+                            ModeChange(retVal, currentBuffer, lineNumber);
+                            retVal.Add(new Token(Token.TokenType.Dot, lineNumber));
                             break;
                         case '-'
                         or '+' when mode is modeType.Start:

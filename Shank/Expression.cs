@@ -17,6 +17,7 @@ namespace Shank
     [JsonDerivedType(typeof(MathOpNode))]
     [JsonDerivedType(typeof(BooleanExpressionNode))]
     [JsonDerivedType(typeof(StatementNode))]
+    [JsonDerivedType(typeof(FunctionNode))]
     public abstract class ASTNode
     {
         public string NodeName { get; init; }

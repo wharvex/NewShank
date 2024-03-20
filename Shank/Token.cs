@@ -28,6 +28,7 @@
             Semicolon,
             Colon,
             Comma,
+            Dot,
             Variables,
             Constants,
             Define,
