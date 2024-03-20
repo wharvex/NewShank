@@ -23,7 +23,7 @@ public class OutputHelper
         // $env:appdata
         var docPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         using var outputFile = new StreamWriter(
-            Path.Combine(docPath, "ShankDebugOutput.txt"),
+            Path.Combine(docPath, "ShankDebugOutput.json"),
             true
         );
         outputFile.WriteLine(output);

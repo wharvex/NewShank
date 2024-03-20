@@ -19,6 +19,8 @@ namespace Shank
     [JsonDerivedType(typeof(StatementNode))]
     public abstract class ASTNode
     {
+        public string NodeName { get; init; }
+
         public enum BooleanExpressionOpType
         {
             lt,
@@ -37,6 +39,11 @@ namespace Shank
             divide,
             modulo
         };
+
+        protected ASTNode()
+        {
+            NodeName = GetType().Name;
+        }
     }
 
     public class FunctionCallNode : StatementNode
@@ -959,6 +966,8 @@ namespace Shank
     [JsonDerivedType(typeof(FunctionCallNode))]
     [JsonDerivedType(typeof(IfNode))]
     [JsonDerivedType(typeof(ForNode))]
+    [JsonDerivedType(typeof(WhileNode))]
+    [JsonDerivedType(typeof(RepeatNode))]
     public class StatementNode : ASTNode
     {
         protected static string StatementListToString(List<StatementNode> statements)
