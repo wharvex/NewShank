@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Headers;
+﻿using System.Diagnostics;
+using System.Net.Http.Headers;
 using System.Text;
 
 namespace Shank;
@@ -125,6 +126,9 @@ public class Interpreter
                     case BooleanDataType bt:
                         bt.Value = ResolveBool(an.expression, variables);
                         break;
+                    case RecordDataType rt:
+                        AssignToRecord(rt, an, variables);
+                        break;
                     default:
                         throw new Exception("Unknown type in assignment");
                 }
@@ -183,6 +187,31 @@ public class Interpreter
                     InterpretBlock(fn.Children, variables, callingFunction);
                 }
             }
+        }
+    }
+
+    private static void AssignToRecord(
+        RecordDataType rdt,
+        AssignmentNode an,
+        Dictionary<string, InterpreterDataType> variables
+    )
+    {
+        if (an.target.RecordMemberReference is { } rmr)
+        {
+            var t = rdt.MemberTypes[rmr.Name];
+            rdt.Value[rmr.Name] = t switch
+            {
+                VariableNode.DataType.Boolean => ResolveBool(an.expression, variables),
+                VariableNode.DataType.String => ResolveString(an.expression, variables),
+                VariableNode.DataType.Real => ResolveFloat(an.expression, variables),
+                VariableNode.DataType.Integer => ResolveInt(an.expression, variables),
+                VariableNode.DataType.Character => ResolveChar(an.expression, variables),
+                _ => throw new NotImplementedException()
+            };
+        }
+        else
+        {
+            throw new InvalidOperationException();
         }
     }
 
@@ -336,44 +365,7 @@ public class Interpreter
                         passed.Add(new BooleanDataType(boolVal.Value));
                         break;
                     case ArrayDataType arrayVal:
-                        // Check if fcp.Variable has an index. If it does, then we are passing
-                        // an element of the array. If it doesn't, then we are passing the
-                        // entire array.
-                        if (fcp.Variable.Index != null)
-                        {
-                            var index = ResolveInt(fcp.Variable.Index, variables);
-                            switch (arrayVal.ArrayContentsType)
-                            {
-                                case VariableNode.DataType.Integer:
-                                    passed.Add(new IntDataType(arrayVal.GetElementInteger(index)));
-                                    break;
-                                case VariableNode.DataType.Real:
-                                    passed.Add(new FloatDataType(arrayVal.GetElementReal(index)));
-                                    break;
-                                case VariableNode.DataType.String:
-                                    passed.Add(
-                                        new StringDataType(arrayVal.GetElementString(index))
-                                    );
-                                    break;
-                                case VariableNode.DataType.Character:
-                                    passed.Add(
-                                        new CharDataType(arrayVal.GetElementCharacter(index))
-                                    );
-                                    break;
-                                case VariableNode.DataType.Boolean:
-                                    passed.Add(
-                                        new BooleanDataType(arrayVal.GetElementBoolean(index))
-                                    );
-                                    break;
-                                default:
-                                    throw new Exception("Invalid ArrayContentsType");
-                            }
-                        }
-                        else
-                            passed.Add(
-                                new ArrayDataType(arrayVal.Value, arrayVal.ArrayContentsType)
-                            );
-
+                        AddToPassedForFunctionCallWithArray(arrayVal, fcp, passed, variables);
                         break;
                 }
             }
@@ -435,6 +427,60 @@ public class Interpreter
         }
     }
 
+    private static void AddToPassedForFunctionCallWithArray(
+        ArrayDataType adt,
+        ParameterNode pn,
+        List<InterpreterDataType> paramsList,
+        Dictionary<string, InterpreterDataType> variables
+    )
+    {
+        if ((pn.Variable ?? throw new InvalidOperationException()).Index is { } i)
+        {
+            // Passing in one element of the array.
+            var index = ResolveInt(i, variables);
+            switch (adt.ArrayContentsType)
+            {
+                case VariableNode.DataType.Integer:
+                    paramsList.Add(new IntDataType(adt.GetElementInteger(index)));
+                    break;
+                case VariableNode.DataType.Real:
+                    paramsList.Add(new FloatDataType(adt.GetElementReal(index)));
+                    break;
+                case VariableNode.DataType.String:
+                    paramsList.Add(new StringDataType(adt.GetElementString(index)));
+                    break;
+                case VariableNode.DataType.Character:
+                    paramsList.Add(new CharDataType(adt.GetElementCharacter(index)));
+                    break;
+                case VariableNode.DataType.Boolean:
+                    paramsList.Add(new BooleanDataType(adt.GetElementBoolean(index)));
+                    break;
+                default:
+                    throw new Exception("Invalid ArrayContentsType");
+            }
+        }
+        else
+        {
+            // Passing in the whole array as a new ADT.
+            paramsList.Add(new ArrayDataType(adt.Value, adt.ArrayContentsType));
+        }
+    }
+
+    private static void AddToPassedForFunctionCallWithRecord(
+        RecordDataType rdt,
+        ParameterNode pn,
+        List<InterpreterDataType> paramsList,
+        Dictionary<string, InterpreterDataType> variables
+    )
+    {
+        if ((pn.Variable ?? throw new InvalidOperationException()).RecordMemberReference is { } rmr)
+        { }
+        else
+        {
+            throw new InvalidOperationException();
+        }
+    }
+
     private static InterpreterDataType VariableNodeToActivationRecord(VariableNode vn)
     {
         switch (vn.Type)
@@ -459,6 +505,14 @@ public class Interpreter
                     "Something went wrong internally. Every array variable declaration"
                         + " should have a range expression, and the Parser should have"
                         + " checked this already."
+                );
+            }
+            case VariableNode.DataType.Record:
+            {
+                return new RecordDataType(
+                    Modules[vn.ModuleName ?? "default"]
+                        .Records[vn.RecordType ?? throw new InvalidOperationException()]
+                        .Members
                 );
             }
             default:
@@ -548,21 +602,24 @@ public class Interpreter
     public static char ResolveChar(ASTNode node, Dictionary<string, InterpreterDataType> variables)
     {
         if (node is CharNode cn)
-            return cn.Value;
-        else if (node is VariableReferenceNode vr)
         {
-            if (vr.Index != null)
+            return cn.Value;
+        }
+
+        if (node is VariableReferenceNode vr)
+        {
+            if (vr.Index is { } i && (variables[vr.Name] as ArrayDataType) is { } adt)
             {
-                var index = ResolveInt(vr.Index, variables);
-                return ((variables[vr.Name] as ArrayDataType)?.GetElement(index))
-                        ?.ToString()
-                        ?.ToCharArray()[0] ?? '0';
+                return adt.GetElementCharacter(ResolveInt(i, variables));
             }
 
-            return ((variables[vr.Name] as CharDataType)?.Value) ?? '0';
+            return (variables[vr.Name] as CharDataType)?.Value ?? '0';
         }
-        else
-            throw new ArgumentException(nameof(node));
+
+        throw new ArgumentException(
+            "Can only resolve a CharNode or a VariableReferenceNode to a char.",
+            nameof(node)
+        );
     }
 
     public static float ResolveFloat(

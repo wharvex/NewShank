@@ -904,6 +904,7 @@ namespace Shank
     public class VariableNode : ASTNode
     {
         public string? Name { get; set; }
+        public string? ModuleName { get; set; }
 
         public enum DataType
         {
