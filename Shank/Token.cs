@@ -33,6 +33,7 @@
             Constants,
             Define,
             Record,
+            Generic,
             Assignment,
             If,
             Then,

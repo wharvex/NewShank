@@ -365,7 +365,10 @@ public class Interpreter
                         passed.Add(new BooleanDataType(boolVal.Value));
                         break;
                     case ArrayDataType arrayVal:
-                        AddToPassedForFunctionCallWithArray(arrayVal, fcp, passed, variables);
+                        AddToParamsArray(arrayVal, fcp, passed, variables);
+                        break;
+                    case RecordDataType recordVal:
+                        AddToParamsRecord(recordVal, fcp, passed);
                         break;
                 }
             }
@@ -427,7 +430,7 @@ public class Interpreter
         }
     }
 
-    private static void AddToPassedForFunctionCallWithArray(
+    private static void AddToParamsArray(
         ArrayDataType adt,
         ParameterNode pn,
         List<InterpreterDataType> paramsList,
@@ -466,15 +469,29 @@ public class Interpreter
         }
     }
 
-    private static void AddToPassedForFunctionCallWithRecord(
+    private static void AddToParamsRecord(
         RecordDataType rdt,
         ParameterNode pn,
-        List<InterpreterDataType> paramsList,
-        Dictionary<string, InterpreterDataType> variables
+        List<InterpreterDataType> paramsList
     )
     {
         if ((pn.Variable ?? throw new InvalidOperationException()).RecordMemberReference is { } rmr)
-        { }
+        {
+            paramsList.Add(
+                rdt.MemberTypes[rmr.Name] switch
+                {
+                    VariableNode.DataType.Character
+                        => new CharDataType(rdt.GetValueCharacter(rmr.Name)),
+                    VariableNode.DataType.Boolean
+                        => new BooleanDataType(rdt.GetValueBoolean(rmr.Name)),
+                    VariableNode.DataType.String
+                        => new StringDataType(rdt.GetValueString(rmr.Name)),
+                    VariableNode.DataType.Integer => new IntDataType(rdt.GetValueInteger(rmr.Name)),
+                    VariableNode.DataType.Real => new FloatDataType(rdt.GetValueReal(rmr.Name)),
+                    _ => throw new InvalidOperationException()
+                }
+            );
+        }
         else
         {
             throw new InvalidOperationException();
@@ -531,12 +548,12 @@ public class Interpreter
             var rf = ResolveFloat(ben.Right, variables);
             return ben.Op switch
             {
-                BooleanExpressionNode.BooleanExpressionOpType.lt => lf < rf,
-                BooleanExpressionNode.BooleanExpressionOpType.le => lf <= rf,
-                BooleanExpressionNode.BooleanExpressionOpType.gt => lf > rf,
-                BooleanExpressionNode.BooleanExpressionOpType.ge => lf >= rf,
-                BooleanExpressionNode.BooleanExpressionOpType.eq => lf == rf,
-                BooleanExpressionNode.BooleanExpressionOpType.ne => lf != rf,
+                ASTNode.BooleanExpressionOpType.lt => lf < rf,
+                ASTNode.BooleanExpressionOpType.le => lf <= rf,
+                ASTNode.BooleanExpressionOpType.gt => lf > rf,
+                ASTNode.BooleanExpressionOpType.ge => lf >= rf,
+                ASTNode.BooleanExpressionOpType.eq => lf == rf,
+                ASTNode.BooleanExpressionOpType.ne => lf != rf,
                 _ => throw new Exception("Unknown boolean operation")
             };
         }
@@ -548,12 +565,12 @@ public class Interpreter
             var rf = ResolveInt(ben.Right, variables);
             return ben.Op switch
             {
-                BooleanExpressionNode.BooleanExpressionOpType.lt => lf < rf,
-                BooleanExpressionNode.BooleanExpressionOpType.le => lf <= rf,
-                BooleanExpressionNode.BooleanExpressionOpType.gt => lf > rf,
-                BooleanExpressionNode.BooleanExpressionOpType.ge => lf >= rf,
-                BooleanExpressionNode.BooleanExpressionOpType.eq => lf == rf,
-                BooleanExpressionNode.BooleanExpressionOpType.ne => lf != rf,
+                ASTNode.BooleanExpressionOpType.lt => lf < rf,
+                ASTNode.BooleanExpressionOpType.le => lf <= rf,
+                ASTNode.BooleanExpressionOpType.gt => lf > rf,
+                ASTNode.BooleanExpressionOpType.ge => lf >= rf,
+                ASTNode.BooleanExpressionOpType.eq => lf == rf,
+                ASTNode.BooleanExpressionOpType.ne => lf != rf,
                 _ => throw new Exception("Unknown boolean operation")
             };
         }

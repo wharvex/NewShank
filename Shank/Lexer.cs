@@ -24,6 +24,7 @@ public class Lexer
             { "constants", Token.TokenType.Constants },
             { "define", Token.TokenType.Define },
             { "record", Token.TokenType.Record },
+            { "generic", Token.TokenType.Generic },
             { "if", Token.TokenType.If },
             { "then", Token.TokenType.Then },
             { "else", Token.TokenType.Else },

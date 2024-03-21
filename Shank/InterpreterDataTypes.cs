@@ -207,6 +207,31 @@ public class RecordDataType : InterpreterDataType
         });
     }
 
+    public string GetValueString(string key)
+    {
+        return (string)Value[key];
+    }
+
+    public char GetValueCharacter(string key)
+    {
+        return (char)Value[key];
+    }
+
+    public int GetValueInteger(string key)
+    {
+        return (int)Value[key];
+    }
+
+    public float GetValueReal(string key)
+    {
+        return (float)Value[key];
+    }
+
+    public bool GetValueBoolean(string key)
+    {
+        return (bool)Value[key];
+    }
+
     public override string ToString()
     {
         return "";
