@@ -1,0 +1,6 @@
+variables a : string
+
+define start()
+    write "hello world"
+    a := "metta world peace"
+    write a
