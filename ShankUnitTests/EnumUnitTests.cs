@@ -13,6 +13,7 @@ namespace ShankUnitTests
         {
             return ModuleParserTests.getModuleFromParser(file);
         }
+
         [TestMethod]
         public void simpleEnumParse()
         {
@@ -29,6 +30,7 @@ namespace ShankUnitTests
             Assert.IsTrue(module.getEnums().ContainsKey("colors"));
             Assert.AreEqual(1, module.getEnums()["colors"].EnumElements.Count);
         }
+
         [TestMethod]
         public void simpleEnumParseMultipleElements()
         {
@@ -44,8 +46,8 @@ namespace ShankUnitTests
             Assert.AreEqual(1, module.getEnums().Count());
             Assert.IsTrue(module.getEnums().ContainsKey("colors"));
             Assert.AreEqual(3, module.getEnums()["colors"].EnumElements.Count);
-
         }
+
         [TestMethod]
         public void parseEnumAfterFunction()
         {
@@ -62,6 +64,5 @@ namespace ShankUnitTests
             Assert.IsTrue(module.getEnums().ContainsKey("colors"));
             Assert.AreEqual(3, module.getEnums()["colors"].EnumElements.Count);
         }
-
     }
 }
