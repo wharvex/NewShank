@@ -64,7 +64,8 @@
             RightBracket,
             CharContents,
             StringContents,
-            Test
+            Test,
+            Enum
         }
 
         public TokenType Type { get; init; }

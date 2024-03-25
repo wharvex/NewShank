@@ -197,6 +197,8 @@ public class Parser
                 module.AddRecord(Record(moduleName));
             else if (MatchAndRemove(Token.TokenType.Test) != null)
                 module.addTest(Test(moduleName));
+            else if (MatchAndRemove(Token.TokenType.Enum) != null)
+                module.addEnum(MakeEnum(moduleName));
             else
             {
                 throw new SyntaxErrorException(
@@ -1088,5 +1090,66 @@ public class Parser
 
         BodyFunction(test);
         return test;
+    }
+
+    private EnumNode MakeEnum(string? parentModuleName)
+    {
+        Token? token = MatchAndRemove(Token.TokenType.Identifier);
+        if(token == null)
+        {
+            throw new SyntaxErrorException(
+                "Expecting identifier after enum declaration, ",
+                Peek(0)
+                );
+        }
+        if(MatchAndRemove(Token.TokenType.Equal) == null)
+        {
+            throw new SyntaxErrorException(
+                "Expecting equal in enum declaration, ",
+                Peek(0)
+                );
+        }
+        if(MatchAndRemove(Token.TokenType.LeftBracket) == null)
+        {
+            throw new SyntaxErrorException(
+                "Expecting left bracket in endum declaration, ",
+                Peek(0)
+                );
+        }
+        EnumNode enumNode = new EnumNode(token.Value, parentModuleName, GetEnumElements());
+        return enumNode;
+    }
+    private LinkedList<string> GetEnumElements()
+    {
+        LinkedList<string> enums = new LinkedList<string>();
+        Token? token = MatchAndRemove(Token.TokenType.Identifier);
+        if (token == null)
+        {
+            throw new SyntaxErrorException(
+                "Expecting identifier after left bracket in enum declaration, ",
+                Peek(0)
+                );
+        }
+        enums.AddLast(token.Value);
+        while(MatchAndRemove(Token.TokenType.Comma) != null)
+        {
+            token = MatchAndRemove(Token.TokenType.Identifier);
+            if (token == null)
+            {
+                throw new SyntaxErrorException(
+                    "Expecting identifier after comma in enum declaration, ",
+                    Peek(0)
+                    );
+            }
+            enums.AddLast(token.Value);
+        }
+        if(MatchAndRemove(Token.TokenType.RightBracket) == null)
+        {
+            throw new SyntaxErrorException(
+                "Expecting right bracket in enum declaration, ",
+                Peek(0)
+                );
+        }
+        return enums;
     }
 }

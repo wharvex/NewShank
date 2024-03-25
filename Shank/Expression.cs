@@ -856,6 +856,21 @@ namespace Shank
         }
     }
 
+    public class EnumNode : ASTNode
+    {
+        public string Name { get; set; }
+        public string? ParentModuleName { get; set; }
+        public LinkedList<String> EnumElements;
+        public EnumNode(string? name, string? parentModuleName, LinkedList<String> enumElements)
+        {
+            Name = name;
+            ParentModuleName = parentModuleName;
+            EnumElements = new LinkedList<string>(enumElements);
+        }
+    }
+
+
+
     public class VariableNode : ASTNode
     {
         public string? Name;
@@ -868,7 +883,8 @@ namespace Shank
             Character,
             Boolean,
             Array,
-            Record
+            Record,
+            Enum
         };
 
         public DataType Type;
@@ -1153,6 +1169,7 @@ namespace Shank
         private string name;
         private Dictionary<string, CallableNode> Functions;
         private Dictionary<string, RecordNode> Records;
+        private Dictionary<string, EnumNode> Enums;
 
         //Dictionary associating names to something to be imported/exported
         //has a type of ASTNode? as references will later be added
@@ -1178,6 +1195,7 @@ namespace Shank
             //ImportTargetNames = new LinkedList<string>();
             ExportTargetNames = new LinkedList<string>();
             Tests = new Dictionary<string, TestNode>();
+            Enums = new Dictionary<string, EnumNode>();
         }
 
         public void updateImports(
@@ -1259,6 +1277,14 @@ namespace Shank
             }
         }
 
+        public void addEnum(EnumNode? enumNode)
+        {
+            if (enumNode is not null)
+            {
+                Enums.Add(enumNode.Name, enumNode);
+            }
+        }
+
         public void addExportName(string? name)
         {
             ExportTargetNames.AddLast(name);
@@ -1313,6 +1339,11 @@ namespace Shank
         public Dictionary<string, CallableNode> getFunctions()
         {
             return Functions;
+        }
+
+        public Dictionary<string, EnumNode> getEnums()
+        {
+            return Enums;
         }
 
         public string getName()

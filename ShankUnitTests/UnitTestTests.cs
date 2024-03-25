@@ -15,7 +15,7 @@ namespace ShankUnitTests
 
         public ModuleNode getModuleFromLexer(string[] file)
         {
-            return ModuleParserTests.getModuleFromLexer(file);
+            return ModuleParserTests.getModuleFromParser(file);
         }
 
         public void initializeInterpreter(LinkedList<string[]> files)

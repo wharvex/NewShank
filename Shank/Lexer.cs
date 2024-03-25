@@ -46,7 +46,8 @@ public class Lexer
             { "export", Token.TokenType.Export },
             { "import", Token.TokenType.Import },
             { "module", Token.TokenType.Module },
-            { "test", Token.TokenType.Test }
+            { "test", Token.TokenType.Test },
+            { "enum", Token.TokenType.Enum }
         };
 
     private void ModeChange(List<Token> retVal, StringBuilder currentBuffer, int lineNumber)

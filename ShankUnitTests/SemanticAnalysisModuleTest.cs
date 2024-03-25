@@ -360,8 +360,8 @@ namespace ShankUnitTests
                 "\t c := a + 3\n"
             };
             Interpreter.reset();
-            ModuleNode module1 = ModuleParserTests.getModuleFromLexer(file1);
-            ModuleNode module2 = ModuleParserTests.getModuleFromLexer(file2);
+            ModuleNode module1 = ModuleParserTests.getModuleFromParser(file1);
+            ModuleNode module2 = ModuleParserTests.getModuleFromParser(file2);
             module1.mergeModule(module2);
             module1.setName("default");
             Interpreter.Modules.Add("default", module1);

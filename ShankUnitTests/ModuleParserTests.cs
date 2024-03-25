@@ -8,7 +8,7 @@ namespace ShankUnitTests
     [TestClass]
     public class ModuleParserTests
     {
-        public static ModuleNode getModuleFromLexer(string[] code)
+        public static ModuleNode getModuleFromParser(string[] code)
         {
             Lexer lexer = new Lexer();
             ModuleNode m;
@@ -35,7 +35,7 @@ namespace ShankUnitTests
                 "\tp:=3\n",
                 "\twrite p\n"
             };
-            ModuleNode m = getModuleFromLexer(code);
+            ModuleNode m = getModuleFromParser(code);
             Assert.AreNotEqual(m, null);
             Assert.AreEqual(m.getFunctions().Count, 1);
         }
@@ -51,7 +51,7 @@ namespace ShankUnitTests
                 "\tp:=3\n",
                 "\twrite p\n"
             };
-            ModuleNode m = getModuleFromLexer(code);
+            ModuleNode m = getModuleFromParser(code);
             Assert.AreEqual(m.getName(), "test1");
         }
 
@@ -67,7 +67,7 @@ namespace ShankUnitTests
                 "\tp:=3\n",
                 "\twrite p\n"
             };
-            ModuleNode m = getModuleFromLexer(code);
+            ModuleNode m = getModuleFromParser(code);
             //if imports don't have functions listed, they are added to the linked list in the dictonary with the key of their module name
             //between the parser and interpreter
             Assert.IsTrue(m.getImportNames().ContainsKey("test2"));
@@ -86,7 +86,7 @@ namespace ShankUnitTests
                 "\twrite p\n",
                 "import test2\n"
             };
-            ModuleNode m = getModuleFromLexer(code);
+            ModuleNode m = getModuleFromParser(code);
             //if imports don't have functions listed, they are added to the linked list in the dictonary with the key of their module name
             //between the parser and interpreter
             Assert.IsTrue(m.getImportNames().ContainsKey("test2"));
@@ -106,7 +106,7 @@ namespace ShankUnitTests
                 "\tp:=3\n",
                 "\twrite p\n"
             };
-            ModuleNode m = getModuleFromLexer(code);
+            ModuleNode m = getModuleFromParser(code);
             Assert.AreEqual(m.getImportNames().Count, 1);
             Assert.IsTrue(m.getImportNames().ContainsKey("test2"));
             Assert.AreEqual(m.getImportNames()["test2"].First.Value, "add");
@@ -124,7 +124,7 @@ namespace ShankUnitTests
                 "\twrite p\n",
                 "import test2[add]\n"
             };
-            ModuleNode m = getModuleFromLexer(code);
+            ModuleNode m = getModuleFromParser(code);
             Assert.AreEqual(m.getImportNames().Count, 1);
             Assert.IsTrue(m.getImportNames().ContainsKey("test2"));
             Assert.AreEqual(m.getImportNames()["test2"].First.Value, "add");
@@ -142,7 +142,7 @@ namespace ShankUnitTests
                 "\tp:=3\n",
                 "\twrite p\n"
             };
-            ModuleNode m = getModuleFromLexer(code);
+            ModuleNode m = getModuleFromParser(code);
             Assert.AreEqual(m.getImportNames().Count, 1);
             Assert.IsTrue(m.getImportNames().ContainsKey("test2"));
             Assert.AreEqual(m.getImportNames()["test2"].Count, 2);
@@ -162,7 +162,7 @@ namespace ShankUnitTests
                 "\twrite p\n",
                 "import test2[add, addFunc]\n"
             };
-            ModuleNode m = getModuleFromLexer(code);
+            ModuleNode m = getModuleFromParser(code);
             Assert.AreEqual(m.getImportNames().Count, 1);
             Assert.IsTrue(m.getImportNames().ContainsKey("test2"));
             Assert.AreEqual(m.getImportNames()["test2"].Count, 2);
@@ -180,7 +180,7 @@ namespace ShankUnitTests
                 "define add(a, b : integer; var c : integer)\n",
                 "\tc := a + b\n"
             };
-            ModuleNode m = getModuleFromLexer(code);
+            ModuleNode m = getModuleFromParser(code);
             Assert.AreEqual(m.getExportNames().Count, 1);
             Assert.IsTrue(m.getExportNames().Contains("add"));
         }
@@ -195,7 +195,7 @@ namespace ShankUnitTests
                 "\tc := a + b\n",
                 "export add\n"
             };
-            ModuleNode m = getModuleFromLexer(code);
+            ModuleNode m = getModuleFromParser(code);
             Assert.AreEqual(m.getExportNames().Count, 1);
             Assert.IsTrue(m.getExportNames().Contains("add"));
         }
@@ -213,7 +213,7 @@ namespace ShankUnitTests
                 "define addThree(a : integer; var c : integer)\n",
                 "\t c := a + 3\n"
             };
-            ModuleNode m = getModuleFromLexer(code);
+            ModuleNode m = getModuleFromParser(code);
             Assert.AreEqual(m.getExportNames().Count, 2);
             Assert.IsTrue(m.getExportNames().Contains("add"));
             Assert.IsTrue(m.getExportNames().Contains("addThree"));
@@ -232,7 +232,7 @@ namespace ShankUnitTests
                 "\t c := a + 3\n",
                 "export add, addThree\n"
             };
-            ModuleNode m = getModuleFromLexer(code);
+            ModuleNode m = getModuleFromParser(code);
             Assert.AreEqual(m.getExportNames().Count, 2);
             Assert.IsTrue(m.getExportNames().Contains("add"));
             Assert.IsTrue(m.getExportNames().Contains("addThree"));
@@ -257,8 +257,8 @@ namespace ShankUnitTests
                 "\t c := a + 3\n"
             };
 
-            ModuleNode module1 = getModuleFromLexer(file1);
-            ModuleNode module2 = getModuleFromLexer(file2);
+            ModuleNode module1 = getModuleFromParser(file1);
+            ModuleNode module2 = getModuleFromParser(file2);
             module1.mergeModule(module2);
 
             Assert.AreEqual(module1.getFunctions().Count, 3);
