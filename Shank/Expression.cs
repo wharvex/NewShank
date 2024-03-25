@@ -906,6 +906,7 @@ namespace Shank
         public string Name { get; set; }
         public string? ParentModuleName { get; set; }
         public LinkedList<String> EnumElements;
+
         public EnumNode(string? name, string? parentModuleName, LinkedList<String> enumElements)
         {
             Name = name;
@@ -913,8 +914,6 @@ namespace Shank
             EnumElements = new LinkedList<string>(enumElements);
         }
     }
-
-
 
     public class VariableNode : ASTNode
     {
@@ -1218,10 +1217,12 @@ namespace Shank
         public string name { get; set; }
         public Dictionary<string, CallableNode> Functions { get; init; }
         public Dictionary<string, RecordNode> Records { get; init; }
+
         //Dictionary associating names to something to be imported/exported
         //has a type of ASTNode? as references will later be added
         public Dictionary<string, ASTNode?> ExportedFunctions { get; set; }
         public Dictionary<string, ASTNode?> ImportedFunctions { get; set; }
+
         //ImportTargetNames holds a module and the list of functions that this module has imported
         public Dictionary<string, LinkedList<string>> ImportTargetNames { get; set; }
 

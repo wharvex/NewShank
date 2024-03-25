@@ -233,7 +233,10 @@ public class Parser
             ?? throw new SyntaxErrorException("Expected a function name", Peek(0));
 
         // Create the function node.
-        var funcNode = new FunctionNode(name.GetIdentifierValue(), moduleName == null ? "default" : moduleName);
+        var funcNode = new FunctionNode(
+            name.GetIdentifierValue(),
+            moduleName == null ? "default" : moduleName
+        );
 
         // Process parameter variables.
         if (MatchAndRemove(Token.TokenType.LeftParen) == null)
