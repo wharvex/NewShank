@@ -1214,25 +1214,14 @@ namespace Shank
 
     public class ModuleNode : ASTNode
     {
-<<<<<<< HEAD
-        private string name;
-        private Dictionary<string, CallableNode> Functions;
-        private Dictionary<string, RecordNode> Records;
         private Dictionary<string, EnumNode> Enums;
-=======
         public string name { get; set; }
-
         public Dictionary<string, CallableNode> Functions { get; init; }
-
         public Dictionary<string, RecordNode> Records { get; init; }
->>>>>>> cf249b1f479538f3f16800912527cbe95f57ae6c
-
         //Dictionary associating names to something to be imported/exported
         //has a type of ASTNode? as references will later be added
         public Dictionary<string, ASTNode?> ExportedFunctions { get; set; }
-
         public Dictionary<string, ASTNode?> ImportedFunctions { get; set; }
-
         //ImportTargetNames holds a module and the list of functions that this module has imported
         public Dictionary<string, LinkedList<string>> ImportTargetNames { get; set; }
 
