@@ -24,6 +24,7 @@ public class Lexer
             { "constants", Token.TokenType.Constants },
             { "define", Token.TokenType.Define },
             { "record", Token.TokenType.Record },
+            { "generic", Token.TokenType.Generic },
             { "if", Token.TokenType.If },
             { "then", Token.TokenType.Then },
             { "else", Token.TokenType.Else },
@@ -172,7 +173,7 @@ public class Lexer
                         case >= 'A'
                         and <= 'Z'
                         or (>= 'a' and <= 'z')
-                        or (>= '0' and <= '9' or '.') when mode == modeType.Name:
+                        or (>= '0' and <= '9') when mode == modeType.Name:
                             currentBuffer.Append(character);
                             break;
                         case (>= '0' and <= '9' or '.')
@@ -189,6 +190,10 @@ public class Lexer
                                     lineNumber
                                 )
                             );
+                            break;
+                        case '.' when mode is modeType.Name:
+                            ModeChange(retVal, currentBuffer, lineNumber);
+                            retVal.Add(new Token(Token.TokenType.Dot, lineNumber));
                             break;
                         case '-'
                         or '+' when mode is modeType.Start:

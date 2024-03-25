@@ -1,0 +1,25 @@
+record genericLinkedList generic T
+    data: T
+    next: refersTo genericLinkedList T
+
+record genericHashMapNode generic K, V
+    key: K
+    value: V
+    next: refersTo genericHashMapNode K, V
+
+define allocateMemory(var output : refersTo T) generic T
+variables head, next : refersTo genericLinkedList integer
+    allocateMemory var head
+    allocateMemory var next
+    next.data := 5 {safety checked at compile time }
+    head.next := next
+
+define addToHashMap(newValue : refersTo genericHashMapNode K, V) generic K, V
+variables node : refersTo genericHashMapNode K, V string, string
+    allocateMemory var node
+    node.key := "hello"
+    node.value := "world"
+    addToHashMap node
+
+define start()
+    write "hello world"

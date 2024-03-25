@@ -1,4 +1,0 @@
-record a
-    string b
-define start()
-	write "hello world"

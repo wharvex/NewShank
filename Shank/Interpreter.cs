@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Headers;
+﻿using System.Diagnostics;
+using System.Net.Http.Headers;
 using System.Text;
 
 namespace Shank;
@@ -125,6 +126,9 @@ public class Interpreter
                     case BooleanDataType bt:
                         bt.Value = ResolveBool(an.expression, variables);
                         break;
+                    case RecordDataType rt:
+                        AssignToRecord(rt, an, variables);
+                        break;
                     default:
                         throw new Exception("Unknown type in assignment");
                 }
@@ -183,6 +187,31 @@ public class Interpreter
                     InterpretBlock(fn.Children, variables, callingFunction);
                 }
             }
+        }
+    }
+
+    private static void AssignToRecord(
+        RecordDataType rdt,
+        AssignmentNode an,
+        Dictionary<string, InterpreterDataType> variables
+    )
+    {
+        if (an.target.RecordMemberReference is { } rmr)
+        {
+            var t = rdt.MemberTypes[rmr.Name];
+            rdt.Value[rmr.Name] = t switch
+            {
+                VariableNode.DataType.Boolean => ResolveBool(an.expression, variables),
+                VariableNode.DataType.String => ResolveString(an.expression, variables),
+                VariableNode.DataType.Real => ResolveFloat(an.expression, variables),
+                VariableNode.DataType.Integer => ResolveInt(an.expression, variables),
+                VariableNode.DataType.Character => ResolveChar(an.expression, variables),
+                _ => throw new NotImplementedException()
+            };
+        }
+        else
+        {
+            throw new InvalidOperationException();
         }
     }
 
@@ -336,44 +365,10 @@ public class Interpreter
                         passed.Add(new BooleanDataType(boolVal.Value));
                         break;
                     case ArrayDataType arrayVal:
-                        // Check if fcp.Variable has an index. If it does, then we are passing
-                        // an element of the array. If it doesn't, then we are passing the
-                        // entire array.
-                        if (fcp.Variable.Index != null)
-                        {
-                            var index = ResolveInt(fcp.Variable.Index, variables);
-                            switch (arrayVal.ArrayContentsType)
-                            {
-                                case VariableNode.DataType.Integer:
-                                    passed.Add(new IntDataType(arrayVal.GetElementInteger(index)));
-                                    break;
-                                case VariableNode.DataType.Real:
-                                    passed.Add(new FloatDataType(arrayVal.GetElementReal(index)));
-                                    break;
-                                case VariableNode.DataType.String:
-                                    passed.Add(
-                                        new StringDataType(arrayVal.GetElementString(index))
-                                    );
-                                    break;
-                                case VariableNode.DataType.Character:
-                                    passed.Add(
-                                        new CharDataType(arrayVal.GetElementCharacter(index))
-                                    );
-                                    break;
-                                case VariableNode.DataType.Boolean:
-                                    passed.Add(
-                                        new BooleanDataType(arrayVal.GetElementBoolean(index))
-                                    );
-                                    break;
-                                default:
-                                    throw new Exception("Invalid ArrayContentsType");
-                            }
-                        }
-                        else
-                            passed.Add(
-                                new ArrayDataType(arrayVal.Value, arrayVal.ArrayContentsType)
-                            );
-
+                        AddToParamsArray(arrayVal, fcp, passed, variables);
+                        break;
+                    case RecordDataType recordVal:
+                        AddToParamsRecord(recordVal, fcp, passed);
                         break;
                 }
             }
@@ -411,7 +406,10 @@ public class Interpreter
             Program
                 .unitTestResults.ElementAt(Program.unitTestResults.Count - 1)
                 .Asserts.AddLast(ar);
-            Program.unitTestResults.ElementAt(Program.unitTestResults.Count - 1).Asserts.Last().lineNum = fc.LineNum;
+            Program
+                .unitTestResults.ElementAt(Program.unitTestResults.Count - 1)
+                .Asserts.Last()
+                .lineNum = fc.LineNum;
         }
         ((CallableNode)calledFunction).Execute?.Invoke(passed);
         // update the variable parameters and return
@@ -429,6 +427,74 @@ public class Interpreter
                 // if this parameter is a "var", then copy the new value back to the parameter holder
                 variables[fc.Parameters[i]?.Variable?.Name ?? ""] = passed[i];
             }
+        }
+    }
+
+    private static void AddToParamsArray(
+        ArrayDataType adt,
+        ParameterNode pn,
+        List<InterpreterDataType> paramsList,
+        Dictionary<string, InterpreterDataType> variables
+    )
+    {
+        if ((pn.Variable ?? throw new InvalidOperationException()).Index is { } i)
+        {
+            // Passing in one element of the array.
+            var index = ResolveInt(i, variables);
+            switch (adt.ArrayContentsType)
+            {
+                case VariableNode.DataType.Integer:
+                    paramsList.Add(new IntDataType(adt.GetElementInteger(index)));
+                    break;
+                case VariableNode.DataType.Real:
+                    paramsList.Add(new FloatDataType(adt.GetElementReal(index)));
+                    break;
+                case VariableNode.DataType.String:
+                    paramsList.Add(new StringDataType(adt.GetElementString(index)));
+                    break;
+                case VariableNode.DataType.Character:
+                    paramsList.Add(new CharDataType(adt.GetElementCharacter(index)));
+                    break;
+                case VariableNode.DataType.Boolean:
+                    paramsList.Add(new BooleanDataType(adt.GetElementBoolean(index)));
+                    break;
+                default:
+                    throw new Exception("Invalid ArrayContentsType");
+            }
+        }
+        else
+        {
+            // Passing in the whole array as a new ADT.
+            paramsList.Add(new ArrayDataType(adt.Value, adt.ArrayContentsType));
+        }
+    }
+
+    private static void AddToParamsRecord(
+        RecordDataType rdt,
+        ParameterNode pn,
+        List<InterpreterDataType> paramsList
+    )
+    {
+        if ((pn.Variable ?? throw new InvalidOperationException()).RecordMemberReference is { } rmr)
+        {
+            paramsList.Add(
+                rdt.MemberTypes[rmr.Name] switch
+                {
+                    VariableNode.DataType.Character
+                        => new CharDataType(rdt.GetValueCharacter(rmr.Name)),
+                    VariableNode.DataType.Boolean
+                        => new BooleanDataType(rdt.GetValueBoolean(rmr.Name)),
+                    VariableNode.DataType.String
+                        => new StringDataType(rdt.GetValueString(rmr.Name)),
+                    VariableNode.DataType.Integer => new IntDataType(rdt.GetValueInteger(rmr.Name)),
+                    VariableNode.DataType.Real => new FloatDataType(rdt.GetValueReal(rmr.Name)),
+                    _ => throw new InvalidOperationException()
+                }
+            );
+        }
+        else
+        {
+            throw new InvalidOperationException();
         }
     }
 
@@ -458,6 +524,14 @@ public class Interpreter
                         + " checked this already."
                 );
             }
+            case VariableNode.DataType.Record:
+            {
+                return new RecordDataType(
+                    Modules[vn.ModuleName ?? "default"]
+                        .Records[vn.RecordType ?? throw new InvalidOperationException()]
+                        .Members
+                );
+            }
             default:
                 throw new Exception($"Unknown local variable type");
         }
@@ -474,12 +548,12 @@ public class Interpreter
             var rf = ResolveFloat(ben.Right, variables);
             return ben.Op switch
             {
-                BooleanExpressionNode.OpType.lt => lf < rf,
-                BooleanExpressionNode.OpType.le => lf <= rf,
-                BooleanExpressionNode.OpType.gt => lf > rf,
-                BooleanExpressionNode.OpType.ge => lf >= rf,
-                BooleanExpressionNode.OpType.eq => lf == rf,
-                BooleanExpressionNode.OpType.ne => lf != rf,
+                ASTNode.BooleanExpressionOpType.lt => lf < rf,
+                ASTNode.BooleanExpressionOpType.le => lf <= rf,
+                ASTNode.BooleanExpressionOpType.gt => lf > rf,
+                ASTNode.BooleanExpressionOpType.ge => lf >= rf,
+                ASTNode.BooleanExpressionOpType.eq => lf == rf,
+                ASTNode.BooleanExpressionOpType.ne => lf != rf,
                 _ => throw new Exception("Unknown boolean operation")
             };
         }
@@ -491,12 +565,12 @@ public class Interpreter
             var rf = ResolveInt(ben.Right, variables);
             return ben.Op switch
             {
-                BooleanExpressionNode.OpType.lt => lf < rf,
-                BooleanExpressionNode.OpType.le => lf <= rf,
-                BooleanExpressionNode.OpType.gt => lf > rf,
-                BooleanExpressionNode.OpType.ge => lf >= rf,
-                BooleanExpressionNode.OpType.eq => lf == rf,
-                BooleanExpressionNode.OpType.ne => lf != rf,
+                ASTNode.BooleanExpressionOpType.lt => lf < rf,
+                ASTNode.BooleanExpressionOpType.le => lf <= rf,
+                ASTNode.BooleanExpressionOpType.gt => lf > rf,
+                ASTNode.BooleanExpressionOpType.ge => lf >= rf,
+                ASTNode.BooleanExpressionOpType.eq => lf == rf,
+                ASTNode.BooleanExpressionOpType.ne => lf != rf,
                 _ => throw new Exception("Unknown boolean operation")
             };
         }
@@ -516,7 +590,7 @@ public class Interpreter
             var right = ResolveString(mon.Right, variables);
             switch (mon.Op)
             {
-                case MathOpNode.OpType.plus:
+                case MathOpNode.MathOpType.plus:
                     return left + right;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -545,21 +619,24 @@ public class Interpreter
     public static char ResolveChar(ASTNode node, Dictionary<string, InterpreterDataType> variables)
     {
         if (node is CharNode cn)
-            return cn.Value;
-        else if (node is VariableReferenceNode vr)
         {
-            if (vr.Index != null)
+            return cn.Value;
+        }
+
+        if (node is VariableReferenceNode vr)
+        {
+            if (vr.Index is { } i && (variables[vr.Name] as ArrayDataType) is { } adt)
             {
-                var index = ResolveInt(vr.Index, variables);
-                return ((variables[vr.Name] as ArrayDataType)?.GetElement(index))
-                        ?.ToString()
-                        ?.ToCharArray()[0] ?? '0';
+                return adt.GetElementCharacter(ResolveInt(i, variables));
             }
 
-            return ((variables[vr.Name] as CharDataType)?.Value) ?? '0';
+            return (variables[vr.Name] as CharDataType)?.Value ?? '0';
         }
-        else
-            throw new ArgumentException(nameof(node));
+
+        throw new ArgumentException(
+            "Can only resolve a CharNode or a VariableReferenceNode to a char.",
+            nameof(node)
+        );
     }
 
     public static float ResolveFloat(
@@ -573,15 +650,15 @@ public class Interpreter
             var right = ResolveFloat(mon.Right, variables);
             switch (mon.Op)
             {
-                case MathOpNode.OpType.plus:
+                case MathOpNode.MathOpType.plus:
                     return left + right;
-                case MathOpNode.OpType.minus:
+                case MathOpNode.MathOpType.minus:
                     return left - right;
-                case MathOpNode.OpType.times:
+                case MathOpNode.MathOpType.times:
                     return left * right;
-                case MathOpNode.OpType.divide:
+                case MathOpNode.MathOpType.divide:
                     return left / right;
-                case MathOpNode.OpType.modulo:
+                case MathOpNode.MathOpType.modulo:
                     return left % right;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -611,15 +688,15 @@ public class Interpreter
             var right = ResolveInt(mon.Right, variables);
             switch (mon.Op)
             {
-                case MathOpNode.OpType.plus:
+                case MathOpNode.MathOpType.plus:
                     return left + right;
-                case MathOpNode.OpType.minus:
+                case MathOpNode.MathOpType.minus:
                     return left - right;
-                case MathOpNode.OpType.times:
+                case MathOpNode.MathOpType.times:
                     return left * right;
-                case MathOpNode.OpType.divide:
+                case MathOpNode.MathOpType.divide:
                     return left / right;
-                case MathOpNode.OpType.modulo:
+                case MathOpNode.MathOpType.modulo:
                     return left % right;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -763,15 +840,15 @@ public class Interpreter
             var right = ResolveIntBeforeVarDecs(mon.Right);
             switch (mon.Op)
             {
-                case MathOpNode.OpType.plus:
+                case MathOpNode.MathOpType.plus:
                     return left + right;
-                case MathOpNode.OpType.minus:
+                case MathOpNode.MathOpType.minus:
                     return left - right;
-                case MathOpNode.OpType.times:
+                case MathOpNode.MathOpType.times:
                     return left * right;
-                case MathOpNode.OpType.divide:
+                case MathOpNode.MathOpType.divide:
                     return left / right;
-                case MathOpNode.OpType.modulo:
+                case MathOpNode.MathOpType.modulo:
                     return left % right;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(mon.Op), "Invalid operation type");

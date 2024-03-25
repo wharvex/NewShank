@@ -149,6 +149,16 @@ public class Parser
                     );
                 return new VariableReferenceNode(id.Value ?? string.Empty, exp);
             }
+            if (MatchAndRemove(Token.TokenType.Dot) is not null)
+            {
+                VariableReferenceNode? varRef = GetVariableReferenceNode();
+                if (varRef is null)
+                    throw new SyntaxErrorException(
+                        "Need a record member reference after the dot!",
+                        Peek(0)
+                    );
+                return new VariableReferenceNode(id.GetIdentifierValue(), varRef, true);
+            }
             return new VariableReferenceNode(id.Value ?? string.Empty);
         }
         return null;
@@ -290,15 +300,20 @@ public class Parser
         }
     }
 
-    private void Statements(ICollection<StatementNode> statements, bool isRecord = false)
+    private void Statements(List<StatementNode> statements, bool isRecord = false)
     {
         StatementNode? s;
         do
         {
             s = Statement(isRecord);
-            if (s != null)
-                statements.Add(s);
-        } while (s != null);
+
+            if (s is null)
+            {
+                continue;
+            }
+
+            statements.Add(s);
+        } while (s is not null);
     }
 
     private StatementNode? Statement(bool isRecord = false)
@@ -333,17 +348,15 @@ public class Parser
         {
             return null;
         }
+
         RequiresEndOfLine();
+
         return IsTokenShankType(typeToken)
             ? new RecordMemberNode(
                 nameToken.GetIdentifierValue(),
                 GetDataTypeFromTokenType(typeToken.Type)
             )
-            : new RecordMemberNode(
-                nameToken.GetIdentifierValue(),
-                VariableNode.DataType.Record,
-                typeToken.GetIdentifierValue()
-            );
+            : new RecordMemberNode(nameToken.GetIdentifierValue(), typeToken.GetIdentifierValue());
     }
 
     private VariableNode.DataType GetDataTypeFromTokenType(Token.TokenType tt) =>
@@ -503,7 +516,12 @@ public class Parser
 
     private StatementNode? Assignment()
     {
-        if (Peek(1)?.Type is Token.TokenType.Assignment or Token.TokenType.LeftBracket)
+        if (
+            Peek(1)?.Type
+            is Token.TokenType.Assignment
+                or Token.TokenType.LeftBracket
+                or Token.TokenType.Dot
+        )
         {
             var target = GetVariableReferenceNode();
             if (target == null)
@@ -688,6 +706,24 @@ public class Parser
             }
             return retVal;
         }
+        else if (MatchAndRemove(Token.TokenType.Identifier) is { } id)
+        {
+            var retVal = names
+                .Select(
+                    n =>
+                        new VariableNode()
+                        {
+                            InitialValue = null,
+                            IsConstant = isConstant,
+                            Type = VariableNode.DataType.Record,
+                            RecordType = id.GetIdentifierValue(),
+                            Name = n
+                        }
+                )
+                .ToList();
+            CheckForRange(retVal);
+            return retVal;
+        }
         else
             throw new SyntaxErrorException("Unknown data type!", Peek(0));
     }
@@ -833,7 +869,7 @@ public class Parser
             var rt = Term();
             if (rt == null)
                 throw new SyntaxErrorException("Expected a term.", Peek(0));
-            lt = new MathOpNode(lt, MathOpNode.OpType.plus, rt);
+            lt = new MathOpNode(lt, MathOpNode.MathOpType.plus, rt);
             return ExpressionRHS(lt);
         }
         else if (MatchAndRemove(Token.TokenType.Minus) != null)
@@ -841,7 +877,7 @@ public class Parser
             var rt = Term();
             if (rt == null)
                 throw new SyntaxErrorException("Expected a term.", Peek(0));
-            lt = new MathOpNode(lt, MathOpNode.OpType.minus, rt);
+            lt = new MathOpNode(lt, MathOpNode.MathOpType.minus, rt);
             return ExpressionRHS(lt);
         }
         else if (MatchAndRemove(Token.TokenType.LessEqual) != null)
@@ -849,42 +885,66 @@ public class Parser
             var rt = Term();
             if (rt == null)
                 throw new SyntaxErrorException("Expected a term.", Peek(0));
-            return new BooleanExpressionNode(lt, BooleanExpressionNode.OpType.le, rt);
+            return new BooleanExpressionNode(
+                lt,
+                BooleanExpressionNode.BooleanExpressionOpType.le,
+                rt
+            );
         }
         else if (MatchAndRemove(Token.TokenType.LessThan) != null)
         {
             var rt = Term();
             if (rt == null)
                 throw new SyntaxErrorException("Expected a term.", Peek(0));
-            return new BooleanExpressionNode(lt, BooleanExpressionNode.OpType.lt, rt);
+            return new BooleanExpressionNode(
+                lt,
+                BooleanExpressionNode.BooleanExpressionOpType.lt,
+                rt
+            );
         }
         else if (MatchAndRemove(Token.TokenType.GreaterEqual) != null)
         {
             var rt = Term();
             if (rt == null)
                 throw new SyntaxErrorException("Expected a term.", Peek(0));
-            return new BooleanExpressionNode(lt, BooleanExpressionNode.OpType.ge, rt);
+            return new BooleanExpressionNode(
+                lt,
+                BooleanExpressionNode.BooleanExpressionOpType.ge,
+                rt
+            );
         }
         else if (MatchAndRemove(Token.TokenType.Greater) != null)
         {
             var rt = Term();
             if (rt == null)
                 throw new SyntaxErrorException("Expected a term.", Peek(0));
-            return new BooleanExpressionNode(lt, BooleanExpressionNode.OpType.gt, rt);
+            return new BooleanExpressionNode(
+                lt,
+                BooleanExpressionNode.BooleanExpressionOpType.gt,
+                rt
+            );
         }
         else if (MatchAndRemove(Token.TokenType.Equal) != null)
         {
             var rt = Term();
             if (rt == null)
                 throw new SyntaxErrorException("Expected a term.", Peek(0));
-            return new BooleanExpressionNode(lt, BooleanExpressionNode.OpType.eq, rt);
+            return new BooleanExpressionNode(
+                lt,
+                BooleanExpressionNode.BooleanExpressionOpType.eq,
+                rt
+            );
         }
         else if (MatchAndRemove(Token.TokenType.NotEqual) != null)
         {
             var rt = Term();
             if (rt == null)
                 throw new SyntaxErrorException("Expected a term.", Peek(0));
-            return new BooleanExpressionNode(lt, BooleanExpressionNode.OpType.ne, rt);
+            return new BooleanExpressionNode(
+                lt,
+                BooleanExpressionNode.BooleanExpressionOpType.ne,
+                rt
+            );
         }
         else
         {
@@ -907,7 +967,7 @@ public class Parser
             var rt = Factor();
             if (rt == null)
                 throw new SyntaxErrorException("Expected a factor.", Peek(0));
-            lt = new MathOpNode(lt, MathOpNode.OpType.times, rt);
+            lt = new MathOpNode(lt, MathOpNode.MathOpType.times, rt);
             return TermRHS(lt);
         }
         else if (MatchAndRemove(Token.TokenType.Divide) != null)
@@ -915,7 +975,7 @@ public class Parser
             var rt = Factor();
             if (rt == null)
                 throw new SyntaxErrorException("Expected a factor.", Peek(0));
-            lt = new MathOpNode(lt, MathOpNode.OpType.divide, rt);
+            lt = new MathOpNode(lt, MathOpNode.MathOpType.divide, rt);
             return TermRHS(lt);
         }
         else if (MatchAndRemove(Token.TokenType.Mod) != null)
@@ -923,7 +983,7 @@ public class Parser
             var rt = Factor();
             if (rt == null)
                 throw new SyntaxErrorException("Expected a factor.", Peek(0));
-            lt = new MathOpNode(lt, MathOpNode.OpType.modulo, rt);
+            lt = new MathOpNode(lt, MathOpNode.MathOpType.modulo, rt);
             return TermRHS(lt);
         }
         else

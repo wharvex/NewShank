@@ -110,7 +110,7 @@ public class CharDataType : InterpreterDataType
 
 public class ArrayDataType : InterpreterDataType
 {
-    public readonly List<object> Value;
+    public List<object> Value { get; }
 
     // TODO: Is this bad form since DataType is part of an AST node (VariableNode), and
     // ArrayDataType is part of the Interpreter?
@@ -163,12 +163,73 @@ public class ArrayDataType : InterpreterDataType
 
     public char GetElementCharacter(int idx)
     {
-        return (char)GetElement(idx);
+        if (GetElement(idx) is char c)
+        {
+            return c;
+        }
+
+        throw new InvalidOperationException("Expected array element to be of type: character");
     }
 
     public bool GetElementBoolean(int idx)
     {
         return (bool)GetElement(idx);
+    }
+
+    public override string ToString()
+    {
+        return "";
+    }
+
+    public override void FromString(string input) { }
+}
+
+public class RecordDataType : InterpreterDataType
+{
+    public Dictionary<string, object> Value { get; } = [];
+
+    public Dictionary<string, VariableNode.DataType> MemberTypes { get; } = [];
+
+    public RecordDataType(List<StatementNode> members)
+    {
+        members.ForEach(s =>
+        {
+            if (s is RecordMemberNode rmn)
+            {
+                MemberTypes[rmn.Name] = rmn.Type;
+            }
+            else
+            {
+                throw new InvalidOperationException(
+                    "A RecordDataType must be initialized with a List of RecordMemberNode."
+                );
+            }
+        });
+    }
+
+    public string GetValueString(string key)
+    {
+        return (string)Value[key];
+    }
+
+    public char GetValueCharacter(string key)
+    {
+        return (char)Value[key];
+    }
+
+    public int GetValueInteger(string key)
+    {
+        return (int)Value[key];
+    }
+
+    public float GetValueReal(string key)
+    {
+        return (float)Value[key];
+    }
+
+    public bool GetValueBoolean(string key)
+    {
+        return (bool)Value[key];
     }
 
     public override string ToString()

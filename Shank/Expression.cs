@@ -1,19 +1,57 @@
 using System.Dynamic;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json.Serialization;
 using LLVMSharp.Interop;
 
 //To compile to RISC-V: llc -march=riscv64 output_ir_3.ll -o out3.s
 
 namespace Shank
 {
-    public abstract class ASTNode { }
+    [JsonDerivedType(typeof(StringNode))]
+    [JsonDerivedType(typeof(IntNode))]
+    [JsonDerivedType(typeof(FloatNode))]
+    [JsonDerivedType(typeof(BoolNode))]
+    [JsonDerivedType(typeof(CharNode))]
+    [JsonDerivedType(typeof(VariableReferenceNode))]
+    [JsonDerivedType(typeof(MathOpNode))]
+    [JsonDerivedType(typeof(BooleanExpressionNode))]
+    [JsonDerivedType(typeof(StatementNode))]
+    [JsonDerivedType(typeof(FunctionNode))]
+    public abstract class ASTNode
+    {
+        public string NodeName { get; init; }
+
+        public enum BooleanExpressionOpType
+        {
+            lt,
+            le,
+            gt,
+            ge,
+            eq,
+            ne
+        };
+
+        public enum MathOpType
+        {
+            plus,
+            minus,
+            times,
+            divide,
+            modulo
+        };
+
+        protected ASTNode()
+        {
+            NodeName = GetType().Name;
+        }
+    }
 
     public class FunctionCallNode : StatementNode
     {
-        public string Name;
-        public int LineNum;
-        public List<ParameterNode> Parameters = new();
+        public string Name { get; set; }
+        public int LineNum { get; set; }
+        public List<ParameterNode> Parameters { get; set; } = [];
 
         public FunctionCallNode(string name)
         {
@@ -91,7 +129,7 @@ namespace Shank
             Value = value;
         }
 
-        public int Value;
+        public int Value { get; set; }
 
         public override string ToString()
         {
@@ -106,7 +144,7 @@ namespace Shank
             Value = value;
         }
 
-        public float Value;
+        public float Value { get; set; }
 
         public override string ToString()
         {
@@ -121,7 +159,7 @@ namespace Shank
             Value = value;
         }
 
-        public bool Value;
+        public bool Value { get; set; }
 
         public override string ToString()
         {
@@ -136,7 +174,7 @@ namespace Shank
             Value = value;
         }
 
-        public char Value;
+        public char Value { get; set; }
 
         public override string ToString()
         {
@@ -151,7 +189,7 @@ namespace Shank
             Value = value;
         }
 
-        public string Value;
+        public string Value { get; set; }
 
         public override string ToString()
         {
@@ -159,15 +197,18 @@ namespace Shank
         }
     }
 
+    [JsonDerivedType(typeof(FunctionNode))]
     public abstract class CallableNode : ASTNode
     {
         public string Name { get; set; }
+
         public string parentModuleName { get; set; }
+
         public bool IsPublic { get; set; }
-        public string OrigName { get; set; }
+
         public int LineNum { get; set; }
 
-        public List<VariableNode> ParameterVariables = new();
+        public List<VariableNode> ParameterVariables { get; set; } = [];
 
         protected CallableNode(string name)
         {
@@ -248,11 +289,11 @@ namespace Shank
                 Interpreter.InterpretFunction(this, paramList);
         }
 
-        public List<VariableNode> LocalVariables = new();
+        public List<VariableNode> LocalVariables { get; set; } = [];
 
-        public List<StatementNode> Statements = new();
+        public List<StatementNode> Statements { get; set; } = [];
 
-        public Dictionary<string, TestNode> Tests = new();
+        public Dictionary<string, TestNode> Tests { get; set; } = [];
 
         public override string ToString()
         {
@@ -816,7 +857,9 @@ namespace Shank
     public class RecordMemberNode : StatementNode
     {
         public string Name { get; init; }
+
         public VariableNode.DataType Type { get; init; }
+
         public string? RecordType { get; init; }
 
         public RecordMemberNode(string name, VariableNode.DataType type)
@@ -825,10 +868,10 @@ namespace Shank
             Type = type;
         }
 
-        public RecordMemberNode(string name, VariableNode.DataType type, string recordType)
+        public RecordMemberNode(string name, string recordType)
         {
             Name = name;
-            Type = type;
+            Type = VariableNode.DataType.Record;
             RecordType = recordType;
         }
     }
@@ -836,8 +879,10 @@ namespace Shank
     public class RecordNode : ASTNode
     {
         public string Name { get; init; }
-        public string? ParentModuleName { get; set; }
-        public List<StatementNode> Members;
+
+        public string? ParentModuleName { get; init; }
+
+        public List<StatementNode> Members { get; init; }
 
         public RecordNode(string name, string moduleName)
         {
@@ -873,7 +918,8 @@ namespace Shank
 
     public class VariableNode : ASTNode
     {
-        public string? Name;
+        public string? Name { get; set; }
+        public string? ModuleName { get; set; }
 
         public enum DataType
         {
@@ -887,18 +933,16 @@ namespace Shank
             Enum
         };
 
-        public DataType Type;
+        public DataType Type { get; set; }
 
         // If Type is Array, then ArrayType is the type of its elements.
         // If Type is not Array, then ArrayType should be null.
-        public DataType? ArrayType;
-
-        public RecordNode? RecordType;
-        public bool IsConstant;
-        public ASTNode? InitialValue;
-
-        public ASTNode? From;
-        public ASTNode? To;
+        public DataType? ArrayType { get; set; }
+        public string? RecordType { get; set; }
+        public bool IsConstant { get; set; }
+        public ASTNode? InitialValue { get; set; }
+        public ASTNode? From { get; set; }
+        public ASTNode? To { get; set; }
 
         public override string ToString()
         {
@@ -918,23 +962,14 @@ namespace Shank
 
     public class MathOpNode : ASTNode
     {
-        public MathOpNode(ASTNode left, OpType op, ASTNode right)
+        public MathOpNode(ASTNode left, MathOpType op, ASTNode right)
         {
             Left = left;
             Op = op;
             Right = right;
         }
 
-        public enum OpType
-        {
-            plus,
-            minus,
-            times,
-            divide,
-            modulo
-        };
-
-        public OpType Op { get; init; }
+        public MathOpType Op { get; init; }
         public ASTNode Left { get; init; }
         public ASTNode Right { get; init; }
 
@@ -944,6 +979,13 @@ namespace Shank
         }
     }
 
+    [JsonDerivedType(typeof(RecordMemberNode))]
+    [JsonDerivedType(typeof(AssignmentNode))]
+    [JsonDerivedType(typeof(FunctionCallNode))]
+    [JsonDerivedType(typeof(IfNode))]
+    [JsonDerivedType(typeof(ForNode))]
+    [JsonDerivedType(typeof(WhileNode))]
+    [JsonDerivedType(typeof(RepeatNode))]
     public class StatementNode : ASTNode
     {
         protected static string StatementListToString(List<StatementNode> statements)
@@ -968,10 +1010,21 @@ namespace Shank
             Index = null;
         }
 
-        public VariableReferenceNode(string name, ASTNode index)
+        public VariableReferenceNode(
+            string name,
+            ASTNode indexOrRecordMemberReference,
+            bool isRecord = false
+        )
         {
             Name = name;
-            Index = index;
+            if (isRecord)
+            {
+                RecordMemberReference = (VariableReferenceNode)indexOrRecordMemberReference;
+            }
+            else
+            {
+                Index = indexOrRecordMemberReference;
+            }
         }
 
         public string Name { get; init; }
@@ -980,6 +1033,11 @@ namespace Shank
         /// Holds the variable's array index expression if it exists.
         /// </summary>
         public ASTNode? Index { get; init; }
+
+        /// <summary>
+        /// Holds the variable's record member reference if it exists.
+        /// </summary>
+        public VariableReferenceNode? RecordMemberReference { get; init; }
 
         public override string ToString()
         {
@@ -996,7 +1054,7 @@ namespace Shank
         }
 
         public BooleanExpressionNode Expression { get; init; }
-        public List<StatementNode> Children;
+        public List<StatementNode> Children { get; set; }
 
         public override object[] returnStatementTokens()
         {
@@ -1020,7 +1078,7 @@ namespace Shank
         }
 
         public BooleanExpressionNode Expression { get; init; }
-        public List<StatementNode> Children;
+        public List<StatementNode> Children { get; set; }
 
         public override string ToString()
         {
@@ -1103,24 +1161,14 @@ namespace Shank
 
     public class BooleanExpressionNode : ASTNode
     {
-        public BooleanExpressionNode(ASTNode left, OpType op, ASTNode right)
+        public BooleanExpressionNode(ASTNode left, BooleanExpressionOpType op, ASTNode right)
         {
             Left = left;
             Op = op;
             Right = right;
         }
 
-        public enum OpType
-        {
-            lt,
-            le,
-            gt,
-            ge,
-            eq,
-            ne
-        };
-
-        public OpType Op { get; init; }
+        public BooleanExpressionOpType Op { get; init; }
         public ASTNode Left { get; init; }
         public ASTNode Right { get; init; }
 
@@ -1164,25 +1212,34 @@ namespace Shank
         }
     }
 
-    public class ModuleNode
+    public class ModuleNode : ASTNode
     {
+<<<<<<< HEAD
         private string name;
         private Dictionary<string, CallableNode> Functions;
         private Dictionary<string, RecordNode> Records;
         private Dictionary<string, EnumNode> Enums;
+=======
+        public string name { get; set; }
+
+        public Dictionary<string, CallableNode> Functions { get; init; }
+
+        public Dictionary<string, RecordNode> Records { get; init; }
+>>>>>>> cf249b1f479538f3f16800912527cbe95f57ae6c
 
         //Dictionary associating names to something to be imported/exported
         //has a type of ASTNode? as references will later be added
-        private Dictionary<string, ASTNode?> ExportedFunctions;
-        private Dictionary<string, ASTNode?> ImportedFunctions;
+        public Dictionary<string, ASTNode?> ExportedFunctions { get; set; }
+
+        public Dictionary<string, ASTNode?> ImportedFunctions { get; set; }
 
         //ImportTargetNames holds a module and the list of functions that this module has imported
-        private Dictionary<string, LinkedList<string>> ImportTargetNames;
+        public Dictionary<string, LinkedList<string>> ImportTargetNames { get; set; }
 
         //the names of functions to be exported
-        private LinkedList<string> ExportTargetNames;
+        public LinkedList<string> ExportTargetNames { get; set; }
 
-        private Dictionary<string, TestNode> Tests;
+        public Dictionary<string, TestNode> Tests { get; set; }
 
         public ModuleNode(string name)
         {

@@ -36,9 +36,9 @@ namespace Shank
                 }
             }
 
-            if (inPaths.Count < 1 && args[1] != "-ut")
+            if (inPaths.Count < 1 && args.Length > 1 && args[1] != "-ut")
             {
-                Console.Write(Directory.GetCurrentDirectory + " " + args[0]);
+                Console.Write(Directory.GetCurrentDirectory() + " " + args[0]);
                 throw new Exception(
                     "Options when calling shank from Command Line (CL): "
                         + "1) pass a valid path to a *.shank file; "
@@ -57,6 +57,7 @@ namespace Shank
                 var l = new Lexer();
                 tokens.AddRange(l.Lex(lines));
 
+                OutputHelper.DebugPrint(OutputHelper.GetDebugJsonForTokenList(tokens), 1);
                 var p = new Parser(tokens);
 
                 var brokeOutOfWhile = false;
@@ -110,6 +111,10 @@ namespace Shank
                 {
                     var currentModule = currentModulePair.Value;
                     //Console.WriteLine($"\nOutput of {currentModule.getName()}:\n");
+                    OutputHelper.DebugPrint(
+                        OutputHelper.GetDebugJsonForModuleNode(currentModule),
+                        2
+                    );
 
                     BuiltInFunctions.Register(currentModule.getFunctions());
                     if (
@@ -181,7 +186,9 @@ namespace Shank
                     Console.WriteLine($"Tests from {module.Key}:");
                     foreach (var testResult in unitTestResults)
                     {
-                        Console.WriteLine($"  Test {testResult.testName} (line: {testResult.lineNum}) results:");
+                        Console.WriteLine(
+                            $"  Test {testResult.testName} (line: {testResult.lineNum}) results:"
+                        );
                         foreach (var assertResult in testResult.Asserts)
                         {
                             Console.WriteLine(
