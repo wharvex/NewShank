@@ -1,0 +1,7 @@
+record genTest generic T
+    data1: T
+    data2: real
+
+define start
+variables myGenTest : genTest integer
+    myGenTest.data1 := 1

@@ -17,6 +17,7 @@ variables myChypre : chypre
 	myAardvark.yes := 3
 	write myAardvark.bokchoy
 	sum myChypre.dahlhaus, myChypre.no, myAardvark.yes
+	sum2 myChypre, myAardvark
 
 define sum(x : integer; y : integer; z : integer)
 variables s : integer
@@ -25,7 +26,8 @@ variables s : integer
 
 define sum2(paramC : chypre; paramA : aardvark)
 variables s, s0 : integer
-variables myChypre : chypre
-	s0 := myChypre.dahlhaus + myChypre.no
+	write "bokchoy from sum2: ", paramA.bokchoy
+	write "dahlhaus from sum2: ", paramC.dahlhaus
 	s := paramC.dahlhaus + paramC.no + paramA.yes
     write "sum2: ", s
+    write "sum0: ", s0

@@ -11,7 +11,7 @@ define allocateMemory(var output : refersTo T) generic T
 variables head, next : refersTo genericLinkedList integer
     allocateMemory var head
     allocateMemory var next
-    next.data := 5 {safety checked at compile time }
+    next.data := 5 { safety checked at compile time }
     head.next := next
 
 define addToHashMap(newValue : refersTo genericHashMapNode K, V) generic K, V

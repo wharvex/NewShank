@@ -206,12 +206,17 @@ public class Interpreter
                 VariableNode.DataType.Real => ResolveFloat(an.expression, variables),
                 VariableNode.DataType.Integer => ResolveInt(an.expression, variables),
                 VariableNode.DataType.Character => ResolveChar(an.expression, variables),
-                _ => throw new NotImplementedException()
+                _
+                    => throw new NotImplementedException(
+                        "Assigning a " + t + " to a record variable member is not implemented yet."
+                    )
             };
         }
         else
         {
-            throw new InvalidOperationException();
+            throw new NotImplementedException(
+                "Assigning to a record variable base is not implemented yet."
+            );
         }
     }
 
@@ -494,7 +499,10 @@ public class Interpreter
         }
         else
         {
-            throw new InvalidOperationException();
+            var newRdt = new RecordDataType(rdt);
+            OutputHelper.DebugPrint(OutputHelper.GetDebugJsonForRecordDataType(rdt), 3);
+            OutputHelper.DebugPrint(OutputHelper.GetDebugJsonForRecordDataType(newRdt), 4);
+            paramsList.Add(newRdt);
         }
     }
 
@@ -615,6 +623,41 @@ public class Interpreter
         else
             throw new ArgumentException(nameof(node));
     }
+
+    public static string ResolveString2(
+        ASTNode node,
+        Dictionary<string, InterpreterDataType> variables
+    ) =>
+        node switch
+        {
+            MathOpNode mon
+                => mon.Op == ASTNode.MathOpType.plus
+                    ? ResolveString2(mon.Left, variables) + ResolveString2(mon.Right, variables)
+                    : throw new NotImplementedException(
+                        "It has not been implemented to perform any math operation on"
+                            + " strings other than addition."
+                    ),
+            StringNode sn => sn.Value,
+            CharNode cn => cn.Value.ToString(),
+            VariableReferenceNode vrn
+                => vrn.Index is { } indexNode
+                    ? (variables[vrn.Name] as ArrayDataType)?.GetElementString(
+                        ResolveInt(indexNode, variables)
+                    ) ?? throw new InvalidOperationException()
+                    : vrn.RecordMemberReference is { } rmr
+                        ? rmr.Name
+                        : (variables[vrn.Name] as StringDataType)?.Value
+                            ?? throw new ArgumentException(
+                                "The given VariableReferenceNode cannot be resolved to a"
+                                    + " string unless it has an index or a member reference, or it"
+                                    + " holds a string."
+                            ),
+            _
+                => throw new ArgumentException(
+                    "The given ASTNode cannot be resolved to a string",
+                    nameof(node)
+                )
+        };
 
     public static char ResolveChar(ASTNode node, Dictionary<string, InterpreterDataType> variables)
     {

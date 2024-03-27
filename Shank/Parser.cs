@@ -225,7 +225,7 @@ public class Parser
         return module;
     }
 
-    public FunctionNode? Function(string moduleName)
+    public FunctionNode? Function(string? moduleName)
     {
         // Process function name.
         var name =
@@ -233,10 +233,7 @@ public class Parser
             ?? throw new SyntaxErrorException("Expected a function name", Peek(0));
 
         // Create the function node.
-        var funcNode = new FunctionNode(
-            name.GetIdentifierValue(),
-            moduleName == null ? "default" : moduleName
-        );
+        var funcNode = new FunctionNode(name.GetIdentifierValue(), moduleName ?? "default");
 
         // Process parameter variables.
         if (MatchAndRemove(Token.TokenType.LeftParen) == null)

@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="dotShank\Generics\" />
+    <Folder Include="dotShank\Generics\NewFolder\" />
     <Folder Include="dotShank\Globals\" />
     <Folder Include="dotShank\VarsSetBeforeUse\" />
     <Folder Include="dotShank\Overloads\" />

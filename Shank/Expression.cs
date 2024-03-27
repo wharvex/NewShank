@@ -943,6 +943,34 @@ namespace Shank
         public ASTNode? From { get; set; }
         public ASTNode? To { get; set; }
 
+        public DataType GetTypeForCheckNode(ModuleNode parentModule, string? memberName)
+        {
+            return memberName is null
+                ? Type
+                : GetRecordMemberType(memberName, parentModule.Records);
+        }
+
+        public DataType GetRecordMemberType(
+            string memberName,
+            Dictionary<string, RecordNode> records
+        )
+        {
+            return records[
+                    RecordType
+                        ?? throw new InvalidOperationException(
+                            "It is invalid to call GetRecordMemberType on a VariableNode that"
+                                + " does not have a RecordType."
+                        )
+                ]
+                    .GetFromMembersByName(memberName)
+                    ?.Type
+                ?? throw new ArgumentOutOfRangeException(
+                    nameof(memberName),
+                    "The specified record member name was not found on the record which this"
+                        + " VariableNode represents"
+                );
+        }
+
         public override string ToString()
         {
             return Name

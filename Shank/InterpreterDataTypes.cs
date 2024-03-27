@@ -186,9 +186,9 @@ public class ArrayDataType : InterpreterDataType
 
 public class RecordDataType : InterpreterDataType
 {
-    public Dictionary<string, object> Value { get; } = [];
+    public Dictionary<string, object> Value { get; init; } = [];
 
-    public Dictionary<string, VariableNode.DataType> MemberTypes { get; } = [];
+    public Dictionary<string, VariableNode.DataType> MemberTypes { get; init; } = [];
 
     public RecordDataType(List<StatementNode> members)
     {
@@ -205,6 +205,12 @@ public class RecordDataType : InterpreterDataType
                 );
             }
         });
+    }
+
+    public RecordDataType(RecordDataType rdt)
+    {
+        Value = rdt.Value;
+        MemberTypes = rdt.MemberTypes;
     }
 
     public string GetValueString(string key)

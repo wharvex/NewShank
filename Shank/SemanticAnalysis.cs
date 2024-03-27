@@ -71,7 +71,7 @@ namespace Shank
                                 ?.Type ?? throw new Exception("Member not found on Record"),
                         _ => target.Type
                     };
-                    CheckNode(targetType, an.expression, dict);
+                    CheckNode(targetType, an.expression, dict, parentModule);
                 }
                 else if (s is FunctionCallNode fn)
                 {
@@ -110,7 +110,8 @@ namespace Shank
         private static void CheckNode(
             VariableNode.DataType targetType,
             ASTNode anExpression,
-            IReadOnlyDictionary<string, VariableNode> variables
+            IReadOnlyDictionary<string, VariableNode> variables,
+            ModuleNode parentModule
         )
         {
             switch (anExpression)
@@ -150,8 +151,8 @@ namespace Shank
                         );
                     break;
                 case MathOpNode mathOpNode:
-                    CheckNode(targetType, mathOpNode.Left, variables);
-                    CheckNode(targetType, mathOpNode.Right, variables);
+                    CheckNode(targetType, mathOpNode.Left, variables, parentModule);
+                    CheckNode(targetType, mathOpNode.Right, variables, parentModule);
                     break;
                 case StringNode stringNode:
                     if (
@@ -161,9 +162,19 @@ namespace Shank
                         throw new Exception("strings have to be assigned to string variables");
                     break;
                 case VariableReferenceNode variableReferenceNode:
-                    if (variables[variableReferenceNode.Name].Type != targetType)
+                    var variableNode = variables[variableReferenceNode.Name];
+                    if (
+                        variableNode.GetTypeForCheckNode(
+                            parentModule,
+                            variableReferenceNode.RecordMemberReference?.Name
+                        ) != targetType
+                    )
                         throw new Exception(
-                            $"{variableReferenceNode.Name} is a {variables[variableReferenceNode.Name].Type} and can't be assigned to a {targetType}"
+                            variableReferenceNode.Name
+                                + " is a "
+                                + variables[variableReferenceNode.Name].Type
+                                + " and can't be assigned to a "
+                                + targetType
                         );
                     break;
                 default:

@@ -38,6 +38,11 @@ public class OutputHelper
     {
         return JsonSerializer.Serialize(tokenList, LexerContext.Default.ListToken);
     }
+
+    public static string GetDebugJsonForRecordDataType(RecordDataType rdt)
+    {
+        return JsonSerializer.Serialize(rdt, RecordDataTypeContext.Default.RecordDataType);
+    }
 }
 
 [JsonSourceGenerationOptions(WriteIndented = true, UseStringEnumConverter = true)]
@@ -47,3 +52,8 @@ internal partial class ModuleNodeContext : JsonSerializerContext { }
 [JsonSourceGenerationOptions(WriteIndented = true, UseStringEnumConverter = true)]
 [JsonSerializable(typeof(List<Token>))]
 internal partial class LexerContext : JsonSerializerContext { }
+
+[JsonSourceGenerationOptions(WriteIndented = true, UseStringEnumConverter = true)]
+[JsonSerializable(typeof(RecordDataType))]
+[JsonSerializable(typeof(Int32))]
+internal partial class RecordDataTypeContext : JsonSerializerContext { }
