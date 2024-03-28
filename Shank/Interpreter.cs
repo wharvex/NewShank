@@ -16,7 +16,7 @@ public class Interpreter
     /// Convert the given FunctionNode and its contents into their associated InterpreterDataTypes.
     /// </summary>
     /// <param name="fn">The FunctionNode being converted</param>
-    /// <param name="ps">Parameters passed in</param>
+    /// <param name="ps">Parameters passed in (already in IDT form)</param>
     /// <exception cref="Exception"></exception>
     public static void InterpretFunction(FunctionNode fn, List<InterpreterDataType> ps)
     {
@@ -33,6 +33,7 @@ public class Interpreter
 
         foreach (var l in fn.LocalVariables)
         {
+            // TODO: When would the Name of a local variable be null? When would the Name of any VariableNode be null?
             // set up the declared variables as locals
             variables[l.Name ?? string.Empty] = VariableNodeToActivationRecord(l);
         }
@@ -77,42 +78,7 @@ public class Interpreter
                         it.Value = ResolveInt(an.expression, variables);
                         break;
                     case ArrayDataType at:
-                        switch (at.ArrayContentsType)
-                        {
-                            case VariableNode.DataType.Integer:
-                                at.AddElement(
-                                    ResolveInt(an.expression, variables),
-                                    ResolveInt(an.target.Index, variables)
-                                );
-                                break;
-                            case VariableNode.DataType.Real:
-                                at.AddElement(
-                                    ResolveFloat(an.expression, variables),
-                                    ResolveInt(an.target.Index, variables)
-                                );
-                                break;
-                            case VariableNode.DataType.String:
-                                at.AddElement(
-                                    ResolveString(an.expression, variables),
-                                    ResolveInt(an.target.Index, variables)
-                                );
-                                break;
-                            case VariableNode.DataType.Character:
-                                at.AddElement(
-                                    ResolveChar(an.expression, variables),
-                                    ResolveInt(an.target.Index, variables)
-                                );
-                                break;
-                            case VariableNode.DataType.Boolean:
-                                at.AddElement(
-                                    ResolveBool(an.expression, variables),
-                                    ResolveInt(an.target.Index, variables)
-                                );
-                                break;
-                            default:
-                                throw new Exception("Invalid ArrayContentsType");
-                        }
-
+                        AssignToArray(at, an, variables);
                         break;
                     case FloatDataType ft:
                         ft.Value = ResolveFloat(an.expression, variables);
@@ -208,14 +174,50 @@ public class Interpreter
                 VariableNode.DataType.Character => ResolveChar(an.expression, variables),
                 _
                     => throw new NotImplementedException(
-                        "Assigning a " + t + " to a record variable member is not implemented yet."
+                        "Assigning a value of type "
+                            + t
+                            + " to a record variable member is not implemented yet."
                     )
             };
         }
         else
         {
             throw new NotImplementedException(
-                "Assigning to a record variable base is not implemented yet."
+                "Assigning any value to a record variable base is not implemented yet."
+            );
+        }
+    }
+
+    private static void AssignToArray(
+        ArrayDataType adt,
+        AssignmentNode an,
+        Dictionary<string, InterpreterDataType> variables
+    )
+    {
+        if (an.target.Index is { } idx)
+        {
+            adt.AddElement(
+                adt.ArrayContentsType switch
+                {
+                    VariableNode.DataType.Integer => ResolveInt(an.expression, variables),
+                    VariableNode.DataType.Real => ResolveFloat(an.expression, variables),
+                    VariableNode.DataType.String => ResolveString(an.expression, variables),
+                    VariableNode.DataType.Character => ResolveChar(an.expression, variables),
+                    VariableNode.DataType.Boolean => ResolveBool(an.expression, variables),
+                    _
+                        => throw new NotImplementedException(
+                            "Assigning a value of type "
+                                + adt.ArrayContentsType
+                                + " to an array index is not implemented yet."
+                        )
+                },
+                ResolveInt(idx, variables)
+            );
+        }
+        else
+        {
+            throw new NotImplementedException(
+                "Assigning any value to an array variable base is not implemented yet."
             );
         }
     }
@@ -435,6 +437,7 @@ public class Interpreter
         }
     }
 
+    // TODO
     private static void AddToParamsArray(
         ArrayDataType adt,
         ParameterNode pn,
@@ -508,6 +511,7 @@ public class Interpreter
 
     private static InterpreterDataType VariableNodeToActivationRecord(VariableNode vn)
     {
+        // TODO: Is it bad to store the VariableNode which the IDT is created from on the IDT?
         switch (vn.Type)
         {
             case VariableNode.DataType.Real:
@@ -522,14 +526,13 @@ public class Interpreter
                 return new BooleanDataType(((vn.InitialValue as BoolNode)?.Value) ?? true);
             case VariableNode.DataType.Array:
             {
-                if (vn.ArrayType is { } at)
-                {
-                    return new ArrayDataType(at);
-                }
-                throw new ArgumentException(
-                    "Something went wrong internally. Every array variable declaration"
-                        + " should have a range expression, and the Parser should have"
-                        + " checked this already."
+                return new ArrayDataType(
+                    vn.ArrayType
+                        ?? throw new ArgumentException(
+                            "Something went wrong internally. Every array variable declaration"
+                                + " should have a range expression, and the Parser should have"
+                                + " checked this already."
+                        )
                 );
             }
             case VariableNode.DataType.Record:
@@ -590,67 +593,33 @@ public class Interpreter
     public static string ResolveString(
         ASTNode node,
         Dictionary<string, InterpreterDataType> variables
-    )
-    {
-        if (node is MathOpNode mon)
-        {
-            var left = ResolveString(mon.Left, variables);
-            var right = ResolveString(mon.Right, variables);
-            switch (mon.Op)
-            {
-                case MathOpNode.MathOpType.plus:
-                    return left + right;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-        else if (node is StringNode fn)
-            return fn.Value;
-        else if (node is CharNode cn)
-            return "" + cn.Value;
-        else if (node is VariableReferenceNode vr)
-        {
-            // If Index is not null, it means the VariableReferenceNode is an array.
-            if (vr.Index is { } indexNode)
-            {
-                var index = ResolveInt(indexNode, variables);
-                var adt = (ArrayDataType)variables[vr.Name];
-                return adt.GetElementString(index);
-            }
-
-            return ((variables[vr.Name] as StringDataType)?.Value) ?? string.Empty;
-        }
-        else
-            throw new ArgumentException(nameof(node));
-    }
-
-    public static string ResolveString2(
-        ASTNode node,
-        Dictionary<string, InterpreterDataType> variables
     ) =>
         node switch
         {
+            StringNode sn => sn.Value,
+            CharNode cn => cn.Value.ToString(),
             MathOpNode mon
                 => mon.Op == ASTNode.MathOpType.plus
-                    ? ResolveString2(mon.Left, variables) + ResolveString2(mon.Right, variables)
+                    ? ResolveString(mon.Left, variables) + ResolveString(mon.Right, variables)
                     : throw new NotImplementedException(
                         "It has not been implemented to perform any math operation on"
                             + " strings other than addition."
                     ),
-            StringNode sn => sn.Value,
-            CharNode cn => cn.Value.ToString(),
             VariableReferenceNode vrn
+                // vrn is an array.
                 => vrn.Index is { } indexNode
-                    ? (variables[vrn.Name] as ArrayDataType)?.GetElementString(
-                        ResolveInt(indexNode, variables)
-                    ) ?? throw new InvalidOperationException()
+                    ? GetArrayDataTypeAfterIndexCheck(variables[vrn.Name])
+                        .GetElementString(ResolveInt(indexNode, variables))
+                    // vrn is a record.
                     : vrn.RecordMemberReference is { } rmr
-                        ? rmr.Name
+                        ? GetRecordDataTypeAfterRmrCheck(variables[vrn.Name])
+                            .GetValueString(rmr.Name)
+                        // vrn directly stores a string.
                         : (variables[vrn.Name] as StringDataType)?.Value
                             ?? throw new ArgumentException(
                                 "The given VariableReferenceNode cannot be resolved to a"
                                     + " string unless it has an index or a member reference, or it"
-                                    + " holds a string."
+                                    + " directly stores a string."
                             ),
             _
                 => throw new ArgumentException(
@@ -680,6 +649,54 @@ public class Interpreter
             "Can only resolve a CharNode or a VariableReferenceNode to a char.",
             nameof(node)
         );
+    }
+
+    public static char ResolveChar2(
+        ASTNode node,
+        Dictionary<string, InterpreterDataType> variables
+    ) =>
+        node switch
+        {
+            CharNode cn => cn.Value,
+            VariableReferenceNode vrn
+                // vrn is an array.
+                => vrn.Index is { } indexNode
+                    ? GetArrayDataTypeAfterIndexCheck(variables[vrn.Name])
+                        .GetElementCharacter(ResolveInt(indexNode, variables))
+                    // vrn is a record.
+                    : vrn.RecordMemberReference is { } rmr
+                        ? GetRecordDataTypeAfterRmrCheck(variables[vrn.Name])
+                            .GetValueCharacter(rmr.Name)
+                        // vrn directly stores a character.
+                        : (variables[vrn.Name] as CharDataType)?.Value
+                            ?? throw new ArgumentException(
+                                "The given VariableReferenceNode cannot be resolved to a"
+                                    + " char unless it has an index or a member reference, or it"
+                                    + " directly stores a char."
+                            ),
+            _
+                => throw new ArgumentException(
+                    "The given ASTNode cannot be resolved to a char",
+                    nameof(node)
+                )
+        };
+
+    public static RecordDataType GetRecordDataTypeAfterRmrCheck(InterpreterDataType idt)
+    {
+        return idt as RecordDataType
+            ?? throw new InvalidOperationException(
+                "If a VariableReferenceNode vrn has a RecordMemberReference then vrn's Name"
+                    + " should map to a RecordDataType in the IDT map."
+            );
+    }
+
+    public static ArrayDataType GetArrayDataTypeAfterIndexCheck(InterpreterDataType idt)
+    {
+        return idt as ArrayDataType
+            ?? throw new InvalidOperationException(
+                "If a VariableReferenceNode vrn has an Index then vrn's Name should map to an"
+                    + " ArrayDataType in the IDT map."
+            );
     }
 
     public static float ResolveFloat(

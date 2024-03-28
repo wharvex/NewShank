@@ -2,6 +2,7 @@ record aardvark
     string bokchoy
 	integer yes
 	blah blahh
+	string elephant
 
 record chypre 
 	integer dahlhaus
@@ -12,6 +13,7 @@ variables a,b,c : integer
 variables myAardvark : aardvark
 variables myChypre : chypre
 	myAardvark.bokchoy := "hi"
+	myAardvark.elephant := "hello"
 	myChypre.dahlhaus := 1
 	myChypre.no := 2
 	myAardvark.yes := 3
@@ -26,8 +28,11 @@ variables s : integer
 
 define sum2(paramC : chypre; paramA : aardvark)
 variables s, s0 : integer
+variables s3 : string
 	write "bokchoy from sum2: ", paramA.bokchoy
 	write "dahlhaus from sum2: ", paramC.dahlhaus
 	s := paramC.dahlhaus + paramC.no + paramA.yes
+	s3 := paramA.bokchoy + paramA.elephant
     write "sum2: ", s
     write "sum0: ", s0
+    write "sum3: ", s3

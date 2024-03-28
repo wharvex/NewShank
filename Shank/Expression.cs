@@ -295,6 +295,29 @@ namespace Shank
 
         public Dictionary<string, TestNode> Tests { get; set; } = [];
 
+        public VariableNode GetVariableNodeByName(string searchName)
+        {
+            return LocalVariables
+                    .Concat(ParameterVariables)
+                    .FirstOrDefault(
+                        vn =>
+                            (
+                                vn
+                                ?? throw new InvalidOperationException(
+                                    "Something went wrong internally. There should not be"
+                                        + " null entries in FunctionNode.LocalVariables or"
+                                        + " FunctionNode.ParameterVariables."
+                                )
+                            ).Name?.Equals(searchName)
+                            ?? throw new InvalidOperationException(vn + " has no Name."),
+                        null
+                    )
+                ?? throw new ArgumentOutOfRangeException(
+                    nameof(searchName),
+                    "No variable found with given searchName."
+                );
+        }
+
         public override string ToString()
         {
             var b = new StringBuilder();
@@ -1065,6 +1088,11 @@ namespace Shank
         /// Holds the variable's record member reference if it exists.
         /// </summary>
         public VariableReferenceNode? RecordMemberReference { get; init; }
+
+        public ASTNode GetIndexSafe()
+        {
+            return Index ?? throw new InvalidOperationException("Expected Index to not be null.");
+        }
 
         public override string ToString()
         {
