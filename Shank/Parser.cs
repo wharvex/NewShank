@@ -132,9 +132,10 @@ public class Parser
 
     private void checkTokenListSize(int offset)
     {
-        if(_tokens.Count < offset)
+        if (_tokens.Count < offset)
             throw new Exception($"Out of bounds, cannot peek {offset} tokens ahead.");
     }
+
     private Token PeekAndCheck(int offset)
     {
         checkTokenListSize(offset);

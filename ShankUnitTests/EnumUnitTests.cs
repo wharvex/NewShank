@@ -69,7 +69,8 @@ namespace ShankUnitTests
         [TestMethod]
         public void parseEnumVariable()
         {
-            string[] file = {
+            string[] file =
+            {
                 "enum colors = [red, green, blue]\n",
                 "define start()\n",
                 "variables i : integer\n",
