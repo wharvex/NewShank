@@ -938,6 +938,12 @@ namespace Shank
         }
     }
 
+<<<<<<< Updated upstream
+=======
+
+
+
+>>>>>>> Stashed changes
     public class VariableNode : ASTNode
     {
         public string? Name { get; set; }

@@ -182,10 +182,13 @@ namespace Shank
             }
         }
 
-        public static void checkModules(Dictionary<string, ModuleNode> modules)
+        public static void checkModules()
         {
-            Modules = modules;
-            foreach (KeyValuePair<string, ModuleNode> module in modules)
+            Interpreter.handleExports();
+            Interpreter.handleImports();
+            Interpreter.handleTests();
+            Modules = Interpreter.getModules();
+            foreach (KeyValuePair<string, ModuleNode> module in Modules)
             {
                 if (module.Value.getName() == "default")
                 {
@@ -208,12 +211,12 @@ namespace Shank
                 )
                 {
                     //checking that the target module exists
-                    if (!modules.ContainsKey(import.Key))
+                    if (!Modules.ContainsKey(import.Key))
                         throw new Exception($"Module {import.Key} does not exist");
                     //if the i
                     if (import.Value != null || import.Value.Count > 0)
                     {
-                        ModuleNode m = modules[import.Key];
+                        ModuleNode m = Modules[import.Key];
 
                         foreach (string s in import.Value)
                         {

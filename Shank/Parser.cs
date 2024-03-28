@@ -130,6 +130,17 @@ public class Parser
         }
     }
 
+    private void checkTokenListSize(int offset)
+    {
+        if(_tokens.Count < offset)
+            throw new Exception($"Out of bounds, cannot peek {offset} tokens ahead.");
+    }
+    private Token PeekAndCheck(int offset)
+    {
+        checkTokenListSize(offset);
+        return _tokens[offset];
+    }
+
     private VariableReferenceNode? GetVariableReferenceNode()
     {
         if (MatchAndRemove(Token.TokenType.Identifier) is { } id)
@@ -196,7 +207,7 @@ public class Parser
             }
             else if (MatchAndRemove(Token.TokenType.Import) != null)
             {
-                if (Peek(1).Type == Token.TokenType.LeftBracket)
+                if (PeekAndCheck(1).Type == Token.TokenType.LeftBracket)
                     module.addImportNames(Import(), checkForFunctions());
                 else
                     module.addImportName(Import());
@@ -213,7 +224,7 @@ public class Parser
             {
                 throw new SyntaxErrorException(
                     "Any statement at indent zero must begin with the keyword `import`,"
-                        + " `export`, `define`, or `record`. The following is invalid: ",
+                        + " `export`, `define`, 'enum', 'test' or `record`. The following is invalid: ",
                     Peek(0)
                 );
             }

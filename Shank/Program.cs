@@ -116,17 +116,14 @@ namespace Shank
                         2
                     );
 
-                    BuiltInFunctions.Register(currentModule.getFunctions());
                     if (
                         currentModule.getFunctions().ContainsKey("start")
                         && currentModule.getFunctions()["start"] is FunctionNode s
                     )
                     {
                         Interpreter.setStartModule();
-                        SemanticAnalysis.checkModules(Interpreter.getModules());
-                        Interpreter.handleTests();
-                        Interpreter.handleExports();
-                        Interpreter.handleImports();
+                        BuiltInFunctions.Register(currentModule.getFunctions());
+                        SemanticAnalysis.checkModules();
                         var interpreterErrorOccurred = false;
                         try
                         {
@@ -164,10 +161,7 @@ namespace Shank
                     );
 
                 Interpreter.setStartModule();
-                SemanticAnalysis.checkModules(Interpreter.getModules());
-                Interpreter.handleTests();
-                Interpreter.handleExports();
-                Interpreter.handleImports();
+                SemanticAnalysis.checkModules();
                 BuiltInFunctions.Register(Interpreter.getStartModule().getFunctions());
                 foreach (var module in Interpreter.Modules)
                 {

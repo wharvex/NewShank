@@ -64,5 +64,21 @@ namespace ShankUnitTests
             Assert.IsTrue(module.getEnums().ContainsKey("colors"));
             Assert.AreEqual(3, module.getEnums()["colors"].EnumElements.Count);
         }
+
+        //checking if the line "e := red" would be parsed without throwing an error
+        [TestMethod]
+        public void parseEnumVariable()
+        {
+            string[] file = {
+                "enum colors = [red, green, blue]\n",
+                "define start()\n",
+                "variables i : integer\n",
+                "variables e : colors\n",
+                "\ti := 3\n",
+                "\te := red\n"
+            };
+            ModuleNode module = getModuleFromParser(file);
+            Assert.IsNotNull(module);
+        }
     }
 }
