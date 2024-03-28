@@ -28,7 +28,7 @@ namespace ShankUnitTests
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(code);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules(Interpreter.getModules());
+            SemanticAnalysis.checkModules();
         }
 
         [TestMethod]
@@ -54,7 +54,7 @@ namespace ShankUnitTests
             files.AddFirst(file1);
             files.AddLast(file2);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules(Interpreter.getModules());
+            SemanticAnalysis.checkModules();
         }
 
         //importing from a module that also imports
@@ -95,7 +95,7 @@ namespace ShankUnitTests
             files.AddLast(file3);
 
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules(Interpreter.getModules());
+            SemanticAnalysis.checkModules();
         }
 
         [TestMethod]
@@ -134,7 +134,7 @@ namespace ShankUnitTests
             files.AddLast(file1);
 
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules(Interpreter.getModules());
+            SemanticAnalysis.checkModules();
         }
 
         [TestMethod]
@@ -177,7 +177,7 @@ namespace ShankUnitTests
             files.AddLast(file1);
 
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules(Interpreter.getModules());
+            SemanticAnalysis.checkModules();
         }
 
         [TestMethod]
@@ -204,7 +204,7 @@ namespace ShankUnitTests
             files.AddLast(file1);
             files.AddLast(file2);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules(Interpreter.getModules());
+            SemanticAnalysis.checkModules();
         }
 
         //CATCHING ERRORS TESTS
@@ -225,7 +225,7 @@ namespace ShankUnitTests
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file1);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules(Interpreter.getModules());
+            SemanticAnalysis.checkModules();
         }
 
         [TestMethod]
@@ -255,7 +255,7 @@ namespace ShankUnitTests
             files.AddLast(file1);
             files.AddLast(file2);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules(Interpreter.getModules());
+            SemanticAnalysis.checkModules();
         }
 
         [TestMethod]
@@ -282,7 +282,7 @@ namespace ShankUnitTests
             files.AddLast(file1);
             files.AddLast(file2);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules(Interpreter.getModules());
+            SemanticAnalysis.checkModules();
         }
 
         [TestMethod]
@@ -312,7 +312,7 @@ namespace ShankUnitTests
             files.AddLast(file1);
             files.AddLast(file2);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules(Interpreter.getModules());
+            SemanticAnalysis.checkModules();
         }
 
         [TestMethod]
@@ -338,7 +338,7 @@ namespace ShankUnitTests
             files.AddLast(file1);
             files.AddLast(file2);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules(Interpreter.getModules());
+            SemanticAnalysis.checkModules();
         }
 
         [TestMethod]
@@ -367,7 +367,7 @@ namespace ShankUnitTests
             Interpreter.Modules.Add("default", module1);
             Interpreter.setStartModule();
             BuiltInFunctions.Register(Interpreter.getStartModule().getFunctions());
-            SemanticAnalysis.checkModules(Interpreter.getModules());
+            SemanticAnalysis.checkModules();
         }
     }
 }

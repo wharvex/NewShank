@@ -42,7 +42,7 @@ namespace ShankUnitTests
             ModuleNode? startModule = Interpreter.setStartModule();
             if (startModule != null)
                 BuiltInFunctions.Register(startModule.getFunctions());
-            Interpreter.handleExports();
+            //Interpreter.handleExports();
         }
 
         [TestMethod]
@@ -58,6 +58,7 @@ namespace ShankUnitTests
             LinkedList<string[]> list = new LinkedList<string[]>();
             list.AddFirst(file2);
             initializeInterpreter(list);
+            Interpreter.handleExports();
             Assert.AreEqual(Interpreter.getModules()["test2"].getExportedFunctions().Count, 1);
             Assert.IsTrue(
                 Interpreter.getModules()["test2"].getExportedFunctions().ContainsKey("add")
@@ -89,6 +90,7 @@ namespace ShankUnitTests
             list.AddFirst(file1);
             list.AddLast(file2);
             initializeInterpreter(list);
+            Interpreter.handleExports();
             Assert.AreEqual(Interpreter.getModules()["test1"].getExportedFunctions().Count, 1);
             Assert.AreEqual(Interpreter.getModules()["test2"].getExportedFunctions().Count, 1);
 
@@ -115,6 +117,7 @@ namespace ShankUnitTests
             LinkedList<string[]> list = new LinkedList<string[]>();
             list.AddLast(file2);
             initializeInterpreter(list);
+            Interpreter.handleExports();
             Assert.AreEqual(Interpreter.getModules()["test2"].getExportedFunctions().Count, 2);
 
             Assert.IsTrue(

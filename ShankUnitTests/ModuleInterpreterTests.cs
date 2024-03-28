@@ -13,20 +13,7 @@ namespace ShankUnitTests
 
         public Dictionary<string, ModuleNode> getModulesFromParser(LinkedList<string[]> list)
         {
-            Dictionary<string, ModuleNode> Modules = new Dictionary<string, ModuleNode>();
-            Lexer l = new Lexer();
-            foreach (string[] file in list)
-            {
-                Parser p = new Parser(l.Lex(file));
-                ModuleNode m = p.Module();
-                if (m.getName() == null)
-                {
-                    m.setName(unnamedModuleCount.ToString());
-                    unnamedModuleCount++;
-                }
-                Modules.Add(m.getName(), m);
-            }
-            return Modules;
+            return ModuleBeforeInterpreterTests.getModulesFromParser(list);
         }
 
         public void initializeInterpreter(LinkedList<string[]> files)
@@ -35,8 +22,6 @@ namespace ShankUnitTests
             Dictionary<string, ModuleNode> modules = getModulesFromParser(files);
             Interpreter.setModules(modules);
             Interpreter.setStartModule();
-            Interpreter.handleExports();
-            Interpreter.handleImports();
         }
 
         public void runInterpreter()
@@ -46,13 +31,14 @@ namespace ShankUnitTests
                 var currentModule = currentModulePair.Value;
                 //Console.WriteLine($"\nOutput of {currentModule.getName()}:\n");
 
-                BuiltInFunctions.Register(currentModule.getFunctions());
                 if (
                     currentModule.getFunctions().ContainsKey("start")
                     && currentModule.getFunctions()["start"] is FunctionNode s
                 )
                 {
                     var interpreterErrorOccurred = false;
+                    BuiltInFunctions.Register(currentModule.getFunctions());
+                    SemanticAnalysis.checkModules();
                     try
                     {
                         Interpreter.InterpretFunction(s, new List<InterpreterDataType>());

@@ -1,4 +1,6 @@
 ﻿using System.Collections;
+using System.ComponentModel.DataAnnotations;
+using LLVMSharp;
 
 namespace Shank;
 
@@ -105,6 +107,26 @@ public class CharDataType : InterpreterDataType
     public override void FromString(string input)
     {
         Value = input[0];
+    }
+}
+
+public class EnumDataType : InterpreterDataType
+{
+    public EnumDataType(string data)
+    {
+        Value = data;
+    }
+
+    public string Value { set; get; }
+
+    public override void FromString(string input)
+    {
+        Value = input;
+    }
+
+    public override string ToString()
+    {
+        return Value;
     }
 }
 
