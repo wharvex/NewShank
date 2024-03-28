@@ -38,39 +38,8 @@ namespace Shank
                 {
                     var target = dict[an.target.Name];
 
-                    // If ArrayType is not null, then we should use it for this analysis because it
-                    // means target is an array.
-                    // If RecordType is not null, then we should use the type of the
-                    // RecordMemberReference on the target.
-                    VariableNode.DataType targetType = target.Type switch
-                    {
-                        VariableNode.DataType.Array
-                            => target.ArrayType
-                                ?? throw new InvalidOperationException(
-                                    "Something went wrong internally. When the Type of a"
-                                        + " VariableReferenceNode is Array, its ArrayType should"
-                                        + " not be null."
-                                ),
-                        VariableNode.DataType.Record
-                            => parentModule
-                                .Records[
-                                    target.RecordType
-                                        ?? throw new InvalidOperationException(
-                                            "Something went wrong internally. When the Type"
-                                                + " of a VariableReferenceNode is Record, its"
-                                                + " RecordType should not be null."
-                                        )
-                                ]
-                                .GetFromMembersByName(
-                                    an.target.RecordMemberReference?.Name
-                                        ?? throw new Exception(
-                                            "Cannot assign to a Record target without"
-                                                + " specifying a Record member."
-                                        )
-                                )
-                                ?.Type ?? throw new Exception("Member not found on Record"),
-                        _ => target.Type
-                    };
+                    var targetType = GetTargetTypeForAssignmentCheck(target, an, parentModule);
+
                     CheckNode(targetType, an.expression, dict, parentModule);
                 }
                 else if (s is FunctionCallNode fn)
@@ -106,6 +75,22 @@ namespace Shank
                 }
             }
         }
+
+        private static VariableNode.DataType GetTargetTypeForAssignmentCheck(
+            VariableNode vn,
+            AssignmentNode an,
+            ModuleNode parentModule
+        ) =>
+            vn.Type switch
+            {
+                VariableNode.DataType.Array => vn.GetArrayTypeSafe(),
+                VariableNode.DataType.Record
+                    => parentModule
+                        .Records[vn.GetRecordTypeSafe()]
+                        .GetFromMembersByNameSafe(an.target.GetRecordMemberReferenceSafe().Name)
+                        .Type,
+                _ => vn.Type
+            };
 
         private static void CheckNode(
             VariableNode.DataType targetType,

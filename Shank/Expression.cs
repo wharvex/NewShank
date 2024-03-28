@@ -30,7 +30,7 @@ namespace Shank
             ge,
             eq,
             ne
-        };
+        }
 
         public enum MathOpType
         {
@@ -39,7 +39,14 @@ namespace Shank
             times,
             divide,
             modulo
-        };
+        }
+
+        public enum VrnExtType
+        {
+            RecordMember,
+            ArrayIndex,
+            None
+        }
 
         protected ASTNode()
         {
@@ -922,6 +929,15 @@ namespace Shank
                     null
                 );
         }
+
+        public RecordMemberNode GetFromMembersByNameSafe(string name)
+        {
+            return GetFromMembersByName(name)
+                ?? throw new ArgumentOutOfRangeException(
+                    nameof(name),
+                    "Member " + name + " not found on record."
+                );
+        }
     }
 
     public class EnumNode : ASTNode
@@ -966,6 +982,18 @@ namespace Shank
         public ASTNode? From { get; set; }
         public ASTNode? To { get; set; }
 
+        public DataType GetArrayTypeSafe()
+        {
+            return ArrayType
+                ?? throw new InvalidOperationException("Expected ArrayType to not be null.");
+        }
+
+        public string GetRecordTypeSafe()
+        {
+            return RecordType
+                ?? throw new InvalidOperationException("Expected RecordType to not be null.");
+        }
+
         public DataType GetTypeForCheckNode(ModuleNode parentModule, string? memberName)
         {
             return memberName is null
@@ -978,20 +1006,7 @@ namespace Shank
             Dictionary<string, RecordNode> records
         )
         {
-            return records[
-                    RecordType
-                        ?? throw new InvalidOperationException(
-                            "It is invalid to call GetRecordMemberType on a VariableNode that"
-                                + " does not have a RecordType."
-                        )
-                ]
-                    .GetFromMembersByName(memberName)
-                    ?.Type
-                ?? throw new ArgumentOutOfRangeException(
-                    nameof(memberName),
-                    "The specified record member name was not found on the record which this"
-                        + " VariableNode represents"
-                );
+            return records[GetRecordTypeSafe()].GetFromMembersByNameSafe(memberName).Type;
         }
 
         public override string ToString()
@@ -1084,6 +1099,9 @@ namespace Shank
         /// </summary>
         public ASTNode? Index { get; init; }
 
+        public ASTNode? Extension { get; init; }
+        public VrnExtType ExtensionType { get; init; }
+
         /// <summary>
         /// Holds the variable's record member reference if it exists.
         /// </summary>
@@ -1092,6 +1110,14 @@ namespace Shank
         public ASTNode GetIndexSafe()
         {
             return Index ?? throw new InvalidOperationException("Expected Index to not be null.");
+        }
+
+        public VariableReferenceNode GetRecordMemberReferenceSafe()
+        {
+            return RecordMemberReference
+                ?? throw new InvalidOperationException(
+                    "Expected RecordMemberReference to not be null."
+                );
         }
 
         public override string ToString()
