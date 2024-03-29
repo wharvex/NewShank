@@ -8,6 +8,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="dotShank\Generics\NewFolder\**" />
+    <EmbeddedResource Remove="dotShank\Generics\NewFolder\**" />
+    <None Remove="dotShank\Generics\NewFolder\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="LLVMSharp" Version="16.0.0" />
     <PackageReference Include="LLVMSharp.Interop" Version="16.0.0" />
   </ItemGroup>
@@ -22,7 +28,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="dotShank\Generics\NewFolder\" />
     <Folder Include="dotShank\Globals\" />
     <Folder Include="dotShank\VarsSetBeforeUse\" />
     <Folder Include="dotShank\Overloads\" />

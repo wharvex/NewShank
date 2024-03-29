@@ -5,17 +5,17 @@ namespace Shank;
 public class Parser
 {
     private readonly Token.TokenType[] _shankTokenTypes =
-    {
+    [
         Token.TokenType.Integer,
         Token.TokenType.Real,
         Token.TokenType.Boolean,
         Token.TokenType.Character,
         Token.TokenType.String,
         Token.TokenType.Array
-    };
+    ];
 
     private readonly Token.TokenType[] _shankTokenTypesPlusIdentifier =
-    {
+    [
         Token.TokenType.Integer,
         Token.TokenType.Real,
         Token.TokenType.Boolean,
@@ -23,7 +23,7 @@ public class Parser
         Token.TokenType.String,
         Token.TokenType.Array,
         Token.TokenType.Identifier
-    };
+    ];
 
     public Parser(List<Token> tokens)
     {
@@ -159,7 +159,11 @@ public class Parser
                         "Need a right bracket after the expression!",
                         Peek(0)
                     );
-                return new VariableReferenceNode(id.Value ?? string.Empty, exp);
+                return new VariableReferenceNode(
+                    id.GetValueSafe(),
+                    exp,
+                    ASTNode.VrnExtType.ArrayIndex
+                );
             }
             if (MatchAndRemove(Token.TokenType.Dot) is not null)
             {
@@ -169,9 +173,13 @@ public class Parser
                         "Need a record member reference after the dot!",
                         Peek(0)
                     );
-                return new VariableReferenceNode(id.GetIdentifierValue(), varRef, true);
+                return new VariableReferenceNode(
+                    id.GetValueSafe(),
+                    varRef,
+                    ASTNode.VrnExtType.RecordMember
+                );
             }
-            return new VariableReferenceNode(id.Value ?? string.Empty);
+            return new VariableReferenceNode(id.GetValueSafe());
         }
         return null;
     }
@@ -245,7 +253,7 @@ public class Parser
             ?? throw new SyntaxErrorException("Expected a function name", Peek(0));
 
         // Create the function node.
-        var funcNode = new FunctionNode(name.GetIdentifierValue(), moduleName ?? "default");
+        var funcNode = new FunctionNode(name.GetValueSafe(), moduleName ?? "default");
 
         // Process parameter variables.
         if (MatchAndRemove(Token.TokenType.LeftParen) == null)
@@ -282,7 +290,7 @@ public class Parser
             ?? throw new SyntaxErrorException("Expected a record name", Peek(0));
         RequiresEndOfLine();
 
-        var recNode = new RecordNode(name.GetIdentifierValue(), moduleName);
+        var recNode = new RecordNode(name.GetValueSafe(), moduleName);
         BodyRecord(recNode);
         return recNode;
     }
@@ -365,10 +373,10 @@ public class Parser
 
         return IsTokenShankType(typeToken)
             ? new RecordMemberNode(
-                nameToken.GetIdentifierValue(),
+                nameToken.GetValueSafe(),
                 GetDataTypeFromTokenType(typeToken.Type)
             )
-            : new RecordMemberNode(nameToken.GetIdentifierValue(), typeToken.GetIdentifierValue());
+            : new RecordMemberNode(nameToken.GetValueSafe(), typeToken.GetValueSafe());
     }
 
     private VariableNode.DataType GetDataTypeFromTokenType(Token.TokenType tt) =>
@@ -728,7 +736,7 @@ public class Parser
                             InitialValue = null,
                             IsConstant = isConstant,
                             Type = VariableNode.DataType.Record,
-                            RecordType = id.GetIdentifierValue(),
+                            RecordType = id.GetValueSafe(),
                             Name = n
                         }
                 )

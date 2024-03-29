@@ -162,10 +162,10 @@ public class Interpreter
         Dictionary<string, InterpreterDataType> variables
     )
     {
-        if (an.target.RecordMemberReference is { } rmr)
+        if (an.target.GetExtensionSafe() is VariableReferenceNode vrn)
         {
-            var t = rdt.MemberTypes[rmr.Name];
-            rdt.Value[rmr.Name] = t switch
+            var t = rdt.MemberTypes[vrn.Name];
+            rdt.Value[vrn.Name] = t switch
             {
                 VariableNode.DataType.Boolean => ResolveBool(an.expression, variables),
                 VariableNode.DataType.String => ResolveString(an.expression, variables),
@@ -194,7 +194,7 @@ public class Interpreter
         Dictionary<string, InterpreterDataType> variables
     )
     {
-        if (an.target.Index is { } idx)
+        if (an.target.Extension is { } idx)
         {
             adt.AddElement(
                 adt.ArrayContentsType switch
@@ -445,7 +445,7 @@ public class Interpreter
         Dictionary<string, InterpreterDataType> variables
     )
     {
-        if ((pn.Variable ?? throw new InvalidOperationException()).Index is { } i)
+        if ((pn.Variable ?? throw new InvalidOperationException()).Extension is { } i)
         {
             // Passing in one element of the array.
             var index = ResolveInt(i, variables);
@@ -483,19 +483,19 @@ public class Interpreter
         List<InterpreterDataType> paramsList
     )
     {
-        if ((pn.Variable ?? throw new InvalidOperationException()).RecordMemberReference is { } rmr)
+        if (pn.GetVariableSafe().GetExtensionSafe() is VariableReferenceNode vrn)
         {
             paramsList.Add(
-                rdt.MemberTypes[rmr.Name] switch
+                rdt.MemberTypes[vrn.Name] switch
                 {
                     VariableNode.DataType.Character
-                        => new CharDataType(rdt.GetValueCharacter(rmr.Name)),
+                        => new CharDataType(rdt.GetValueCharacter(vrn.Name)),
                     VariableNode.DataType.Boolean
-                        => new BooleanDataType(rdt.GetValueBoolean(rmr.Name)),
+                        => new BooleanDataType(rdt.GetValueBoolean(vrn.Name)),
                     VariableNode.DataType.String
-                        => new StringDataType(rdt.GetValueString(rmr.Name)),
-                    VariableNode.DataType.Integer => new IntDataType(rdt.GetValueInteger(rmr.Name)),
-                    VariableNode.DataType.Real => new FloatDataType(rdt.GetValueReal(rmr.Name)),
+                        => new StringDataType(rdt.GetValueString(vrn.Name)),
+                    VariableNode.DataType.Integer => new IntDataType(rdt.GetValueInteger(vrn.Name)),
+                    VariableNode.DataType.Real => new FloatDataType(rdt.GetValueReal(vrn.Name)),
                     _ => throw new InvalidOperationException()
                 }
             );
@@ -606,25 +606,22 @@ public class Interpreter
                             + " strings other than addition."
                     ),
             VariableReferenceNode vrn
-                // vrn is an array.
-                => vrn.Index is { } indexNode
-                    ? GetArrayDataTypeAfterIndexCheck(variables[vrn.Name])
-                        .GetElementString(ResolveInt(indexNode, variables))
-                    // vrn is a record.
-                    : vrn.RecordMemberReference is { } rmr
-                        ? GetRecordDataTypeAfterRmrCheck(variables[vrn.Name])
-                            .GetValueString(rmr.Name)
-                        // vrn directly stores a string.
-                        : (variables[vrn.Name] as StringDataType)?.Value
-                            ?? throw new ArgumentException(
-                                "The given VariableReferenceNode cannot be resolved to a"
-                                    + " string unless it has an index or a member reference, or it"
-                                    + " directly stores a string."
-                            ),
+                => vrn.ExtensionType switch
+                {
+                    ASTNode.VrnExtType.ArrayIndex
+                        => ((ArrayDataType)variables[vrn.Name]).GetElementString(
+                            ResolveInt(vrn.GetExtensionSafe(), variables)
+                        ),
+                    ASTNode.VrnExtType.RecordMember
+                        => ((RecordDataType)variables[vrn.Name]).GetValueString(
+                            vrn.GetRecordMemberReferenceSafe().Name
+                        ),
+                    _ => ((StringDataType)variables[vrn.Name]).Value
+                },
             _
-                => throw new ArgumentException(
-                    "The given ASTNode cannot be resolved to a string",
-                    nameof(node)
+                => throw new ArgumentOutOfRangeException(
+                    nameof(node),
+                    "The given ASTNode cannot be resolved to a string"
                 )
         };
 
@@ -637,7 +634,7 @@ public class Interpreter
 
         if (node is VariableReferenceNode vr)
         {
-            if (vr.Index is { } i && (variables[vr.Name] as ArrayDataType) is { } adt)
+            if (vr.Extension is { } i && (variables[vr.Name] as ArrayDataType) is { } adt)
             {
                 return adt.GetElementCharacter(ResolveInt(i, variables));
             }
@@ -651,36 +648,6 @@ public class Interpreter
         );
     }
 
-    public static char ResolveChar2(
-        ASTNode node,
-        Dictionary<string, InterpreterDataType> variables
-    ) =>
-        node switch
-        {
-            CharNode cn => cn.Value,
-            VariableReferenceNode vrn
-                // vrn is an array.
-                => vrn.Index is { } indexNode
-                    ? GetArrayDataTypeAfterIndexCheck(variables[vrn.Name])
-                        .GetElementCharacter(ResolveInt(indexNode, variables))
-                    // vrn is a record.
-                    : vrn.RecordMemberReference is { } rmr
-                        ? GetRecordDataTypeAfterRmrCheck(variables[vrn.Name])
-                            .GetValueCharacter(rmr.Name)
-                        // vrn directly stores a character.
-                        : (variables[vrn.Name] as CharDataType)?.Value
-                            ?? throw new ArgumentException(
-                                "The given VariableReferenceNode cannot be resolved to a"
-                                    + " char unless it has an index or a member reference, or it"
-                                    + " directly stores a char."
-                            ),
-            _
-                => throw new ArgumentException(
-                    "The given ASTNode cannot be resolved to a char",
-                    nameof(node)
-                )
-        };
-
     public static RecordDataType GetRecordDataTypeAfterRmrCheck(InterpreterDataType idt)
     {
         return idt as RecordDataType
@@ -690,14 +657,19 @@ public class Interpreter
             );
     }
 
-    public static ArrayDataType GetArrayDataTypeAfterIndexCheck(InterpreterDataType idt)
-    {
-        return idt as ArrayDataType
-            ?? throw new InvalidOperationException(
-                "If a VariableReferenceNode vrn has an Index then vrn's Name should map to an"
-                    + " ArrayDataType in the IDT map."
-            );
-    }
+    public static ArrayDataType GetIdtAsArrayDt(InterpreterDataType idt) =>
+        idt as ArrayDataType
+        ?? throw new ArgumentOutOfRangeException(
+            nameof(idt),
+            "Expected given InterpreterDataType to be an ArrayDataType"
+        );
+
+    public static RecordDataType GetIdtAsRecordDt(InterpreterDataType idt) =>
+        idt as RecordDataType
+        ?? throw new ArgumentOutOfRangeException(
+            nameof(idt),
+            "Expected given InterpreterDataType to be a RecordDataType"
+        );
 
     public static float ResolveFloat(
         ASTNode node,
@@ -728,9 +700,9 @@ public class Interpreter
             return fn.Value;
         else if (node is VariableReferenceNode vr)
         {
-            if (vr.Index != null)
+            if (vr.Extension != null)
             {
-                var index = ResolveInt(vr.Index, variables);
+                var index = ResolveInt(vr.Extension, variables);
                 return (float)(variables[vr.Name] as ArrayDataType)?.GetElement(index);
             }
 
@@ -766,9 +738,9 @@ public class Interpreter
             return fn.Value;
         else if (node is VariableReferenceNode vr)
         {
-            if (vr.Index != null)
+            if (vr.Extension != null)
             {
-                var index = ResolveInt(vr.Index, variables);
+                var index = ResolveInt(vr.Extension, variables);
                 return (int)(variables[vr.Name] as ArrayDataType)?.GetElement(index);
             }
 

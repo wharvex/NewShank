@@ -104,10 +104,9 @@ namespace Shank
         }
 
         /**
-         * IsVariable: the param was preceded by the "var" keyword when it was passed in,
-         * meaning it can be changed in the function and its new value will persist in the
-         * caller's scope.
-         *
+         * If IsVariable is true, it means the param was preceded by the "var" keyword when it was
+         * passed in, meaning it can be changed in the function, and its new value will persist in
+         * the caller's scope.
          */
         public ParameterNode(VariableReferenceNode variable, bool isVariable)
         {
@@ -119,6 +118,9 @@ namespace Shank
         public ASTNode? Constant { get; init; }
         public VariableReferenceNode? Variable { get; init; }
         public bool IsVariable { get; init; }
+
+        public VariableReferenceNode GetVariableSafe() =>
+            Variable ?? throw new InvalidOperationException("Expected Variable to not be null");
 
         public override string ToString()
         {
@@ -994,12 +996,37 @@ namespace Shank
                 ?? throw new InvalidOperationException("Expected RecordType to not be null.");
         }
 
-        public DataType GetTypeForCheckNode(ModuleNode parentModule, string? memberName)
-        {
-            return memberName is null
-                ? Type
-                : GetRecordMemberType(memberName, parentModule.Records);
-        }
+        /// <summary>
+        /// Get this VariableNode's type based on what Extension the VariableReferenceNode that
+        /// points to it might have.
+        /// </summary>
+        /// <param name="parentModule"></param>
+        /// <param name="vrn">The VariableReferenceNode that points to this VariableNode</param>
+        /// <returns></returns>
+        public DataType GetSpecificType(ModuleNode parentModule, VariableReferenceNode vrn) =>
+            vrn.ExtensionType switch
+            {
+                VrnExtType.ArrayIndex => GetArrayTypeSafe(),
+                VrnExtType.RecordMember
+                    => GetRecordMemberType(
+                        vrn.GetRecordMemberReferenceSafe().Name,
+                        parentModule.Records
+                    ),
+                VrnExtType.None
+                    => Type switch
+                    {
+                        DataType.Record
+                            => throw new NotImplementedException(
+                                "It is not implemented yet to assign a record variable base to a target."
+                            ),
+                        DataType.Array
+                            => throw new NotImplementedException(
+                                "It is not implemented yet to assign an array variable base to a target."
+                            ),
+                        _ => Type
+                    },
+                _ => throw new NotImplementedException("Unknown VrnExtType member.")
+            };
 
         public DataType GetRecordMemberType(
             string memberName,
@@ -1072,57 +1099,38 @@ namespace Shank
         public VariableReferenceNode(string name)
         {
             Name = name;
-            Index = null;
+            Extension = null;
+            ExtensionType = VrnExtType.None;
         }
 
-        public VariableReferenceNode(
-            string name,
-            ASTNode indexOrRecordMemberReference,
-            bool isRecord = false
-        )
+        public VariableReferenceNode(string name, ASTNode extension, VrnExtType extensionType)
         {
             Name = name;
-            if (isRecord)
-            {
-                RecordMemberReference = (VariableReferenceNode)indexOrRecordMemberReference;
-            }
-            else
-            {
-                Index = indexOrRecordMemberReference;
-            }
+            Extension = extension;
+            ExtensionType = extensionType;
         }
 
         public string Name { get; init; }
 
         /// <summary>
-        /// Holds the variable's array index expression if it exists.
+        /// Represents an extension of the base variable reference (e.g. an array subscript or a record member).
         /// </summary>
-        public ASTNode? Index { get; init; }
-
         public ASTNode? Extension { get; init; }
+
         public VrnExtType ExtensionType { get; init; }
 
-        /// <summary>
-        /// Holds the variable's record member reference if it exists.
-        /// </summary>
-        public VariableReferenceNode? RecordMemberReference { get; init; }
+        public ASTNode GetExtensionSafe() =>
+            Extension ?? throw new InvalidOperationException("Expected Extension to not be null.");
 
-        public ASTNode GetIndexSafe()
-        {
-            return Index ?? throw new InvalidOperationException("Expected Index to not be null.");
-        }
-
-        public VariableReferenceNode GetRecordMemberReferenceSafe()
-        {
-            return RecordMemberReference
-                ?? throw new InvalidOperationException(
-                    "Expected RecordMemberReference to not be null."
-                );
-        }
+        public VariableReferenceNode GetRecordMemberReferenceSafe() =>
+            GetExtensionSafe() as VariableReferenceNode
+            ?? throw new InvalidOperationException(
+                "Expected Extension to be a VariableReferenceNode."
+            );
 
         public override string ToString()
         {
-            return $"{Name + (Index != null ? (", Index: " + Index) : string.Empty)}";
+            return $"{Name + (Extension != null ? (", Index: " + Extension) : string.Empty)}";
         }
     }
 

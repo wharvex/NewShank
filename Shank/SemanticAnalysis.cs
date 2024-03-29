@@ -83,7 +83,12 @@ namespace Shank
         ) =>
             vn.Type switch
             {
-                VariableNode.DataType.Array => vn.GetArrayTypeSafe(),
+                VariableNode.DataType.Array
+                    => an.target.ExtensionType == ASTNode.VrnExtType.None
+                        ? throw new NotImplementedException(
+                            "It is not implemented yet to assign to the base of an array variable."
+                        )
+                        : vn.GetArrayTypeSafe(),
                 VariableNode.DataType.Record
                     => parentModule
                         .Records[vn.GetRecordTypeSafe()]
@@ -146,18 +151,13 @@ namespace Shank
                     )
                         throw new Exception("strings have to be assigned to string variables");
                     break;
-                case VariableReferenceNode variableReferenceNode:
-                    var variableNode = variables[variableReferenceNode.Name];
-                    if (
-                        variableNode.GetTypeForCheckNode(
-                            parentModule,
-                            variableReferenceNode.RecordMemberReference?.Name
-                        ) != targetType
-                    )
+                case VariableReferenceNode vrn:
+                    var vn = variables[vrn.Name];
+                    if (vn.GetSpecificType(parentModule, vrn) != targetType)
                         throw new Exception(
-                            variableReferenceNode.Name
+                            vrn.Name
                                 + " is a "
-                                + variables[variableReferenceNode.Name].Type
+                                + variables[vrn.Name].Type
                                 + " and can't be assigned to a "
                                 + targetType
                         );

@@ -2,7 +2,22 @@
 {
     public class Token
     {
-        public Token(TokenType type, int lineNumber, string? value = null)
+        private readonly TokenType[] _nonNullValuedTokenTypes =
+        [
+            TokenType.Identifier,
+            TokenType.Number,
+            TokenType.CharContents,
+            TokenType.StringContents,
+        ];
+
+        public Token(TokenType type, int lineNumber)
+        {
+            Type = type;
+            Value = null;
+            LineNumber = lineNumber;
+        }
+
+        public Token(TokenType type, int lineNumber, string value)
         {
             Type = type;
             Value = value;
@@ -74,24 +89,22 @@
         public string? Value { get; init; }
         public int LineNumber { get; init; }
 
-        public string GetIdentifierValue()
+        public string GetValueSafe()
         {
-            // TODO: Convert this to a method that gets the non-null Value of a Token of any type
-            // for which something has gone wrong internally if Value is null.
-            if (Type != TokenType.Identifier)
-            {
-                throw new InvalidOperationException("This method is for Identifier Tokens only.");
-            }
-
-            if (Value is null)
+            if (!_nonNullValuedTokenTypes.Contains(Type))
             {
                 throw new InvalidOperationException(
-                    "Something went wrong internally. A Token of type Identifier should not have a"
-                        + " null Value."
+                    "It is invalid to call this method on a Token whose Type is not"
+                        + " Identifier, Number, CharContents, or StringContents."
                 );
             }
 
-            return Value;
+            return Value
+                ?? throw new InvalidOperationException(
+                    "Something went wrong internally. A Token of type "
+                        + Type
+                        + " should not have a null Value."
+                );
         }
 
         public override string ToString()
