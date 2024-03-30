@@ -4,6 +4,9 @@ namespace Shank;
 
 public class Parser
 {
+    // Only TokenTypes used to declare variables of that type appear in this list. The TokenTypes
+    // for 'record' and 'enum' are not in this list because user-defined identifiers are used to
+    // declare their types.
     private readonly Token.TokenType[] _shankTokenTypes =
     [
         Token.TokenType.Integer,
@@ -247,13 +250,16 @@ public class Parser
 
     public FunctionNode? Function(string? moduleName)
     {
+        // If moduleName is null, set it to "default".
+        moduleName ??= "default";
+
         // Process function name.
         var name =
             MatchAndRemove(Token.TokenType.Identifier)
             ?? throw new SyntaxErrorException("Expected a function name", Peek(0));
 
         // Create the function node.
-        var funcNode = new FunctionNode(name.GetValueSafe(), moduleName ?? "default");
+        var funcNode = new FunctionNode(name.GetValueSafe(), moduleName);
 
         // Process parameter variables.
         if (MatchAndRemove(Token.TokenType.LeftParen) == null)
@@ -261,7 +267,7 @@ public class Parser
         var done = false;
         while (!done)
         {
-            var vars = GetVariables();
+            var vars = GetVariables(moduleName);
             done = vars == null;
             if (vars != null)
             {
@@ -275,8 +281,8 @@ public class Parser
         MatchAndRemove(Token.TokenType.EndOfLine);
 
         // Process local variables.
-        funcNode.LocalVariables.AddRange(ProcessConstants());
-        funcNode.LocalVariables.AddRange(ProcessVariables());
+        funcNode.LocalVariables.AddRange(ProcessConstants(moduleName));
+        funcNode.LocalVariables.AddRange(ProcessVariables(moduleName));
 
         // Process function body and return function node.
         BodyFunction(funcNode);
@@ -363,11 +369,9 @@ public class Parser
             return null;
         }
 
-        var nameToken = MatchAndRemove(Token.TokenType.Identifier);
-        if (nameToken is null)
-        {
-            return null;
-        }
+        var nameToken =
+            MatchAndRemove(Token.TokenType.Identifier)
+            ?? throw new SyntaxErrorException("Expected a name", Peek(0));
 
         RequiresEndOfLine();
 
@@ -379,7 +383,7 @@ public class Parser
             : new RecordMemberNode(nameToken.GetValueSafe(), typeToken.GetValueSafe());
     }
 
-    private VariableNode.DataType GetDataTypeFromTokenType(Token.TokenType tt) =>
+    private static VariableNode.DataType GetDataTypeFromTokenType(Token.TokenType tt) =>
         tt switch
         {
             Token.TokenType.Integer => VariableNode.DataType.Integer,
@@ -564,23 +568,37 @@ public class Parser
         }
     }
 
-    private List<VariableNode> ProcessVariables()
+    /// <summary>
+    /// Process an arbitrary number of consecutive variables declaration lines (i.e. lines that
+    /// start with the 'variables' keyword).
+    /// </summary>
+    /// <param name="parentModule"></param>
+    /// <returns></returns>
+    private List<VariableNode> ProcessVariables(string? parentModule)
     {
         var retVal = new List<VariableNode>();
 
         while (MatchAndRemove(Token.TokenType.Variables) != null)
         {
-            var nextOnes = GetVariables();
+            var nextOnes = GetVariables(parentModule);
+
+            // TODO: We are potentially adding null to retVal here.
             retVal.AddRange(nextOnes);
+
             MatchAndRemove(Token.TokenType.EndOfLine);
         }
         return retVal;
     }
 
-    private List<VariableNode>? GetVariables()
+    private List<VariableNode>? GetVariables(string? parentModuleName)
     {
         var names = new List<string>();
+
+        // TODO: Since GetVariables is also used to process lines that begin with the 'variables'
+        // keyword, the following line would allow the 'var' keyword to appear in those lines,
+        // which would not make sense.
         var isConstant = MatchAndRemove(Token.TokenType.Var) == null;
+
         var name = MatchAndRemove(Token.TokenType.Identifier);
         if (name == null)
             return null;
@@ -604,7 +622,8 @@ public class Parser
                             InitialValue = null,
                             IsConstant = isConstant,
                             Type = VariableNode.DataType.Integer,
-                            Name = n
+                            Name = n,
+                            ModuleName = parentModuleName,
                         }
                 )
                 .ToList();
@@ -621,7 +640,8 @@ public class Parser
                             InitialValue = null,
                             IsConstant = isConstant,
                             Type = VariableNode.DataType.Real,
-                            Name = n
+                            Name = n,
+                            ModuleName = parentModuleName,
                         }
                 )
                 .ToList();
@@ -638,7 +658,8 @@ public class Parser
                             InitialValue = null,
                             IsConstant = isConstant,
                             Type = VariableNode.DataType.Boolean,
-                            Name = n
+                            Name = n,
+                            ModuleName = parentModuleName,
                         }
                 )
                 .ToList();
@@ -655,7 +676,8 @@ public class Parser
                             InitialValue = null,
                             IsConstant = isConstant,
                             Type = VariableNode.DataType.Character,
-                            Name = n
+                            Name = n,
+                            ModuleName = parentModuleName,
                         }
                 )
                 .ToList();
@@ -672,7 +694,8 @@ public class Parser
                             InitialValue = null,
                             IsConstant = isConstant,
                             Type = VariableNode.DataType.String,
-                            Name = n
+                            Name = n,
+                            ModuleName = parentModuleName,
                         }
                 )
                 .ToList();
@@ -689,7 +712,8 @@ public class Parser
                             InitialValue = null,
                             IsConstant = isConstant,
                             Type = VariableNode.DataType.Array,
-                            Name = n
+                            Name = n,
+                            ModuleName = parentModuleName,
                         }
                 )
                 .ToList();
@@ -735,9 +759,10 @@ public class Parser
                         {
                             InitialValue = null,
                             IsConstant = isConstant,
-                            Type = VariableNode.DataType.Record,
-                            RecordType = id.GetValueSafe(),
-                            Name = n
+                            Type = VariableNode.DataType.Unknown,
+                            UnknownType = id.GetValueSafe(),
+                            Name = n,
+                            ModuleName = parentModuleName,
                         }
                 )
                 .ToList();
@@ -745,7 +770,7 @@ public class Parser
             return retVal;
         }
         else
-            throw new SyntaxErrorException("Unknown data type!", Peek(0));
+            throw new SyntaxErrorException("Invalid data type!", Peek(0));
     }
 
     private void CheckForRange(List<VariableNode> retVal)
@@ -779,7 +804,7 @@ public class Parser
             );
     }
 
-    private List<VariableNode> ProcessConstants()
+    private List<VariableNode> ProcessConstants(string? parentModuleName)
     {
         var retVal = new List<VariableNode>();
         while (MatchAndRemove(Token.TokenType.Constants) != null)
@@ -802,14 +827,16 @@ public class Parser
                                 InitialValue = node,
                                 Type = VariableNode.DataType.Real,
                                 IsConstant = true,
-                                Name = name.Value ?? ""
+                                Name = name.Value ?? "",
+                                ModuleName = parentModuleName
                             }
                             : new VariableNode()
                             {
                                 InitialValue = node,
                                 Type = VariableNode.DataType.Integer,
                                 IsConstant = true,
-                                Name = name.Value ?? ""
+                                Name = name.Value ?? "",
+                                ModuleName = parentModuleName
                             }
                     );
                 }
@@ -824,7 +851,8 @@ public class Parser
                                 InitialValue = new CharNode((chr?.Value ?? " ")[0]),
                                 Type = VariableNode.DataType.Character,
                                 IsConstant = true,
-                                Name = name.Value ?? ""
+                                Name = name.Value ?? "",
+                                ModuleName = parentModuleName
                             }
                         );
                     }
@@ -839,7 +867,8 @@ public class Parser
                                     InitialValue = new StringNode(str?.Value ?? ""),
                                     Type = VariableNode.DataType.String,
                                     IsConstant = true,
-                                    Name = name.Value ?? ""
+                                    Name = name.Value ?? "",
+                                    ModuleName = parentModuleName
                                 }
                             );
                         }
@@ -1117,6 +1146,9 @@ public class Parser
 
     private TestNode Test(string? parentModuleName)
     {
+        // If parentModuleName is null, set it to "default".
+        parentModuleName ??= "default";
+
         TestNode test;
         Token? token;
         if ((token = MatchAndRemove(Token.TokenType.Identifier)) == null)
@@ -1148,7 +1180,7 @@ public class Parser
         var done = false;
         while (!done)
         {
-            var vars = GetVariables();
+            var vars = GetVariables(parentModuleName);
             done = vars == null;
             if (vars != null)
             {
@@ -1163,8 +1195,8 @@ public class Parser
 
         // Process local variables.
 
-        test.LocalVariables.AddRange(ProcessConstants());
-        test.LocalVariables.AddRange(ProcessVariables());
+        test.LocalVariables.AddRange(ProcessConstants(parentModuleName));
+        test.LocalVariables.AddRange(ProcessVariables(parentModuleName));
 
         // Process function body and return function node.
 

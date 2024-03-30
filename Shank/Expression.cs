@@ -923,23 +923,24 @@ namespace Shank
             Members = [];
         }
 
-        public RecordMemberNode? GetFromMembersByName(string name)
-        {
-            return (RecordMemberNode?)
-                Members.FirstOrDefault(
-                    m => m is not null && ((RecordMemberNode)m).Name.Equals(name),
-                    null
-                );
-        }
+        public static RecordMemberNode ToMember(StatementNode? sn) =>
+            (RecordMemberNode)(
+                sn
+                ?? throw new ArgumentNullException(
+                    nameof(sn),
+                    "Expected StatementNode to not be null"
+                )
+            );
 
-        public RecordMemberNode GetFromMembersByNameSafe(string name)
-        {
-            return GetFromMembersByName(name)
-                ?? throw new ArgumentOutOfRangeException(
-                    nameof(name),
-                    "Member " + name + " not found on record."
-                );
-        }
+        public RecordMemberNode? GetFromMembersByName(string name) =>
+            (RecordMemberNode?)Members.FirstOrDefault(s => ToMember(s).Name.Equals(name), null);
+
+        public RecordMemberNode GetFromMembersByNameSafe(string name) =>
+            GetFromMembersByName(name)
+            ?? throw new ArgumentOutOfRangeException(
+                nameof(name),
+                "Member " + name + " not found on record."
+            );
     }
 
     public class EnumNode : ASTNode
@@ -970,15 +971,27 @@ namespace Shank
             Boolean,
             Array,
             Record,
-            Enum
+            Enum,
+            Unknown
+        };
+
+        public enum UnknownTypeResolver
+        {
+            Record,
+            Enum,
+            None,
+            Multiple
         };
 
         public DataType Type { get; set; }
 
-        // If Type is Array, then ArrayType is the type of its elements.
-        // If Type is not Array, then ArrayType should be null.
+        // If Type is Array, then ArrayType is the type of its elements, or else it is null.
         public DataType? ArrayType { get; set; }
-        public string? RecordType { get; set; }
+
+        // UnknownType is the base name of an enum or record.
+        // If Type is not Unknown or Enum or Record, then UnknownType should be null.
+        public string? UnknownType { get; set; }
+
         public bool IsConstant { get; set; }
         public ASTNode? InitialValue { get; set; }
         public ASTNode? From { get; set; }
@@ -990,10 +1003,34 @@ namespace Shank
                 ?? throw new InvalidOperationException("Expected ArrayType to not be null.");
         }
 
-        public string GetRecordTypeSafe()
+        public string GetUnknownTypeSafe()
         {
-            return RecordType
-                ?? throw new InvalidOperationException("Expected RecordType to not be null.");
+            return UnknownType
+                ?? throw new InvalidOperationException(
+                    "Expected " + nameof(UnknownType) + " to not be null."
+                );
+        }
+
+        public string GetModuleNameSafe() => ModuleName ?? "default";
+
+        public UnknownTypeResolver ResolveUnknownType(ModuleNode parentModule)
+        {
+            if (
+                parentModule.getEnums().ContainsKey(GetUnknownTypeSafe())
+                && parentModule.Records.ContainsKey(GetUnknownTypeSafe())
+            )
+            {
+                return UnknownTypeResolver.Multiple;
+            }
+
+            if (parentModule.getEnums().ContainsKey(GetUnknownTypeSafe()))
+            {
+                return UnknownTypeResolver.Enum;
+            }
+
+            return parentModule.Records.ContainsKey(GetUnknownTypeSafe())
+                ? UnknownTypeResolver.Record
+                : UnknownTypeResolver.None;
         }
 
         /// <summary>
@@ -1033,7 +1070,7 @@ namespace Shank
             Dictionary<string, RecordNode> records
         )
         {
-            return records[GetRecordTypeSafe()].GetFromMembersByNameSafe(memberName).Type;
+            return records[GetUnknownTypeSafe()].GetFromMembersByNameSafe(memberName).Type;
         }
 
         public override string ToString()

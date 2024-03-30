@@ -483,35 +483,39 @@ public class Interpreter
         List<InterpreterDataType> paramsList
     )
     {
-        if (pn.GetVariableSafe().GetExtensionSafe() is VariableReferenceNode vrn)
+        var pnVrn = pn.GetVariableSafe();
+        if (pnVrn.ExtensionType == ASTNode.VrnExtType.RecordMember)
         {
+            var rmVrn = pnVrn.GetRecordMemberReferenceSafe();
             paramsList.Add(
-                rdt.MemberTypes[vrn.Name] switch
+                rdt.MemberTypes[rmVrn.Name] switch
                 {
                     VariableNode.DataType.Character
-                        => new CharDataType(rdt.GetValueCharacter(vrn.Name)),
+                        => new CharDataType(rdt.GetValueCharacter(rmVrn.Name)),
                     VariableNode.DataType.Boolean
-                        => new BooleanDataType(rdt.GetValueBoolean(vrn.Name)),
+                        => new BooleanDataType(rdt.GetValueBoolean(rmVrn.Name)),
                     VariableNode.DataType.String
-                        => new StringDataType(rdt.GetValueString(vrn.Name)),
-                    VariableNode.DataType.Integer => new IntDataType(rdt.GetValueInteger(vrn.Name)),
-                    VariableNode.DataType.Real => new FloatDataType(rdt.GetValueReal(vrn.Name)),
-                    _ => throw new InvalidOperationException()
+                        => new StringDataType(rdt.GetValueString(rmVrn.Name)),
+                    VariableNode.DataType.Integer
+                        => new IntDataType(rdt.GetValueInteger(rmVrn.Name)),
+                    VariableNode.DataType.Real => new FloatDataType(rdt.GetValueReal(rmVrn.Name)),
+                    _
+                        => throw new NotImplementedException(
+                            "It has not been implemented yet to pass a complex Record member"
+                                + " type into a function."
+                        )
                 }
             );
         }
         else
         {
-            var newRdt = new RecordDataType(rdt);
-            OutputHelper.DebugPrint(OutputHelper.GetDebugJsonForRecordDataType(rdt), 3);
-            OutputHelper.DebugPrint(OutputHelper.GetDebugJsonForRecordDataType(newRdt), 4);
-            paramsList.Add(newRdt);
+            paramsList.Add(new RecordDataType(rdt));
         }
     }
 
     private static InterpreterDataType VariableNodeToActivationRecord(VariableNode vn)
     {
-        // TODO: Is it bad to store the VariableNode which the IDT is created from on the IDT?
+        var parentModule = Modules[vn.GetModuleNameSafe()];
         switch (vn.Type)
         {
             case VariableNode.DataType.Real:
@@ -526,22 +530,37 @@ public class Interpreter
                 return new BooleanDataType(((vn.InitialValue as BoolNode)?.Value) ?? true);
             case VariableNode.DataType.Array:
             {
-                return new ArrayDataType(
-                    vn.ArrayType
-                        ?? throw new ArgumentException(
-                            "Something went wrong internally. Every array variable declaration"
-                                + " should have a range expression, and the Parser should have"
-                                + " checked this already."
-                        )
-                );
+                return new ArrayDataType(vn.GetArrayTypeSafe());
             }
             case VariableNode.DataType.Record:
             {
-                return new RecordDataType(
-                    Modules[vn.ModuleName ?? "default"]
-                        .Records[vn.RecordType ?? throw new InvalidOperationException()]
-                        .Members
-                );
+                return new RecordDataType(parentModule.Records[vn.GetUnknownTypeSafe()].Members);
+            }
+            case VariableNode.DataType.Unknown:
+            {
+                return vn.ResolveUnknownType(parentModule) switch
+                {
+                    VariableNode.UnknownTypeResolver.Record
+                        => new RecordDataType(
+                            parentModule.Records[vn.GetUnknownTypeSafe()].Members
+                        ),
+                    VariableNode.UnknownTypeResolver.None
+                        => throw new InvalidOperationException(
+                            "The VariableNode's type was set to Unknown, but neither a"
+                                + " RecordNode nor an EnumNode could be found in its parent module "
+                                + "for it."
+                        ),
+                    VariableNode.UnknownTypeResolver.Multiple
+                        => throw new InvalidOperationException(
+                            "An EnumNode and a RecordNode were found with this "
+                                + "VariableNode's type name, so we don't know which one to use."
+                        ),
+                    _
+                        => throw new NotImplementedException(
+                            "Bret, you can put an enum arm in this switch expression if you"
+                                + " want the interpreter to be able to process Unknowns as enums."
+                        )
+                };
             }
             default:
                 throw new Exception($"Unknown local variable type");
@@ -632,14 +651,20 @@ public class Interpreter
             return cn.Value;
         }
 
-        if (node is VariableReferenceNode vr)
+        if (node is VariableReferenceNode vrn)
         {
-            if (vr.Extension is { } i && (variables[vr.Name] as ArrayDataType) is { } adt)
+            return vrn.ExtensionType switch
             {
-                return adt.GetElementCharacter(ResolveInt(i, variables));
-            }
-
-            return (variables[vr.Name] as CharDataType)?.Value ?? '0';
+                ASTNode.VrnExtType.ArrayIndex
+                    => ((ArrayDataType)variables[vrn.Name]).GetElementCharacter(
+                        ResolveInt(vrn.GetExtensionSafe(), variables)
+                    ),
+                ASTNode.VrnExtType.RecordMember
+                    => ((RecordDataType)variables[vrn.Name]).GetValueCharacter(
+                        vrn.GetRecordMemberReferenceSafe().Name
+                    ),
+                _ => ((CharDataType)variables[vrn.Name]).Value
+            };
         }
 
         throw new ArgumentException(
@@ -647,29 +672,6 @@ public class Interpreter
             nameof(node)
         );
     }
-
-    public static RecordDataType GetRecordDataTypeAfterRmrCheck(InterpreterDataType idt)
-    {
-        return idt as RecordDataType
-            ?? throw new InvalidOperationException(
-                "If a VariableReferenceNode vrn has a RecordMemberReference then vrn's Name"
-                    + " should map to a RecordDataType in the IDT map."
-            );
-    }
-
-    public static ArrayDataType GetIdtAsArrayDt(InterpreterDataType idt) =>
-        idt as ArrayDataType
-        ?? throw new ArgumentOutOfRangeException(
-            nameof(idt),
-            "Expected given InterpreterDataType to be an ArrayDataType"
-        );
-
-    public static RecordDataType GetIdtAsRecordDt(InterpreterDataType idt) =>
-        idt as RecordDataType
-        ?? throw new ArgumentOutOfRangeException(
-            nameof(idt),
-            "Expected given InterpreterDataType to be a RecordDataType"
-        );
 
     public static float ResolveFloat(
         ASTNode node,
@@ -698,15 +700,20 @@ public class Interpreter
         }
         else if (node is FloatNode fn)
             return fn.Value;
-        else if (node is VariableReferenceNode vr)
+        else if (node is VariableReferenceNode vrn)
         {
-            if (vr.Extension != null)
+            return vrn.ExtensionType switch
             {
-                var index = ResolveInt(vr.Extension, variables);
-                return (float)(variables[vr.Name] as ArrayDataType)?.GetElement(index);
-            }
-
-            return ((variables[vr.Name] as FloatDataType)?.Value) ?? 0.0F;
+                ASTNode.VrnExtType.ArrayIndex
+                    => ((ArrayDataType)variables[vrn.Name]).GetElementReal(
+                        ResolveInt(vrn.GetExtensionSafe(), variables)
+                    ),
+                ASTNode.VrnExtType.RecordMember
+                    => ((RecordDataType)variables[vrn.Name]).GetValueReal(
+                        vrn.GetRecordMemberReferenceSafe().Name
+                    ),
+                _ => ((FloatDataType)variables[vrn.Name]).Value
+            };
         }
         else
             throw new ArgumentException(nameof(node));
@@ -736,15 +743,20 @@ public class Interpreter
         }
         else if (node is IntNode fn)
             return fn.Value;
-        else if (node is VariableReferenceNode vr)
+        else if (node is VariableReferenceNode vrn)
         {
-            if (vr.Extension != null)
+            return vrn.ExtensionType switch
             {
-                var index = ResolveInt(vr.Extension, variables);
-                return (int)(variables[vr.Name] as ArrayDataType)?.GetElement(index);
-            }
-
-            return ((variables[vr.Name] as IntDataType)?.Value) ?? 0;
+                ASTNode.VrnExtType.ArrayIndex
+                    => ((ArrayDataType)variables[vrn.Name]).GetElementInteger(
+                        ResolveInt(vrn.GetExtensionSafe(), variables)
+                    ),
+                ASTNode.VrnExtType.RecordMember
+                    => ((RecordDataType)variables[vrn.Name]).GetValueInteger(
+                        vrn.GetRecordMemberReferenceSafe().Name
+                    ),
+                _ => ((IntDataType)variables[vrn.Name]).Value
+            };
         }
         else
             throw new ArgumentException(nameof(node));

@@ -123,7 +123,7 @@ namespace Shank
                     {
                         Interpreter.setStartModule();
                         BuiltInFunctions.Register(currentModule.getFunctions());
-                        SemanticAnalysis.checkModules();
+                        //SemanticAnalysis.checkModules();
                         var interpreterErrorOccurred = false;
                         try
                         {

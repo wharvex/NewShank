@@ -91,7 +91,7 @@ namespace Shank
                         : vn.GetArrayTypeSafe(),
                 VariableNode.DataType.Record
                     => parentModule
-                        .Records[vn.GetRecordTypeSafe()]
+                        .Records[vn.GetUnknownTypeSafe()]
                         .GetFromMembersByNameSafe(an.target.GetRecordMemberReferenceSafe().Name)
                         .Type,
                 _ => vn.Type
