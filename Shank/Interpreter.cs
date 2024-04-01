@@ -762,7 +762,6 @@ public class Interpreter
             throw new ArgumentException(nameof(node));
     }
 
-
     public static ModuleNode? setStartModule()
     {
         foreach (KeyValuePair<string, ModuleNode> currentModule in Modules)

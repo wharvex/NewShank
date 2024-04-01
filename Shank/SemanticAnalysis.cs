@@ -98,7 +98,11 @@ namespace Shank
         //                .Type,
         //        _ => vn.Type
         //    };
-        private static VariableNode.DataType GetTargetTypeForAssignmentCheck(VariableNode vn, AssignmentNode an, ModuleNode parentModule)
+        private static VariableNode.DataType GetTargetTypeForAssignmentCheck(
+            VariableNode vn,
+            AssignmentNode an,
+            ModuleNode parentModule
+        )
         {
             switch (vn.Type)
             {
@@ -106,16 +110,18 @@ namespace Shank
                     if (an.target.ExtensionType == ASTNode.VrnExtType.None)
                     {
                         throw new NotImplementedException(
-                           "It is not implemented yet to assign to the base of an array variable."
-                       );
+                            "It is not implemented yet to assign to the base of an array variable."
+                        );
                     }
                     else
                     {
                         return vn.GetArrayTypeSafe();
                     }
                 case VariableNode.DataType.Record:
-                    return parentModule.Records[vn.GetUnknownTypeSafe()].GetFromMembersByNameSafe(
-                        an.target.GetRecordMemberReferenceSafe().Name).Type;
+                    return parentModule
+                        .Records[vn.GetUnknownTypeSafe()]
+                        .GetFromMembersByNameSafe(an.target.GetRecordMemberReferenceSafe().Name)
+                        .Type;
                 default:
                     return vn.Type;
             }
@@ -245,6 +251,7 @@ namespace Shank
                 CheckAssignments(module.Value.getFunctions(), module.Value);
             }
         }
+
         public static ModuleNode? setStartModule()
         {
             if (Modules == null || Modules.Count == 0)
@@ -261,6 +268,7 @@ namespace Shank
             }
             return null;
         }
+
         public static void handleImports()
         {
             foreach (string currentImport in startModule.getImportNames().Keys)
@@ -271,7 +279,9 @@ namespace Shank
                 }
                 else
                 {
-                    throw new Exception("Could not find " + currentImport + " in the list of modules.");
+                    throw new Exception(
+                        "Could not find " + currentImport + " in the list of modules."
+                    );
                 }
             }
 
@@ -341,7 +351,11 @@ namespace Shank
             {
                 foreach (KeyValuePair<string, TestNode> test in currentModule.Value.getTests())
                 {
-                    if (currentModule.Value.getFunctions().ContainsKey(test.Value.targetFunctionName))
+                    if (
+                        currentModule
+                            .Value.getFunctions()
+                            .ContainsKey(test.Value.targetFunctionName)
+                    )
                     {
                         (
                             (FunctionNode)
@@ -360,30 +374,47 @@ namespace Shank
         {
             foreach (KeyValuePair<string, ModuleNode> currentModule in Modules)
             {
-                foreach (KeyValuePair<string, CallableNode> function in currentModule.Value.getFunctions())
+                foreach (
+                    KeyValuePair<
+                        string,
+                        CallableNode
+                    > function in currentModule.Value.getFunctions()
+                )
                 {
-                    if(function.Value is BuiltInFunctionNode) { continue; }
+                    if (function.Value is BuiltInFunctionNode)
+                    {
+                        continue;
+                    }
                     FunctionNode currentFunction = (FunctionNode)function.Value;
                     foreach (VariableNode variable in currentFunction.LocalVariables)
                     {
                         if (variable.Type == VariableNode.DataType.Unknown)
                         {
-                            if (variable.UnknownType != null && currentModule.Value.getEnums().ContainsKey(variable.UnknownType))
+                            if (
+                                variable.UnknownType != null
+                                && currentModule.Value.getEnums().ContainsKey(variable.UnknownType)
+                            )
                             {
                                 variable.Type = VariableNode.DataType.Enum;
                             }
-                            else if (variable.UnknownType != null && currentModule.Value.Records.ContainsKey(variable.UnknownType))
+                            else if (
+                                variable.UnknownType != null
+                                && currentModule.Value.Records.ContainsKey(variable.UnknownType)
+                            )
                             {
                                 variable.Type = VariableNode.DataType.Record;
                             }
-                            else throw new Exception(
-                                "Could not find a definition for the unknown type " + variable.UnknownType
+                            else
+                                throw new Exception(
+                                    "Could not find a definition for the unknown type "
+                                        + variable.UnknownType
                                 );
                         }
                     }
                 }
             }
         }
+
         public static void reset()
         {
             Modules = new Dictionary<string, ModuleNode>();
@@ -391,6 +422,5 @@ namespace Shank
             Interpreter.testOutput = new StringBuilder();
             Program.unitTestResults = new();
         }
-
     }
 }
