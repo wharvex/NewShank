@@ -241,10 +241,6 @@ public class Parser
                 );
             }
         }
-        //if (MatchAndRemove(Token.TokenType.Module) != null)
-        //{
-        //    module = new Module();
-        //}
         return module;
     }
 

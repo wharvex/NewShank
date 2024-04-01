@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 
 namespace Shank
 {
     public class SemanticAnalysis
     {
         private static Dictionary<string, ModuleNode> Modules;
+        private static ModuleNode startModule;
 
         public static void CheckAssignments(
             Dictionary<string, CallableNode> functions,
@@ -76,26 +78,48 @@ namespace Shank
             }
         }
 
-        private static VariableNode.DataType GetTargetTypeForAssignmentCheck(
-            VariableNode vn,
-            AssignmentNode an,
-            ModuleNode parentModule
-        ) =>
-            vn.Type switch
+        //private static VariableNode.DataType GetTargetTypeForAssignmentCheck(
+        //    VariableNode vn,
+        //    AssignmentNode an,
+        //    ModuleNode parentModule
+        //) =>
+        //    vn.Type switch
+        //    {
+        //        VariableNode.DataType.Array
+        //            => an.target.ExtensionType == ASTNode.VrnExtType.None
+        //                ? throw new NotImplementedException(
+        //                    "It is not implemented yet to assign to the base of an array variable."
+        //                )
+        //                : vn.GetArrayTypeSafe(),
+        //        VariableNode.DataType.Record
+        //            => parentModule
+        //                .Records[vn.GetUnknownTypeSafe()]
+        //                .GetFromMembersByNameSafe(an.target.GetRecordMemberReferenceSafe().Name)
+        //                .Type,
+        //        _ => vn.Type
+        //    };
+        private static VariableNode.DataType GetTargetTypeForAssignmentCheck(VariableNode vn, AssignmentNode an, ModuleNode parentModule)
+        {
+            switch (vn.Type)
             {
-                VariableNode.DataType.Array
-                    => an.target.ExtensionType == ASTNode.VrnExtType.None
-                        ? throw new NotImplementedException(
-                            "It is not implemented yet to assign to the base of an array variable."
-                        )
-                        : vn.GetArrayTypeSafe(),
-                VariableNode.DataType.Record
-                    => parentModule
-                        .Records[vn.GetUnknownTypeSafe()]
-                        .GetFromMembersByNameSafe(an.target.GetRecordMemberReferenceSafe().Name)
-                        .Type,
-                _ => vn.Type
-            };
+                case VariableNode.DataType.Array:
+                    if (an.target.ExtensionType == ASTNode.VrnExtType.None)
+                    {
+                        throw new NotImplementedException(
+                           "It is not implemented yet to assign to the base of an array variable."
+                       );
+                    }
+                    else
+                    {
+                        return vn.GetArrayTypeSafe();
+                    }
+                case VariableNode.DataType.Record:
+                    return parentModule.Records[vn.GetUnknownTypeSafe()].GetFromMembersByNameSafe(
+                        an.target.GetRecordMemberReferenceSafe().Name).Type;
+                default:
+                    return vn.Type;
+            }
+        }
 
         private static void CheckNode(
             VariableNode.DataType targetType,
@@ -169,10 +193,12 @@ namespace Shank
 
         public static void checkModules()
         {
-            Interpreter.handleExports();
-            Interpreter.handleImports();
-            Interpreter.handleTests();
             Modules = Interpreter.getModules();
+            setStartModule();
+            handleExports();
+            handleImports();
+            handleUnknownTypes();
+            handleTests();
             foreach (KeyValuePair<string, ModuleNode> module in Modules)
             {
                 if (module.Value.getName() == "default")
@@ -219,5 +245,152 @@ namespace Shank
                 CheckAssignments(module.Value.getFunctions(), module.Value);
             }
         }
+        public static ModuleNode? setStartModule()
+        {
+            if (Modules == null || Modules.Count == 0)
+                Modules = Interpreter.Modules;
+            if (startModule != null)
+                return startModule;
+            foreach (KeyValuePair<string, ModuleNode> currentModule in Modules)
+            {
+                if (currentModule.Value.getFunctions().ContainsKey("start"))
+                {
+                    startModule = currentModule.Value;
+                    return startModule;
+                }
+            }
+            return null;
+        }
+        public static void handleImports()
+        {
+            foreach (string currentImport in startModule.getImportNames().Keys)
+            {
+                if (Modules.ContainsKey(currentImport))
+                {
+                    recursiveImportCheck(Modules[currentImport]);
+                }
+                else
+                {
+                    throw new Exception("Could not find " + currentImport + " in the list of modules.");
+                }
+            }
+
+            foreach (var currentModule in startModule.getImportNames())
+            {
+                if (startModule.getImportNames()[currentModule.Key].Count == 0)
+                {
+                    var tempList = new LinkedList<string>();
+                    foreach (string s in Modules[currentModule.Key].getExportNames())
+                    {
+                        tempList.AddLast(s);
+                    }
+
+                    startModule.getImportNames()[currentModule.Key] = tempList;
+                }
+            }
+        }
+
+        public static void recursiveImportCheck(ModuleNode m)
+        {
+            startModule.updateImports(
+                Modules[m.getName()].getFunctions(),
+                Modules[m.getName()].getExportedFunctions()
+            );
+
+            if (Modules[m.getName()].getImportNames().Count > 0)
+            {
+                foreach (string? moduleToBeImported in Modules[m.getName()].getImportNames().Keys)
+                {
+                    if (Modules.ContainsKey(moduleToBeImported))
+                    {
+                        m.updateImports(
+                            Modules[moduleToBeImported].getFunctions(),
+                            Modules[moduleToBeImported].getExportedFunctions()
+                        );
+                        foreach (var currentModule in m.getImportNames())
+                        {
+                            if (m.getImportNames()[currentModule.Key].Count == 0)
+                            {
+                                var tempList = new LinkedList<string>();
+                                foreach (string s in Modules[currentModule.Key].getExportNames())
+                                {
+                                    tempList.AddLast(s);
+                                }
+
+                                m.getImportNames()[currentModule.Key] = tempList;
+                            }
+                        }
+
+                        recursiveImportCheck(Modules[moduleToBeImported]);
+                    }
+                }
+            }
+        }
+
+        public static void handleExports()
+        {
+            foreach (KeyValuePair<string, ModuleNode> currentModule in Modules)
+            {
+                currentModule.Value.updateExports();
+            }
+        }
+
+        public static void handleTests()
+        {
+            foreach (KeyValuePair<string, ModuleNode> currentModule in Modules)
+            {
+                foreach (KeyValuePair<string, TestNode> test in currentModule.Value.getTests())
+                {
+                    if (currentModule.Value.getFunctions().ContainsKey(test.Value.targetFunctionName))
+                    {
+                        (
+                            (FunctionNode)
+                                currentModule.Value.getFunctions()[test.Value.targetFunctionName]
+                        ).Tests.Add(test.Key, test.Value);
+                    }
+                    else
+                        throw new Exception(
+                            $"Could not find the function {test.Value.targetFunctionName} in the module {currentModule.Key} to be tested."
+                        );
+                }
+            }
+        }
+
+        public static void handleUnknownTypes()
+        {
+            foreach (KeyValuePair<string, ModuleNode> currentModule in Modules)
+            {
+                foreach (KeyValuePair<string, CallableNode> function in currentModule.Value.getFunctions())
+                {
+                    if(function.Value is BuiltInFunctionNode) { continue; }
+                    FunctionNode currentFunction = (FunctionNode)function.Value;
+                    foreach (VariableNode variable in currentFunction.LocalVariables)
+                    {
+                        if (variable.Type == VariableNode.DataType.Unknown)
+                        {
+                            if (variable.UnknownType != null && currentModule.Value.getEnums().ContainsKey(variable.UnknownType))
+                            {
+                                variable.Type = VariableNode.DataType.Enum;
+                            }
+                            else if (variable.UnknownType != null && currentModule.Value.Records.ContainsKey(variable.UnknownType))
+                            {
+                                variable.Type = VariableNode.DataType.Record;
+                            }
+                            else throw new Exception(
+                                "Could not find a definition for the unknown type " + variable.UnknownType
+                                );
+                        }
+                    }
+                }
+            }
+        }
+        public static void reset()
+        {
+            Modules = new Dictionary<string, ModuleNode>();
+            startModule = null;
+            Interpreter.testOutput = new StringBuilder();
+            Program.unitTestResults = new();
+        }
+
     }
 }

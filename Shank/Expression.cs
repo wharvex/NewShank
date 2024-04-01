@@ -945,13 +945,13 @@ namespace Shank
 
     public class EnumNode : ASTNode
     {
-        public string Name { get; set; }
+        public string Type { get; set; }
         public string? ParentModuleName { get; set; }
         public LinkedList<String> EnumElements;
 
-        public EnumNode(string? name, string? parentModuleName, LinkedList<String> enumElements)
+        public EnumNode(string? type, string? parentModuleName, LinkedList<String> enumElements)
         {
-            Name = name;
+            Type = type;
             ParentModuleName = parentModuleName;
             EnumElements = new LinkedList<string>(enumElements);
         }
@@ -1455,7 +1455,7 @@ namespace Shank
         {
             if (enumNode is not null)
             {
-                Enums.Add(enumNode.Name, enumNode);
+                Enums.Add(enumNode.Type, enumNode);
             }
         }
 

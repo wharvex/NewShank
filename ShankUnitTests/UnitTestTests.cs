@@ -67,7 +67,7 @@ namespace ShankUnitTests
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file1);
             initializeInterpreter(files);
-            Interpreter.handleTests();
+            SemanticAnalysis.handleTests();
             Assert.AreEqual(
                 Interpreter.getModules()["default"].getFunctions().Count,
                 2 + BuiltInFunctions.numberOfBuiltInFunctions
@@ -106,7 +106,7 @@ namespace ShankUnitTests
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file1);
             initializeInterpreter(files);
-            Interpreter.handleTests();
+            SemanticAnalysis.handleTests();
             Assert.AreEqual(
                 Interpreter.getModules()["default"].getFunctions().Count,
                 2 + BuiltInFunctions.numberOfBuiltInFunctions
@@ -150,7 +150,7 @@ namespace ShankUnitTests
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file1);
             initializeInterpreter(files);
-            Interpreter.handleTests();
+            SemanticAnalysis.handleTests();
             Assert.AreEqual(
                 Interpreter.getModules()["default"].getFunctions().Count,
                 3 + BuiltInFunctions.numberOfBuiltInFunctions
