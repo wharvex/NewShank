@@ -912,14 +912,17 @@ namespace Shank
     {
         public string Name { get; init; }
 
+        public List<string>? GenericTypeParameterNames { get; init; }
+
         public string? ParentModuleName { get; init; }
 
         public List<StatementNode> Members { get; init; }
 
-        public RecordNode(string name, string moduleName)
+        public RecordNode(string name, string moduleName, List<string>? genericTypeParameterNames)
         {
             Name = name;
             ParentModuleName = moduleName;
+            GenericTypeParameterNames = genericTypeParameterNames;
             Members = [];
         }
 
@@ -991,6 +994,8 @@ namespace Shank
         // UnknownType is the base name of an enum or record.
         // If Type is not Unknown or Enum or Record, then UnknownType should be null.
         public string? UnknownType { get; set; }
+
+        public List<DataType>? GenericTypeArgs { get; set; }
 
         public bool IsConstant { get; set; }
         public ASTNode? InitialValue { get; set; }

@@ -17,6 +17,15 @@ public class Parser
         Token.TokenType.Array
     ];
 
+    private readonly Token.TokenType[] _shankTokenTypesMinusArray =
+    [
+        Token.TokenType.Integer,
+        Token.TokenType.Real,
+        Token.TokenType.Boolean,
+        Token.TokenType.Character,
+        Token.TokenType.String
+    ];
+
     private readonly Token.TokenType[] _shankTokenTypesPlusIdentifier =
     [
         Token.TokenType.Integer,
@@ -290,11 +299,32 @@ public class Parser
         var name =
             MatchAndRemove(Token.TokenType.Identifier)
             ?? throw new SyntaxErrorException("Expected a record name", Peek(0));
+
+        var genericTypeParameterNames = ParseGenericKeywordAndTypeParams();
+
         RequiresEndOfLine();
 
-        var recNode = new RecordNode(name.GetValueSafe(), moduleName);
+        var recNode = new RecordNode(name.GetValueSafe(), moduleName, genericTypeParameterNames);
         BodyRecord(recNode);
         return recNode;
+    }
+
+    private List<string>? ParseGenericKeywordAndTypeParams()
+    {
+        if (MatchAndRemove(Token.TokenType.Generic) is null)
+        {
+            return null;
+        }
+
+        var genericTypeParameterToken =
+            MatchAndRemove(Token.TokenType.Identifier)
+            ?? throw new SyntaxErrorException("Expected an identifier", Peek(0));
+
+        List<string> ret = [];
+
+        GatherCommaSeparatedIdentifiers(genericTypeParameterToken.GetValueSafe(), ret);
+
+        return ret;
     }
 
     private void BodyFunction(FunctionNode function)
@@ -352,11 +382,6 @@ public class Parser
             ?? (isRecord ? RecordMember() : FunctionCall());
     }
 
-    private bool IsTokenShankType(Token t)
-    {
-        return _shankTokenTypes.Contains(t.Type);
-    }
-
     private RecordMemberNode? RecordMember()
     {
         var typeToken = MatchAndRemoveMultiple(_shankTokenTypesPlusIdentifier);
@@ -371,7 +396,7 @@ public class Parser
 
         RequiresEndOfLine();
 
-        return IsTokenShankType(typeToken)
+        return _shankTokenTypes.Contains(typeToken.Type)
             ? new RecordMemberNode(
                 nameToken.GetValueSafe(),
                 GetDataTypeFromTokenType(typeToken.Type)
@@ -586,28 +611,111 @@ public class Parser
         return retVal;
     }
 
+    private List<VariableNode> GetVariables(
+        List<string> names,
+        bool isConstant,
+        string parentModuleName
+    )
+    {
+        var typeToken =
+            MatchAndRemoveMultiple(_shankTokenTypesPlusIdentifier)
+            ?? throw new SyntaxErrorException("Expected type", Peek(0));
+
+        if (_shankTokenTypesMinusArray.Contains(typeToken.Type))
+        {
+            return GetVariablesBasic(
+                names,
+                isConstant,
+                parentModuleName,
+                GetDataTypeFromTokenType(typeToken.Type)
+            );
+        }
+
+        if (typeToken.Type == Token.TokenType.Array)
+        {
+            return GetVariablesArray(names, isConstant, parentModuleName);
+        }
+
+        throw new SyntaxErrorException("Expected a type", Peek(0));
+    }
+
+    private List<VariableNode> GetVariablesBasic(
+        List<string> names,
+        bool isConstant,
+        string parentModuleName,
+        VariableNode.DataType type,
+        string? unknownType = null
+    )
+    {
+        var ret = names
+            .Select(
+                n =>
+                    new VariableNode()
+                    {
+                        IsConstant = isConstant,
+                        Type = type,
+                        Name = n,
+                        ModuleName = parentModuleName,
+                        UnknownType = unknownType,
+                    }
+            )
+            .ToList();
+        CheckForRange(ret);
+        return ret;
+    }
+
+    private List<VariableNode> GetVariablesArray(
+        List<string> names,
+        bool isConstant,
+        string parentModuleName
+    )
+    {
+        // Parse the first part of the declaration.
+        var ret = GetVariablesBasic(
+            names,
+            isConstant,
+            parentModuleName,
+            VariableNode.DataType.Array
+        );
+
+        // Require 'of'.
+        RequiresToken(Token.TokenType.Of);
+
+        // Get the array type.
+        var arrayType =
+            MatchAndRemoveMultiple(_shankTokenTypesMinusArray)
+            ?? throw new SyntaxErrorException("Expected a type", Peek(0));
+
+        // Set the array type on all the VariableNodes.
+        ret.ForEach(d => d.ArrayType = GetDataTypeFromTokenType(arrayType.Type));
+
+        // Return the VariableNodes.
+        return ret;
+    }
+
     private List<VariableNode>? GetVariables(string? parentModuleName)
     {
-        var names = new List<string>();
+        // TODO: GetVariables is used to parse function definition parameters (the contents of the
+        // parentheses that follow a function name) AND the lines immediately following a function
+        // signature that start with the 'variables' keyword.
+        // It only makes sense for the 'var' keyword to appear in a function definition parameters
+        // context, but here we are allowing it regardless of the context.
+        var isConstant = MatchAndRemove(Token.TokenType.Var) is null;
 
-        // TODO: Since GetVariables is also used to process lines that begin with the 'variables'
-        // keyword, the following line would allow the 'var' keyword to appear in those lines,
-        // which would not make sense.
-        var isConstant = MatchAndRemove(Token.TokenType.Var) == null;
-
-        var name = MatchAndRemove(Token.TokenType.Identifier);
-        if (name == null)
-            return null;
-        names.Add(name.Value ?? string.Empty);
-        while (MatchAndRemove(Token.TokenType.Comma) != null)
+        // Get variable names.
+        List<string> names = [];
+        if (MatchAndRemove(Token.TokenType.Identifier) is { } nameToken)
         {
-            name = MatchAndRemove(Token.TokenType.Identifier);
-            if (name == null)
-                throw new SyntaxErrorException("Expected a name", Peek(0));
-            names.Add(name.Value ?? string.Empty);
+            GatherCommaSeparatedIdentifiers(nameToken.GetValueSafe(), names);
         }
-        if (MatchAndRemove(Token.TokenType.Colon) == null)
-            throw new SyntaxErrorException("Expected a colon", Peek(0));
+        else
+        {
+            return null;
+        }
+
+        // Require a colon.
+        RequiresToken(Token.TokenType.Colon);
+
         if (MatchAndRemove(Token.TokenType.Integer) != null)
         {
             var retVal = names
@@ -767,6 +875,46 @@ public class Parser
         }
         else
             throw new SyntaxErrorException("Invalid data type!", Peek(0));
+    }
+
+    private void RequiresToken(Token.TokenType tokenType)
+    {
+        if (MatchAndRemove(tokenType) is null)
+        {
+            throw new SyntaxErrorException("Expected a " + tokenType, Peek(0));
+        }
+    }
+
+    private void GatherCommaSeparatedIdentifiers(string firstIdentifierValue, List<string> idValues)
+    {
+        idValues.Add(firstIdentifierValue);
+
+        while (MatchAndRemove(Token.TokenType.Comma) is not null)
+        {
+            idValues.Add(
+                (
+                    MatchAndRemove(Token.TokenType.Identifier)
+                    ?? throw new SyntaxErrorException("Expected an identifier", Peek(0))
+                ).GetValueSafe()
+            );
+        }
+    }
+
+    private void GatherCommaSeparatedTokens(
+        Token firstToken,
+        List<Token> tokens,
+        Token.TokenType[] matchAgainst
+    )
+    {
+        tokens.Add(firstToken);
+
+        while (MatchAndRemove(Token.TokenType.Comma) is not null)
+        {
+            tokens.Add(
+                MatchAndRemoveMultiple(matchAgainst)
+                    ?? throw new SyntaxErrorException("Expected one of: " + matchAgainst, Peek(0))
+            );
+        }
     }
 
     private void CheckForRange(List<VariableNode> retVal)
