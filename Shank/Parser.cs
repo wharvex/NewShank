@@ -316,13 +316,12 @@ public class Parser
             return null;
         }
 
-        var genericTypeParameterToken =
+        var typeParam =
             MatchAndRemove(Token.TokenType.Identifier)
             ?? throw new SyntaxErrorException("Expected an identifier", Peek(0));
 
         List<string> ret = [];
-
-        GatherCommaSeparatedIdentifiers(genericTypeParameterToken.GetValueSafe(), ret);
+        ParseCommaSeparatedIdentifiers(typeParam, ret);
 
         return ret;
     }
@@ -621,22 +620,25 @@ public class Parser
             MatchAndRemoveMultiple(_shankTokenTypesPlusIdentifier)
             ?? throw new SyntaxErrorException("Expected type", Peek(0));
 
-        if (_shankTokenTypesMinusArray.Contains(typeToken.Type))
+        return typeToken.Type switch
         {
-            return GetVariablesBasic(
-                names,
-                isConstant,
-                parentModuleName,
-                GetDataTypeFromTokenType(typeToken.Type)
-            );
-        }
-
-        if (typeToken.Type == Token.TokenType.Array)
-        {
-            return GetVariablesArray(names, isConstant, parentModuleName);
-        }
-
-        throw new SyntaxErrorException("Expected a type", Peek(0));
+            Token.TokenType.Array => GetVariablesArray(names, isConstant, parentModuleName),
+            Token.TokenType.Identifier
+                => GetVariablesUnknown(
+                    names,
+                    isConstant,
+                    parentModuleName,
+                    typeToken.GetValueSafe()
+                ),
+            _ when _shankTokenTypesMinusArray.Contains(typeToken.Type)
+                => GetVariablesBasic(
+                    names,
+                    isConstant,
+                    parentModuleName,
+                    GetDataTypeFromTokenType(typeToken.Type)
+                ),
+            _ => throw new SyntaxErrorException("Expected a valid type", Peek(0))
+        };
     }
 
     private List<VariableNode> GetVariablesBasic(
@@ -693,6 +695,42 @@ public class Parser
         return ret;
     }
 
+    private List<VariableNode> GetVariablesUnknown(
+        List<string> names,
+        bool isConstant,
+        string parentModuleName,
+        string unknownType
+    )
+    {
+        // Parse the first part of the declaration.
+        var ret = GetVariablesBasic(
+            names,
+            isConstant,
+            parentModuleName,
+            VariableNode.DataType.Unknown,
+            unknownType
+        );
+
+        // Get the generic type arguments if they exist.
+        List<Token> typeArgs = [];
+        if (MatchAndRemoveMultiple(_shankTokenTypesPlusIdentifier) is { } firstArg)
+        {
+            ParseCommaSeparatedTokens(firstArg, typeArgs, _shankTokenTypesPlusIdentifier);
+        }
+
+        // Set the GenericTypeArgs on the VariableNodes to return.
+        ret.ForEach(
+            vn =>
+                vn.GenericTypeArgs =
+                    typeArgs.Count > 0
+                        ? typeArgs.Select(ta => GetDataTypeFromTokenType(ta.Type)).ToList()
+                        : null
+        );
+
+        // Return the VariableNodes.
+        return ret;
+    }
+
     private List<VariableNode>? GetVariables(string? parentModuleName)
     {
         // TODO: GetVariables is used to parse function definition parameters (the contents of the
@@ -706,7 +744,7 @@ public class Parser
         List<string> names = [];
         if (MatchAndRemove(Token.TokenType.Identifier) is { } nameToken)
         {
-            GatherCommaSeparatedIdentifiers(nameToken.GetValueSafe(), names);
+            ParseCommaSeparatedIdentifiers(nameToken, names);
         }
         else
         {
@@ -716,165 +754,7 @@ public class Parser
         // Require a colon.
         RequiresToken(Token.TokenType.Colon);
 
-        if (MatchAndRemove(Token.TokenType.Integer) != null)
-        {
-            var retVal = names
-                .Select(
-                    n =>
-                        new VariableNode()
-                        {
-                            InitialValue = null,
-                            IsConstant = isConstant,
-                            Type = VariableNode.DataType.Integer,
-                            Name = n,
-                            ModuleName = parentModuleName,
-                        }
-                )
-                .ToList();
-            CheckForRange(retVal);
-            return retVal;
-        }
-        else if (MatchAndRemove(Token.TokenType.Real) != null)
-        {
-            var retVal = names
-                .Select(
-                    n =>
-                        new VariableNode()
-                        {
-                            InitialValue = null,
-                            IsConstant = isConstant,
-                            Type = VariableNode.DataType.Real,
-                            Name = n,
-                            ModuleName = parentModuleName,
-                        }
-                )
-                .ToList();
-            CheckForRange(retVal);
-            return retVal;
-        }
-        else if (MatchAndRemove(Token.TokenType.Boolean) != null)
-        {
-            var retVal = names
-                .Select(
-                    n =>
-                        new VariableNode()
-                        {
-                            InitialValue = null,
-                            IsConstant = isConstant,
-                            Type = VariableNode.DataType.Boolean,
-                            Name = n,
-                            ModuleName = parentModuleName,
-                        }
-                )
-                .ToList();
-            CheckForRange(retVal);
-            return retVal;
-        }
-        else if (MatchAndRemove(Token.TokenType.Character) != null)
-        {
-            var retVal = names
-                .Select(
-                    n =>
-                        new VariableNode()
-                        {
-                            InitialValue = null,
-                            IsConstant = isConstant,
-                            Type = VariableNode.DataType.Character,
-                            Name = n,
-                            ModuleName = parentModuleName,
-                        }
-                )
-                .ToList();
-            CheckForRange(retVal);
-            return retVal;
-        }
-        else if (MatchAndRemove(Token.TokenType.String) != null)
-        {
-            var retVal = names
-                .Select(
-                    n =>
-                        new VariableNode()
-                        {
-                            InitialValue = null,
-                            IsConstant = isConstant,
-                            Type = VariableNode.DataType.String,
-                            Name = n,
-                            ModuleName = parentModuleName,
-                        }
-                )
-                .ToList();
-            CheckForRange(retVal);
-            return retVal;
-        }
-        else if (MatchAndRemove(Token.TokenType.Array) != null)
-        {
-            var retVal = names
-                .Select(
-                    n =>
-                        new VariableNode()
-                        {
-                            InitialValue = null,
-                            IsConstant = isConstant,
-                            Type = VariableNode.DataType.Array,
-                            Name = n,
-                            ModuleName = parentModuleName,
-                        }
-                )
-                .ToList();
-            CheckForRange(retVal);
-            if (MatchAndRemove(Token.TokenType.Of) == null)
-                throw new SyntaxErrorException(
-                    $"In the declaration of the array for {retVal.First().Name}, no array type found.",
-                    Peek(0)
-                );
-            var arrayType = _tokens[0];
-            _tokens.RemoveAt(0);
-            switch (arrayType.Type)
-            {
-                case Token.TokenType.Integer:
-                    retVal.ForEach(d => d.ArrayType = VariableNode.DataType.Integer);
-                    break;
-                case Token.TokenType.Real:
-                    retVal.ForEach(d => d.ArrayType = VariableNode.DataType.Real);
-                    break;
-                case Token.TokenType.Boolean:
-                    retVal.ForEach(d => d.ArrayType = VariableNode.DataType.Boolean);
-                    break;
-                case Token.TokenType.Character:
-                    retVal.ForEach(d => d.ArrayType = VariableNode.DataType.Character);
-                    break;
-                case Token.TokenType.String:
-                    retVal.ForEach(d => d.ArrayType = VariableNode.DataType.String);
-                    break;
-                default:
-                    throw new SyntaxErrorException(
-                        $"In the declaration of the array for {retVal.First().Name}, invalid array type {arrayType.Type} found.",
-                        Peek(0)
-                    );
-            }
-            return retVal;
-        }
-        else if (MatchAndRemove(Token.TokenType.Identifier) is { } id)
-        {
-            var retVal = names
-                .Select(
-                    n =>
-                        new VariableNode()
-                        {
-                            InitialValue = null,
-                            IsConstant = isConstant,
-                            Type = VariableNode.DataType.Unknown,
-                            UnknownType = id.GetValueSafe(),
-                            Name = n,
-                            ModuleName = parentModuleName,
-                        }
-                )
-                .ToList();
-            CheckForRange(retVal);
-            return retVal;
-        }
-        else
-            throw new SyntaxErrorException("Invalid data type!", Peek(0));
+        return GetVariables(names, isConstant, parentModuleName ?? "default");
     }
 
     private void RequiresToken(Token.TokenType tokenType)
@@ -885,22 +765,7 @@ public class Parser
         }
     }
 
-    private void GatherCommaSeparatedIdentifiers(string firstIdentifierValue, List<string> idValues)
-    {
-        idValues.Add(firstIdentifierValue);
-
-        while (MatchAndRemove(Token.TokenType.Comma) is not null)
-        {
-            idValues.Add(
-                (
-                    MatchAndRemove(Token.TokenType.Identifier)
-                    ?? throw new SyntaxErrorException("Expected an identifier", Peek(0))
-                ).GetValueSafe()
-            );
-        }
-    }
-
-    private void GatherCommaSeparatedTokens(
+    private void ParseCommaSeparatedTokens(
         Token firstToken,
         List<Token> tokens,
         Token.TokenType[] matchAgainst
@@ -912,9 +777,19 @@ public class Parser
         {
             tokens.Add(
                 MatchAndRemoveMultiple(matchAgainst)
-                    ?? throw new SyntaxErrorException("Expected one of: " + matchAgainst, Peek(0))
+                    ?? throw new SyntaxErrorException(
+                        "Expected one of: " + string.Join(", ", matchAgainst),
+                        Peek(0)
+                    )
             );
         }
+    }
+
+    private void ParseCommaSeparatedIdentifiers(Token firstId, List<string> idValues)
+    {
+        List<Token> tokens = [];
+        ParseCommaSeparatedTokens(firstId, tokens, [Token.TokenType.Identifier]);
+        tokens.ForEach(t => idValues.Add(t.GetValueSafe()));
     }
 
     private void CheckForRange(List<VariableNode> retVal)
