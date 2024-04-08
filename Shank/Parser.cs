@@ -44,6 +44,8 @@ public class Parser
 
     private readonly List<Token> _tokens;
 
+    public static int Line { get; set; } = 0;
+
     private Token? MatchAndRemove(Token.TokenType t)
     {
         // If there are no Tokens left, return null.
@@ -64,6 +66,9 @@ public class Parser
         // Remove the Token.
         _tokens.RemoveAt(0);
 
+        // Update line num tracker.
+        Line = retVal.LineNumber;
+
         // Consume blank lines logic.
         // We don't want MatchAndRemove to be the permanent home of this logic because we want to
         // keep MAR simple. The eventual permanent fix will be to convert every
@@ -78,38 +83,16 @@ public class Parser
         return retVal;
     }
 
-    private Token? MatchAndRemoveMultiple(params Token.TokenType[] t)
+    private Token? MatchAndRemoveMultiple(params Token.TokenType[] ts)
     {
-        // If there are no Tokens left, return null.
-        if (!_tokens.Any())
+        Token? ret = null;
+        var i = 0;
+        while (ret is null && i < ts.Length)
         {
-            return null;
+            ret = MatchAndRemove(ts[i++]);
         }
 
-        // Get the next Token.
-        var retVal = _tokens[0];
-
-        // If the TokenType does not match, return null.
-        if (!t.Contains(retVal.Type))
-        {
-            return null;
-        }
-
-        // Remove the Token.
-        _tokens.RemoveAt(0);
-
-        // Consume blank lines logic.
-        // We don't want MatchAndRemove to be the permanent home of this logic because we want to
-        // keep MAR simple. The eventual permanent fix will be to convert every
-        // "MatchAndRemove(EndOfLine)" call in the whole project to an "ExpectsEndOfLine()" or a
-        // "RequiresEndOfLine()" call (this will be a big undertaking).
-        if (retVal.Type == Token.TokenType.EndOfLine)
-        {
-            ConsumeBlankLines();
-        }
-
-        // Return the Token.
-        return retVal;
+        return ret;
     }
 
     private Token? Peek(int offset)
@@ -794,33 +777,24 @@ public class Parser
 
     private void CheckForRange(List<VariableNode> retVal)
     {
-        if (MatchAndRemove(Token.TokenType.From) == null)
+        if (MatchAndRemove(Token.TokenType.From) is null)
+        {
             return;
-        var fromToken = _tokens[0];
-        _tokens.RemoveAt(0);
-        var fromNode = ProcessConstant(fromToken);
-        if (fromToken.Type == Token.TokenType.Number)
-            retVal.ForEach(v => v.From = fromNode);
-        else
-            throw new SyntaxErrorException(
-                $"In the declaration of {retVal.First().Name}, invalid from value {fromToken} found.",
-                Peek(0)
-            );
-        if (MatchAndRemove(Token.TokenType.To) == null)
-            throw new SyntaxErrorException(
-                $"In the declaration of {retVal.First().Name}, no 'to' found.",
-                Peek(0)
-            );
-        var toToken = _tokens[0];
-        _tokens.RemoveAt(0);
-        var toNode = ProcessConstant(toToken);
-        if (toToken.Type == Token.TokenType.Number)
-            retVal.ForEach(v => v.To = toNode);
-        else
-            throw new SyntaxErrorException(
-                $"In the declaration of {retVal.First().Name}, invalid to value {toToken} found.",
-                Peek(0)
-            );
+        }
+
+        var fromNode = ProcessNumericConstant(
+            MatchAndRemove(Token.TokenType.Number)
+                ?? throw new SyntaxErrorException("Expected a number", Peek(0))
+        );
+        retVal.ForEach(v => v.From = fromNode);
+
+        RequiresToken(Token.TokenType.To);
+
+        var toNode = ProcessNumericConstant(
+            MatchAndRemove(Token.TokenType.Number)
+                ?? throw new SyntaxErrorException("Expected a number", Peek(0))
+        );
+        retVal.ForEach(v => v.To = toNode);
     }
 
     private List<VariableNode> ProcessConstants(string? parentModuleName)
@@ -838,7 +812,7 @@ public class Parser
                 var num = MatchAndRemove(Token.TokenType.Number);
                 if (num != null)
                 {
-                    var node = ProcessConstant(num);
+                    var node = ProcessNumericConstant(num);
                     retVal.Add(
                         node is FloatNode
                             ? new VariableNode()
@@ -908,7 +882,7 @@ public class Parser
         return retVal;
     }
 
-    private ASTNode ProcessConstant(Token num)
+    private ASTNode ProcessNumericConstant(Token num)
     {
         return (num.Value ?? "").Contains('.')
             ? new FloatNode(float.Parse(num.Value ?? ""))

@@ -21,6 +21,8 @@ namespace Shank
     public abstract class ASTNode
     {
         public string NodeName { get; init; }
+        public string InheritsDirectlyFrom { get; init; }
+        public int Line { get; init; }
 
         public enum BooleanExpressionOpType
         {
@@ -51,6 +53,8 @@ namespace Shank
         protected ASTNode()
         {
             NodeName = GetType().Name;
+            InheritsDirectlyFrom = GetType().BaseType?.Name ?? "None";
+            Line = Parser.Line;
         }
     }
 
@@ -892,7 +896,7 @@ namespace Shank
 
         public VariableNode.DataType Type { get; init; }
 
-        public string? RecordType { get; init; }
+        public string? UnknownType { get; init; }
 
         public RecordMemberNode(string name, VariableNode.DataType type)
         {
@@ -900,11 +904,11 @@ namespace Shank
             Type = type;
         }
 
-        public RecordMemberNode(string name, string recordType)
+        public RecordMemberNode(string name, string unknownType)
         {
             Name = name;
-            Type = VariableNode.DataType.Record;
-            RecordType = recordType;
+            Type = VariableNode.DataType.Unknown;
+            UnknownType = unknownType;
         }
     }
 
