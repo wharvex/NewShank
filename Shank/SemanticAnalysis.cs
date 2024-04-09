@@ -90,13 +90,17 @@ namespace Shank
             }
         }
 
-        private static void CheckComparision(BooleanExpressionNode? ben, Dictionary<string, VariableNode> variables, ModuleNode parentModule)
+        private static void CheckComparision(
+            BooleanExpressionNode? ben,
+            Dictionary<string, VariableNode> variables,
+            ModuleNode parentModule
+        )
         {
-            if(ben == null)
+            if (ben == null)
                 return;
-            if(ben.Left is IntNode)
+            if (ben.Left is IntNode)
             {
-                if(ben.Right is not IntNode)
+                if (ben.Right is not IntNode)
                     throw new Exception("Can only compare integers to other integers.");
             }
             else if (ben.Left is FloatNode rn)
@@ -106,35 +110,67 @@ namespace Shank
             }
             else if (ben.Left is VariableReferenceNode vrn)
             {
-                if (!variables.ContainsKey(vrn.Name) && !variables.ContainsKey(((VariableReferenceNode)ben.Right).Name))
+                if (
+                    !variables.ContainsKey(vrn.Name)
+                    && !variables.ContainsKey(((VariableReferenceNode)ben.Right).Name)
+                )
                     throw new Exception("Cannot compare two enum elements.");
                 var variable = variables[vrn.Name];
                 switch (variable.Type)
                 {
                     case VariableNode.DataType.Integer:
-                        if (ben.Right is not IntNode || variables[((VariableReferenceNode)ben.Right).Name].Type != VariableNode.DataType.Integer)
-                            throw new Exception("Integers can only be compared to integers or integer variables.");
+                        if (
+                            ben.Right is not IntNode
+                            || variables[((VariableReferenceNode)ben.Right).Name].Type
+                                != VariableNode.DataType.Integer
+                        )
+                            throw new Exception(
+                                "Integers can only be compared to integers or integer variables."
+                            );
                         break;
                     case VariableNode.DataType.Real:
-                        if (ben.Right is not FloatNode || variables[((VariableReferenceNode)ben.Right).Name].Type != VariableNode.DataType.Real)
-                            throw new Exception("Floats can only be compared to floats or float variables.");
+                        if (
+                            ben.Right is not FloatNode
+                            || variables[((VariableReferenceNode)ben.Right).Name].Type
+                                != VariableNode.DataType.Real
+                        )
+                            throw new Exception(
+                                "Floats can only be compared to floats or float variables."
+                            );
                         break;
                     case VariableNode.DataType.Enum:
                         Dictionary<string, EnumNode> enums;
                         if (parentModule.getEnums().ContainsKey(variable.UnknownType))
                             enums = parentModule.getEnums();
                         else
-                            enums = Modules[((EnumNode)parentModule.Imported[variable.UnknownType]).ParentModuleName].getEnums();
-                        if (!enums[variable.UnknownType].EnumElements
-                                    .Contains(((VariableReferenceNode)ben.Right).Name))
+                            enums = Modules[
+                                (
+                                    (EnumNode)parentModule.Imported[variable.UnknownType]
+                                ).ParentModuleName
+                            ].getEnums();
+                        if (
+                            !enums[variable.UnknownType].EnumElements.Contains(
+                                ((VariableReferenceNode)ben.Right).Name
+                            )
+                        )
                         {
                             if ((variables.ContainsKey(((VariableReferenceNode)ben.Right).Name)))
                             {
-                                if((variables[((VariableReferenceNode)ben.Right).Name].UnknownType!= variable.UnknownType))
-                                        throw new Exception("Enums can only be compared to enums or enum variables of the same type.");
+                                if (
+                                    (
+                                        variables[
+                                            ((VariableReferenceNode)ben.Right).Name
+                                        ].UnknownType != variable.UnknownType
+                                    )
+                                )
+                                    throw new Exception(
+                                        "Enums can only be compared to enums or enum variables of the same type."
+                                    );
                                 break;
                             }
-                            throw new Exception("Enums can only be compared to enums or enum variables of the same type.");
+                            throw new Exception(
+                                "Enums can only be compared to enums or enum variables of the same type."
+                            );
                         }
                         break;
                 }
@@ -181,16 +217,22 @@ namespace Shank
                         return vn.GetArrayTypeSafe();
                     }
                 case VariableNode.DataType.Record:
-                    if (parentModule.Records.ContainsKey(vn.GetUnknownTypeSafe())){
-                        return parentModule.Records[vn.GetUnknownTypeSafe()].GetFromMembersByNameSafe(
-                            an.target.GetRecordMemberReferenceSafe().Name).Type;
+                    if (parentModule.Records.ContainsKey(vn.GetUnknownTypeSafe()))
+                    {
+                        return parentModule
+                            .Records[vn.GetUnknownTypeSafe()]
+                            .GetFromMembersByNameSafe(an.target.GetRecordMemberReferenceSafe().Name)
+                            .Type;
                     }
                     else
                     {
                         if (!parentModule.Imported.ContainsKey(vn.GetUnknownTypeSafe()))
-                            throw new Exception($"Could not find definition for the record {vn.GetUnknownTypeSafe()}");
-                        return ((RecordNode)parentModule.Imported[vn.GetUnknownTypeSafe()]).GetFromMembersByNameSafe(
-                            an.target.GetRecordMemberReferenceSafe().Name).Type;
+                            throw new Exception(
+                                $"Could not find definition for the record {vn.GetUnknownTypeSafe()}"
+                            );
+                        return ((RecordNode)parentModule.Imported[vn.GetUnknownTypeSafe()])
+                            .GetFromMembersByNameSafe(an.target.GetRecordMemberReferenceSafe().Name)
+                            .Type;
                     }
                 default:
                     return vn.Type;
@@ -264,7 +306,7 @@ namespace Shank
                                 break;
                             }
                         }
-                        foreach(var e in parentModule.Imported)
+                        foreach (var e in parentModule.Imported)
                         {
                             if (e.Value is not EnumNode)
                                 continue;
@@ -276,9 +318,13 @@ namespace Shank
                             }
                         }
                         if (enumDefinition == null)
-                            throw new Exception($"Could not find the definition for an enum containing the element {vrn.Name}.");
+                            throw new Exception(
+                                $"Could not find the definition for an enum containing the element {vrn.Name}."
+                            );
                         if (enumDefinition.Type != target.UnknownType)
-                            throw new Exception($"Cannot assign an enum of type {enumDefinition.Type} to the enum element {target.UnknownType}.");
+                            throw new Exception(
+                                $"Cannot assign an enum of type {enumDefinition.Type} to the enum element {target.UnknownType}."
+                            );
                     }
                     else
                     {
@@ -323,12 +369,14 @@ namespace Shank
                 //checking exports
                 foreach (string exportName in module.Value.getExportNames())
                 {
-                    if (!module.Value.getFunctions().ContainsKey(exportName) 
-                         && !module.Value.getEnums().ContainsKey(exportName) 
-                         && !module.Value.Records.ContainsKey(exportName))
-                            throw new Exception(
-                                $"Cannot export {exportName} from the module {module.Key} as it wasn't defined in that file."
-                            );
+                    if (
+                        !module.Value.getFunctions().ContainsKey(exportName)
+                        && !module.Value.getEnums().ContainsKey(exportName)
+                        && !module.Value.Records.ContainsKey(exportName)
+                    )
+                        throw new Exception(
+                            $"Cannot export {exportName} from the module {module.Key} as it wasn't defined in that file."
+                        );
                 }
                 //checking imports
                 foreach (
@@ -345,7 +393,11 @@ namespace Shank
 
                         foreach (string s in import.Value)
                         {
-                            if (!m.getFunctions().ContainsKey(s) && !m.getEnums().ContainsKey(s) && !m.Records.ContainsKey(s))
+                            if (
+                                !m.getFunctions().ContainsKey(s)
+                                && !m.getEnums().ContainsKey(s)
+                                && !m.Records.ContainsKey(s)
+                            )
                                 throw new Exception(
                                     $"The function {s} does not exist in module {import.Key}."
                                 );
@@ -516,24 +568,41 @@ namespace Shank
                             {
                                 variable.Type = VariableNode.DataType.Record;
                             }
-                            else if (variable.UnknownType != null && currentModule.Value.Imported.ContainsKey(variable.UnknownType))
+                            else if (
+                                variable.UnknownType != null
+                                && currentModule.Value.Imported.ContainsKey(variable.UnknownType)
+                            )
                             {
-                                if (currentModule.Value.Imported[variable.UnknownType] is EnumNode 
-                                    && Modules[((EnumNode)currentModule.Value.Imported[variable.UnknownType]).ParentModuleName].getEnums().ContainsKey(variable.UnknownType))
-                                        variable.Type = VariableNode.DataType.Enum;
+                                if (
+                                    currentModule.Value.Imported[variable.UnknownType] is EnumNode
+                                    && Modules[
+                                        (
+                                            (EnumNode)
+                                                currentModule.Value.Imported[variable.UnknownType]
+                                        ).ParentModuleName
+                                    ]
+                                        .getEnums()
+                                        .ContainsKey(variable.UnknownType)
+                                )
+                                    variable.Type = VariableNode.DataType.Enum;
                                 else
                                     variable.Type = VariableNode.DataType.Record;
                             }
-                            else throw new Exception(
-                                "Could not find a definition for the unknown type " + variable.UnknownType
+                            else
+                                throw new Exception(
+                                    "Could not find a definition for the unknown type "
+                                        + variable.UnknownType
                                 );
                         }
                     }
-                    foreach(var statement in currentFunction.Statements)
+                    foreach (var statement in currentFunction.Statements)
                     {
-                        if(statement is not AssignmentNode) { continue; }
+                        if (statement is not AssignmentNode)
+                        {
+                            continue;
+                        }
                         var assignment = (AssignmentNode)statement;
-                        foreach(var variable in currentFunction.LocalVariables)
+                        foreach (var variable in currentFunction.LocalVariables)
                         {
                             if (variable.Type == VariableNode.DataType.Enum)
                             {
@@ -542,15 +611,15 @@ namespace Shank
                                     assignment.target.ExtensionType = ASTNode.VrnExtType.Enum;
                                 }
                             }
-//                            else if (variable.Type == VariableNode.DataType.Record)
-//                            {
-//                                if(assignment.target.Name == variable.Name)
-//                                {
-//                                    if (currentModule.Value.Records.ContainsKey(variable.Name)) {
-//                                        assignment.target.ExtensionType = currentModule.Value.Records[variable.UnknownType]
-//                                            .GetFromMembersByName(assignment.target.Name).Type;
-//}
-//                            }
+                            //                            else if (variable.Type == VariableNode.DataType.Record)
+                            //                            {
+                            //                                if(assignment.target.Name == variable.Name)
+                            //                                {
+                            //                                    if (currentModule.Value.Records.ContainsKey(variable.Name)) {
+                            //                                        assignment.target.ExtensionType = currentModule.Value.Records[variable.UnknownType]
+                            //                                            .GetFromMembersByName(assignment.target.Name).Type;
+                            //}
+                            //                            }
                         }
                     }
                 }

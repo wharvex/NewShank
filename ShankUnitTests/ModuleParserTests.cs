@@ -353,12 +353,14 @@ namespace ShankUnitTests
             Assert.IsTrue(Interpreter.getModules()["default"].getFunctions().ContainsKey("add"));
             Assert.IsTrue(
                 Interpreter.getModules()["default"].getFunctions().ContainsKey("addThree")
-            );            
+            );
         }
+
         [TestMethod]
         public void SimpleEnumExport()
-        { 
-            string[] code = {
+        {
+            string[] code =
+            {
                 "module test2\n",
                 "enum colors = [red, green, blue]\n",
                 "export colors\n",

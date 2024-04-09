@@ -922,7 +922,7 @@ namespace Shank
         public string? ParentModuleName { get; init; }
 
         public List<StatementNode> Members { get; init; }
-        public bool IsPublic { get; set; } 
+        public bool IsPublic { get; set; }
 
         public RecordNode(string name, string moduleName, List<string>? genericTypeParameterNames)
         {
@@ -1431,11 +1431,7 @@ namespace Shank
                 {
                     if (ImportTargetNames[Enum.Value.ParentModuleName] != null)
                     {
-                        if (
-                            !ImportTargetNames[Enum.Value.ParentModuleName].Contains(
-                                Enum.Key
-                            )
-                        )
+                        if (!ImportTargetNames[Enum.Value.ParentModuleName].Contains(Enum.Key))
                         {
                             ((EnumNode)Imported[Enum.Key]).IsPublic = false;
                         }
@@ -1455,11 +1451,7 @@ namespace Shank
                 {
                     if (ImportTargetNames[record.Value.ParentModuleName] != null)
                     {
-                        if (
-                            !ImportTargetNames[record.Value.ParentModuleName].Contains(
-                                record.Key
-                            )
-                        )
+                        if (!ImportTargetNames[record.Value.ParentModuleName].Contains(record.Key))
                         {
                             ((RecordNode)Imported[record.Key]).IsPublic = false;
                         }

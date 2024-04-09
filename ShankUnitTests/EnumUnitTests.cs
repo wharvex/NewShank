@@ -96,7 +96,7 @@ namespace ShankUnitTests
         public void enumDeclarationSemanticAnalysis()
         {
             string[] file =
-{
+            {
                 "enum colors = [red, green, blue]\n",
                 "define start()\n",
                 "variables i : integer\n",
@@ -111,7 +111,8 @@ namespace ShankUnitTests
         [TestMethod]
         public void enumVariableCreationSemanticAnalysis()
         {
-            string[] file = {
+            string[] file =
+            {
                 "enum colors = [red, green, blue]\n",
                 "define start()\n",
                 "variables i : integer\n",
@@ -127,7 +128,8 @@ namespace ShankUnitTests
         [TestMethod]
         public void enumVariableAssignmentSemanticAnalysis()
         {
-            string[] file = {
+            string[] file =
+            {
                 "enum colors = [red, green, blue]\n",
                 "define start()\n",
                 "variables i : integer\n",
@@ -144,7 +146,8 @@ namespace ShankUnitTests
         [TestMethod]
         public void enumVariableCompareSemanticAnalysis()
         {
-            string[] file = {
+            string[] file =
+            {
                 "enum colors = [red, green, blue]\n",
                 "define start()\n",
                 "variables i : integer\n",
@@ -163,7 +166,8 @@ namespace ShankUnitTests
         [TestMethod]
         public void simpleEnumInterpreter()
         {
-            string[] file = {
+            string[] file =
+            {
                 "enum colors = [red, green, blue]\n",
                 "define start()\n",
                 "variables i : integer\n",
@@ -184,7 +188,8 @@ namespace ShankUnitTests
         [TestMethod]
         public void EnumAtEndInterpreter()
         {
-            string[] file = {
+            string[] file =
+            {
                 "define start()\n",
                 "variables i : integer\n",
                 "variables e : colors\n",
@@ -192,7 +197,6 @@ namespace ShankUnitTests
                 "\te := red\n",
                 "\twriteToTest e\n",
                 "enum colors = [red, green, blue]\n"
-
             };
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file);
@@ -206,7 +210,8 @@ namespace ShankUnitTests
         [TestMethod]
         public void CompareEnum()
         {
-            string[] file = {
+            string[] file =
+            {
                 "enum colors = [red, green, blue]\n",
                 "define start()\n",
                 "variables e : colors\n",
@@ -228,7 +233,8 @@ namespace ShankUnitTests
         [TestMethod]
         public void CompareEnumVariables()
         {
-            string[] file = {
+            string[] file =
+            {
                 "enum colors = [red, green, blue]\n",
                 "define start()\n",
                 "variables e, s : colors\n",
@@ -252,7 +258,8 @@ namespace ShankUnitTests
         [ExpectedException(typeof(Exception), "Cannot compare two enum elements")]
         public void CompareEnumValues()
         {
-            string[] file = {
+            string[] file =
+            {
                 "enum colors = [red, green, blue]\n",
                 "define start()\n",
                 "variables e : colors\n",

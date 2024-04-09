@@ -375,8 +375,12 @@ namespace ShankUnitTests
             BuiltInFunctions.Register(Interpreter.getStartModule().getFunctions());
             SemanticAnalysis.checkModules();
         }
+
         [TestMethod]
-        [ExpectedException(typeof(Exception), "Cannot create an enum of type colors as it was never exported")]
+        [ExpectedException(
+            typeof(Exception),
+            "Cannot create an enum of type colors as it was never exported"
+        )]
         public void ImportedEnumPrivacy()
         {
             string[] file1 =
@@ -386,8 +390,8 @@ namespace ShankUnitTests
                 "define start()\n",
                 "variables e : colors\n",
                 "variables p : integer\n",
-                    "\tadd 1, 2, var p\n",
-                    "\twriteToTest p\n",
+                "\tadd 1, 2, var p\n",
+                "\twriteToTest p\n",
             };
 
             string[] file2 =
@@ -409,10 +413,14 @@ namespace ShankUnitTests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Exception), "Enums can only be compared to enums or enum variables of the same type.")]
+        [ExpectedException(
+            typeof(Exception),
+            "Enums can only be compared to enums or enum variables of the same type."
+        )]
         public void compareTwoDifferentEnumTypes()
         {
-            string[] file1 = {
+            string[] file1 =
+            {
                 "enum colors = [red, green, blue]\n",
                 "enum tokens = [WORD, NUMBER]\n",
                 "define start()\n",

@@ -9,7 +9,6 @@ namespace ShankUnitTests
     [TestClass]
     public class ModuleInterpreterTests
     {
-
         public static Dictionary<string, ModuleNode> getModulesFromParser(LinkedList<string[]> list)
         {
             return ModuleBeforeInterpreterTests.getModulesFromParser(list);
@@ -266,7 +265,8 @@ namespace ShankUnitTests
         [TestMethod]
         public void EnumImportAndExport()
         {
-            string[] file1 = {
+            string[] file1 =
+            {
                 "module test1\n",
                 "import test2\n",
                 "define start()\n",
@@ -297,7 +297,8 @@ namespace ShankUnitTests
         [TestMethod]
         public void chainEnumImportAndParameters()
         {
-            string[] file1 = {
+            string[] file1 =
+            {
                 "module test1\n",
                 "import test2\n",
                 "import test3\n",
@@ -339,7 +340,8 @@ namespace ShankUnitTests
         [TestMethod]
         public void SimpleRecordImportAndExport()
         {
-            string[] file1 = {
+            string[] file1 =
+            {
                 "module test1\n",
                 "import test2\n",
                 "define start()\n",

@@ -423,7 +423,8 @@ namespace ShankUnitTests
         [TestMethod]
         public void SimpleEnumHandleExport()
         {
-            string[] file2 = {
+            string[] file2 =
+            {
                 "module test2\n",
                 "enum colors = [red, green, blue]\n",
                 "export add, colors\n",
@@ -446,7 +447,8 @@ namespace ShankUnitTests
         [TestMethod]
         public void SimpleEnumExportAndImport()
         {
-            string[] file1 = {
+            string[] file1 =
+            {
                 "module test1\n",
                 "import test2\n",
                 "define start()\n",
@@ -475,10 +477,12 @@ namespace ShankUnitTests
             );
             Assert.IsTrue(Interpreter.getModules()["test1"].Imported.ContainsKey("colors"));
         }
+
         [TestMethod]
         public void SimpleRecordExport()
         {
-            string[] file2 = {
+            string[] file2 =
+            {
                 "module test2\n",
                 "record testRecord\n",
                 "\tint data\n",
@@ -499,10 +503,12 @@ namespace ShankUnitTests
                 Interpreter.getModules()["test2"].getExportedFunctions().ContainsKey("testRecord")
             );
         }
+
         [TestMethod]
         public void SimpleRecordImportAndExport()
         {
-            string[] file1 = {
+            string[] file1 =
+            {
                 "module test1\n",
                 "import test2\n",
                 "define start()\n",
