@@ -1,0 +1,15 @@
+record stringStorage
+    string data
+
+record intStorage
+    integer data
+
+define saveAnythingToAnythingStorage(anything : A; var anythingStorage : S) generic A, S
+    anythingStorage.data := anything
+
+define start()
+variables myIntStorage : integer
+variables myStrStorage : string
+    saveAnythingToAnythingStorage 1 intStorage
+    saveAnythingToAnythingStorage "hello" stringStorage
+

@@ -1,7 +1,0 @@
-record genTest generic T
-    T data1
-    real data2
-
-define start()
-variables myGenTest : genTest integer
-    myGenTest.data1 := 1

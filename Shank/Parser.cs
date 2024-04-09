@@ -44,12 +44,12 @@ public class Parser
 
     private readonly List<Token> _tokens;
 
-    public static int Line { get; set; } = 0;
+    public static int Line { get; set; }
 
     private Token? MatchAndRemove(Token.TokenType t)
     {
         // If there are no Tokens left, return null.
-        if (!_tokens.Any())
+        if (_tokens.Count == 0)
         {
             return null;
         }
@@ -67,9 +67,13 @@ public class Parser
         _tokens.RemoveAt(0);
 
         // Update line num tracker.
-        Line = retVal.LineNumber;
+        if (t != Token.TokenType.EndOfLine)
+        {
+            Line = retVal.LineNumber;
+        }
 
         // Consume blank lines logic.
+        // TODO
         // We don't want MatchAndRemove to be the permanent home of this logic because we want to
         // keep MAR simple. The eventual permanent fix will be to convert every
         // "MatchAndRemove(EndOfLine)" call in the whole project to an "ExpectsEndOfLine()" or a
@@ -104,10 +108,13 @@ public class Parser
     {
         var ret = MatchAndRemove(Token.TokenType.EndOfLine) is not null;
 
-        if (ret)
-        {
-            ConsumeBlankLines();
-        }
+        // TODO
+        // Uncomment this part when we implement the overhaul described in MatchAndRemove. For now,
+        // this code would be redundant.
+        //if (ret)
+        //{
+        //    ConsumeBlankLines();
+        //}
 
         return ret;
     }
@@ -264,9 +271,12 @@ public class Parser
             }
         }
         funcNode.LineNum = Peek(0).LineNumber;
-        if (MatchAndRemove(Token.TokenType.RightParen) == null)
-            throw new SyntaxErrorException("Expected a right paren", Peek(0));
-        MatchAndRemove(Token.TokenType.EndOfLine);
+
+        RequiresToken(Token.TokenType.RightParen);
+
+        var genericTypeParameterNames = ParseGenericKeywordAndTypeParams();
+
+        RequiresEndOfLine();
 
         // Process local variables.
         funcNode.LocalVariables.AddRange(ProcessConstants(moduleName));

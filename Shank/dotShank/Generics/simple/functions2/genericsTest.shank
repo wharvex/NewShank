@@ -1,0 +1,5 @@
+﻿define writeAnything(anything : T) generic T
+    write anything
+
+define start()
+	write "hello"

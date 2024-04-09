@@ -1,0 +1,8 @@
+record anythingHolder generic T
+    T data
+
+define start()
+variables myAnythingHolder : anythingHolder integer
+variables myAnythingHolder2 : anythingHolder string
+    myAnythingHolder.data := 1
+    myAnythingHolder2.data := "hello"
