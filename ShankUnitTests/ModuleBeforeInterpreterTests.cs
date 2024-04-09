@@ -419,5 +419,126 @@ namespace ShankUnitTests
                 Interpreter.getModules()["test1"].getImportedFunctions().ContainsKey("addFunc")
             );
         }
+
+        [TestMethod]
+        public void SimpleEnumHandleExport()
+        {
+            string[] file2 =
+            {
+                "module test2\n",
+                "enum colors = [red, green, blue]\n",
+                "export add, colors\n",
+                "define add(a, b : integer; var c : integer)\n",
+                "\tc := a + b\n"
+            };
+            LinkedList<string[]> list = new LinkedList<string[]>();
+            list.AddFirst(file2);
+            initializeInterpreter(list);
+            SemanticAnalysis.handleExports();
+            Assert.AreEqual(Interpreter.getModules()["test2"].getExportedFunctions().Count, 2);
+            Assert.IsTrue(
+                Interpreter.getModules()["test2"].getExportedFunctions().ContainsKey("add")
+            );
+            Assert.IsTrue(
+                Interpreter.getModules()["test2"].getExportedFunctions().ContainsKey("colors")
+            );
+        }
+
+        [TestMethod]
+        public void SimpleEnumExportAndImport()
+        {
+            string[] file1 =
+            {
+                "module test1\n",
+                "import test2\n",
+                "define start()\n",
+                "variables p : integer\n",
+                "\tp:=3\n",
+                "\twrite p\n"
+            };
+            string[] file2 =
+            {
+                "module test2\n",
+                "enum colors = [red, green, blue]\n",
+                "export colors\n",
+                "define add(a, b : integer; var c : integer)\n",
+                "\tc := a + b\n"
+            };
+            LinkedList<string[]> list = new LinkedList<string[]>();
+            list.AddFirst(file1);
+            list.AddLast(file2);
+            initializeInterpreter(list);
+            SemanticAnalysis.handleImports();
+
+            Assert.AreEqual(Interpreter.getModules()["test1"].getImportNames().Count, 1);
+            Assert.AreEqual(Interpreter.getModules()["test1"].getImportNames()["test2"].Count, 1);
+            Assert.IsTrue(
+                Interpreter.getModules()["test1"].getImportNames()["test2"].Contains("colors")
+            );
+            Assert.IsTrue(Interpreter.getModules()["test1"].Imported.ContainsKey("colors"));
+        }
+
+        [TestMethod]
+        public void SimpleRecordExport()
+        {
+            string[] file2 =
+            {
+                "module test2\n",
+                "record testRecord\n",
+                "\tint data\n",
+                "\tstring s\n",
+                "export add, testRecord\n",
+                "define add(a, b : integer; var c : integer)\n",
+                "\tc := a + b\n"
+            };
+            LinkedList<string[]> list = new LinkedList<string[]>();
+            list.AddFirst(file2);
+            initializeInterpreter(list);
+            SemanticAnalysis.handleExports();
+            Assert.AreEqual(Interpreter.getModules()["test2"].getExportedFunctions().Count, 2);
+            Assert.IsTrue(
+                Interpreter.getModules()["test2"].getExportedFunctions().ContainsKey("add")
+            );
+            Assert.IsTrue(
+                Interpreter.getModules()["test2"].getExportedFunctions().ContainsKey("testRecord")
+            );
+        }
+
+        [TestMethod]
+        public void SimpleRecordImportAndExport()
+        {
+            string[] file1 =
+            {
+                "module test1\n",
+                "import test2\n",
+                "define start()\n",
+                "variables p : testRecord\n",
+                "\tp.data := 3\n",
+                "\tp.s := \"hello\"",
+                "\twrite p.s, p.data\n"
+            };
+            string[] file2 =
+            {
+                "module test2\n",
+                "record testRecord\n",
+                "\tint data\n",
+                "\tstring s\n",
+                "export testRecord\n",
+                "define add(a, b : integer; var c : integer)\n",
+                "\tc := a + b\n"
+            };
+            LinkedList<string[]> list = new LinkedList<string[]>();
+            list.AddFirst(file1);
+            list.AddLast(file2);
+            initializeInterpreter(list);
+            SemanticAnalysis.handleImports();
+
+            Assert.AreEqual(Interpreter.getModules()["test1"].getImportNames().Count, 1);
+            Assert.AreEqual(Interpreter.getModules()["test1"].getImportNames()["test2"].Count, 1);
+            Assert.IsTrue(
+                Interpreter.getModules()["test1"].getImportNames()["test2"].Contains("testRecord")
+            );
+            Assert.IsTrue(Interpreter.getModules()["test1"].Imported.ContainsKey("testRecord"));
+        }
     }
 }

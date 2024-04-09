@@ -1,5 +1,6 @@
 using System.Data;
 using System.IO;
+using System.Security.Cryptography.X509Certificates;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shank;
 
@@ -353,6 +354,41 @@ namespace ShankUnitTests
             Assert.IsTrue(
                 Interpreter.getModules()["default"].getFunctions().ContainsKey("addThree")
             );
+        }
+
+        [TestMethod]
+        public void SimpleEnumExport()
+        {
+            string[] code =
+            {
+                "module test2\n",
+                "enum colors = [red, green, blue]\n",
+                "export colors\n",
+                "define add(a, b : integer; var c : integer)\n",
+                "\tc := a + b\n"
+            };
+            ModuleNode m = getModuleFromParser(code);
+            Assert.AreEqual(m.getExportNames().Count, 1);
+            Assert.IsTrue(m.getExportNames().Contains("colors"));
+        }
+
+        [TestMethod]
+        public void SimpleEnumImport()
+        {
+            string[] code =
+            {
+                "module test1\n",
+                "import test2 [colors]\n",
+                "define start()\n",
+                "variables p : integer\n",
+                "\tp:=3\n",
+                "\twrite p\n"
+            };
+            ModuleNode m = getModuleFromParser(code);
+            //if imports don't have functions listed, they are added to the linked list in the dictonary with the key of their module name
+            //between the parser and interpreter
+            Assert.IsTrue(m.getImportNames().ContainsKey("test2"));
+            Assert.AreEqual(m.getImportNames()["test2"].Count, 1);
         }
     }
 }

@@ -9,24 +9,24 @@ namespace ShankUnitTests
     [TestClass]
     public class ModuleInterpreterTests
     {
-        private int unnamedModuleCount = 0;
-
-        public Dictionary<string, ModuleNode> getModulesFromParser(LinkedList<string[]> list)
+        public static Dictionary<string, ModuleNode> getModulesFromParser(LinkedList<string[]> list)
         {
             return ModuleBeforeInterpreterTests.getModulesFromParser(list);
         }
 
-        public void initializeInterpreter(LinkedList<string[]> files)
+        public static void initializeInterpreter(LinkedList<string[]> files)
         {
             Interpreter.reset();
             SemanticAnalysis.reset();
             Dictionary<string, ModuleNode> modules = getModulesFromParser(files);
             Interpreter.setModules(modules);
-            Interpreter.setStartModule();
+            var startModule = Interpreter.setStartModule();
             SemanticAnalysis.setStartModule();
+            if (startModule != null)
+                BuiltInFunctions.Register(startModule.getFunctions());
         }
 
-        public void runInterpreter()
+        public static void runInterpreter()
         {
             foreach (KeyValuePair<string, ModuleNode> currentModulePair in Interpreter.Modules)
             {
@@ -41,17 +41,7 @@ namespace ShankUnitTests
                     var interpreterErrorOccurred = false;
                     BuiltInFunctions.Register(currentModule.getFunctions());
                     SemanticAnalysis.checkModules();
-                    try
-                    {
-                        Interpreter.InterpretFunction(s, new List<InterpreterDataType>());
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(
-                            $"\nInterpretation error encountered in file {currentModulePair.Key}:\n{e}\nskipping..."
-                        );
-                        interpreterErrorOccurred = true;
-                    }
+                    Interpreter.InterpretFunction(s, new List<InterpreterDataType>());
 
                     if (interpreterErrorOccurred)
                     {
@@ -270,6 +260,112 @@ namespace ShankUnitTests
             Assert.AreEqual(j, 6);
             int.TryParse(Interpreter.testOutput[2].ToString(), out int f);
             Assert.AreEqual(f, 6);
+        }
+
+        [TestMethod]
+        public void EnumImportAndExport()
+        {
+            string[] file1 =
+            {
+                "module test1\n",
+                "import test2\n",
+                "define start()\n",
+                "variables e : colors\n",
+                "\te := red\n",
+                "\tif e = red then\n",
+                "\t\twriteToTest \"true\"\n",
+                "\telse\n",
+                "\t\twriteToTest \"false\""
+            };
+            string[] file2 =
+            {
+                "module test2\n",
+                "enum colors = [red, green, blue]\n",
+                "export colors\n",
+                "define add(a, b : integer; var c : integer)\n",
+                "\tc := a + b\n"
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddFirst(file1);
+            files.AddLast(file2);
+            initializeInterpreter(files);
+            runInterpreter();
+            Console.Write(Interpreter.testOutput.ToString());
+            Assert.AreEqual("true ", Interpreter.testOutput.ToString());
+        }
+
+        [TestMethod]
+        public void chainEnumImportAndParameters()
+        {
+            string[] file1 =
+            {
+                "module test1\n",
+                "import test2\n",
+                "import test3\n",
+                "define start()\n",
+                "variables e : colors\n",
+                "variables b : boolean\n",
+                "\t e := red\n",
+                "\tisRed e, var b\n",
+                "\twriteToTest b\n"
+            };
+            string[] file2 =
+            {
+                "module test2\n",
+                "export isRed\n",
+                "import test3\n",
+                "define isRed(e : colors; var b : boolean)\n",
+                "variables d : boolean\n",
+                "\tcheckIfRed e, d\n",
+                "\tb := d\n"
+            };
+            string[] file3 =
+            {
+                "module test3\n",
+                "enum colors = [red, green, blue]\n",
+                "export checkIfRed, colors\n",
+                "define checkIfRed(e : colors; var b : boolean)\n",
+                "\tb := e = red\n"
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddFirst(file1);
+            files.AddLast(file2);
+            files.AddLast(file3);
+
+            initializeInterpreter(files);
+            runInterpreter();
+            Assert.AreEqual("True ", Interpreter.testOutput.ToString());
+        }
+
+        [TestMethod]
+        public void SimpleRecordImportAndExport()
+        {
+            string[] file1 =
+            {
+                "module test1\n",
+                "import test2\n",
+                "define start()\n",
+                "variables p : testRecord\n",
+                "\tp.data := 3\n",
+                "\tp.s := \"hello\"",
+                "\twriteToTest p.s, p.data\n"
+            };
+            string[] file2 =
+            {
+                "module test2\n",
+                "record testRecord\n",
+                "\tinteger data\n",
+                "\tstring s\n",
+                "export testRecord\n",
+                "define add(a, b : integer; var c : integer)\n",
+                "\tc := a + b\n"
+            };
+            LinkedList<string[]> list = new LinkedList<string[]>();
+            list.AddFirst(file1);
+            list.AddLast(file2);
+            initializeInterpreter(list);
+            runInterpreter();
+            Assert.AreEqual("hello 3 ", Interpreter.testOutput.ToString());
         }
     }
 }

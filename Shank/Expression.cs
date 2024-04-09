@@ -47,6 +47,7 @@ namespace Shank
         {
             RecordMember,
             ArrayIndex,
+            Enum,
             None
         }
 
@@ -921,6 +922,7 @@ namespace Shank
         public string? ParentModuleName { get; init; }
 
         public List<StatementNode> Members { get; init; }
+        public bool IsPublic { get; set; }
 
         public RecordNode(string name, string moduleName, List<string>? genericTypeParameterNames)
         {
@@ -928,6 +930,7 @@ namespace Shank
             ParentModuleName = moduleName;
             GenericTypeParameterNames = genericTypeParameterNames;
             Members = [];
+            IsPublic = false;
         }
 
         public static RecordMemberNode ToMember(StatementNode? sn) =>
@@ -953,14 +956,16 @@ namespace Shank
     public class EnumNode : ASTNode
     {
         public string Type { get; set; }
-        public string? ParentModuleName { get; set; }
+        public string ParentModuleName { get; set; }
         public LinkedList<String> EnumElements;
+        public bool IsPublic { get; set; }
 
         public EnumNode(string? type, string? parentModuleName, LinkedList<String> enumElements)
         {
             Type = type;
             ParentModuleName = parentModuleName;
             EnumElements = new LinkedList<string>(enumElements);
+            IsPublic = false;
         }
     }
 
@@ -1163,7 +1168,7 @@ namespace Shank
         /// </summary>
         public ASTNode? Extension { get; init; }
 
-        public VrnExtType ExtensionType { get; init; }
+        public VrnExtType ExtensionType { get; set; }
 
         public ASTNode GetExtensionSafe() =>
             Extension ?? throw new InvalidOperationException("Expected Extension to not be null.");
@@ -1356,8 +1361,8 @@ namespace Shank
 
         //Dictionary associating names to something to be imported/exported
         //has a type of ASTNode? as references will later be added
-        public Dictionary<string, ASTNode?> ExportedFunctions { get; set; }
-        public Dictionary<string, ASTNode?> ImportedFunctions { get; set; }
+        public Dictionary<string, ASTNode?> Exported { get; set; }
+        public Dictionary<string, ASTNode?> Imported { get; set; }
 
         //ImportTargetNames holds a module and the list of functions that this module has imported
         public Dictionary<string, LinkedList<string>> ImportTargetNames { get; set; }
@@ -1372,8 +1377,8 @@ namespace Shank
             this.name = name;
             Functions = new Dictionary<string, CallableNode>();
             Records = [];
-            ExportedFunctions = new Dictionary<string, ASTNode?>();
-            ImportedFunctions = new Dictionary<string, ASTNode?>();
+            Exported = new Dictionary<string, ASTNode?>();
+            Imported = new Dictionary<string, ASTNode?>();
             ImportTargetNames = new Dictionary<string, LinkedList<string>>();
             //ImportTargetNames = new LinkedList<string>();
             ExportTargetNames = new LinkedList<string>();
@@ -1383,16 +1388,19 @@ namespace Shank
 
         public void updateImports(
             Dictionary<string, CallableNode> recievedFunctions,
+            Dictionary<string, EnumNode> recievedEnums,
+            Dictionary<string, RecordNode> recievedRecords,
             Dictionary<string, ASTNode?> recievedExports
         )
         {
             foreach (var function in recievedFunctions)
             {
-                if (!ImportedFunctions.ContainsKey(function.Key))
-                    ImportedFunctions.Add(function.Key, function.Value);
+                if (!Imported.ContainsKey(function.Key))
+                    Imported.Add(function.Key, function.Value);
                 if (recievedExports.ContainsKey(function.Key))
                 {
-                    ((CallableNode)ImportedFunctions[function.Key]).IsPublic = true;
+                    ((CallableNode)Imported[function.Key]).IsPublic = true;
+                    continue;
                 }
                 if (ImportTargetNames.ContainsKey(function.Value.parentModuleName))
                 {
@@ -1404,7 +1412,48 @@ namespace Shank
                             )
                         )
                         {
-                            ((CallableNode)ImportedFunctions[function.Key]).IsPublic = false;
+                            ((CallableNode)Imported[function.Key]).IsPublic = false;
+                        }
+                    }
+                }
+            }
+
+            foreach (var Enum in recievedEnums)
+            {
+                if (!Imported.ContainsKey(Enum.Key))
+                    Imported.Add(Enum.Key, Enum.Value);
+                if (recievedExports.ContainsKey(Enum.Key))
+                {
+                    ((EnumNode)Imported[Enum.Key]).IsPublic = true;
+                    continue;
+                }
+                if (ImportTargetNames.ContainsKey(Enum.Value.ParentModuleName))
+                {
+                    if (ImportTargetNames[Enum.Value.ParentModuleName] != null)
+                    {
+                        if (!ImportTargetNames[Enum.Value.ParentModuleName].Contains(Enum.Key))
+                        {
+                            ((EnumNode)Imported[Enum.Key]).IsPublic = false;
+                        }
+                    }
+                }
+            }
+            foreach (var record in recievedRecords)
+            {
+                if (!Imported.ContainsKey(record.Key))
+                    Imported.Add(record.Key, record.Value);
+                if (recievedExports.ContainsKey(record.Key))
+                {
+                    ((RecordNode)Imported[record.Key]).IsPublic = true;
+                    continue;
+                }
+                if (ImportTargetNames.ContainsKey(record.Value.ParentModuleName))
+                {
+                    if (ImportTargetNames[record.Value.ParentModuleName] != null)
+                    {
+                        if (!ImportTargetNames[record.Value.ParentModuleName].Contains(record.Key))
+                        {
+                            ((RecordNode)Imported[record.Key]).IsPublic = false;
                         }
                     }
                 }
@@ -1413,18 +1462,26 @@ namespace Shank
 
         public void updateExports()
         {
-            foreach (var exportFunctionName in ExportTargetNames)
+            foreach (var exportName in ExportTargetNames)
             {
-                if (Functions.ContainsKey(exportFunctionName))
+                if (Functions.ContainsKey(exportName))
                 {
-                    ExportedFunctions.Add(exportFunctionName, Functions[exportFunctionName]);
+                    Exported.Add(exportName, Functions[exportName]);
+                }
+                else if (Enums.ContainsKey(exportName))
+                {
+                    Exported.Add(exportName, Enums[exportName]);
+                }
+                else if (Records.ContainsKey(exportName))
+                {
+                    Exported.Add(exportName, Records[exportName]);
                 }
                 else
                 {
                     throw new Exception(
-                        "Could not find "
-                            + exportFunctionName
-                            + " in the current list of functions in module "
+                        "Could not find '"
+                            + exportName
+                            + "' in the current list of functions, enums or records in module "
                             + name
                     );
                 }
@@ -1503,12 +1560,12 @@ namespace Shank
 
         public Dictionary<string, ASTNode?> getExportedFunctions()
         {
-            return ExportedFunctions;
+            return Exported;
         }
 
         public Dictionary<string, ASTNode?> getImportedFunctions()
         {
-            return ImportedFunctions;
+            return Imported;
         }
 
         public CallableNode? getFunction(string name)

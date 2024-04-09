@@ -14,6 +14,16 @@ namespace ShankUnitTests
             return ModuleParserTests.getModuleFromParser(file);
         }
 
+        public static void initializeInterpreter(LinkedList<string[]> files)
+        {
+            ModuleInterpreterTests.initializeInterpreter(files);
+        }
+
+        public static void runInterpreter()
+        {
+            ModuleInterpreterTests.runInterpreter();
+        }
+
         [TestMethod]
         public void simpleEnumParse()
         {
@@ -80,6 +90,189 @@ namespace ShankUnitTests
             };
             ModuleNode module = getModuleFromParser(file);
             Assert.IsNotNull(module);
+        }
+
+        [TestMethod]
+        public void enumDeclarationSemanticAnalysis()
+        {
+            string[] file =
+            {
+                "enum colors = [red, green, blue]\n",
+                "define start()\n",
+                "variables i : integer\n",
+                "\ti := 3\n"
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddLast(file);
+            initializeInterpreter(files);
+            SemanticAnalysis.checkModules();
+        }
+
+        [TestMethod]
+        public void enumVariableCreationSemanticAnalysis()
+        {
+            string[] file =
+            {
+                "enum colors = [red, green, blue]\n",
+                "define start()\n",
+                "variables i : integer\n",
+                "variables e : colors\n",
+                "\ti := 3\n"
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddLast(file);
+            initializeInterpreter(files);
+            SemanticAnalysis.checkModules();
+        }
+
+        [TestMethod]
+        public void enumVariableAssignmentSemanticAnalysis()
+        {
+            string[] file =
+            {
+                "enum colors = [red, green, blue]\n",
+                "define start()\n",
+                "variables i : integer\n",
+                "variables e : colors\n",
+                "\ti := 3\n",
+                "\te := red\n"
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddLast(file);
+            initializeInterpreter(files);
+            SemanticAnalysis.checkModules();
+        }
+
+        [TestMethod]
+        public void enumVariableCompareSemanticAnalysis()
+        {
+            string[] file =
+            {
+                "enum colors = [red, green, blue]\n",
+                "define start()\n",
+                "variables i : integer\n",
+                "variables e : colors\n",
+                "\ti := 3\n",
+                "\te := red\n",
+                "\tif e = red then\n",
+                "\t\twrite \"red\"\n"
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddLast(file);
+            initializeInterpreter(files);
+            SemanticAnalysis.checkModules();
+        }
+
+        [TestMethod]
+        public void simpleEnumInterpreter()
+        {
+            string[] file =
+            {
+                "enum colors = [red, green, blue]\n",
+                "define start()\n",
+                "variables i : integer\n",
+                "variables e : colors\n",
+                "\ti := 3\n",
+                "\te := red\n",
+                "\twriteToTest e\n"
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddLast(file);
+            initializeInterpreter(files);
+            SemanticAnalysis.checkModules();
+            runInterpreter();
+            Console.Write(Interpreter.testOutput.ToString());
+            Assert.AreEqual("red ", Interpreter.testOutput.ToString());
+        }
+
+        [TestMethod]
+        public void EnumAtEndInterpreter()
+        {
+            string[] file =
+            {
+                "define start()\n",
+                "variables i : integer\n",
+                "variables e : colors\n",
+                "\ti := 3\n",
+                "\te := red\n",
+                "\twriteToTest e\n",
+                "enum colors = [red, green, blue]\n"
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddLast(file);
+            initializeInterpreter(files);
+            SemanticAnalysis.checkModules();
+            runInterpreter();
+            Console.Write(Interpreter.testOutput.ToString());
+            Assert.AreEqual("red ", Interpreter.testOutput.ToString());
+        }
+
+        [TestMethod]
+        public void CompareEnum()
+        {
+            string[] file =
+            {
+                "enum colors = [red, green, blue]\n",
+                "define start()\n",
+                "variables e : colors\n",
+                "\te := red\n",
+                "\tif e = red then\n",
+                "\t\twriteToTest \"true\"\n",
+                "\telse\n",
+                "\t\twriteToTest \"false\""
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddLast(file);
+            initializeInterpreter(files);
+            SemanticAnalysis.checkModules();
+            runInterpreter();
+            Console.Write(Interpreter.testOutput.ToString());
+            Assert.AreEqual("true ", Interpreter.testOutput.ToString());
+        }
+
+        [TestMethod]
+        public void CompareEnumVariables()
+        {
+            string[] file =
+            {
+                "enum colors = [red, green, blue]\n",
+                "define start()\n",
+                "variables e, s : colors\n",
+                "\te := red\n",
+                "\ts := blue\n",
+                "\tif e = s then\n",
+                "\t\twriteToTest \"true\"\n",
+                "\telse\n",
+                "\t\twriteToTest \"false\""
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddLast(file);
+            initializeInterpreter(files);
+            SemanticAnalysis.checkModules();
+            runInterpreter();
+            Console.Write(Interpreter.testOutput.ToString());
+            Assert.AreEqual("false ", Interpreter.testOutput.ToString());
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(Exception), "Cannot compare two enum elements")]
+        public void CompareEnumValues()
+        {
+            string[] file =
+            {
+                "enum colors = [red, green, blue]\n",
+                "define start()\n",
+                "variables e : colors\n",
+                "\te := red\n",
+                "\tif red = red then\n",
+                "\t\twriteToTest \"true\"\n",
+                "\telse\n",
+                "\t\twriteToTest \"false\""
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddLast(file);
+            initializeInterpreter(files);
+            SemanticAnalysis.checkModules();
         }
     }
 }

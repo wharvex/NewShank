@@ -112,12 +112,20 @@ public class CharDataType : InterpreterDataType
 
 public class EnumDataType : InterpreterDataType
 {
-    public EnumDataType(string data)
+    public EnumDataType(EnumNode type)
     {
-        Value = data;
+        Type = type;
+        Value = "";
+    }
+
+    public EnumDataType(EnumNode type, string value)
+    {
+        Type = type;
+        Value = value;
     }
 
     public string Value { set; get; }
+    public EnumNode Type { get; set; }
 
     public override void FromString(string input)
     {

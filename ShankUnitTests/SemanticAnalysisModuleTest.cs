@@ -14,6 +14,11 @@ namespace ShankUnitTests
             ModuleBeforeInterpreterTests.initializeInterpreter(files);
         }
 
+        public void runInterpreter()
+        {
+            ModuleInterpreterTests.runInterpreter();
+        }
+
         [TestMethod]
         public void preliminaryTest()
         {
@@ -360,6 +365,7 @@ namespace ShankUnitTests
                 "\t c := a + 3\n"
             };
             Interpreter.reset();
+            SemanticAnalysis.reset();
             ModuleNode module1 = ModuleParserTests.getModuleFromParser(file1);
             ModuleNode module2 = ModuleParserTests.getModuleFromParser(file2);
             module1.mergeModule(module2);
@@ -367,6 +373,69 @@ namespace ShankUnitTests
             Interpreter.Modules.Add("default", module1);
             Interpreter.setStartModule();
             BuiltInFunctions.Register(Interpreter.getStartModule().getFunctions());
+            SemanticAnalysis.checkModules();
+        }
+
+        [TestMethod]
+        [ExpectedException(
+            typeof(Exception),
+            "Cannot create an enum of type colors as it was never exported"
+        )]
+        public void ImportedEnumPrivacy()
+        {
+            string[] file1 =
+            {
+                "module test1\n",
+                "import test2\n",
+                "define start()\n",
+                "variables e : colors\n",
+                "variables p : integer\n",
+                "\tadd 1, 2, var p\n",
+                "\twriteToTest p\n",
+            };
+
+            string[] file2 =
+            {
+                "module test2\n",
+                "enum colors = [red, green, blue]\n",
+                "export add\n",
+                "define add(a, b : integer; var p : integer)\n",
+                "\tp := a + b\n"
+            };
+            SemanticAnalysis.reset();
+            Interpreter.reset();
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddLast(file1);
+            files.AddLast(file2);
+            initializeInterpreter(files);
+            //SemanticAnalysis.checkModules();
+            runInterpreter();
+        }
+
+        [TestMethod]
+        [ExpectedException(
+            typeof(Exception),
+            "Enums can only be compared to enums or enum variables of the same type."
+        )]
+        public void compareTwoDifferentEnumTypes()
+        {
+            string[] file1 =
+            {
+                "enum colors = [red, green, blue]\n",
+                "enum tokens = [WORD, NUMBER]\n",
+                "define start()\n",
+                "variables c : colors\n",
+                "variables t : tokens\n",
+                "\tc := red\n",
+                "\tt := WORD\n",
+                "\tif c = t then\n",
+                "\t\twriteToTest \"failed\"\n",
+                "\telse\n",
+                "\t\twriteToTest \"passed\"\n",
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddLast(file1);
+            initializeInterpreter(files);
             SemanticAnalysis.checkModules();
         }
     }
