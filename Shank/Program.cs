@@ -142,14 +142,6 @@ namespace Shank
                             continue;
                         }
                     }
-
-                    // if (count < 1)
-                    // {
-                    //     var gen = new IRGenerator(newFnNamePrefix);
-                    //     gen.GenerateIR();
-                    // }
-
-                    // count++;
                 }
             }
             //Unit test interpreter mode

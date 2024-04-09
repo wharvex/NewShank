@@ -95,6 +95,9 @@ public class Interpreter
                     case RecordDataType rt:
                         AssignToRecord(rt, an, variables);
                         break;
+                    case EnumDataType et:
+                        et.Value = ResolveEnum((EnumDataType)target, an.expression, variables);
+                        break;
                     default:
                         throw new Exception("Unknown type in assignment");
                 }
@@ -228,8 +231,27 @@ public class Interpreter
             return EvaluateBooleanExpressionNode(ben, variables);
         else if (node is BoolNode bn)
             return bn.Value;
+        else if (node is VariableReferenceNode vrn)
+            return ((BooleanDataType)variables[vrn.Name]).Value;
         else
             throw new ArgumentException(nameof(node));
+    }
+
+    private static string ResolveEnum(EnumDataType target, ASTNode node, Dictionary<string, InterpreterDataType> variables)
+    {
+        if(node is VariableReferenceNode variable)
+        {
+            //if the variable is a variable and not an enum reference
+            if (variables.ContainsKey(variable.Name))
+            {
+                return ((EnumDataType)variables[variable.Name]).Value;
+            }
+            else
+            {
+                return variable.Name;
+            }
+        }
+        throw new Exception("Enums must be asigned Enums");
     }
 
     private static void ProcessFunctionCall(
@@ -376,6 +398,9 @@ public class Interpreter
                         break;
                     case RecordDataType recordVal:
                         AddToParamsRecord(recordVal, fcp, passed);
+                        break;
+                    case EnumDataType enumVal:
+                        passed.Add(new EnumDataType(enumVal.Type, enumVal.Value));
                         break;
                 }
             }
@@ -534,8 +559,23 @@ public class Interpreter
             }
             case VariableNode.DataType.Record:
             {
-                return new RecordDataType(parentModule.Records[vn.GetUnknownTypeSafe()].Members);
+                    if (parentModule.Records.ContainsKey(vn.GetUnknownTypeSafe()))
+                        return new RecordDataType(parentModule.Records[vn.GetUnknownTypeSafe()].Members);
+                    else
+                    {
+                        if (!parentModule.Imported.ContainsKey(vn.GetUnknownTypeSafe()))
+                            throw new Exception($"Could not find definition for the record {vn.GetUnknownTypeSafe()}.");
+                        return new RecordDataType(((RecordNode)parentModule.Imported[vn.GetUnknownTypeSafe()]).Members);
+                    }
             }
+            case VariableNode.DataType.Enum:
+                if (parentModule.getEnums().ContainsKey(vn.GetUnknownTypeSafe()))
+                    return new EnumDataType(parentModule.getEnums()[vn.GetUnknownTypeSafe()]);
+                else
+                    if (!((EnumNode)parentModule.Imported[vn.GetUnknownTypeSafe()]).IsPublic)
+                        throw new Exception($"Cannot create an enum of type {vn.GetUnknownTypeSafe()} as it was never exported");
+                    return new EnumDataType((EnumNode)parentModule.Imported[vn.GetUnknownTypeSafe()]);
+                    
             case VariableNode.DataType.Unknown:
             {
                 return vn.ResolveUnknownType(parentModule) switch
@@ -555,7 +595,7 @@ public class Interpreter
                             "An EnumNode and a RecordNode were found with this "
                                 + "VariableNode's type name, so we don't know which one to use."
                         ),
-                    _
+                    VariableNode.UnknownTypeResolver.Enum
                         => throw new NotImplementedException(
                             "Bret, you can put an enum arm in this switch expression if you"
                                 + " want the interpreter to be able to process Unknowns as enums."
@@ -605,6 +645,46 @@ public class Interpreter
             };
         }
         catch { } // It might not have been an int operation
+
+        try
+        {
+            var lf = ben.Left;
+            var rf = ben.Right;
+            if(rf is VariableReferenceNode right)
+            {
+                if(lf is VariableReferenceNode left)
+                {
+                    if(variables.ContainsKey(left.Name) && variables.ContainsKey(right.Name))
+                    {
+                        return ben.Op switch
+                        {
+                            ASTNode.BooleanExpressionOpType.eq => variables[left.Name].ToString() == variables[right.Name].ToString(),
+                            ASTNode.BooleanExpressionOpType.ne => variables[left.Name].ToString() != variables[right.Name].ToString(),
+                            _ => throw new Exception("Enums can only be compared with <> and =.")
+                        };
+                    } 
+                    else if(!variables.ContainsKey(left.Name) && variables.ContainsKey(right.Name))
+                    {
+                        return ben.Op switch
+                        {
+                            ASTNode.BooleanExpressionOpType.eq => left.Name == variables[right.Name].ToString(),
+                            ASTNode.BooleanExpressionOpType.ne => left.Name != variables[right.Name].ToString(),
+                            _ => throw new Exception("Enums can only be compared with <> and =.")
+                        };
+                    }
+                    else if(variables.ContainsKey(left.Name) && !variables.ContainsKey(right.Name))
+                    {
+                        return ben.Op switch
+                        {
+                            ASTNode.BooleanExpressionOpType.eq => variables[left.Name].ToString() == right.Name,
+                            ASTNode.BooleanExpressionOpType.ne => variables[left.Name].ToString() != right.Name,
+                            _ => throw new Exception("Enums can only be compared with <> and =.")
+                        };
+                    }
+                }
+            }
+        }
+        catch { } // It might not have been an enum to enum
 
         throw new Exception("Unable to calculate truth of expression.");
     }
