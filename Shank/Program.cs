@@ -111,10 +111,6 @@ namespace Shank
                 {
                     var currentModule = currentModulePair.Value;
                     //Console.WriteLine($"\nOutput of {currentModule.getName()}:\n");
-                    OutputHelper.DebugPrint(
-                        OutputHelper.GetDebugJsonForModuleNode(currentModule),
-                        2
-                    );
 
                     if (
                         currentModule.getFunctions().ContainsKey("start")
@@ -124,6 +120,10 @@ namespace Shank
                         Interpreter.setStartModule();
                         BuiltInFunctions.Register(currentModule.getFunctions());
                         SemanticAnalysis.checkModules();
+                        OutputHelper.DebugPrint(
+                            OutputHelper.GetDebugJsonForModuleNode(currentModule),
+                            2
+                        );
                         var interpreterErrorOccurred = false;
                         try
                         {

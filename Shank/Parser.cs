@@ -274,18 +274,7 @@ public class Parser
         // Create an extension for the function's name based on its parameters, so overloads don't
         // produce name collisions in the functions dictionary.
         var overloadNameExt = "";
-        funcNode.ParameterVariables.ForEach(
-            vn =>
-                overloadNameExt +=
-                    "_"
-                    + (vn.IsConstant ? "" : "VAR")
-                    + "_"
-                    + (
-                        vn.Type == VariableNode.DataType.Unknown
-                            ? vn.GetUnknownTypeSafe()
-                            : vn.Type.ToString().ToUpper()
-                    )
-        );
+        funcNode.ParameterVariables.ForEach(vn => overloadNameExt += vn.ToStringForOverloadExt());
         funcNode.OverloadNameExt = overloadNameExt;
 
         funcNode.LineNum = Peek(0).LineNumber;
@@ -413,6 +402,20 @@ public class Parser
             )
             : new RecordMemberNode(nameToken.GetValueSafe(), typeToken.GetValueSafe());
     }
+
+    public static VariableNode.DataType GetDataTypeFromConstantNodeType(ASTNode constantNode) =>
+        constantNode switch
+        {
+            IntNode => VariableNode.DataType.Integer,
+            FloatNode => VariableNode.DataType.Real,
+            StringNode => VariableNode.DataType.String,
+            CharNode => VariableNode.DataType.Character,
+            BooleanExpressionNode or BoolNode => VariableNode.DataType.Boolean,
+            _
+                => throw new InvalidOperationException(
+                    "Bad constant node type for converting to data type"
+                )
+        };
 
     private static VariableNode.DataType GetDataTypeFromTokenType(Token.TokenType tt) =>
         tt switch

@@ -1,11 +1,11 @@
 define myFunc(a : string)
     write a
 
-define myFunc(a : string; b : integer)
+define myFunc2(a : string; b : integer)
     write a
     write b
 
 define start()
     write "hello world"
-    myFunc "hi", 1
+    myFunc2 "hi", 1
     myFunc "hi2"

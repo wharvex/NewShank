@@ -47,7 +47,16 @@ namespace Shank
                 else if (s is FunctionCallNode fn)
                 {
                     var overloadNameExt = "";
-                    //fn.Parameters.ForEach(pn => pn.passedAsVrn ? dict[pn.GetVariableSafe().Name].Type.ToString().ToUpper());
+                    fn.Parameters.ForEach(
+                        pn =>
+                            overloadNameExt += pn.ToStringForOverload(
+                                parentModule.GetImportedSafe(),
+                                parentModule.Records,
+                                dict
+                            )
+                    );
+                    fn.OverloadNameExt = overloadNameExt;
+
                     if (parentModule.getFunctions().ContainsKey(fn.Name))
                         foundFunction = true;
                     else
@@ -179,26 +188,32 @@ namespace Shank
             }
         }
 
-        //private static VariableNode.DataType GetTargetTypeForAssignmentCheck(
-        //    VariableNode vn,
-        //    AssignmentNode an,
-        //    ModuleNode parentModule
-        //) =>
-        //    vn.Type switch
-        //    {
-        //        VariableNode.DataType.Array
-        //            => an.target.ExtensionType == ASTNode.VrnExtType.None
-        //                ? throw new NotImplementedException(
-        //                    "It is not implemented yet to assign to the base of an array variable."
-        //                )
-        //                : vn.GetArrayTypeSafe(),
-        //        VariableNode.DataType.Record
-        //            => parentModule
-        //                .Records[vn.GetUnknownTypeSafe()]
-        //                .GetFromMembersByNameSafe(an.target.GetRecordMemberReferenceSafe().Name)
-        //                .Type,
-        //        _ => vn.Type
-        //    };
+        private static VariableNode.DataType GetTargetTypeForAssignmentCheck2(
+            VariableNode vn,
+            AssignmentNode an,
+            ModuleNode parentModule
+        ) =>
+            vn.Type switch
+            {
+                VariableNode.DataType.Array
+                    => an.target.ExtensionType == ASTNode.VrnExtType.None
+                        ? throw new NotImplementedException(
+                            "It is not implemented yet to assign to the base of an array variable."
+                        )
+                        : vn.GetArrayTypeSafe(),
+                VariableNode.DataType.Record
+                    => (
+                        (RecordNode)
+                            GetRecordsAndImports(
+                                parentModule.Records,
+                                parentModule.GetImportedSafe()
+                            )[vn.GetUnknownTypeSafe()]
+                    )
+                        .GetFromMembersByNameSafe(an.target.GetRecordMemberReferenceSafe().Name)
+                        .Type,
+                _ => vn.Type
+            };
+
         private static VariableNode.DataType GetTargetTypeForAssignmentCheck(
             VariableNode vn,
             AssignmentNode an,
@@ -241,14 +256,26 @@ namespace Shank
             }
         }
 
-        public static Dictionary<string, ASTNode> GetAllValidRecords(
+        public static Dictionary<string, ASTNode> GetRecordsAndImports(
             Dictionary<string, RecordNode> localRecords,
             Dictionary<string, ASTNode> allImports
         )
         {
             var ret = new Dictionary<string, ASTNode>();
             localRecords.ToList().ForEach(r => ret.Add(r.Key, r.Value));
-            allImports.ToList().ForEach(r => ret.Add(r.Key, r.Value));
+            allImports
+                .ToList()
+                .ForEach(i =>
+                {
+                    if (!ret.TryAdd(i.Key, i.Value))
+                    {
+                        throw new InvalidOperationException(
+                            "Cannot import name "
+                                + i.Key
+                                + " because it conflicts with a local record."
+                        );
+                    }
+                });
             return ret;
         }
 

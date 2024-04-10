@@ -64,6 +64,7 @@ namespace Shank
         public string Name { get; set; }
         public int LineNum { get; set; }
         public List<ParameterNode> Parameters { get; set; } = [];
+        public string OverloadNameExt { get; set; } = "";
 
         public FunctionCallNode(string name)
         {
@@ -126,6 +127,33 @@ namespace Shank
 
         public VariableReferenceNode GetVariableSafe() =>
             Variable ?? throw new InvalidOperationException("Expected Variable to not be null");
+
+        public string ToStringForOverload(
+            Dictionary<string, ASTNode> imports,
+            Dictionary<string, RecordNode> records,
+            Dictionary<string, VariableNode> variables
+        ) =>
+            "_"
+            + (IsVariable ? "VAR_" : "")
+            + (
+                // TODO
+                // If GetSpecificType would give us a user-created type, it should be Unknown, and then
+                // we need to resolve that to its specific string.
+                Variable
+                    ?.GetSpecificType(records, imports, variables, Variable.Name)
+                    .ToString()
+                    .ToUpper()
+                ?? Parser
+                    .GetDataTypeFromConstantNodeType(
+                        Constant
+                            ?? throw new InvalidOperationException(
+                                "A ParameterNode should not have both Variable and Constant set to"
+                                    + " null."
+                            )
+                    )
+                    .ToString()
+                    .ToUpper()
+            );
 
         public override string ToString()
         {
@@ -212,6 +240,7 @@ namespace Shank
     }
 
     [JsonDerivedType(typeof(FunctionNode))]
+    [JsonDerivedType(typeof(BuiltInFunctionNode))]
     public abstract class CallableNode : ASTNode
     {
         public string Name { get; set; }
@@ -303,7 +332,7 @@ namespace Shank
                 Interpreter.InterpretFunction(this, paramList);
         }
 
-        public string OverloadNameExt { get; set; }
+        public string OverloadNameExt { get; set; } = "";
 
         public List<VariableNode> LocalVariables { get; set; } = [];
 
@@ -1031,6 +1060,11 @@ namespace Shank
 
         public string GetModuleNameSafe() => ModuleName ?? "default";
 
+        public string ToStringForOverloadExt() =>
+            "_"
+            + (IsConstant ? "" : "VAR_")
+            + (Type == DataType.Unknown ? GetUnknownTypeSafe() : Type.ToString().ToUpper());
+
         public UnknownTypeResolver ResolveUnknownType(ModuleNode parentModule)
         {
             if (
@@ -1185,13 +1219,21 @@ namespace Shank
 
         public VariableNode.DataType GetSpecificType(
             Dictionary<string, RecordNode> records,
-            Dictionary<string, ASTNode> imports
+            Dictionary<string, ASTNode> imports,
+            Dictionary<string, VariableNode> variables,
+            string name
         )
         {
-            var combinedDictionary = new Dictionary<string, ASTNode>();
-            records.ToList().ForEach(r => combinedDictionary.Add(r.Key, r.Value));
-            imports.ToList().ForEach(r => combinedDictionary.Add(r.Key, r.Value));
-            return VariableNode.DataType.Record;
+            var recordsAndImports = SemanticAnalysis.GetRecordsAndImports(records, imports);
+            return variables[name].Type switch
+            {
+                VariableNode.DataType.Record
+                    => ((RecordNode)recordsAndImports[name])
+                        .GetFromMembersByNameSafe(GetRecordMemberReferenceSafe().Name)
+                        .Type,
+                VariableNode.DataType.Array => variables[name].GetArrayTypeSafe(),
+                _ => variables[name].Type
+            };
         }
 
         public override string ToString()
