@@ -270,11 +270,29 @@ public class Parser
                 MatchAndRemove(Token.TokenType.Semicolon);
             }
         }
+
+        // Create an extension for the function's name based on its parameters, so overloads don't
+        // produce name collisions in the functions dictionary.
+        var overloadNameExt = "";
+        funcNode.ParameterVariables.ForEach(
+            vn =>
+                overloadNameExt +=
+                    "_"
+                    + (vn.IsConstant ? "" : "VAR")
+                    + "_"
+                    + (
+                        vn.Type == VariableNode.DataType.Unknown
+                            ? vn.GetUnknownTypeSafe()
+                            : vn.Type.ToString().ToUpper()
+                    )
+        );
+        funcNode.OverloadNameExt = overloadNameExt;
+
         funcNode.LineNum = Peek(0).LineNumber;
 
         RequiresToken(Token.TokenType.RightParen);
 
-        var genericTypeParameterNames = ParseGenericKeywordAndTypeParams();
+        funcNode.GenericTypeParameterNames = ParseGenericKeywordAndTypeParams();
 
         RequiresEndOfLine();
 

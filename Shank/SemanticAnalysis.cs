@@ -46,6 +46,8 @@ namespace Shank
                 }
                 else if (s is FunctionCallNode fn)
                 {
+                    var overloadNameExt = "";
+                    //fn.Parameters.ForEach(pn => pn.passedAsVrn ? dict[pn.GetVariableSafe().Name].Type.ToString().ToUpper());
                     if (parentModule.getFunctions().ContainsKey(fn.Name))
                         foundFunction = true;
                     else
@@ -237,6 +239,17 @@ namespace Shank
                 default:
                     return vn.Type;
             }
+        }
+
+        public static Dictionary<string, ASTNode> GetAllValidRecords(
+            Dictionary<string, RecordNode> localRecords,
+            Dictionary<string, ASTNode> allImports
+        )
+        {
+            var ret = new Dictionary<string, ASTNode>();
+            localRecords.ToList().ForEach(r => ret.Add(r.Key, r.Value));
+            allImports.ToList().ForEach(r => ret.Add(r.Key, r.Value));
+            return ret;
         }
 
         private static void CheckNode(

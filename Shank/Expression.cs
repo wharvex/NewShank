@@ -303,11 +303,15 @@ namespace Shank
                 Interpreter.InterpretFunction(this, paramList);
         }
 
+        public string OverloadNameExt { get; set; }
+
         public List<VariableNode> LocalVariables { get; set; } = [];
 
         public List<StatementNode> Statements { get; set; } = [];
 
         public Dictionary<string, TestNode> Tests { get; set; } = [];
+
+        public List<string>? GenericTypeParameterNames { get; set; }
 
         public VariableNode GetVariableNodeByName(string searchName)
         {
@@ -1179,6 +1183,17 @@ namespace Shank
                 "Expected Extension to be a VariableReferenceNode."
             );
 
+        public VariableNode.DataType GetSpecificType(
+            Dictionary<string, RecordNode> records,
+            Dictionary<string, ASTNode> imports
+        )
+        {
+            var combinedDictionary = new Dictionary<string, ASTNode>();
+            records.ToList().ForEach(r => combinedDictionary.Add(r.Key, r.Value));
+            imports.ToList().ForEach(r => combinedDictionary.Add(r.Key, r.Value));
+            return VariableNode.DataType.Record;
+        }
+
         public override string ToString()
         {
             return $"{Name + (Extension != null ? (", Index: " + Extension) : string.Empty)}";
@@ -1384,6 +1399,26 @@ namespace Shank
             ExportTargetNames = new LinkedList<string>();
             Tests = new Dictionary<string, TestNode>();
             Enums = new Dictionary<string, EnumNode>();
+        }
+
+        public Dictionary<string, ASTNode> GetImportedSafe()
+        {
+            var ret = new Dictionary<string, ASTNode>();
+            Imported
+                .ToList()
+                .ForEach(
+                    i =>
+                        ret.Add(
+                            i.Key,
+                            i.Value
+                                ?? throw new InvalidOperationException(
+                                    "Expected the value associated with "
+                                        + i.Key
+                                        + " to not be null."
+                                )
+                        )
+                );
+            return ret;
         }
 
         public void updateImports(
