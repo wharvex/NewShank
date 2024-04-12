@@ -932,6 +932,10 @@ namespace Shank
 
         public string? UnknownType { get; init; }
 
+        public string GetUnknownTypeSafe() =>
+            UnknownType
+            ?? throw new InvalidOperationException("Expected UnknownType to not be null.");
+
         public RecordMemberNode(string name, VariableNode.DataType type)
         {
             Name = name;
@@ -944,6 +948,13 @@ namespace Shank
             Type = VariableNode.DataType.Unknown;
             UnknownType = unknownType;
         }
+
+        //public VariableNode.DataType GetTypeResolveUnknown(ModuleNode module)
+        //{
+        //    return Type != VariableNode.DataType.Unknown
+        //        ? Type
+        //        : (SemanticAnalysis.GetNamespaceOfRecordsAndEnumsAndImports(module)[GetUnknownTypeSafe()] as RecordNode)?.;
+        //}
     }
 
     public class RecordNode : ASTNode
@@ -1411,10 +1422,12 @@ namespace Shank
 
     public class ModuleNode : ASTNode
     {
-        private Dictionary<string, EnumNode> Enums;
+        public Dictionary<string, EnumNode> Enums { get; init; }
         public string name { get; set; }
         public Dictionary<string, CallableNode> Functions { get; init; }
+        public Dictionary<string, List<CallableNode>> Functions2 { get; } = [];
         public Dictionary<string, RecordNode> Records { get; init; }
+        public Dictionary<string, VariableNode> GlobalVariables { get; init; }
 
         //Dictionary associating names to something to be imported/exported
         //has a type of ASTNode? as references will later be added

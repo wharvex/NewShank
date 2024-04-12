@@ -1,0 +1,9 @@
+record Sky
+    Cloud cloud
+
+record Cloud
+    boolean isRainCloud
+
+define start()
+variables sky : Sky
+    sky.cloud.isRainCloud := true

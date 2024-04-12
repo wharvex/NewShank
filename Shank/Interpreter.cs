@@ -530,8 +530,9 @@ public class Interpreter
                     VariableNode.DataType.Real => new FloatDataType(rdt.GetValueReal(rmVrn.Name)),
                     _
                         => throw new NotImplementedException(
-                            "It has not been implemented yet to pass a complex Record member"
-                                + " type into a function."
+                            "It has not been implemented yet to pass Record member type "
+                                + rdt.MemberTypes[rmVrn.Name]
+                                + " into a function."
                         )
                 }
             );

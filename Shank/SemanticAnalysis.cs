@@ -38,23 +38,27 @@ namespace Shank
                 bool foundFunction = false;
                 if (s is AssignmentNode an)
                 {
-                    var target = dict[an.target.Name];
+                    var targetDefinition = dict[an.target.Name];
 
-                    var targetType = GetTargetTypeForAssignmentCheck(target, an, parentModule);
+                    var targetType = GetTargetTypeForAssignmentCheck(
+                        targetDefinition,
+                        an.target,
+                        parentModule
+                    );
 
-                    CheckNode(targetType, an.expression, dict, parentModule, target);
+                    CheckNode(targetType, an.expression, dict, parentModule, targetDefinition);
                 }
                 else if (s is FunctionCallNode fn)
                 {
                     var overloadNameExt = "";
-                    fn.Parameters.ForEach(
-                        pn =>
-                            overloadNameExt += pn.ToStringForOverload(
-                                parentModule.GetImportedSafe(),
-                                parentModule.Records,
-                                dict
-                            )
-                    );
+                    //fn.Parameters.ForEach(
+                    //    pn =>
+                    //        overloadNameExt += pn.ToStringForOverload(
+                    //            parentModule.GetImportedSafe(),
+                    //            parentModule.Records,
+                    //            dict
+                    //        )
+                    //);
                     fn.OverloadNameExt = overloadNameExt;
 
                     if (parentModule.getFunctions().ContainsKey(fn.Name))
@@ -88,20 +92,20 @@ namespace Shank
                 }
                 else if (s is RepeatNode repNode)
                 {
-                    CheckComparision(repNode.Expression, dict, parentModule);
+                    CheckComparison(repNode.Expression, dict, parentModule);
                 }
                 else if (s is WhileNode whileNode)
                 {
-                    CheckComparision(whileNode.Expression, dict, parentModule);
+                    CheckComparison(whileNode.Expression, dict, parentModule);
                 }
                 else if (s is IfNode ifNode)
                 {
-                    CheckComparision(ifNode.Expression, dict, parentModule);
+                    CheckComparison(ifNode.Expression, dict, parentModule);
                 }
             }
         }
 
-        private static void CheckComparision(
+        private static void CheckComparison(
             BooleanExpressionNode? ben,
             Dictionary<string, VariableNode> variables,
             ModuleNode parentModule
@@ -188,42 +192,49 @@ namespace Shank
             }
         }
 
-        private static VariableNode.DataType GetTargetTypeForAssignmentCheck2(
-            VariableNode vn,
-            AssignmentNode an,
+        private static VariableNode.DataType GetTargetTypeForAssignmentCheck(
+            VariableNode targetDefinition,
+            VariableReferenceNode targetUsage,
             ModuleNode parentModule
         ) =>
-            vn.Type switch
+            targetDefinition.Type switch
             {
                 VariableNode.DataType.Array
-                    => an.target.ExtensionType == ASTNode.VrnExtType.None
+                    => targetUsage.ExtensionType == ASTNode.VrnExtType.None
                         ? throw new NotImplementedException(
                             "It is not implemented yet to assign to the base of an array variable."
                         )
-                        : vn.GetArrayTypeSafe(),
+                        : targetDefinition.GetArrayTypeSafe(),
                 VariableNode.DataType.Record
-                    => (
-                        (RecordNode)
-                            GetRecordsAndImports(
-                                parentModule.Records,
-                                parentModule.GetImportedSafe()
-                            )[vn.GetUnknownTypeSafe()]
-                    )
-                        .GetFromMembersByNameSafe(an.target.GetRecordMemberReferenceSafe().Name)
-                        .Type,
-                _ => vn.Type
+                    => GetSpecificRecordType(parentModule, targetDefinition, targetUsage),
+                VariableNode.DataType.Unknown => throw new InvalidOperationException("hi"),
+                _ => targetDefinition.Type
             };
 
-        private static VariableNode.DataType GetTargetTypeForAssignmentCheck(
+        private static VariableNode.DataType GetSpecificRecordType(
+            ModuleNode parentModule,
+            VariableNode targetDefinition,
+            VariableReferenceNode targetUsage
+        ) =>
+            (
+                (RecordNode)
+                    GetRecordsAndImports(parentModule.Records, parentModule.GetImportedSafe())[
+                        targetDefinition.GetUnknownTypeSafe()
+                    ]
+            )
+                .GetFromMembersByNameSafe(targetUsage.GetRecordMemberReferenceSafe().Name)
+                .Type;
+
+        private static VariableNode.DataType GetTargetTypeForAssignmentCheck2(
             VariableNode vn,
-            AssignmentNode an,
+            VariableReferenceNode anTarget,
             ModuleNode parentModule
         )
         {
             switch (vn.Type)
             {
                 case VariableNode.DataType.Array:
-                    if (an.target.ExtensionType == ASTNode.VrnExtType.None)
+                    if (anTarget.ExtensionType == ASTNode.VrnExtType.None)
                     {
                         throw new NotImplementedException(
                             "It is not implemented yet to assign to the base of an array variable."
@@ -238,7 +249,7 @@ namespace Shank
                     {
                         return parentModule
                             .Records[vn.GetUnknownTypeSafe()]
-                            .GetFromMembersByNameSafe(an.target.GetRecordMemberReferenceSafe().Name)
+                            .GetFromMembersByNameSafe(anTarget.GetRecordMemberReferenceSafe().Name)
                             .Type;
                     }
                     else
@@ -248,7 +259,7 @@ namespace Shank
                                 $"Could not find definition for the record {vn.GetUnknownTypeSafe()}"
                             );
                         return ((RecordNode)parentModule.Imported[vn.GetUnknownTypeSafe()])
-                            .GetFromMembersByNameSafe(an.target.GetRecordMemberReferenceSafe().Name)
+                            .GetFromMembersByNameSafe(anTarget.GetRecordMemberReferenceSafe().Name)
                             .Type;
                     }
                 default:
@@ -257,26 +268,55 @@ namespace Shank
         }
 
         public static Dictionary<string, ASTNode> GetRecordsAndImports(
-            Dictionary<string, RecordNode> localRecords,
-            Dictionary<string, ASTNode> allImports
+            Dictionary<string, RecordNode> records,
+            Dictionary<string, ASTNode> imports
         )
         {
             var ret = new Dictionary<string, ASTNode>();
-            localRecords.ToList().ForEach(r => ret.Add(r.Key, r.Value));
-            allImports
+            records.ToList().ForEach(r => ret.Add(r.Key, r.Value));
+            imports
                 .ToList()
                 .ForEach(i =>
                 {
                     if (!ret.TryAdd(i.Key, i.Value))
                     {
                         throw new InvalidOperationException(
-                            "Cannot import name "
-                                + i.Key
-                                + " because it conflicts with a local record."
+                            "Uncaught namespace conflict with record: " + i.Key
                         );
                     }
                 });
             return ret;
+        }
+
+        public static Dictionary<string, ASTNode> GetEnumsAndImports(
+            Dictionary<string, EnumNode> enums,
+            Dictionary<string, ASTNode> imports
+        )
+        {
+            var ret = new Dictionary<string, ASTNode>();
+            enums.ToList().ForEach(r => ret.Add(r.Key, r.Value));
+            imports
+                .ToList()
+                .ForEach(i =>
+                {
+                    if (!ret.TryAdd(i.Key, i.Value))
+                    {
+                        throw new InvalidOperationException(
+                            "Uncaught namespace conflict with enum: " + i.Key
+                        );
+                    }
+                });
+            return ret;
+        }
+
+        public static Dictionary<string, ASTNode> GetNamespaceOfRecordsAndEnumsAndImports(
+            ModuleNode module
+        )
+        {
+            return GetRecordsAndImports(
+                module.Records,
+                GetEnumsAndImports(module.Enums, module.GetImportedSafe())
+            );
         }
 
         private static void CheckNode(
@@ -298,7 +338,10 @@ namespace Shank
                 case BoolNode boolNode:
                     if (targetType != VariableNode.DataType.Boolean)
                         throw new Exception(
-                            "True and False have to be assigned to boolean variables"
+                            "true and false must be assigned to boolean variables; found "
+                                + boolNode.Value
+                                + " assigned to "
+                                + targetType
                         );
                     break;
                 case CharNode charNode:

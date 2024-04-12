@@ -8,12 +8,16 @@ record chypre
 	integer dahlhaus
 	integer no
 
+record blah
+	integer bloor
+
 define start()
 variables a,b,c : integer
 variables myAardvark : aardvark
 variables myChypre : chypre
 	myAardvark.bokchoy := "hi"
 	myAardvark.elephant := "hello"
+	myAardvark.blahh.bloor := 1
 	myChypre.dahlhaus := 1
 	myChypre.no := 2
 	myAardvark.yes := 3
