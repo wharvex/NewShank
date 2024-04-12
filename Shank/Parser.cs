@@ -104,6 +104,9 @@ public class Parser
         return _tokens.Count > offset ? _tokens[offset] : null;
     }
 
+    private Token PeekSafe(int offset) =>
+        Peek(offset) ?? throw new SyntaxErrorException("Unexpected EOF", null);
+
     private bool ExpectsEndOfLine()
     {
         var ret = MatchAndRemove(Token.TokenType.EndOfLine) is not null;
@@ -231,11 +234,14 @@ public class Parser
                 module.addTest(Test(moduleName));
             else if (MatchAndRemove(Token.TokenType.Enum) != null)
                 module.addEnum(MakeEnum(moduleName));
+            else if (PeekSafe(0).Type == Token.TokenType.Variables)
+                module.AddToGlobalVariables(ProcessVariables(moduleName));
             else
             {
                 throw new SyntaxErrorException(
-                    "Any statement at indent zero must begin with the keyword `import`,"
-                        + " `export`, `define`, 'enum', 'test' or `record`. The following is invalid: ",
+                    "Any statement at indent zero must begin with the keyword "
+                        + "`import`, `export`, `define`, `enum`, `test`, `record`, or `variables`."
+                        + " The following is invalid: ",
                     Peek(0)
                 );
             }

@@ -1055,6 +1055,9 @@ namespace Shank
         public ASTNode? From { get; set; }
         public ASTNode? To { get; set; }
 
+        public string GetNameSafe() =>
+            Name ?? throw new InvalidOperationException("Expected Name to not be null");
+
         public DataType GetArrayTypeSafe()
         {
             return ArrayType
@@ -1427,7 +1430,7 @@ namespace Shank
         public Dictionary<string, CallableNode> Functions { get; init; }
         public Dictionary<string, List<CallableNode>> Functions2 { get; } = [];
         public Dictionary<string, RecordNode> Records { get; init; }
-        public Dictionary<string, VariableNode> GlobalVariables { get; init; }
+        public Dictionary<string, VariableNode> GlobalVariables { get; } = [];
 
         //Dictionary associating names to something to be imported/exported
         //has a type of ASTNode? as references will later be added
@@ -1454,6 +1457,19 @@ namespace Shank
             ExportTargetNames = new LinkedList<string>();
             Tests = new Dictionary<string, TestNode>();
             Enums = new Dictionary<string, EnumNode>();
+        }
+
+        public void AddToGlobalVariables(List<VariableNode> variables)
+        {
+            variables.ForEach(v =>
+            {
+                if (!GlobalVariables.TryAdd(v.GetNameSafe(), v))
+                {
+                    throw new InvalidOperationException(
+                        "Uncaught namespace conflict with global variable " + v.GetNameSafe()
+                    );
+                }
+            });
         }
 
         public Dictionary<string, ASTNode> GetImportedSafe()
