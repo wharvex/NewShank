@@ -12,6 +12,112 @@ public class Interpreter
     private static ModuleNode? startModule;
     public static StringBuilder testOutput = new StringBuilder();
 
+    private static Dictionary<string, InterpreterDataType> GetVariablesLookup(
+        FunctionNode fn,
+        List<InterpreterDataType> parameters,
+        ModuleNode? maybeModule = null
+    )
+    {
+        Dictionary<string, InterpreterDataType> ret = [];
+
+        // Ensure the args count matches the params count.
+        if (parameters.Count != fn.ParameterVariables.Count)
+        {
+            throw new InvalidOperationException(
+                "For function "
+                    + fn.Name
+                    + ", "
+                    + parameters.Count
+                    + " parameters were passed in, but "
+                    + fn.ParameterVariables.Count
+                    + " are required."
+            );
+        }
+
+        // Populate ret with entries with param name keys and arg IDT values.
+        fn.ParameterVariables.Select((vn, i) => new { i, vn })
+            .ToList()
+            .ForEach(vni => ret.Add(vni.vn.GetNameSafe(), parameters[vni.i]));
+
+        // If module was passed in, add its global variables to ret.
+        maybeModule
+            ?.GlobalVariables
+            .ToList()
+            .ForEach(kvp =>
+            {
+                if (!ret.TryAdd(kvp.Key, VariableNodeToActivationRecord(kvp.Value)))
+                {
+                    throw new InvalidOperationException(
+                        "Uncaught namespace conflict with name " + kvp.Key
+                    );
+                }
+            });
+
+        fn.LocalVariables.ForEach(lv =>
+        {
+            if (!ret.TryAdd(lv.GetNameSafe(), VariableNodeToActivationRecord(lv)))
+            {
+                throw new InvalidOperationException(
+                    "Uncaught namespace conflict with name " + lv.GetNameSafe()
+                );
+            }
+        });
+
+        return ret;
+    }
+
+    /// <summary>
+    /// Convert the given FunctionNode and its contents into their associated InterpreterDataTypes.
+    /// </summary>
+    /// <param name="fn">The FunctionNode being converted</param>
+    /// <param name="ps">Parameters passed in (already in IDT form)</param>
+    /// <exception cref="Exception"></exception>
+    public static void InterpretFunction2(
+        FunctionNode fn,
+        List<InterpreterDataType> ps,
+        ModuleNode? maybeModule = null
+    )
+    {
+        var variables = new Dictionary<string, InterpreterDataType>();
+        if (ps.Count != fn.ParameterVariables.Count)
+            throw new Exception(
+                $"Function {fn.Name}, {ps.Count} parameters passed in, {fn.ParameterVariables.Count} required"
+            );
+        for (var i = 0; i < fn.ParameterVariables.Count; i++)
+        {
+            // Create the parameters as "locals"
+            variables[fn.ParameterVariables[i].Name ?? string.Empty] = ps[i];
+        }
+
+        foreach (var l in fn.LocalVariables)
+        {
+            // TODO: When would the Name of a local variable be null? When would the Name of any VariableNode be null?
+            // set up the declared variables as locals
+            variables[l.Name ?? string.Empty] = VariableNodeToActivationRecord(l);
+        }
+        if (fn is TestNode)
+        {
+            bool foundTestResult = false;
+            foreach (var testResult in Program.unitTestResults)
+            {
+                if (testResult.parentFunctionName == (((TestNode)fn).targetFunctionName))
+                {
+                    foundTestResult = true;
+                    break;
+                }
+            }
+            if (!foundTestResult)
+            {
+                Program.unitTestResults.AddLast(
+                    new TestResult(((TestNode)fn).Name, ((TestNode)fn).targetFunctionName)
+                );
+                Program.unitTestResults.Last().lineNum = fn.LineNum;
+            }
+        }
+        // Interpret instructions
+        InterpretBlock(fn.Statements, variables, fn);
+    }
+
     /// <summary>
     /// Convert the given FunctionNode and its contents into their associated InterpreterDataTypes.
     /// </summary>

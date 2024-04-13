@@ -1176,9 +1176,6 @@ public class Parser
 
     private TestNode Test(string? parentModuleName)
     {
-        // If parentModuleName is null, set it to "default".
-        parentModuleName ??= "default";
-
         TestNode test;
         Token? token;
         if ((token = MatchAndRemove(Token.TokenType.Identifier)) == null)
@@ -1188,6 +1185,7 @@ public class Parser
                 Peek(0)
             );
         }
+
         string testName = token.Value;
         if (MatchAndRemove(Token.TokenType.For) == null)
         {

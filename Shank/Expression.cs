@@ -251,7 +251,7 @@ namespace Shank
 
         public int LineNum { get; set; }
 
-        public List<VariableNode> ParameterVariables { get; set; } = [];
+        public List<VariableNode> ParameterVariables { get; } = [];
 
         protected CallableNode(string name)
         {
@@ -313,7 +313,7 @@ namespace Shank
         public FunctionNode(string name, string moduleName, bool isPublic)
             : base(name, moduleName, isPublic)
         {
-            // This is a delegate instance, similar to an abstract method implementation in Java.
+            // This is a delegate instance, like an anonymous interface implementation in Java.
             Execute = (List<InterpreterDataType> paramList) =>
                 Interpreter.InterpretFunction(this, paramList);
         }

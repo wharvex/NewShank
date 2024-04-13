@@ -18,35 +18,67 @@ namespace Shank
         {
             foreach (var f in functions.Values.Where(f => f is FunctionNode).Cast<FunctionNode>())
             {
+                var e = f.LocalVariables.Concat(f.ParameterVariables).ToList();
                 CheckBlock(
                     f.Statements,
-                    f.LocalVariables.Concat(f.ParameterVariables),
+                    f.LocalVariables.Concat(f.ParameterVariables).ToList(),
                     parentModule
                 );
             }
         }
 
+        private static Dictionary<string, VariableNode> GetLocalAndGlobalVariables(
+            ModuleNode module,
+            List<VariableNode> localVariables
+        )
+        {
+            var ret = new Dictionary<string, VariableNode>(module.GlobalVariables);
+            localVariables.ForEach(v =>
+            {
+                if (!ret.TryAdd(v.GetNameSafe(), v))
+                {
+                    throw new InvalidOperationException(
+                        "Uncaught namespace conflict with local variable " + v.GetNameSafe()
+                    );
+                }
+            });
+            return ret;
+        }
+
         private static void CheckBlock(
             List<StatementNode> statements,
-            IEnumerable<VariableNode> variables,
+            List<VariableNode> variables,
             ModuleNode parentModule
         )
         {
-            var dict = variables.ToDictionary(x => x.Name ?? "", x => x);
+            var variablesLookup = GetLocalAndGlobalVariables(parentModule, variables);
             foreach (var s in statements)
             {
                 bool foundFunction = false;
                 if (s is AssignmentNode an)
                 {
-                    var targetDefinition = dict[an.target.Name];
+                    if (variablesLookup.TryGetValue(an.target.Name, out var targetDefinition))
+                    {
+                        var targetType = GetTargetTypeForAssignmentCheck(
+                            targetDefinition,
+                            an.target,
+                            parentModule
+                        );
 
-                    var targetType = GetTargetTypeForAssignmentCheck(
-                        targetDefinition,
-                        an.target,
-                        parentModule
-                    );
-
-                    CheckNode(targetType, an.expression, dict, parentModule, targetDefinition);
+                        CheckNode(
+                            targetType,
+                            an.expression,
+                            variablesLookup,
+                            parentModule,
+                            targetDefinition
+                        );
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException(
+                            "Unrecognized variable name " + an.target.Name
+                        );
+                    }
                 }
                 else if (s is FunctionCallNode fn)
                 {
@@ -92,15 +124,15 @@ namespace Shank
                 }
                 else if (s is RepeatNode repNode)
                 {
-                    CheckComparison(repNode.Expression, dict, parentModule);
+                    CheckComparison(repNode.Expression, variablesLookup, parentModule);
                 }
                 else if (s is WhileNode whileNode)
                 {
-                    CheckComparison(whileNode.Expression, dict, parentModule);
+                    CheckComparison(whileNode.Expression, variablesLookup, parentModule);
                 }
                 else if (s is IfNode ifNode)
                 {
-                    CheckComparison(ifNode.Expression, dict, parentModule);
+                    CheckComparison(ifNode.Expression, variablesLookup, parentModule);
                 }
             }
         }
@@ -309,9 +341,7 @@ namespace Shank
             return ret;
         }
 
-        public static Dictionary<string, ASTNode> GetNamespaceOfRecordsAndEnumsAndImports(
-            ModuleNode module
-        )
+        public static Dictionary<string, ASTNode> GetRecordsAndEnumsAndImports(ModuleNode module)
         {
             return GetRecordsAndImports(
                 module.Records,
