@@ -391,14 +391,17 @@ public class Parser
 
     private RecordMemberNode? RecordMember()
     {
-        var typeToken = MatchAndRemoveMultiple(_shankTokenTypesPlusIdentifier);
-        if (typeToken is null)
+        var nameToken = MatchAndRemove(Token.TokenType.Identifier);
+
+        if (nameToken is null)
         {
             return null;
         }
 
-        var nameToken =
-            MatchAndRemove(Token.TokenType.Identifier)
+        RequiresToken(Token.TokenType.Colon);
+
+        var typeToken =
+            MatchAndRemoveMultiple(_shankTokenTypesPlusIdentifier)
             ?? throw new SyntaxErrorException("Expected a name", Peek(0));
 
         RequiresEndOfLine();

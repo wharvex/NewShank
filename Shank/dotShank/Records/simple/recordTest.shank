@@ -1,24 +1,7 @@
-record aardvark
-    string bokchoy
-	integer yes
-	blah blahh
-
-record chypre 
-	integer dahlhaus
-	integer no
+record Sky
+    cloud : string
 
 define start()
-variables a,b,c : integer
-variables myAardvark : aardvark
-variables myChypre : chypre
-	myAardvark.bokchoy := "hi"
-	myChypre.dahlhaus := 1
-	myChypre.no := 2
-	myAardvark.yes := 3
-	write myAardvark.bokchoy
-	sum myChypre.dahlhaus, myChypre.no, myAardvark.yes
-
-define sum(x : integer; y : integer; z : integer)
-variables s : integer
-	s := x + y + z
-    write "sum: ", s
+variables sky : Sky
+    sky.cloud := "nimbus"
+    write sky.cloud
