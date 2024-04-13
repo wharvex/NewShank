@@ -12,7 +12,18 @@ public class Interpreter
     private static ModuleNode? startModule;
     public static StringBuilder testOutput = new StringBuilder();
 
-    private static Dictionary<string, InterpreterDataType> GetVariablesLookup(
+    /// <summary>
+    /// Get an IDT-by-name dictionary of all the variables which a function can access.
+    /// </summary>
+    /// <param name="fn">The function</param>
+    /// <param name="parameters">A list of IDTs of the arguments that were passed in when calling
+    /// the function</param>
+    /// <param name="maybeModule">The module to which the function belongs (optional)</param>
+    /// <returns>A dictionary for getting IDTs by name of all the variables which a function can
+    /// access</returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    /// <remarks>Author: Tim Gudlewski</remarks>
+    private static Dictionary<string, InterpreterDataType> GetVariablesDictionary(
         FunctionNode fn,
         List<InterpreterDataType> parameters,
         ModuleNode? maybeModule = null
@@ -53,6 +64,7 @@ public class Interpreter
                 }
             });
 
+        // Add local variables to ret.
         fn.LocalVariables.ForEach(lv =>
         {
             if (!ret.TryAdd(lv.GetNameSafe(), VariableNodeToActivationRecord(lv)))
@@ -63,6 +75,7 @@ public class Interpreter
             }
         });
 
+        // Return the dictionary of all the variables which the function can access.
         return ret;
     }
 
@@ -70,31 +83,16 @@ public class Interpreter
     /// Convert the given FunctionNode and its contents into their associated InterpreterDataTypes.
     /// </summary>
     /// <param name="fn">The FunctionNode being converted</param>
-    /// <param name="ps">Parameters passed in (already in IDT form)</param>
+    /// <param name="parametersIDTs">Parameters passed in (already in IDT form)</param>
     /// <exception cref="Exception"></exception>
-    public static void InterpretFunction2(
+    public static void InterpretFunction(
         FunctionNode fn,
-        List<InterpreterDataType> ps,
+        List<InterpreterDataType> parametersIDTs,
         ModuleNode? maybeModule = null
     )
     {
-        var variables = new Dictionary<string, InterpreterDataType>();
-        if (ps.Count != fn.ParameterVariables.Count)
-            throw new Exception(
-                $"Function {fn.Name}, {ps.Count} parameters passed in, {fn.ParameterVariables.Count} required"
-            );
-        for (var i = 0; i < fn.ParameterVariables.Count; i++)
-        {
-            // Create the parameters as "locals"
-            variables[fn.ParameterVariables[i].Name ?? string.Empty] = ps[i];
-        }
+        var variables = GetVariablesDictionary(fn, parametersIDTs, maybeModule);
 
-        foreach (var l in fn.LocalVariables)
-        {
-            // TODO: When would the Name of a local variable be null? When would the Name of any VariableNode be null?
-            // set up the declared variables as locals
-            variables[l.Name ?? string.Empty] = VariableNodeToActivationRecord(l);
-        }
         if (fn is TestNode)
         {
             bool foundTestResult = false;
@@ -124,7 +122,7 @@ public class Interpreter
     /// <param name="fn">The FunctionNode being converted</param>
     /// <param name="ps">Parameters passed in (already in IDT form)</param>
     /// <exception cref="Exception"></exception>
-    public static void InterpretFunction(FunctionNode fn, List<InterpreterDataType> ps)
+    public static void InterpretFunction2(FunctionNode fn, List<InterpreterDataType> ps)
     {
         var variables = new Dictionary<string, InterpreterDataType>();
         if (ps.Count != fn.ParameterVariables.Count)

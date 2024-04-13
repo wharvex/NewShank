@@ -127,7 +127,7 @@ namespace Shank
                         var interpreterErrorOccurred = false;
                         try
                         {
-                            Interpreter.InterpretFunction(s, new List<InterpreterDataType>());
+                            Interpreter.InterpretFunction(s, [], currentModule);
                         }
                         catch (Exception e)
                         {
