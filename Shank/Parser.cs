@@ -1,5 +1,5 @@
-﻿using LLVMSharp;
-using System.Text.Json;
+﻿using System.Text.Json;
+using LLVMSharp;
 
 namespace Shank;
 
@@ -659,31 +659,35 @@ public class Parser
                     parentModuleName,
                     GetDataTypeFromTokenType(typeToken.Type)
                 ),
-                Token.TokenType.RefersTo 
-                    => GetRefersToVariables(
-                        names,
-                        isConstant,
-                        parentModuleName
-                ),
+            Token.TokenType.RefersTo => GetRefersToVariables(names, isConstant, parentModuleName),
             _ => throw new SyntaxErrorException("Expected a valid type", Peek(0))
         };
     }
 
-    private List<VariableNode> GetRefersToVariables(List<string> names, bool isConstant, string parentModuleName)
+    private List<VariableNode> GetRefersToVariables(
+        List<string> names,
+        bool isConstant,
+        string parentModuleName
+    )
     {
         Token? t;
         var ret = names
             .Select(
                 n =>
                     new VariableNode()
-                {
-                    IsConstant = isConstant,
-                    Type = VariableNode.DataType.Reference,
-                    Name = n,
-                    ModuleName = parentModuleName,
-                    UnknownType = (t = MatchAndRemove(Token.TokenType.Identifier)) == null ?
-                        throw new SyntaxErrorException("Could not get reference record type", Peek(0)) : t.Value,
-                }
+                    {
+                        IsConstant = isConstant,
+                        Type = VariableNode.DataType.Reference,
+                        Name = n,
+                        ModuleName = parentModuleName,
+                        UnknownType =
+                            (t = MatchAndRemove(Token.TokenType.Identifier)) == null
+                                ? throw new SyntaxErrorException(
+                                    "Could not get reference record type",
+                                    Peek(0)
+                                )
+                                : t.Value,
+                    }
             )
             .ToList();
         return ret;

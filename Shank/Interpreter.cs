@@ -12,7 +12,6 @@ public class Interpreter
     private static ModuleNode? startModule;
     public static StringBuilder testOutput = new StringBuilder();
 
-
     private static Dictionary<string, InterpreterDataType> GetVariablesLookup(
         FunctionNode fn,
         List<InterpreterDataType> parameters,
@@ -205,9 +204,11 @@ public class Interpreter
                     case EnumDataType et:
                         et.Value = ResolveEnum((EnumDataType)target, an.expression, variables);
                         break;
-                        case ReferenceDataType rt:
+                    case ReferenceDataType rt:
                         if (rt.Record == null)
-                            throw new Exception($"{an.target.Name} must be allocated before it can be addressed.");
+                            throw new Exception(
+                                $"{an.target.Name} must be allocated before it can be addressed."
+                            );
                         AssignToRecord(rt.Record, an, variables);
                         break;
                     default:
@@ -519,21 +520,31 @@ public class Interpreter
                         passed.Add(new EnumDataType(enumVal.Type, enumVal.Value));
                         break;
                     case ReferenceDataType referenceVal:
-                        if(fcp.Variable.Extension != null)
+                        if (fcp.Variable.Extension != null)
                         {
                             var vrn = ((VariableReferenceNode)fcp.Variable.Extension);
                             if (referenceVal.Record is null)
                                 throw new Exception($"{fcp.Variable.Name} was never allocated.");
-                            if(referenceVal.Record.Value[vrn.Name] is int)
-                                passed.Add(new IntDataType((int)referenceVal.Record.Value[vrn.Name]));
+                            if (referenceVal.Record.Value[vrn.Name] is int)
+                                passed.Add(
+                                    new IntDataType((int)referenceVal.Record.Value[vrn.Name])
+                                );
                             else if (referenceVal.Record.Value[vrn.Name] is float)
-                                passed.Add(new FloatDataType((float)referenceVal.Record.Value[vrn.Name]));
+                                passed.Add(
+                                    new FloatDataType((float)referenceVal.Record.Value[vrn.Name])
+                                );
                             else if (referenceVal.Record.Value[vrn.Name] is char)
-                                passed.Add(new CharDataType((char)referenceVal.Record.Value[vrn.Name]));
+                                passed.Add(
+                                    new CharDataType((char)referenceVal.Record.Value[vrn.Name])
+                                );
                             else if (referenceVal.Record.Value[vrn.Name] is string)
-                                passed.Add(new StringDataType((string)referenceVal.Record.Value[vrn.Name]));
+                                passed.Add(
+                                    new StringDataType((string)referenceVal.Record.Value[vrn.Name])
+                                );
                             else if (referenceVal.Record.Value[vrn.Name] is float)
-                                passed.Add(new BooleanDataType((bool)referenceVal.Record.Value[vrn.Name]));
+                                passed.Add(
+                                    new BooleanDataType((bool)referenceVal.Record.Value[vrn.Name])
+                                );
                         }
                         else
                             passed.Add(new ReferenceDataType(referenceVal));
@@ -562,7 +573,7 @@ public class Interpreter
                         passed.Add(new BooleanDataType(boolVal.Value));
                         break;
                     case EnumNode enumVal:
-                       // passed.Add(new EnumDataType(enumVal.Type, enumVal.Value));
+                        // passed.Add(new EnumDataType(enumVal.Type, enumVal.Value));
                         break;
                     default:
                         throw new Exception(
@@ -662,8 +673,7 @@ public class Interpreter
                         => new StringDataType(rdt.GetValueString(rmVrn.Name)),
                     VariableNode.DataType.Integer
                         => new IntDataType(rdt.GetValueInteger(rmVrn.Name)),
-                    VariableNode.DataType.Real 
-                        => new FloatDataType(rdt.GetValueReal(rmVrn.Name)),
+                    VariableNode.DataType.Real => new FloatDataType(rdt.GetValueReal(rmVrn.Name)),
                     VariableNode.DataType.Reference
                         => new ReferenceDataType(rdt.GetValueReference(rmVrn.Name)),
                     _
@@ -727,9 +737,7 @@ public class Interpreter
 
             case VariableNode.DataType.Reference:
                 if (parentModule.Records.ContainsKey(vn.GetUnknownTypeSafe()))
-                    return new ReferenceDataType(
-                        parentModule.Records[vn.GetUnknownTypeSafe()]
-                    );
+                    return new ReferenceDataType(parentModule.Records[vn.GetUnknownTypeSafe()]);
                 else
                 {
                     if (!parentModule.Imported.ContainsKey(vn.GetUnknownTypeSafe()))

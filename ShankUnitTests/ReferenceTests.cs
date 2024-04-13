@@ -42,7 +42,8 @@ namespace ShankUnitTests
         [TestMethod]
         public void SimpleReferenceInterpret()
         {
-            string[] file = {
+            string[] file =
+            {
                 "record rtest\n",
                 "\tinteger i\n",
                 "\tstring s\n",
@@ -59,7 +60,8 @@ namespace ShankUnitTests
         [TestMethod]
         public void ReferenceInterpretAssignMember()
         {
-            string[] file = {
+            string[] file =
+            {
                 "record rtest\n",
                 "\tinteger i\n",
                 "\tstring s\n",
@@ -83,7 +85,8 @@ namespace ShankUnitTests
         [TestMethod]
         public void builtInSizeFunctionSimple()
         {
-            string[] file = {
+            string[] file =
+            {
                 "record rtest\n",
                 "\tinteger i\n",
                 "\tstring s\n",
@@ -103,6 +106,5 @@ namespace ShankUnitTests
             runInterpreter();
             Assert.AreEqual("14 ", Interpreter.testOutput.ToString());
         }
-            
     }
 }

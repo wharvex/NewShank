@@ -141,7 +141,8 @@ public class EnumDataType : InterpreterDataType
 
 public class ReferenceDataType : InterpreterDataType
 {
-    public ReferenceDataType(RecordNode rn) {
+    public ReferenceDataType(RecordNode rn)
+    {
         Record = null;
         RecordType = rn;
     }
@@ -301,7 +302,7 @@ public class RecordDataType : InterpreterDataType
     public override string ToString()
     {
         StringBuilder sb = new StringBuilder();
-        foreach(var  member in Value)
+        foreach (var member in Value)
         {
             sb.Append(member.Key).Append(": ").Append(member.Value).Append(" ");
         }

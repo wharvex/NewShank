@@ -207,7 +207,7 @@
                     },
                     AllocateMemory,
                     false
-                    ),
+                ),
                 MakeNode(
                     "freeMemory",
                     new VariableNode[]
@@ -221,10 +221,10 @@
                     },
                     FreeMemory,
                     false
-                    ),
+                ),
                 MakeNode(
                     "isSet",
-                     new VariableNode[]
+                    new VariableNode[]
                     {
                         new VariableNode()
                         {
@@ -239,9 +239,9 @@
                             IsConstant = false
                         }
                     },
-                     IsSet,
-                     false
-                    ),
+                    IsSet,
+                    false
+                ),
                 MakeNode(
                     "size",
                     new VariableNode[]
@@ -261,7 +261,7 @@
                     },
                     Size,
                     false
-                    )
+                )
             };
             foreach (var f in retVal)
             {
@@ -467,38 +467,41 @@
 
         public static void IsSet(List<InterpreterDataType> parameters)
         {
-            if (parameters[0] is ReferenceDataType rdt
-                && parameters[1] is BooleanDataType bdt)
+            if (parameters[0] is ReferenceDataType rdt && parameters[1] is BooleanDataType bdt)
                 bdt.Value = rdt.Record != null;
             else
-                throw new Exception("IsSet requires the following parameters: record pointer, var boolean");
+                throw new Exception(
+                    "IsSet requires the following parameters: record pointer, var boolean"
+                );
         }
 
         public static void Size(List<InterpreterDataType> parameters)
         {
-            if (parameters[0] is ReferenceDataType rdt
-                && parameters[1] is IntDataType idt)
+            if (parameters[0] is ReferenceDataType rdt && parameters[1] is IntDataType idt)
             {
                 if (rdt.Record != null)
                     idt.Value = recursiveRecordSize(rdt.Record);
                 else
-                    throw new Exception("Cannot call size on a record pointer that has not been allocated");
+                    throw new Exception(
+                        "Cannot call size on a record pointer that has not been allocated"
+                    );
             }
-
             else
-                throw new Exception("Size requires the following parameters: record pointer, var integer");
+                throw new Exception(
+                    "Size requires the following parameters: record pointer, var integer"
+                );
         }
 
         private static int recursiveRecordSize(RecordDataType rdt)
         {
             int size = 0;
-            foreach(var recordMember in rdt.MemberTypes)
+            foreach (var recordMember in rdt.MemberTypes)
             {
                 var rm = recordMember.Value;
                 switch (rm)
                 {
                     case VariableNode.DataType.Integer:
-                        size+=sizeof(int);
+                        size += sizeof(int);
                         break;
                     case VariableNode.DataType.Real:
                         size += sizeof(float);
@@ -518,7 +521,6 @@
                     case VariableNode.DataType.Reference:
                         //size += recursiveRecordSize(recordMember);
                         break;
-                        
                 }
             }
             return size;
