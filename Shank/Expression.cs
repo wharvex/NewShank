@@ -1017,6 +1017,8 @@ namespace Shank
     {
         public string? Name { get; set; }
         public string? ModuleName { get; set; }
+        public List<int> UsageLines { get; } = [];
+        public int AssignmentLine { get; set; } = -1;
 
         public enum DataType
         {
@@ -1223,6 +1225,18 @@ namespace Shank
 
         public VrnExtType ExtensionType { get; set; }
 
+        public bool IsSet { get; set; }
+
+        public void RequiresSet()
+        {
+            if (!IsSet)
+            {
+                throw new InvalidOperationException(
+                    "Expected the variable with name " + Name + " to be set."
+                );
+            }
+        }
+
         public ASTNode GetExtensionSafe() =>
             Extension ?? throw new InvalidOperationException("Expected Extension to not be null.");
 
@@ -1397,30 +1411,31 @@ namespace Shank
     {
         public AssignmentNode(VariableReferenceNode target, ASTNode expression)
         {
-            this.expression = expression;
-            this.target = target;
+            Target = target;
+            Expression = expression;
+            target.IsSet = true;
         }
 
         /// <summary>
-        /// The variable to be assigned to (Left hand side of assignment statement).
+        /// The target variable to which the expression is assigned (LHS of the :=).
         /// </summary>
-        public VariableReferenceNode target { get; set; }
+        public VariableReferenceNode Target { get; init; }
 
         /// <summary>
-        /// The expression to be assigned to the variable (Right hand side of assignment statement).
+        /// The expression assigned to the target variable (RHS of the :=).
         /// </summary>
-        public ASTNode expression { get; set; }
+        public ASTNode Expression { get; init; }
 
         public override object[] returnStatementTokens()
         {
-            object[] arr = { "", target.Name, expression.ToString() };
+            object[] arr = { "", Target.Name, Expression.ToString() };
 
             return arr;
         }
 
         public override string ToString()
         {
-            return $"{target} := {expression}";
+            return $"{Target} := {Expression}";
         }
     }
 

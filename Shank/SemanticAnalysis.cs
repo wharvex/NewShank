@@ -11,20 +11,46 @@ namespace Shank
         private static Dictionary<string, ModuleNode> Modules;
         private static ModuleNode startModule;
 
-        public static void CheckAssignments(
+        // TODO: This method is called "CheckAssignments" but it runs CheckBlock on
+        // every function, which is more general than just checking assignments.
+        public static void CheckAssignments2(
             Dictionary<string, CallableNode> functions,
             ModuleNode parentModule
         )
         {
             foreach (var f in functions.Values.Where(f => f is FunctionNode).Cast<FunctionNode>())
             {
-                var e = f.LocalVariables.Concat(f.ParameterVariables).ToList();
                 CheckBlock(
                     f.Statements,
-                    f.LocalVariables.Concat(f.ParameterVariables).ToList(),
+                    f.LocalVariables.Concat(f.ParameterVariables)
+                        .ToList()
+                        .ToDictionary(vn => vn.GetNameSafe()),
                     parentModule
                 );
             }
+        }
+
+        public static void CheckAssignments(
+            Dictionary<string, CallableNode> functions,
+            ModuleNode parentModule
+        )
+        {
+            functions
+                .ToList()
+                .ForEach(kvp =>
+                {
+                    if (kvp.Value is FunctionNode fn)
+                    {
+                        CheckBlock(
+                            fn.Statements,
+                            GetLocalAndGlobalVariables(
+                                parentModule,
+                                fn.LocalVariables.Concat(fn.ParameterVariables).ToList()
+                            ),
+                            parentModule
+                        );
+                    }
+                });
         }
 
         private static Dictionary<string, VariableNode> GetLocalAndGlobalVariables(
@@ -47,28 +73,27 @@ namespace Shank
 
         private static void CheckBlock(
             List<StatementNode> statements,
-            List<VariableNode> variables,
+            Dictionary<string, VariableNode> variables,
             ModuleNode parentModule
         )
         {
-            var variablesLookup = GetLocalAndGlobalVariables(parentModule, variables);
             foreach (var s in statements)
             {
                 bool foundFunction = false;
                 if (s is AssignmentNode an)
                 {
-                    if (variablesLookup.TryGetValue(an.target.Name, out var targetDefinition))
+                    if (variables.TryGetValue(an.Target.Name, out var targetDefinition))
                     {
                         var targetType = GetTargetTypeForAssignmentCheck(
                             targetDefinition,
-                            an.target,
+                            an.Target,
                             parentModule
                         );
 
                         CheckNode(
                             targetType,
-                            an.expression,
-                            variablesLookup,
+                            an.Expression,
+                            variables,
                             parentModule,
                             targetDefinition
                         );
@@ -76,7 +101,7 @@ namespace Shank
                     else
                     {
                         throw new InvalidOperationException(
-                            "Unrecognized variable name " + an.target.Name
+                            "Unrecognized variable name " + an.Target.Name
                         );
                     }
                 }
@@ -124,15 +149,15 @@ namespace Shank
                 }
                 else if (s is RepeatNode repNode)
                 {
-                    CheckComparison(repNode.Expression, variablesLookup, parentModule);
+                    CheckComparison(repNode.Expression, variables, parentModule);
                 }
                 else if (s is WhileNode whileNode)
                 {
-                    CheckComparison(whileNode.Expression, variablesLookup, parentModule);
+                    CheckComparison(whileNode.Expression, variables, parentModule);
                 }
                 else if (s is IfNode ifNode)
                 {
-                    CheckComparison(ifNode.Expression, variablesLookup, parentModule);
+                    CheckComparison(ifNode.Expression, variables, parentModule);
                 }
             }
         }
@@ -723,9 +748,9 @@ namespace Shank
                         {
                             if (variable.Type == VariableNode.DataType.Enum)
                             {
-                                if (assignment.target.Name == variable.Name)
+                                if (assignment.Target.Name == variable.Name)
                                 {
-                                    assignment.target.ExtensionType = ASTNode.VrnExtType.Enum;
+                                    assignment.Target.ExtensionType = ASTNode.VrnExtType.Enum;
                                 }
                             }
                         }

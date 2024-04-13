@@ -80,10 +80,11 @@ public class Interpreter
     }
 
     /// <summary>
-    /// Convert the given FunctionNode and its contents into their associated InterpreterDataTypes.
+    /// Interpret the given function.
     /// </summary>
-    /// <param name="fn">The FunctionNode being converted</param>
+    /// <param name="fn">The function being interpreted</param>
     /// <param name="parametersIDTs">Parameters passed in (already in IDT form)</param>
+    /// <param name="maybeModule">The function's module</param>
     /// <exception cref="Exception"></exception>
     public static void InterpretFunction(
         FunctionNode fn,
@@ -175,37 +176,37 @@ public class Interpreter
             if (stmt is AssignmentNode an)
             {
                 // target is the left side of the assignment statement
-                var target = variables[an.target.Name];
+                var target = variables[an.Target.Name];
                 switch (target)
                 {
                     case IntDataType it:
-                        it.Value = ResolveInt(an.expression, variables);
+                        it.Value = ResolveInt(an.Expression, variables);
                         break;
                     case ArrayDataType at:
                         AssignToArray(at, an, variables);
                         break;
                     case FloatDataType ft:
-                        ft.Value = ResolveFloat(an.expression, variables);
+                        ft.Value = ResolveFloat(an.Expression, variables);
                         break;
                     case StringDataType st:
-                        st.Value = ResolveString(an.expression, variables);
+                        st.Value = ResolveString(an.Expression, variables);
                         break;
                     case CharDataType ct:
-                        ct.Value = ResolveChar(an.expression, variables);
+                        ct.Value = ResolveChar(an.Expression, variables);
                         break;
                     case BooleanDataType bt:
-                        bt.Value = ResolveBool(an.expression, variables);
+                        bt.Value = ResolveBool(an.Expression, variables);
                         break;
                     case RecordDataType rt:
                         AssignToRecord(rt, an, variables);
                         break;
                     case EnumDataType et:
-                        et.Value = ResolveEnum((EnumDataType)target, an.expression, variables);
+                        et.Value = ResolveEnum((EnumDataType)target, an.Expression, variables);
                         break;
                     case ReferenceDataType rt:
                         if (rt.Record == null)
                             throw new Exception(
-                                $"{an.target.Name} must be allocated before it can be addressed."
+                                $"{an.Target.Name} must be allocated before it can be addressed."
                             );
                         AssignToRecord(rt.Record, an, variables);
                         break;
@@ -276,16 +277,16 @@ public class Interpreter
         Dictionary<string, InterpreterDataType> variables
     )
     {
-        if (an.target.GetExtensionSafe() is VariableReferenceNode vrn)
+        if (an.Target.GetExtensionSafe() is VariableReferenceNode vrn)
         {
             var t = rdt.MemberTypes[vrn.Name];
             rdt.Value[vrn.Name] = t switch
             {
-                VariableNode.DataType.Boolean => ResolveBool(an.expression, variables),
-                VariableNode.DataType.String => ResolveString(an.expression, variables),
-                VariableNode.DataType.Real => ResolveFloat(an.expression, variables),
-                VariableNode.DataType.Integer => ResolveInt(an.expression, variables),
-                VariableNode.DataType.Character => ResolveChar(an.expression, variables),
+                VariableNode.DataType.Boolean => ResolveBool(an.Expression, variables),
+                VariableNode.DataType.String => ResolveString(an.Expression, variables),
+                VariableNode.DataType.Real => ResolveFloat(an.Expression, variables),
+                VariableNode.DataType.Integer => ResolveInt(an.Expression, variables),
+                VariableNode.DataType.Character => ResolveChar(an.Expression, variables),
                 _
                     => throw new NotImplementedException(
                         "Assigning a value of type "
@@ -308,16 +309,16 @@ public class Interpreter
         Dictionary<string, InterpreterDataType> variables
     )
     {
-        if (an.target.Extension is { } idx)
+        if (an.Target.Extension is { } idx)
         {
             adt.AddElement(
                 adt.ArrayContentsType switch
                 {
-                    VariableNode.DataType.Integer => ResolveInt(an.expression, variables),
-                    VariableNode.DataType.Real => ResolveFloat(an.expression, variables),
-                    VariableNode.DataType.String => ResolveString(an.expression, variables),
-                    VariableNode.DataType.Character => ResolveChar(an.expression, variables),
-                    VariableNode.DataType.Boolean => ResolveBool(an.expression, variables),
+                    VariableNode.DataType.Integer => ResolveInt(an.Expression, variables),
+                    VariableNode.DataType.Real => ResolveFloat(an.Expression, variables),
+                    VariableNode.DataType.String => ResolveString(an.Expression, variables),
+                    VariableNode.DataType.Character => ResolveChar(an.Expression, variables),
+                    VariableNode.DataType.Boolean => ResolveBool(an.Expression, variables),
                     _
                         => throw new NotImplementedException(
                             "Assigning a value of type "
