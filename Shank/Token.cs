@@ -82,7 +82,8 @@
             CharContents,
             StringContents,
             Test,
-            Enum
+            Enum,
+            RefersTo
         }
 
         public TokenType Type { get; init; }

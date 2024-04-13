@@ -2,7 +2,7 @@ record aardvark
     string bokchoy
 	integer yes
 	blah blahh
-	string elephant
+	integer elephant
 
 record chypre 
 	integer dahlhaus
@@ -16,8 +16,9 @@ variables a,b,c : integer
 variables myAardvark : aardvark
 variables myChypre : chypre
 	myAardvark.bokchoy := "hi"
-	myAardvark.elephant := "hello"
+	myAardvark.elephant := 3
 	myAardvark.blahh.bloor := 1
+	myAardvark.elephant := 15
 	myChypre.dahlhaus := 1
 	myChypre.no := 2
 	myAardvark.yes := 3

@@ -12,6 +12,7 @@ public class Interpreter
     private static ModuleNode? startModule;
     public static StringBuilder testOutput = new StringBuilder();
 
+
     private static Dictionary<string, InterpreterDataType> GetVariablesLookup(
         FunctionNode fn,
         List<InterpreterDataType> parameters,
@@ -203,6 +204,11 @@ public class Interpreter
                         break;
                     case EnumDataType et:
                         et.Value = ResolveEnum((EnumDataType)target, an.expression, variables);
+                        break;
+                        case ReferenceDataType rt:
+                        if (rt.Record == null)
+                            throw new Exception($"{an.target.Name} must be allocated before it can be addressed.");
+                        AssignToRecord(rt.Record, an, variables);
                         break;
                     default:
                         throw new Exception("Unknown type in assignment");
@@ -512,6 +518,26 @@ public class Interpreter
                     case EnumDataType enumVal:
                         passed.Add(new EnumDataType(enumVal.Type, enumVal.Value));
                         break;
+                    case ReferenceDataType referenceVal:
+                        if(fcp.Variable.Extension != null)
+                        {
+                            var vrn = ((VariableReferenceNode)fcp.Variable.Extension);
+                            if (referenceVal.Record is null)
+                                throw new Exception($"{fcp.Variable.Name} was never allocated.");
+                            if(referenceVal.Record.Value[vrn.Name] is int)
+                                passed.Add(new IntDataType((int)referenceVal.Record.Value[vrn.Name]));
+                            else if (referenceVal.Record.Value[vrn.Name] is float)
+                                passed.Add(new FloatDataType((float)referenceVal.Record.Value[vrn.Name]));
+                            else if (referenceVal.Record.Value[vrn.Name] is char)
+                                passed.Add(new CharDataType((char)referenceVal.Record.Value[vrn.Name]));
+                            else if (referenceVal.Record.Value[vrn.Name] is string)
+                                passed.Add(new StringDataType((string)referenceVal.Record.Value[vrn.Name]));
+                            else if (referenceVal.Record.Value[vrn.Name] is float)
+                                passed.Add(new BooleanDataType((bool)referenceVal.Record.Value[vrn.Name]));
+                        }
+                        else
+                            passed.Add(new ReferenceDataType(referenceVal));
+                        break;
                 }
             }
             else
@@ -534,6 +560,9 @@ public class Interpreter
                         break;
                     case BoolNode boolVal:
                         passed.Add(new BooleanDataType(boolVal.Value));
+                        break;
+                    case EnumNode enumVal:
+                       // passed.Add(new EnumDataType(enumVal.Type, enumVal.Value));
                         break;
                     default:
                         throw new Exception(
@@ -633,12 +662,14 @@ public class Interpreter
                         => new StringDataType(rdt.GetValueString(rmVrn.Name)),
                     VariableNode.DataType.Integer
                         => new IntDataType(rdt.GetValueInteger(rmVrn.Name)),
-                    VariableNode.DataType.Real => new FloatDataType(rdt.GetValueReal(rmVrn.Name)),
+                    VariableNode.DataType.Real 
+                        => new FloatDataType(rdt.GetValueReal(rmVrn.Name)),
+                    VariableNode.DataType.Reference
+                        => new ReferenceDataType(rdt.GetValueReference(rmVrn.Name)),
                     _
                         => throw new NotImplementedException(
-                            "It has not been implemented yet to pass Record member type "
-                                + rdt.MemberTypes[rmVrn.Name]
-                                + " into a function."
+                            "It has not been implemented yet to pass a complex Record member"
+                                + " type into a function."
                         )
                 }
             );
@@ -693,6 +724,22 @@ public class Interpreter
                         $"Cannot create an enum of type {vn.GetUnknownTypeSafe()} as it was never exported"
                     );
                 return new EnumDataType((EnumNode)parentModule.Imported[vn.GetUnknownTypeSafe()]);
+
+            case VariableNode.DataType.Reference:
+                if (parentModule.Records.ContainsKey(vn.GetUnknownTypeSafe()))
+                    return new ReferenceDataType(
+                        parentModule.Records[vn.GetUnknownTypeSafe()]
+                    );
+                else
+                {
+                    if (!parentModule.Imported.ContainsKey(vn.GetUnknownTypeSafe()))
+                        throw new Exception(
+                            $"Could not find definition for the record {vn.GetUnknownTypeSafe()}."
+                        );
+                    return new ReferenceDataType(
+                        ((RecordNode)parentModule.Imported[vn.GetUnknownTypeSafe()])
+                    );
+                }
 
             case VariableNode.DataType.Unknown:
             {

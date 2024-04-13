@@ -1435,8 +1435,8 @@ namespace Shank
 
         //Dictionary associating names to something to be imported/exported
         //has a type of ASTNode? as references will later be added
-        public Dictionary<string, ASTNode?> Exported { get; set; }
-        public Dictionary<string, ASTNode?> Imported { get; set; }
+        public Dictionary<string, ASTNode> Exported { get; set; }
+        public Dictionary<string, ASTNode> Imported { get; set; }
 
         //ImportTargetNames holds a module and the list of functions that this module has imported
         public Dictionary<string, LinkedList<string>> ImportTargetNames { get; set; }
@@ -1451,8 +1451,8 @@ namespace Shank
             this.name = name;
             Functions = new Dictionary<string, CallableNode>();
             Records = [];
-            Exported = new Dictionary<string, ASTNode?>();
-            Imported = new Dictionary<string, ASTNode?>();
+            Exported = new Dictionary<string, ASTNode>();
+            Imported = new Dictionary<string, ASTNode>();
             ImportTargetNames = new Dictionary<string, LinkedList<string>>();
             //ImportTargetNames = new LinkedList<string>();
             ExportTargetNames = new LinkedList<string>();

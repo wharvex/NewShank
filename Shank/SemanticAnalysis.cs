@@ -239,6 +239,9 @@ namespace Shank
                         : targetDefinition.GetArrayTypeSafe(),
                 VariableNode.DataType.Record
                     => GetSpecificRecordType(parentModule, targetDefinition, targetUsage),
+                VariableNode.DataType.Reference
+                    => GetSpecificRecordType(parentModule, targetDefinition, targetUsage),
+
                 VariableNode.DataType.Unknown => throw new InvalidOperationException("hi"),
                 _ => targetDefinition.Type
             };
@@ -277,6 +280,7 @@ namespace Shank
                         return vn.GetArrayTypeSafe();
                     }
                 case VariableNode.DataType.Record:
+                case VariableNode.DataType.Reference:
                     if (parentModule.Records.ContainsKey(vn.GetUnknownTypeSafe()))
                     {
                         return parentModule
@@ -724,15 +728,6 @@ namespace Shank
                                     assignment.target.ExtensionType = ASTNode.VrnExtType.Enum;
                                 }
                             }
-                            //                            else if (variable.Type == VariableNode.DataType.Record)
-                            //                            {
-                            //                                if(assignment.target.Name == variable.Name)
-                            //                                {
-                            //                                    if (currentModule.Value.Records.ContainsKey(variable.Name)) {
-                            //                                        assignment.target.ExtensionType = currentModule.Value.Records[variable.UnknownType]
-                            //                                            .GetFromMembersByName(assignment.target.Name).Type;
-                            //}
-                            //                            }
                         }
                     }
                 }

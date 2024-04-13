@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.ComponentModel.DataAnnotations;
+using System.Text;
 using LLVMSharp;
 
 namespace Shank;
@@ -140,8 +141,8 @@ public class EnumDataType : InterpreterDataType
 
 public class ReferenceDataType : InterpreterDataType
 {
-    public ReferenceDataType(RecordNode rn)
-    {
+    public ReferenceDataType(RecordNode rn) {
+        Record = null;
         RecordType = rn;
     }
 
@@ -158,7 +159,7 @@ public class ReferenceDataType : InterpreterDataType
 
     public override string ToString()
     {
-        throw new NotImplementedException();
+        return Record == null ? "Reference: unallocated" : "Reference: " + Record.ToString();
     }
 }
 
@@ -299,7 +300,12 @@ public class RecordDataType : InterpreterDataType
 
     public override string ToString()
     {
-        return "";
+        StringBuilder sb = new StringBuilder();
+        foreach(var  member in Value)
+        {
+            sb.Append(member.Key).Append(": ").Append(member.Value).Append(" ");
+        }
+        return sb.ToString();
     }
 
     public override void FromString(string input) { }

@@ -193,7 +193,75 @@
                     },
                     AssertIsEqual,
                     false
-                )
+                ),
+                MakeNode(
+                    "allocateMemory",
+                    new VariableNode[]
+                    {
+                        new VariableNode()
+                        {
+                            Name = "refersTo",
+                            Type = VariableNode.DataType.Reference,
+                            IsConstant = false
+                        }
+                    },
+                    AllocateMemory,
+                    false
+                    ),
+                MakeNode(
+                    "freeMemory",
+                    new VariableNode[]
+                    {
+                        new VariableNode()
+                        {
+                            Name = "refersTo",
+                            Type = VariableNode.DataType.Reference,
+                            IsConstant = false
+                        }
+                    },
+                    FreeMemory,
+                    false
+                    ),
+                MakeNode(
+                    "isSet",
+                     new VariableNode[]
+                    {
+                        new VariableNode()
+                        {
+                            Name = "refersTo",
+                            Type = VariableNode.DataType.Reference,
+                            IsConstant = true
+                        },
+                        new VariableNode()
+                        {
+                            Name = "value",
+                            Type = VariableNode.DataType.Boolean,
+                            IsConstant = false
+                        }
+                    },
+                     IsSet,
+                     false
+                    ),
+                MakeNode(
+                    "size",
+                    new VariableNode[]
+                    {
+                        new VariableNode()
+                        {
+                            Name = "refersTo",
+                            Type = VariableNode.DataType.Reference,
+                            IsConstant = true
+                        },
+                        new VariableNode()
+                        {
+                            Name = "value",
+                            Type = VariableNode.DataType.Integer,
+                            IsConstant = false
+                        }
+                    },
+                    Size,
+                    false
+                    )
             };
             foreach (var f in retVal)
             {
@@ -379,6 +447,81 @@
             Program.unitTestResults.Last().Asserts.Last().passed = i.Equals(j);
             Program.unitTestResults.Last().Asserts.Last().comparedValues =
                 $"Expected<{i}>, Actual<{j}>";
+        }
+
+        public static void AllocateMemory(List<InterpreterDataType> parameters)
+        {
+            if (parameters[0] is ReferenceDataType rdt)
+                rdt.Record = new RecordDataType(rdt.RecordType.Members);
+            else
+                throw new Exception("Can only allocate memory for record pointers.");
+        }
+
+        public static void FreeMemory(List<InterpreterDataType> parameters)
+        {
+            if (parameters[0] is ReferenceDataType rdt)
+                rdt.Record = null;
+            else
+                throw new Exception("Can only free memory for record pointers.");
+        }
+
+        public static void IsSet(List<InterpreterDataType> parameters)
+        {
+            if (parameters[0] is ReferenceDataType rdt
+                && parameters[1] is BooleanDataType bdt)
+                bdt.Value = rdt.Record != null;
+            else
+                throw new Exception("IsSet requires the following parameters: record pointer, var boolean");
+        }
+
+        public static void Size(List<InterpreterDataType> parameters)
+        {
+            if (parameters[0] is ReferenceDataType rdt
+                && parameters[1] is IntDataType idt)
+            {
+                if (rdt.Record != null)
+                    idt.Value = recursiveRecordSize(rdt.Record);
+                else
+                    throw new Exception("Cannot call size on a record pointer that has not been allocated");
+            }
+
+            else
+                throw new Exception("Size requires the following parameters: record pointer, var integer");
+        }
+
+        private static int recursiveRecordSize(RecordDataType rdt)
+        {
+            int size = 0;
+            foreach(var recordMember in rdt.MemberTypes)
+            {
+                var rm = recordMember.Value;
+                switch (rm)
+                {
+                    case VariableNode.DataType.Integer:
+                        size+=sizeof(int);
+                        break;
+                    case VariableNode.DataType.Real:
+                        size += sizeof(float);
+                        break;
+                    case VariableNode.DataType.String:
+                        size += ((string)rdt.Value[recordMember.Key]).Length * 2;
+                        break;
+                    case VariableNode.DataType.Character:
+                        size += sizeof(char);
+                        break;
+                    case VariableNode.DataType.Boolean:
+                        size += 1;
+                        break;
+                    case VariableNode.DataType.Record:
+                        //size += recursiveRecordSize(rmn.);
+                        break;
+                    case VariableNode.DataType.Reference:
+                        //size += recursiveRecordSize(recordMember);
+                        break;
+                        
+                }
+            }
+            return size;
         }
     }
 }
