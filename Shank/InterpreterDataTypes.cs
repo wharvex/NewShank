@@ -144,17 +144,18 @@ public class ReferenceDataType : InterpreterDataType
     {
         RecordType = rn;
     }
+
     public ReferenceDataType(ReferenceDataType rdt)
     {
         RecordType = rdt.RecordType;
         Record = rdt.Record;
     }
+
     public RecordNode RecordType { get; init; }
     public RecordDataType? Record { get; set; }
-    public override void FromString(string input)
-    {
 
-    }
+    public override void FromString(string input) { }
+
     public override string ToString()
     {
         throw new NotImplementedException();
