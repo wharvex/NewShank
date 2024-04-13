@@ -1028,6 +1028,7 @@ namespace Shank
             Array,
             Record,
             Enum,
+            Reference,
             Unknown
         };
 

@@ -138,6 +138,29 @@ public class EnumDataType : InterpreterDataType
     }
 }
 
+public class ReferenceDataType : InterpreterDataType
+{
+    public ReferenceDataType(RecordNode rn)
+    {
+        RecordType = rn;
+    }
+    public ReferenceDataType(ReferenceDataType rdt)
+    {
+        RecordType = rdt.RecordType;
+        Record = rdt.Record;
+    }
+    public RecordNode RecordType { get; init; }
+    public RecordDataType? Record { get; set; }
+    public override void FromString(string input)
+    {
+
+    }
+    public override string ToString()
+    {
+        throw new NotImplementedException();
+    }
+}
+
 public class ArrayDataType : InterpreterDataType
 {
     public List<object> Value { get; }
@@ -266,6 +289,11 @@ public class RecordDataType : InterpreterDataType
     public bool GetValueBoolean(string key)
     {
         return (bool)Value[key];
+    }
+
+    public ReferenceDataType GetValueReference(string key)
+    {
+        return (ReferenceDataType)Value[key];
     }
 
     public override string ToString()
