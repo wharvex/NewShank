@@ -928,9 +928,11 @@ namespace Shank
     {
         public string Name { get; init; }
 
-        public VariableNode.DataType Type { get; init; }
+        public VariableNode.DataType Type { get; set; }
 
         public string? UnknownType { get; init; }
+        public ASTNode? From { get; set; }
+        public ASTNode? To { get; set; }
 
         public string GetUnknownTypeSafe() =>
             UnknownType

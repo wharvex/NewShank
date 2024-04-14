@@ -485,8 +485,8 @@ namespace ShankUnitTests
             {
                 "module test2\n",
                 "record testRecord\n",
-                "\tint data\n",
-                "\tstring s\n",
+                "\tdata : integer\n",
+                "\ts : string\n",
                 "export add, testRecord\n",
                 "define add(a, b : integer; var c : integer)\n",
                 "\tc := a + b\n"
@@ -521,8 +521,8 @@ namespace ShankUnitTests
             {
                 "module test2\n",
                 "record testRecord\n",
-                "\tint data\n",
-                "\tstring s\n",
+                "\tdata : integer\n",
+                "\ts : string\n",
                 "export testRecord\n",
                 "define add(a, b : integer; var c : integer)\n",
                 "\tc := a + b\n"

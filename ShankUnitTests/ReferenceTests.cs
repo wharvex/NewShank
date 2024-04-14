@@ -30,8 +30,8 @@ namespace ShankUnitTests
             string[] file =
             {
                 "record rtest\n",
-                "\tinteger i\n",
-                "\tstring s\n",
+                "\ti : integer\n",
+                "\ts : string\n",
                 "define start()\n",
                 "variables t : refersTo rtest\n",
                 "\tallocateMemory var t\n"
@@ -45,8 +45,8 @@ namespace ShankUnitTests
             string[] file =
             {
                 "record rtest\n",
-                "\tinteger i\n",
-                "\tstring s\n",
+                "\ti : integer\n",
+                "\ts : string\n",
                 "define start()\n",
                 "variables t : refersTo rtest\n",
                 "\tallocateMemory var t\n"
@@ -63,8 +63,8 @@ namespace ShankUnitTests
             string[] file =
             {
                 "record rtest\n",
-                "\tinteger i\n",
-                "\tstring s\n",
+                "\ti : integer\n",
+                "\ts : string\n",
                 "define start()\n",
                 "variables t : refersTo rtest\n",
                 "\tallocateMemory var t\n",
@@ -72,7 +72,7 @@ namespace ShankUnitTests
                 "\tt.s := \"hello\"",
                 "\twriteToTest t.i\n",
                 "\twriteToTest t.s\n",
-                "\tfreeMemory t\n"
+                "\tfreeMemory var t\n"
             };
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddFirst(file);
@@ -88,8 +88,8 @@ namespace ShankUnitTests
             string[] file =
             {
                 "record rtest\n",
-                "\tinteger i\n",
-                "\tstring s\n",
+                "\ti : integer\n",
+                "\ts : string\n",
                 "define start()\n",
                 "variables t : refersTo rtest\n",
                 "variables p : integer\n",
@@ -98,13 +98,40 @@ namespace ShankUnitTests
                 "\tt.s := \"hello\"",
                 "\tsize t, var p\n",
                 "\twriteToTest p\n",
-                "\tfreeMemory t\n"
+                "\tfreeMemory var t\n"
             };
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddFirst(file);
             initializeInterpreter(files);
             runInterpreter();
             Assert.AreEqual("14 ", Interpreter.testOutput.ToString());
+        }
+
+        [TestMethod]
+        public void builtInIsSet()
+        {
+            string[] file =
+{
+                "record rtest\n",
+                "\ti : integer\n",
+                "\ts : string\n",
+                "define start()\n",
+                "variables t : refersTo rtest\n",
+                "variables p : boolean\n",
+                "\tallocateMemory var t\n",
+                "\tt.i := 4\n",
+                "\tt.s := \"hello\"\n",
+                "\tisSet t, var p\n",
+                "\twriteToTest p\n",
+                "\tfreeMemory var t\n",
+                "\tisSet t, var p\n",
+                "\twriteToTest p\n"
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddFirst(file);
+            initializeInterpreter(files);
+            runInterpreter();
+            Assert.AreEqual("True False ", Interpreter.testOutput.ToString());
         }
     }
 }
