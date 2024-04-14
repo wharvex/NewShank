@@ -422,10 +422,16 @@ public class Interpreter
         if (Modules[callingFunction.parentModuleName].getFunctions().ContainsKey(fc.Name))
             callingModuleCanAccessFunction = true;
         //check the whole dictonary that correlates a module name to the list of functions that should be useabe in this module
-        foreach (string? moduleName in Modules[callingFunction.parentModuleName].getImportNames().Keys)
+        foreach (
+            string? moduleName in Modules[callingFunction.parentModuleName].getImportNames().Keys
+        )
         {
             //if we find the function, it means that the other module exported it, and this module imported it
-            if (Modules[callingFunction.parentModuleName].getImportNames()[moduleName].Contains(fc.Name))
+            if (
+                Modules[callingFunction.parentModuleName]
+                    .getImportNames()[moduleName]
+                    .Contains(fc.Name)
+            )
             {
                 callingModuleCanAccessFunction = true;
                 break;
@@ -730,10 +736,17 @@ public class Interpreter
                     );
                 else
                 {
-                    if (parentModule.Imported.ContainsKey(vn.GetUnknownTypeSafe()) 
-                            && !parentModule.ImportTargetNames[
-                                ((RecordNode)parentModule.GetImportedSafe()[vn.GetUnknownTypeSafe()]).GetParentModuleSafe()]
-                                .Contains(vn.GetUnknownTypeSafe()))
+                    if (
+                        parentModule.Imported.ContainsKey(vn.GetUnknownTypeSafe())
+                        && !parentModule
+                            .ImportTargetNames[
+                                (
+                                    (RecordNode)
+                                        parentModule.GetImportedSafe()[vn.GetUnknownTypeSafe()]
+                                ).GetParentModuleSafe()
+                            ]
+                            .Contains(vn.GetUnknownTypeSafe())
+                    )
                         throw new Exception(
                             $"Could not find definition for the record {vn.GetUnknownTypeSafe()}."
                         );

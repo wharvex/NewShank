@@ -369,11 +369,15 @@ namespace ShankUnitTests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Exception), "Could not find a definition for the function addFunc. Make sure it was defined and" +
-                                                        " properly exported if it was imported.")]
+        [ExpectedException(
+            typeof(Exception),
+            "Could not find a definition for the function addFunc. Make sure it was defined and"
+                + " properly exported if it was imported."
+        )]
         public void FunctionNotExportedPrivacy()
         {
-            string[] file1 = {
+            string[] file1 =
+            {
                 "module test1\n",
                 "import test2\n",
                 "define start()\n",
@@ -391,7 +395,6 @@ namespace ShankUnitTests
                 "\tc := i\n",
                 "define addFunc(a, b : integer; var c : integer)\n",
                 "\tc := a + b\n"
-
             };
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddFirst(file1);
@@ -401,10 +404,14 @@ namespace ShankUnitTests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Exception), "Cannot create an enum of type colors as it was never exported")]
+        [ExpectedException(
+            typeof(Exception),
+            "Cannot create an enum of type colors as it was never exported"
+        )]
         public void EnumNotExportedPrivacy()
         {
-            string[] file1 = {
+            string[] file1 =
+            {
                 "module test1\n",
                 "import test2\n",
                 "define start()\n",
@@ -419,7 +426,6 @@ namespace ShankUnitTests
                 "enum colors = [red, green, blue]\n",
                 "define add(a, b : integer; var c : integer)\n",
                 "\tc := a + b\n"
-
             };
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddFirst(file1);
@@ -427,11 +433,13 @@ namespace ShankUnitTests
             initializeInterpreter(files);
             runInterpreter();
         }
+
         [TestMethod]
         [ExpectedException(typeof(Exception), "Could not find definition for the record r")]
         public void RecordNotExportedPrivacy()
         {
-            string[] file1 = {
+            string[] file1 =
+            {
                 "module test1\n",
                 "import test2\n",
                 "define start()\n",
@@ -447,7 +455,6 @@ namespace ShankUnitTests
                 "\ti : integer\n",
                 "define add(a, b : integer; var c : integer)\n",
                 "\tc := a + b\n"
-
             };
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddFirst(file1);

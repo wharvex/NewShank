@@ -1144,9 +1144,11 @@ namespace Shank
                 nameof(name),
                 "Member " + name + " not found on record."
             );
+
         public string GetParentModuleSafe()
         {
-            return ParentModuleName ?? throw new Exception("Parent module name of RecordNode is null.");
+            return ParentModuleName
+                ?? throw new Exception("Parent module name of RecordNode is null.");
         }
     }
 
@@ -1717,7 +1719,11 @@ namespace Shank
                     ((CallableNode)Imported[function.Key]).IsPublic = true;
                     continue;
                 }
-                string pmn = function.Value.parentModuleName ?? throw new Exception("Could not get parent module name while updating imports.");
+                string pmn =
+                    function.Value.parentModuleName
+                    ?? throw new Exception(
+                        "Could not get parent module name while updating imports."
+                    );
                 if (ImportTargetNames.ContainsKey(function.Value.parentModuleName))
                 {
                     if (ImportTargetNames[function.Value.parentModuleName] != null)
