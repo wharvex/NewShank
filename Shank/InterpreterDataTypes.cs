@@ -307,7 +307,7 @@ public class RecordDataType : InterpreterDataType
 
     public RecordDataType GetValueRecord(string key)
     {
-        return (RecordDataType)Value[key]; 
+        return (RecordDataType)Value[key];
     }
 
     public override string ToString()

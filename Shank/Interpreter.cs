@@ -1,7 +1,7 @@
-﻿using LLVMSharp;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Text;
+using LLVMSharp;
 
 namespace Shank;
 
@@ -298,7 +298,7 @@ public class Interpreter
                             + t
                             + " to a record variable member is not implemented yet."
                     )
-            } ;
+            };
         }
         else
         {
@@ -680,14 +680,19 @@ public class Interpreter
                     VariableNode.DataType.Real => new FloatDataType(rdt.GetValueReal(rmVrn.Name)),
                     VariableNode.DataType.Reference
                         => new ReferenceDataType(rdt.GetValueReference(rmVrn.Name)),
-                    VariableNode.DataType.Record => GetNestedParam(rdt, pn.Variable ?? throw new Exception("Could not find extension for nested record")),
+                    VariableNode.DataType.Record
+                        => GetNestedParam(
+                            rdt,
+                            pn.Variable
+                                ?? throw new Exception("Could not find extension for nested record")
+                        ),
                     _
                         => throw new NotImplementedException(
                             "It has not been implemented yet to pass a complex Record member"
                                 + " type into a function."
                         )
                 }
-            ) ;
+            );
         }
         else
         {
@@ -698,15 +703,26 @@ public class Interpreter
     public static InterpreterDataType GetNestedParam(RecordDataType rdt, VariableReferenceNode vn)
     {
         var temp = rdt.Value[((VariableReferenceNode)vn.GetExtensionSafe()).Name];
-        if (temp is RecordDataType && ((VariableReferenceNode)vn.GetExtensionSafe()).Extension is null)
-        {
-            return GetNestedParam((RecordDataType)temp, (VariableReferenceNode)vn.GetExtensionSafe());
-        }
-        if (temp is ReferenceDataType && ((VariableReferenceNode)vn.GetExtensionSafe()).Extension is null)
+        if (
+            temp is RecordDataType
+            && ((VariableReferenceNode)vn.GetExtensionSafe()).Extension is null
+        )
         {
             return GetNestedParam(
-                ((ReferenceDataType)temp).Record ?? throw new Exception($"Reference was never allocated, {vn.ToString()}")
-                , (VariableReferenceNode)vn.GetExtensionSafe());
+                (RecordDataType)temp,
+                (VariableReferenceNode)vn.GetExtensionSafe()
+            );
+        }
+        if (
+            temp is ReferenceDataType
+            && ((VariableReferenceNode)vn.GetExtensionSafe()).Extension is null
+        )
+        {
+            return GetNestedParam(
+                ((ReferenceDataType)temp).Record
+                    ?? throw new Exception($"Reference was never allocated, {vn.ToString()}"),
+                (VariableReferenceNode)vn.GetExtensionSafe()
+            );
         }
         return temp switch
         {
@@ -722,6 +738,7 @@ public class Interpreter
         };
         throw new Exception("Could not get nested param");
     }
+
     private static InterpreterDataType VariableNodeToActivationRecord(VariableNode vn)
     {
         var parentModule = Modules[vn.GetModuleNameSafe()];
@@ -1055,13 +1072,18 @@ public class Interpreter
             throw new ArgumentException(nameof(node));
     }
 
-    public static object ResolveRecord(ASTNode node, Dictionary<string, InterpreterDataType> variables)
+    public static object ResolveRecord(
+        ASTNode node,
+        Dictionary<string, InterpreterDataType> variables
+    )
     {
         return ResolveReference(node, variables);
-                
     }
 
-    public static object ResolveReference(ASTNode node, Dictionary<string, InterpreterDataType> variables)
+    public static object ResolveReference(
+        ASTNode node,
+        Dictionary<string, InterpreterDataType> variables
+    )
     {
         switch (node)
         {
@@ -1078,7 +1100,9 @@ public class Interpreter
             case VariableReferenceNode v:
                 return variables[v.Name];
             default:
-                throw new Exception($"Error when assigning {node.ToString()} to a reference or record.");
+                throw new Exception(
+                    $"Error when assigning {node.ToString()} to a reference or record."
+                );
         }
     }
 
