@@ -133,5 +133,31 @@ namespace ShankUnitTests
             runInterpreter();
             Assert.AreEqual("True False ", Interpreter.testOutput.ToString());
         }
+
+        [TestMethod]
+        public void nestedRefersToInRecord()
+        {
+            string[] file =
+            {
+                "record node\n",
+                "\tdata : integer\n",
+                "\tnext : refersTo node\n",
+                "define start()\n",
+                "variables head, n : refersTo node\n",
+                "\tallocateMemory var head\n",
+                "\tallocateMemory var n\n",
+                "\thead.data := 5\n",
+                "\thead.next := n\n",
+                "\thead.next.data := 3\n",
+                "\twriteToTest head.data, head.next.data\n",
+                "\tfreeMemory var n\n",
+                "\tfreeMemory var head\n"
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddFirst(file);
+            initializeInterpreter(files);
+            runInterpreter();
+            Assert.AreEqual("5 3 ", Interpreter.testOutput.ToString());
+        }
     }
 }

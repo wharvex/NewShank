@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using LLVMSharp;
+using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Text;
 
@@ -287,13 +288,17 @@ public class Interpreter
                 VariableNode.DataType.Real => ResolveFloat(an.Expression, variables),
                 VariableNode.DataType.Integer => ResolveInt(an.Expression, variables),
                 VariableNode.DataType.Character => ResolveChar(an.Expression, variables),
+                VariableNode.DataType.Record => ResolveRecord(an.Expression, variables),
+                VariableNode.DataType.Reference => ResolveReference(an.Expression, variables),
+                //VariableNode.DataType.Enum => ResolveEnum()
+
                 _
                     => throw new NotImplementedException(
                         "Assigning a value of type "
                             + t
                             + " to a record variable member is not implemented yet."
                     )
-            };
+            } ;
         }
         else
         {
@@ -675,13 +680,14 @@ public class Interpreter
                     VariableNode.DataType.Real => new FloatDataType(rdt.GetValueReal(rmVrn.Name)),
                     VariableNode.DataType.Reference
                         => new ReferenceDataType(rdt.GetValueReference(rmVrn.Name)),
+                    VariableNode.DataType.Record => GetNestedParam(rdt, pn.Variable ?? throw new Exception("Could not find extension for nested record")),
                     _
                         => throw new NotImplementedException(
                             "It has not been implemented yet to pass a complex Record member"
                                 + " type into a function."
                         )
                 }
-            );
+            ) ;
         }
         else
         {
@@ -689,6 +695,33 @@ public class Interpreter
         }
     }
 
+    public static InterpreterDataType GetNestedParam(RecordDataType rdt, VariableReferenceNode vn)
+    {
+        var temp = rdt.Value[((VariableReferenceNode)vn.GetExtensionSafe()).Name];
+        if (temp is RecordDataType && ((VariableReferenceNode)vn.GetExtensionSafe()).Extension is null)
+        {
+            return GetNestedParam((RecordDataType)temp, (VariableReferenceNode)vn.GetExtensionSafe());
+        }
+        if (temp is ReferenceDataType && ((VariableReferenceNode)vn.GetExtensionSafe()).Extension is null)
+        {
+            return GetNestedParam(
+                ((ReferenceDataType)temp).Record ?? throw new Exception($"Reference was never allocated, {vn.ToString()}")
+                , (VariableReferenceNode)vn.GetExtensionSafe());
+        }
+        return temp switch
+        {
+            int => new IntDataType((int)temp),
+            float => new FloatDataType((float)temp),
+            string => new StringDataType((string)temp),
+            char => new CharDataType((char)temp),
+            bool => new BooleanDataType((bool)temp),
+            EnumDataType => new EnumDataType((EnumDataType)temp),
+            RecordDataType => new RecordDataType((RecordDataType)temp),
+            ReferenceDataType => new ReferenceDataType((ReferenceDataType)temp),
+            _ => throw new Exception("Could not find nested type.")
+        };
+        throw new Exception("Could not get nested param");
+    }
     private static InterpreterDataType VariableNodeToActivationRecord(VariableNode vn)
     {
         var parentModule = Modules[vn.GetModuleNameSafe()];
@@ -1020,6 +1053,33 @@ public class Interpreter
         }
         else
             throw new ArgumentException(nameof(node));
+    }
+
+    public static object ResolveRecord(ASTNode node, Dictionary<string, InterpreterDataType> variables)
+    {
+        return ResolveReference(node, variables);
+                
+    }
+
+    public static object ResolveReference(ASTNode node, Dictionary<string, InterpreterDataType> variables)
+    {
+        switch (node)
+        {
+            case IntNode i:
+                return ResolveInt(node, variables);
+            case FloatNode f:
+                return ResolveFloat(node, variables);
+            case StringNode s:
+                return ResolveString(node, variables);
+            case CharNode c:
+                return ResolveChar(node, variables);
+            case BoolNode b:
+                return ResolveBool(node, variables);
+            case VariableReferenceNode v:
+                return variables[v.Name];
+            default:
+                throw new Exception($"Error when assigning {node.ToString()} to a reference or record.");
+        }
     }
 
     public static ModuleNode? setStartModule()

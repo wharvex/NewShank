@@ -402,16 +402,24 @@ public class Parser
 
         var typeToken =
             MatchAndRemoveMultiple(_shankTokenTypesPlusIdentifier)
+<<<<<<< Updated upstream
             ?? throw new SyntaxErrorException("Expected a type", Peek(0));
+=======
+            ?? throw new SyntaxErrorException("Expected a name", Peek(0));
+        Token? referenceName = null;
+        if (typeToken.Type is Token.TokenType.RefersTo)
+            referenceName = MatchAndRemove(Token.TokenType.Identifier) 
+                ?? throw new SyntaxErrorException("Expected a record name after refersTo token.", Peek(0));
+>>>>>>> Stashed changes
 
         RequiresEndOfLine();
 
-        return _shankTokenTypes.Contains(typeToken.Type)
-            ? new RecordMemberNode(
-                nameToken.GetValueSafe(),
-                GetDataTypeFromTokenType(typeToken.Type)
-            )
-            : new RecordMemberNode(nameToken.GetValueSafe(), typeToken.GetValueSafe());
+        if (_shankTokenTypes.Contains(typeToken.Type))
+            return new RecordMemberNode(nameToken.GetValueSafe(), GetDataTypeFromTokenType(typeToken.Type));
+        else if (referenceName is not null)
+            return new RecordMemberNode(nameToken.GetValueSafe(), "refersTo", referenceName.GetValueSafe());
+        else
+            return new RecordMemberNode(nameToken.GetValueSafe(), typeToken.GetValueSafe());
     }
 
     public static VariableNode.DataType GetDataTypeFromConstantNodeType(ASTNode constantNode) =>
@@ -673,7 +681,9 @@ public class Parser
         string parentModuleName
     )
     {
-        Token? t;
+        Token? t = MatchAndRemove(Token.TokenType.Identifier);
+        if (t is null)
+            throw new SyntaxErrorException("Could not get reference record type", Peek(0));
         var ret = names
             .Select(
                 n =>
@@ -683,13 +693,7 @@ public class Parser
                         Type = VariableNode.DataType.Reference,
                         Name = n,
                         ModuleName = parentModuleName,
-                        UnknownType =
-                            (t = MatchAndRemove(Token.TokenType.Identifier)) == null
-                                ? throw new SyntaxErrorException(
-                                    "Could not get reference record type",
-                                    Peek(0)
-                                )
-                                : t.Value,
+                        UnknownType = t.Value,
                     }
             )
             .ToList();

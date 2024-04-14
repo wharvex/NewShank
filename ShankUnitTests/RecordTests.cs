@@ -43,7 +43,10 @@ namespace ShankUnitTests
         }
 
         [TestMethod]
+<<<<<<< Updated upstream
         //gets past semantic analysis but gets caught in the interpreter
+=======
+>>>>>>> Stashed changes
         public void nestedRecord()
         {
             string[] file =
@@ -55,12 +58,40 @@ namespace ShankUnitTests
                 "\ts : string\n",
                 "define start()\n",
                 "variables r : rec1\n",
-                "\tr.p.s := \"helloworld\"\n"
+                "\tr.p.s := \"helloworld\"\n",
+                "\twriteToTest r.p.s\n"
             };
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file);
             initializeInterpreter(files);
-            //runInterpreter();
+            runInterpreter();
+            Assert.AreEqual("helloworld ", Interpreter.testOutput.ToString());
+        }
+
+        [TestMethod]
+        public void superNestedRecord()
+        {
+            string[] file =
+{
+                "record rec1\n",
+                "\ti : integer\n",
+                "\tp : rec2\n",
+                "record rec2\n",
+                "\tj : rec3\n",
+                "record rec3\n",
+                "\tu : rec4\n",
+                "record rec4\n",
+                "\ts : string\n",
+                "define start()\n",
+                "variables r : rec1\n",
+                "\tr.p.j.u.s := \"helloworld\"\n",
+                "\twriteToTest r.p.j.u.s\n"
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddLast(file);
+            initializeInterpreter(files);
+            runInterpreter();
+            Assert.AreEqual("helloworld ", Interpreter.testOutput.ToString());
         }
     }
 }

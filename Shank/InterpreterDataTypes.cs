@@ -125,6 +125,12 @@ public class EnumDataType : InterpreterDataType
         Value = value;
     }
 
+    public EnumDataType(EnumDataType edt)
+    {
+        Type = edt.Type;
+        Value = edt.Value;
+    }
+
     public string Value { set; get; }
     public EnumNode Type { get; set; }
 
@@ -297,6 +303,11 @@ public class RecordDataType : InterpreterDataType
     public ReferenceDataType GetValueReference(string key)
     {
         return (ReferenceDataType)Value[key];
+    }
+
+    public RecordDataType GetValueRecord(string key)
+    {
+        return (RecordDataType)Value[key]; 
     }
 
     public override string ToString()

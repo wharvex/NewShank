@@ -951,6 +951,13 @@ namespace Shank
             UnknownType = unknownType;
         }
 
+        public RecordMemberNode(string name, string dataType, string unknownType)
+        {
+            Name = name;
+            Type = VariableNode.DataType.Reference;
+            UnknownType = unknownType;
+        }
+
         //public VariableNode.DataType GetTypeResolveUnknown(ModuleNode module)
         //{
         //    return Type != VariableNode.DataType.Unknown
