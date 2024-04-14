@@ -71,7 +71,7 @@ namespace Shank
 
             // Therefore, the following should be sufficient to ensure variables are set before use.
 
-            // When we encounter a variable x as the target of a valid assignment, we determine if
+            // When we encounter a variable x as the target of an assignment, we determine if
             // the assignment is valid, and if it is valid, then we set the Value of x's Key in
             // variablesSet to true. (If it's not valid, throw an exception.)
 

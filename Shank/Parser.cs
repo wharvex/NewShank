@@ -439,7 +439,7 @@ public class Parser
             BooleanExpressionNode or BoolNode => VariableNode.DataType.Boolean,
             _
                 => throw new InvalidOperationException(
-                    "Bad constant node type for converting to data type"
+                    "Bad constant node type for converting to data type."
                 )
         };
 

@@ -71,6 +71,36 @@ namespace Shank
             Name = name;
         }
 
+        public bool EqualsWrtNameAndParams(
+            CallableNode givenFunction,
+            Dictionary<string, VariableNode> variablesInScope
+        )
+        {
+            // If the names don't match, it's not a match.
+            if (!givenFunction.Name.Equals(Name))
+            {
+                return false;
+            }
+
+            // If the param counts don't match, it's not a match.
+            if (givenFunction.ParameterVariables.Count != Parameters.Count)
+            {
+                return false;
+            }
+
+            // If there's any parameter whose type and 'var' status would disqualify the given
+            // function from matching this call, return false, otherwise true.
+            return !Parameters
+                .Where(
+                    (p, i) =>
+                        !p.EqualsWrtTypeAndVar(
+                            givenFunction.ParameterVariables[i],
+                            variablesInScope
+                        )
+                )
+                .Any();
+        }
+
         public override object[] returnStatementTokens()
         {
             var b = new StringBuilder();
@@ -158,19 +188,64 @@ namespace Shank
                     .ToUpper()
             );
 
-        public bool EqualsForOverload(
+        /// <summary>
+        /// Ensure this ParameterNode's invariants hold.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">If this ParameterNode is in an invalid state
+        /// </exception>
+        /// <remarks>Author: Tim Gudlewski</remarks>
+        private void ValidateState()
+        {
+            if (
+                (Variable is not null && Constant is not null)
+                || (Variable is null && Constant is null)
+            )
+            {
+                throw new InvalidOperationException(
+                    "This ParameterNode is in an undefined state because Constant and Variable are"
+                        + " both null, or both non-null."
+                );
+            }
+
+            if (Constant is not null && IsVariable)
+            {
+                throw new InvalidOperationException(
+                    "This ParameterNode is in an undefined state because its value is stored in"
+                        + " Constant, but it is also 'var'."
+                );
+            }
+        }
+
+        public bool ValueIsStoredInVariable()
+        {
+            ValidateState();
+            return Variable is not null;
+        }
+
+        public bool EqualsWrtTypeAndVar(
             VariableNode givenVariable,
             Dictionary<string, VariableNode> variablesInScope
         )
         {
-            // TODO: Need to handle the case where this ParameterNode's value is stored in Constant.
-            return VarStatusEquals(givenVariable)
-                && VariableTypeEquals(givenVariable, variablesInScope);
+            return ValueIsStoredInVariable()
+                ? VarStatusEquals(givenVariable)
+                    && VariableTypeEquals(givenVariable, variablesInScope)
+                : ConstantTypeEquals(givenVariable);
         }
 
         public bool VarStatusEquals(VariableNode givenVariable)
         {
             return IsVariable != givenVariable.IsConstant;
+        }
+
+        public bool ConstantTypeEquals(VariableNode givenVariable)
+        {
+            return givenVariable.Type == GetConstantType();
+        }
+
+        public VariableNode.DataType GetConstantType()
+        {
+            return Parser.GetDataTypeFromConstantNodeType(GetConstantSafe());
         }
 
         public bool VariableTypeEquals(
@@ -1573,9 +1648,19 @@ namespace Shank
             Functions2[fn.Name].Add(fn);
         }
 
-        public FunctionNode GetFromFunctions(FunctionCallNode fcn)
+        public CallableNode? GetFromFunctionsByCall(
+            FunctionCallNode givenCall,
+            Dictionary<string, VariableNode> variablesInScope
+        )
         {
-            return new FunctionNode("hi");
+            if (Functions2.TryGetValue(givenCall.Name, out var foundFns))
+            {
+                return foundFns.FirstOrDefault(
+                    fn => givenCall.EqualsWrtNameAndParams(fn, variablesInScope)
+                );
+            }
+
+            return null;
         }
 
         public void AddToGlobalVariables(List<VariableNode> variables)
