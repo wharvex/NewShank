@@ -405,15 +405,26 @@ public class Parser
             ?? throw new SyntaxErrorException("Expected a name", Peek(0));
         Token? referenceName = null;
         if (typeToken.Type is Token.TokenType.RefersTo)
-            referenceName = MatchAndRemove(Token.TokenType.Identifier) 
-                ?? throw new SyntaxErrorException("Expected a record name after refersTo token.", Peek(0));
+            referenceName =
+                MatchAndRemove(Token.TokenType.Identifier)
+                ?? throw new SyntaxErrorException(
+                    "Expected a record name after refersTo token.",
+                    Peek(0)
+                );
 
         RequiresEndOfLine();
 
         if (_shankTokenTypes.Contains(typeToken.Type))
-            return new RecordMemberNode(nameToken.GetValueSafe(), GetDataTypeFromTokenType(typeToken.Type));
+            return new RecordMemberNode(
+                nameToken.GetValueSafe(),
+                GetDataTypeFromTokenType(typeToken.Type)
+            );
         else if (referenceName is not null)
-            return new RecordMemberNode(nameToken.GetValueSafe(), "refersTo", referenceName.GetValueSafe());
+            return new RecordMemberNode(
+                nameToken.GetValueSafe(),
+                "refersTo",
+                referenceName.GetValueSafe()
+            );
         else
             return new RecordMemberNode(nameToken.GetValueSafe(), typeToken.GetValueSafe());
     }

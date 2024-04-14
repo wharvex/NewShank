@@ -85,7 +85,6 @@ namespace Shank
                 {
                     if (variables.TryGetValue(an.Target.Name, out var targetDeclaration))
                     {
-
                         var targetTypeNull = GetTargetTypeForAssignmentCheck(
                             targetDeclaration,
                             an.Target,
@@ -95,7 +94,7 @@ namespace Shank
                         //GetTargetTypeForAssignmentCheck can now maybe return null, we catch it here
                         if (targetTypeNull == null)
                             throw new Exception("Couldn't find target type");
-                         VariableNode.DataType targetType = (VariableNode.DataType)targetTypeNull;
+                        VariableNode.DataType targetType = (VariableNode.DataType)targetTypeNull;
 
                         CheckNode(
                             targetType,
@@ -438,11 +437,12 @@ namespace Shank
             )
                 .GetFromMembersByNameSafe(targetUsage.GetRecordMemberReferenceSafe().Name)
                 .Type;
+
         //can return null as we may need to step backwards once recursive loop
         //this is if there is a nested record or reference, in which case the type that we want to return to be checked
         //should be variablenode.datatype.reference
         //if we checked for an extension when the target should be one of these types, an error is thrown, so if there is no extension
-        //on the variable reference node, we return null to the previous recursive pass, which returns either VariableNode.DataType.Record 
+        //on the variable reference node, we return null to the previous recursive pass, which returns either VariableNode.DataType.Record
         //or Reference depending on what the previous loop found
         private static VariableNode.DataType? GetRecordTypeRecursive(
             ModuleNode parentModule,
@@ -455,23 +455,27 @@ namespace Shank
             VariableNode.DataType vndt = targetDefinition
                 .GetFromMembersByNameSafe(targetUsage.GetRecordMemberReferenceSafe().Name)
                 .Type;
-            if (vndt != VariableNode.DataType.Record && vndt != VariableNode.DataType.Reference && vndt != VariableNode.DataType.Unknown)
+            if (
+                vndt != VariableNode.DataType.Record
+                && vndt != VariableNode.DataType.Reference
+                && vndt != VariableNode.DataType.Unknown
+            )
                 return vndt;
             else
                 return GetRecordTypeRecursive(
-                    parentModule,
-                    (RecordNode)
-                        GetRecordsAndImports(parentModule.Records, parentModule.Imported)[
-                            targetDefinition
-                                .GetFromMembersByNameSafe(
-                                    ((VariableReferenceNode)targetUsage.GetExtensionSafe()).Name
-                                )
-                                .GetUnknownTypeSafe()
-                        ],
-                    (VariableReferenceNode)targetUsage.GetExtensionSafe() 
-                ) ?? vndt ;
+                        parentModule,
+                        (RecordNode)
+                            GetRecordsAndImports(parentModule.Records, parentModule.Imported)[
+                                targetDefinition
+                                    .GetFromMembersByNameSafe(
+                                        ((VariableReferenceNode)targetUsage.GetExtensionSafe()).Name
+                                    )
+                                    .GetUnknownTypeSafe()
+                            ],
+                        (VariableReferenceNode)targetUsage.GetExtensionSafe()
+                    ) ?? vndt;
         }
-        
+
         public static Dictionary<string, ASTNode> GetRecordsAndImports(
             Dictionary<string, RecordNode> records,
             Dictionary<string, ASTNode> imports

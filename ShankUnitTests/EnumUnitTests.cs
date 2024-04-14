@@ -278,7 +278,8 @@ namespace ShankUnitTests
         [TestMethod]
         public void constantEnum()
         {
-            string[] file = {
+            string[] file =
+            {
                 "enum colors = [red, green, blue]\n",
                 "define start()\n",
                 "constants p = red\n",

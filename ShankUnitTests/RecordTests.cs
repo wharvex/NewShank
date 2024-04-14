@@ -68,7 +68,7 @@ namespace ShankUnitTests
         public void superNestedRecord()
         {
             string[] file =
-{
+            {
                 "record rec1\n",
                 "\ti : integer\n",
                 "\tp : rec2\n",

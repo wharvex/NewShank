@@ -538,7 +538,7 @@ namespace ShankUnitTests
                 "variables j : integer\n",
                 "\tadd 1, 2, var j\n",
                 "\tassertIsEqual 3, j\n",
-                 "test add3 for add(a, b, c : integer; var d : integer)\n",
+                "test add3 for add(a, b, c : integer; var d : integer)\n",
                 "variables j : integer\n",
                 "\tadd 1, 2,, 3 var j\n",
                 "\tassertIsEqual 6, j\n"
