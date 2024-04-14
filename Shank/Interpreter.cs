@@ -385,18 +385,12 @@ public class Interpreter
         bool callingModuleCanAccessFunction = false;
 
         if (startModule == null)
-        {
             throw new Exception("Interpreter error, start function could not be found.");
-        }
 
         if (startModule.getFunctions().ContainsKey(fc.Name))
-        {
             calledFunction = startModule.getFunctions()[fc.Name]; // find the function
-        }
         else if (startModule.getImportedFunctions().ContainsKey(fc.Name))
-        {
             calledFunction = startModule.getImportedFunctions()[fc.Name];
-        }
         else
         {
             //this loop allows tests to search their own module for functions
@@ -424,63 +418,33 @@ public class Interpreter
             }
         }
 
-        // TODO: fix single file calling another function causing parentModuleName to be null
-        if (callingFunction.parentModuleName != null)
+        //if the function was defined in this module, this module can access it
+        if (Modules[callingFunction.parentModuleName].getFunctions().ContainsKey(fc.Name))
+            callingModuleCanAccessFunction = true;
+        //check the whole dictonary that correlates a module name to the list of functions that should be useabe in this module
+        foreach (string? moduleName in Modules[callingFunction.parentModuleName].getImportNames().Keys)
         {
-            if (Modules[callingFunction.parentModuleName].getFunctions().ContainsKey(fc.Name))
+            //if we find the function, it means that the other module exported it, and this module imported it
+            if (Modules[callingFunction.parentModuleName].getImportNames()[moduleName].Contains(fc.Name))
             {
                 callingModuleCanAccessFunction = true;
+                break;
             }
-            foreach (
-                string? moduleName in Modules[callingFunction.parentModuleName]
-                    .getImportNames()
-                    .Keys
-            )
-            {
-                if (
-                    Modules[callingFunction.parentModuleName]
-                        .getImportNames()
-                        .ContainsKey(moduleName)
-                )
-                {
-                    if (
-                        Modules[callingFunction.parentModuleName]
-                            .getImportNames()[moduleName]
-                            .Contains(fc.Name)
-                    )
-                    {
-                        callingModuleCanAccessFunction = true;
-                        break;
-                    }
-                    else
-                    {
-                        if (
-                            Modules[callingFunction.parentModuleName]
-                                .getImportNames()[moduleName]
-                                .Contains(fc.Name)
-                        )
-                        {
-                            callingModuleCanAccessFunction = true;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (startModule.getFunctions().ContainsKey(fc.Name))
-            {
-                if (startModule.getFunctions()[fc.Name] is BuiltInFunctionNode)
-                    callingModuleCanAccessFunction = true;
-            }
-
-            if (!callingModuleCanAccessFunction)
-                throw new Exception(
-                    "Cannot access the private function "
-                        + ((CallableNode)calledFunction).Name
-                        + " from module "
-                        + callingFunction.parentModuleName
-                );
         }
+        //check if the function is a builtIn, which all modules should have access to,
+        //but they're only stored in the module with the start function to prevent collisions
+        if (startModule.getFunctions().ContainsKey(fc.Name))
+            if (startModule.getFunctions()[fc.Name] is BuiltInFunctionNode)
+                callingModuleCanAccessFunction = true;
+
+        //if we haven't found the function name, its an error at this point
+        if (!callingModuleCanAccessFunction)
+            throw new Exception(
+                "Cannot access the private function "
+                    + ((CallableNode)calledFunction).Name
+                    + " from module "
+                    + callingFunction.parentModuleName
+            );
 
         if (
             fc.Parameters.Count != ((CallableNode)calledFunction).ParameterVariables.Count
@@ -766,7 +730,10 @@ public class Interpreter
                     );
                 else
                 {
-                    if (!parentModule.Imported.ContainsKey(vn.GetUnknownTypeSafe()))
+                    if (parentModule.Imported.ContainsKey(vn.GetUnknownTypeSafe()) 
+                            && !parentModule.ImportTargetNames[
+                                ((RecordNode)parentModule.GetImportedSafe()[vn.GetUnknownTypeSafe()]).GetParentModuleSafe()]
+                                .Contains(vn.GetUnknownTypeSafe()))
                         throw new Exception(
                             $"Could not find definition for the record {vn.GetUnknownTypeSafe()}."
                         );

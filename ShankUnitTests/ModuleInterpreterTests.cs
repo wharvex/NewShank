@@ -367,5 +367,93 @@ namespace ShankUnitTests
             runInterpreter();
             Assert.AreEqual("hello 3 ", Interpreter.testOutput.ToString());
         }
+
+        [TestMethod]
+        [ExpectedException(typeof(Exception), "Could not find a definition for the function addFunc. Make sure it was defined and" +
+                                                        " properly exported if it was imported.")]
+        public void FunctionNotExportedPrivacy()
+        {
+            string[] file1 = {
+                "module test1\n",
+                "import test2\n",
+                "define start()\n",
+                "variables p : integer\n",
+                "\tadd 4,2, var p\n",
+                "\taddFunc 2, 3, var p\n"
+            };
+            string[] file2 =
+            {
+                "module test2\n",
+                "export add\n",
+                "define add(a, b : integer; var c : integer)\n",
+                "variables i : integer\n",
+                "\taddFunc a, b, i\n",
+                "\tc := i\n",
+                "define addFunc(a, b : integer; var c : integer)\n",
+                "\tc := a + b\n"
+
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddFirst(file1);
+            files.AddLast(file2);
+            initializeInterpreter(files);
+            runInterpreter();
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(Exception), "Cannot create an enum of type colors as it was never exported")]
+        public void EnumNotExportedPrivacy()
+        {
+            string[] file1 = {
+                "module test1\n",
+                "import test2\n",
+                "define start()\n",
+                "variables p : integer\n",
+                "variables e : colors\n",
+                "\tadd 4,2, var p\n"
+            };
+            string[] file2 =
+            {
+                "module test2\n",
+                "export add\n",
+                "enum colors = [red, green, blue]\n",
+                "define add(a, b : integer; var c : integer)\n",
+                "\tc := a + b\n"
+
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddFirst(file1);
+            files.AddLast(file2);
+            initializeInterpreter(files);
+            runInterpreter();
+        }
+        [TestMethod]
+        [ExpectedException(typeof(Exception), "Could not find definition for the record r")]
+        public void RecordNotExportedPrivacy()
+        {
+            string[] file1 = {
+                "module test1\n",
+                "import test2\n",
+                "define start()\n",
+                "variables p : integer\n",
+                "variables rec : r\n",
+                "\tadd 4,2, var p\n"
+            };
+            string[] file2 =
+            {
+                "module test2\n",
+                "export add\n",
+                "record r\n",
+                "\ti : integer\n",
+                "define add(a, b : integer; var c : integer)\n",
+                "\tc := a + b\n"
+
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddFirst(file1);
+            files.AddLast(file2);
+            initializeInterpreter(files);
+            runInterpreter();
+        }
     }
 }
