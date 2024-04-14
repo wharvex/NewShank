@@ -402,7 +402,7 @@ public class Parser
 
         var typeToken =
             MatchAndRemoveMultiple(_shankTokenTypesPlusIdentifier)
-            ?? throw new SyntaxErrorException("Expected a name", Peek(0));
+            ?? throw new SyntaxErrorException("Expected a type", Peek(0));
 
         RequiresEndOfLine();
 

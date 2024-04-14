@@ -11,45 +11,33 @@ namespace Shank
         private static Dictionary<string, ModuleNode> Modules;
         private static ModuleNode startModule;
 
-        // TODO: This method is called "CheckAssignments" but it runs CheckBlock on
-        // every function, which is more general than just checking assignments.
-        public static void CheckAssignments2(
-            Dictionary<string, CallableNode> functions,
-            ModuleNode parentModule
-        )
-        {
-            foreach (var f in functions.Values.Where(f => f is FunctionNode).Cast<FunctionNode>())
-            {
-                CheckBlock(
-                    f.Statements,
-                    f.LocalVariables.Concat(f.ParameterVariables)
-                        .ToList()
-                        .ToDictionary(vn => vn.GetNameSafe()),
-                    parentModule
-                );
-            }
-        }
-
-        public static void CheckAssignments(
+        /// <summary>
+        /// Checks the given functions for semantic issues.
+        /// </summary>
+        /// <param name="functions">A function-by-name dictionary of the functions to check</param>
+        /// <param name="parentModule">The parent module of the given functions</param>
+        /// <remarks>Author: Tim Gudlewski</remarks>
+        public static void CheckFunctions(
             Dictionary<string, CallableNode> functions,
             ModuleNode parentModule
         )
         {
             functions
+                .Where(kvp => kvp.Value is FunctionNode)
+                .Select(kvp => (FunctionNode)kvp.Value)
                 .ToList()
-                .ForEach(kvp =>
+                .ForEach(fn =>
                 {
-                    if (kvp.Value is FunctionNode fn)
-                    {
-                        CheckBlock(
-                            fn.Statements,
-                            GetLocalAndGlobalVariables(
-                                parentModule,
-                                fn.LocalVariables.Concat(fn.ParameterVariables).ToList()
-                            ),
-                            parentModule
-                        );
-                    }
+                    var variables = GetLocalAndGlobalVariables(
+                        parentModule,
+                        [.. fn.LocalVariables.Concat(fn.ParameterVariables)]
+                    );
+                    CheckBlock(
+                        fn.Statements,
+                        variables,
+                        variables.ToDictionary(kvp => kvp.Key, _ => false),
+                        parentModule
+                    );
                 });
         }
 
@@ -74,18 +62,27 @@ namespace Shank
         private static void CheckBlock(
             List<StatementNode> statements,
             Dictionary<string, VariableNode> variables,
+            Dictionary<string, bool> variablesSet,
             ModuleNode parentModule
         )
         {
+            // This foreach loop goes through the statements in order,
+            // and starts with the outermost scope in which the variables passed in are visible.
+            // Therefore, the following should be sufficient to ensure variables are set before use.
+            // When we encounter a variable x as the target of a valid assignment, we determine if
+            // the assignment is valid, and if it is valid, then we set the Value of x's Key in
+            // variablesSet to true. (If it's not valid, throw an exception.)
+            // When we encounter a variable x NOT as the target of an assignment, then we look x up
+            // in variablesSet, and if its Value is false, then we throw an exception.
             foreach (var s in statements)
             {
                 bool foundFunction = false;
                 if (s is AssignmentNode an)
                 {
-                    if (variables.TryGetValue(an.Target.Name, out var targetDefinition))
+                    if (variables.TryGetValue(an.Target.Name, out var targetDeclaration))
                     {
                         var targetType = GetTargetTypeForAssignmentCheck(
-                            targetDefinition,
+                            targetDeclaration,
                             an.Target,
                             parentModule
                         );
@@ -95,7 +92,7 @@ namespace Shank
                             an.Expression,
                             variables,
                             parentModule,
-                            targetDefinition
+                            targetDeclaration
                         );
 
                         CheckRange(an, variables, targetDefinition, parentModule);
@@ -679,7 +676,7 @@ namespace Shank
                         }
                     }
                 }
-                CheckAssignments(module.Value.getFunctions(), module.Value);
+                CheckFunctions(module.Value.getFunctions(), module.Value);
             }
         }
 
