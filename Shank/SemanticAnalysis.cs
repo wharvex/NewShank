@@ -66,14 +66,18 @@ namespace Shank
             ModuleNode parentModule
         )
         {
-            // This foreach loop goes through the statements in order,
-            // and starts with the outermost scope in which the variables passed in are visible.
+            // This foreach loop goes through the statements in order, starting with the outermost
+            // scope (i.e. a function block) in which the variables passed in are visible.
+
             // Therefore, the following should be sufficient to ensure variables are set before use.
+
             // When we encounter a variable x as the target of a valid assignment, we determine if
             // the assignment is valid, and if it is valid, then we set the Value of x's Key in
             // variablesSet to true. (If it's not valid, throw an exception.)
+
             // When we encounter a variable x NOT as the target of an assignment, then we look x up
             // in variablesSet, and if its Value is false, then we throw an exception.
+
             foreach (var s in statements)
             {
                 bool foundFunction = false;

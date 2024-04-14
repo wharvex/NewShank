@@ -1019,8 +1019,6 @@ namespace Shank
     {
         public string? Name { get; set; }
         public string? ModuleName { get; set; }
-        public List<int> UsageLines { get; } = [];
-        public int AssignmentLine { get; set; } = -1;
 
         public enum DataType
         {
@@ -1142,6 +1140,11 @@ namespace Shank
         )
         {
             return records[GetUnknownTypeSafe()].GetFromMembersByNameSafe(memberName).Type;
+        }
+
+        public bool EqualsForOverload(VariableNode vn)
+        {
+            return vn.Type == Type && vn.IsConstant == IsConstant;
         }
 
         public override string ToString()
@@ -1477,6 +1480,23 @@ namespace Shank
             Enums = new Dictionary<string, EnumNode>();
         }
 
+        private bool IsOverload(CallableNode fn1, CallableNode fn2) =>
+            fn1.ParameterVariables.Where((pv, i) => fn2.ParameterVariables[i].EqualsForOverload(pv))
+                .Any();
+
+        public void AddToFunctions(FunctionNode fn)
+        {
+            if (Functions2.TryAdd(fn.Name, []))
+            {
+                return;
+            }
+
+            if (Functions2[fn.Name].Any(existingFn => !IsOverload(existingFn, fn)))
+            {
+                throw new InvalidOperationException("Overload failed.");
+            }
+        }
+
         public void AddToGlobalVariables(List<VariableNode> variables)
         {
             variables.ForEach(v =>
@@ -1490,6 +1510,7 @@ namespace Shank
             });
         }
 
+        // TODO: This is no longer necessary.
         public Dictionary<string, ASTNode> GetImportedSafe()
         {
             var ret = new Dictionary<string, ASTNode>();
