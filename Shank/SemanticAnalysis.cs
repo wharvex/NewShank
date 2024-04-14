@@ -98,12 +98,7 @@ namespace Shank
                             targetDefinition
                         );
 
-                        CheckRange(
-                            an,
-                            variables,
-                            targetDefinition,
-                            parentModule
-                            );
+                        CheckRange(an, variables, targetDefinition, parentModule);
                     }
                     else
                     {
@@ -169,7 +164,12 @@ namespace Shank
             }
         }
 
-        private static void CheckRange(AssignmentNode an, Dictionary<string, VariableNode> variablesLookup, VariableNode targetDefinition, ModuleNode parentModule)
+        private static void CheckRange(
+            AssignmentNode an,
+            Dictionary<string, VariableNode> variablesLookup,
+            VariableNode targetDefinition,
+            ModuleNode parentModule
+        )
         {
             //if(an.target.ExtensionType is ASTNode.VrnExtType.RecordMember)
             //{
@@ -217,7 +217,7 @@ namespace Shank
             //    }
 
             //}
-            if(an.Expression is IntNode i)
+            if (an.Expression is IntNode i)
             {
                 try
                 {
@@ -225,14 +225,19 @@ namespace Shank
                     var to = (IntNode)variablesLookup[an.Target.Name].To;
                     if (from is null || to is null)
                         return;
-                    if (i.Value < from.Value|| i.Value > to.Value)
-                        throw new Exception($"The variable {an.Target.Name} can only be assigned values from {from.ToString()} to {to.ToString()}.");
-                } catch (InvalidCastException e)
+                    if (i.Value < from.Value || i.Value > to.Value)
+                        throw new Exception(
+                            $"The variable {an.Target.Name} can only be assigned values from {from.ToString()} to {to.ToString()}."
+                        );
+                }
+                catch (InvalidCastException e)
                 {
-                    throw new Exception("Integer types can only be assigned a range of two integers.");
+                    throw new Exception(
+                        "Integer types can only be assigned a range of two integers."
+                    );
                 }
             }
-            if(an.Expression is FloatNode f)
+            if (an.Expression is FloatNode f)
             {
                 try
                 {
@@ -241,14 +246,16 @@ namespace Shank
                     if (from is null || to is null)
                         return;
                     if (f.Value < from.Value || f.Value > to.Value)
-                        throw new Exception($"The variable {an.Target.Name} can only be assigned values from {from.ToString()} to {to.ToString()}.");
+                        throw new Exception(
+                            $"The variable {an.Target.Name} can only be assigned values from {from.ToString()} to {to.ToString()}."
+                        );
                 }
                 catch (InvalidCastException e)
                 {
                     throw new Exception("Real types can only be assigned a range of two reals.");
                 }
             }
-            if(an.Expression is StringNode s)
+            if (an.Expression is StringNode s)
             {
                 try
                 {
@@ -259,16 +266,24 @@ namespace Shank
                     if (from.Value != 0)
                         throw new Exception("Strings must have a range starting at 0.");
                     if (s.Value.Length < from.Value || s.Value.Length > to.Value)
-                        throw new Exception($"The variable {an.Target.Name} can only be a length from {from.ToString()} to {to.ToString()}.");
+                        throw new Exception(
+                            $"The variable {an.Target.Name} can only be a length from {from.ToString()} to {to.ToString()}."
+                        );
                 }
                 catch (InvalidCastException e)
                 {
-                    throw new Exception("String types can only be assigned a range of two integers.");
+                    throw new Exception(
+                        "String types can only be assigned a range of two integers."
+                    );
                 }
             }
         }
 
-        private static RecordMemberNode GetNestedRecordMemberNode(RecordNode rn, AssignmentNode an, ModuleNode parentModule)
+        private static RecordMemberNode GetNestedRecordMemberNode(
+            RecordNode rn,
+            AssignmentNode an,
+            ModuleNode parentModule
+        )
         {
             RecordMemberNode rmn = rn.GetFromMembersByNameSafe(an.Target.Name);
             while (rmn.UnknownType is not null)
@@ -380,13 +395,23 @@ namespace Shank
                         )
                         : targetDefinition.GetArrayTypeSafe(),
                 VariableNode.DataType.Record
-                    => GetRecordTypeRecursive(parentModule,
-                        (RecordNode)GetRecordsAndImports(parentModule.Records, parentModule.Imported)[targetDefinition.GetUnknownTypeSafe()],
-                        targetUsage),
+                    => GetRecordTypeRecursive(
+                        parentModule,
+                        (RecordNode)
+                            GetRecordsAndImports(parentModule.Records, parentModule.Imported)[
+                                targetDefinition.GetUnknownTypeSafe()
+                            ],
+                        targetUsage
+                    ),
                 VariableNode.DataType.Reference
-                    => GetRecordTypeRecursive(parentModule,
-                        (RecordNode)GetRecordsAndImports(parentModule.Records, parentModule.Imported)[targetDefinition.GetUnknownTypeSafe()]
-                        , targetUsage),
+                    => GetRecordTypeRecursive(
+                        parentModule,
+                        (RecordNode)
+                            GetRecordsAndImports(parentModule.Records, parentModule.Imported)[
+                                targetDefinition.GetUnknownTypeSafe()
+                            ],
+                        targetUsage
+                    ),
 
                 VariableNode.DataType.Unknown => throw new InvalidOperationException("hi"),
                 _ => targetDefinition.Type
@@ -410,18 +435,26 @@ namespace Shank
             ModuleNode parentModule,
             RecordNode targetDefinition,
             VariableReferenceNode targetUsage
-            )
+        )
         {
-            VariableNode.DataType vndt = targetDefinition.GetFromMembersByNameSafe(targetUsage.GetRecordMemberReferenceSafe().Name).Type;
+            VariableNode.DataType vndt = targetDefinition
+                .GetFromMembersByNameSafe(targetUsage.GetRecordMemberReferenceSafe().Name)
+                .Type;
             if (vndt != VariableNode.DataType.Record)
                 return vndt;
             else
-                return GetRecordTypeRecursive(parentModule, 
-                    (RecordNode)GetRecordsAndImports(parentModule.Records, parentModule.Imported)[
-                        targetDefinition.GetFromMembersByNameSafe(
-                        ((VariableReferenceNode)targetUsage.GetExtensionSafe()).Name)
-                        .GetUnknownTypeSafe()]
-                    , (VariableReferenceNode)targetUsage.GetExtensionSafe());
+                return GetRecordTypeRecursive(
+                    parentModule,
+                    (RecordNode)
+                        GetRecordsAndImports(parentModule.Records, parentModule.Imported)[
+                            targetDefinition
+                                .GetFromMembersByNameSafe(
+                                    ((VariableReferenceNode)targetUsage.GetExtensionSafe()).Name
+                                )
+                                .GetUnknownTypeSafe()
+                        ],
+                    (VariableReferenceNode)targetUsage.GetExtensionSafe()
+                );
         }
 
         public static Dictionary<string, ASTNode> GetRecordsAndImports(
@@ -790,8 +823,14 @@ namespace Shank
                     FunctionNode currentFunction = (FunctionNode)function.Value;
                     foreach (VariableNode variable in currentFunction.LocalVariables)
                     {
-                        var enumsAndImports = GetEnumsAndImports(currentModule.Value.getEnums(), currentModule.Value.Imported);
-                        var recordsAndImports = GetRecordsAndImports(currentModule.Value.Records, currentModule.Value.Imported);
+                        var enumsAndImports = GetEnumsAndImports(
+                            currentModule.Value.getEnums(),
+                            currentModule.Value.Imported
+                        );
+                        var recordsAndImports = GetRecordsAndImports(
+                            currentModule.Value.Records,
+                            currentModule.Value.Imported
+                        );
                         if (variable.Type == VariableNode.DataType.Unknown)
                         {
                             if (
@@ -809,17 +848,18 @@ namespace Shank
                             )
                             {
                                 variable.Type = VariableNode.DataType.Record;
-                                var allRecords = GetRecordsAndImports(currentModule.Value.Records, currentModule.Value.Imported);
+                                var allRecords = GetRecordsAndImports(
+                                    currentModule.Value.Records,
+                                    currentModule.Value.Imported
+                                );
                                 var targetRecord = (RecordNode)allRecords[variable.UnknownType];
                                 AssignNestedRecordTypes(targetRecord.Members, currentModule.Value);
-
                             }
                             else
                                 throw new Exception(
                                     "Could not find a definition for the unknown type "
                                         + variable.UnknownType
                                 );
-                           
                         }
                     }
                     foreach (var statement in currentFunction.Statements)
@@ -844,7 +884,10 @@ namespace Shank
             }
         }
 
-        public static void AssignNestedRecordTypes(List<StatementNode> statements, ModuleNode parentModule)
+        public static void AssignNestedRecordTypes(
+            List<StatementNode> statements,
+            ModuleNode parentModule
+        )
         {
             foreach (var statement in statements)
             {
@@ -852,12 +895,16 @@ namespace Shank
                 if (rmn.UnknownType == null)
                     continue;
 
-                if (parentModule.Records.ContainsKey(rmn.UnknownType)
-                    || (parentModule.Imported.ContainsKey(rmn.UnknownType)
-                    && parentModule.Imported[rmn.UnknownType] is RecordNode))
+                if (
+                    parentModule.Records.ContainsKey(rmn.UnknownType)
+                    || (
+                        parentModule.Imported.ContainsKey(rmn.UnknownType)
+                        && parentModule.Imported[rmn.UnknownType] is RecordNode
+                    )
+                )
                 {
                     rmn.Type = VariableNode.DataType.Record;
-                } 
+                }
                 else
                 {
                     rmn.Type = VariableNode.DataType.Enum;

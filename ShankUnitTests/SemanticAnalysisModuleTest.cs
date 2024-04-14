@@ -438,10 +438,12 @@ namespace ShankUnitTests
             initializeInterpreter(files);
             SemanticAnalysis.checkModules();
         }
+
         [TestMethod]
         public void simpleRangeAssignmentCheck()
         {
-            string[] file = {
+            string[] file =
+            {
                 "define start()\n",
                 "variables i : integer from 1 to 10\n",
                 "\ti := 4\n"
@@ -453,10 +455,14 @@ namespace ShankUnitTests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Exception), "The variable i can only be assigned values from 1 to 10.")]
+        [ExpectedException(
+            typeof(Exception),
+            "The variable i can only be assigned values from 1 to 10."
+        )]
         public void simpleRangeAssignmentCheckFail()
         {
-            string[] file = {
+            string[] file =
+            {
                 "define start()\n",
                 "variables i : integer from 1 to 10\n",
                 "\ti := 11\n"
@@ -470,7 +476,8 @@ namespace ShankUnitTests
         [TestMethod]
         public void simpleRangeStringAssignmentCheck()
         {
-            string[] file = {
+            string[] file =
+            {
                 "define start()\n",
                 "variables s : string from 0 to 3\n",
                 "\ts := \"hi!\"\n"
@@ -485,7 +492,8 @@ namespace ShankUnitTests
         [ExpectedException(typeof(Exception), "The variable s can only be a length from 0 to 10.")]
         public void simpleRangeStringAssignmentCheckFail()
         {
-            string[] file = {
+            string[] file =
+            {
                 "define start()\n",
                 "variables s : string from 0 to 3\n",
                 "\ts := \"helloworld!\"\n"

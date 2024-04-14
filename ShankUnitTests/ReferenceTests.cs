@@ -111,7 +111,7 @@ namespace ShankUnitTests
         public void builtInIsSet()
         {
             string[] file =
-{
+            {
                 "record rtest\n",
                 "\ti : integer\n",
                 "\ts : string\n",
