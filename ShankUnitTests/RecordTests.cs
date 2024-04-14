@@ -43,10 +43,6 @@ namespace ShankUnitTests
         }
 
         [TestMethod]
-<<<<<<< Updated upstream
-        //gets past semantic analysis but gets caught in the interpreter
-=======
->>>>>>> Stashed changes
         public void nestedRecord()
         {
             string[] file =

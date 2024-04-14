@@ -274,5 +274,21 @@ namespace ShankUnitTests
             initializeInterpreter(files);
             SemanticAnalysis.checkModules();
         }
+
+        [TestMethod]
+        public void constantEnum()
+        {
+            string[] file = {
+                "enum colors = [red, green, blue]\n",
+                "define start()\n",
+                "constants p = red\n",
+                "variables r : green\n",
+                "\tr := p"
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddLast(file);
+            initializeInterpreter(files);
+            SemanticAnalysis.checkModules();
+        }
     }
 }

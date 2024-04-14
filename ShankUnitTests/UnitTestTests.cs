@@ -520,5 +520,48 @@ namespace ShankUnitTests
             );
             Assert.IsTrue(Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).passed);
         }
+
+        [TestMethod]
+        public void testingOverloadedFunctions()
+        {
+            string[] args = { "", "-ut" };
+            string[] file =
+            {
+                "define add(a, b : integer; var c : integer)\n",
+                "\tc:=a + b\n",
+                "define add(a, b, c : integer; var d : integer)\n",
+                "\td := a + b + c\n",
+                "define start()\n",
+                "variables p : integer\n",
+                "\tadd 1, 2, var p\n",
+                "test add2 for add(a, b : integer; var c : integer)\n",
+                "variables j : integer\n",
+                "\tadd 1, 2, var j\n",
+                "\tassertIsEqual 3, j\n",
+                 "test add3 for add(a, b, c : integer; var d : integer)\n",
+                "variables j : integer\n",
+                "\tadd 1, 2,, 3 var j\n",
+                "\tassertIsEqual 6, j\n"
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddLast(file);
+            initializeInterpreter(files);
+            Program.Main(args);
+            Assert.AreEqual(2, Program.unitTestResults.Count);
+            Assert.AreEqual(1, Program.unitTestResults.ElementAt(0).Asserts.Count);
+            Assert.AreEqual(1, Program.unitTestResults.ElementAt(1).Asserts.Count);
+
+            Assert.AreEqual(
+                "add2",
+                Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).parentTestName
+            );
+            Assert.AreEqual(true, Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).passed);
+
+            Assert.AreEqual(
+                "add3",
+                Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).parentTestName
+            );
+            Assert.AreEqual(true, Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).passed);
+        }
     }
 }

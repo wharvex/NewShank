@@ -85,13 +85,9 @@ namespace Shank
                 {
                     if (variables.TryGetValue(an.Target.Name, out var targetDeclaration))
                     {
-<<<<<<< Updated upstream
-                        var targetType = GetTargetTypeForAssignmentCheck(
-                            targetDeclaration,
-=======
+
                         var targetTypeNull = GetTargetTypeForAssignmentCheck(
-                            targetDefinition,
->>>>>>> Stashed changes
+                            targetDeclaration,
                             an.Target,
                             parentModule
                         );
@@ -454,11 +450,12 @@ namespace Shank
             VariableReferenceNode targetUsage
         )
         {
-<<<<<<< Updated upstream
+            if (targetUsage.Extension is null)
+                return null;
             VariableNode.DataType vndt = targetDefinition
                 .GetFromMembersByNameSafe(targetUsage.GetRecordMemberReferenceSafe().Name)
                 .Type;
-            if (vndt != VariableNode.DataType.Record)
+            if (vndt != VariableNode.DataType.Record && vndt != VariableNode.DataType.Reference && vndt != VariableNode.DataType.Unknown)
                 return vndt;
             else
                 return GetRecordTypeRecursive(
@@ -471,22 +468,8 @@ namespace Shank
                                 )
                                 .GetUnknownTypeSafe()
                         ],
-                    (VariableReferenceNode)targetUsage.GetExtensionSafe()
-                );
-=======
-            if (targetUsage.Extension is null)
-                return null;
-            VariableNode.DataType vndt = targetDefinition.GetFromMembersByNameSafe(targetUsage.GetRecordMemberReferenceSafe().Name).Type;
-            if (vndt != VariableNode.DataType.Record && vndt != VariableNode.DataType.Reference && vndt != VariableNode.DataType.Unknown)
-                return vndt;
-            else
-                return GetRecordTypeRecursive(parentModule, 
-                    (RecordNode)GetRecordsAndImports(parentModule.Records, parentModule.Imported)[
-                        targetDefinition.GetFromMembersByNameSafe(
-                        ((VariableReferenceNode)targetUsage.GetExtensionSafe()).Name)
-                        .GetUnknownTypeSafe()]
-                    , (VariableReferenceNode)targetUsage.GetExtensionSafe()) ?? vndt;
->>>>>>> Stashed changes
+                    (VariableReferenceNode)targetUsage.GetExtensionSafe() 
+                ) ?? vndt ;
         }
         
         public static Dictionary<string, ASTNode> GetRecordsAndImports(

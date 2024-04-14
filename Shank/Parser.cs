@@ -402,15 +402,11 @@ public class Parser
 
         var typeToken =
             MatchAndRemoveMultiple(_shankTokenTypesPlusIdentifier)
-<<<<<<< Updated upstream
-            ?? throw new SyntaxErrorException("Expected a type", Peek(0));
-=======
             ?? throw new SyntaxErrorException("Expected a name", Peek(0));
         Token? referenceName = null;
         if (typeToken.Type is Token.TokenType.RefersTo)
             referenceName = MatchAndRemove(Token.TokenType.Identifier) 
                 ?? throw new SyntaxErrorException("Expected a record name after refersTo token.", Peek(0));
->>>>>>> Stashed changes
 
         RequiresEndOfLine();
 
