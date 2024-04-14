@@ -1,0 +1,15 @@
+﻿define addTwo(a : integer; b : integer; var c : integer) 
+    c := a + b
+
+define start()
+variables x : integer
+    write "hi"
+
+    (* 
+       This fails in the Interpreter because in ProcessFunctionCall, in the switch statement that
+       handles a ParameterNode whose value is stored in Constant, there is simply not a case for
+       MathOpNode. It passes in Parser and SA.
+    *)
+    addTwo 1, (2+4), var x 
+
+    write x

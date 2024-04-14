@@ -63,7 +63,7 @@ namespace Shank
     {
         public string Name { get; set; }
         public int LineNum { get; set; }
-        public List<ParameterNode> Parameters { get; set; } = [];
+        public List<ParameterNode> Parameters { get; } = [];
         public string OverloadNameExt { get; set; } = "";
 
         public FunctionCallNode(string name)
@@ -128,6 +128,9 @@ namespace Shank
         public VariableReferenceNode GetVariableSafe() =>
             Variable ?? throw new InvalidOperationException("Expected Variable to not be null");
 
+        public ASTNode GetConstantSafe() =>
+            Constant ?? throw new InvalidOperationException("Expected Constant to not be null");
+
         public string ToStringForOverload(
             Dictionary<string, ASTNode> imports,
             Dictionary<string, RecordNode> records,
@@ -154,6 +157,63 @@ namespace Shank
                     .ToString()
                     .ToUpper()
             );
+
+        public bool EqualsForOverload(
+            VariableNode givenVariable,
+            Dictionary<string, VariableNode> variablesInScope
+        )
+        {
+            // TODO: Need to handle the case where this ParameterNode's value is stored in Constant.
+            return VarStatusEquals(givenVariable)
+                && VariableTypeEquals(givenVariable, variablesInScope);
+        }
+
+        public bool VarStatusEquals(VariableNode givenVariable)
+        {
+            return IsVariable != givenVariable.IsConstant;
+        }
+
+        public bool VariableTypeEquals(
+            VariableNode givenVariable,
+            Dictionary<string, VariableNode> variablesInScope
+        )
+        {
+            // Check if the types are unequal.
+            if (givenVariable.Type != GetVariableType(variablesInScope))
+            {
+                return false;
+            }
+
+            // The types are equal. If they're not Unknown, no further action needed.
+            if (givenVariable.Type != VariableNode.DataType.Unknown)
+            {
+                return true;
+            }
+
+            // The types are equal and Unknown. Check their UnknownTypes (string comparison).
+            return givenVariable
+                .GetUnknownTypeSafe()
+                .Equals(GetVariableDeclarationSafe(variablesInScope).GetUnknownTypeSafe());
+        }
+
+        public VariableNode GetVariableDeclarationSafe(
+            Dictionary<string, VariableNode> variablesInScope
+        )
+        {
+            if (variablesInScope.TryGetValue(GetVariableSafe().Name, out var varDec))
+            {
+                return varDec;
+            }
+
+            throw new InvalidOperationException("Could not find given variable in scope");
+        }
+
+        public VariableNode.DataType GetVariableType(
+            Dictionary<string, VariableNode> variablesInScope
+        )
+        {
+            return GetVariableDeclarationSafe(variablesInScope).Type;
+        }
 
         public override string ToString()
         {
@@ -282,6 +342,11 @@ namespace Shank
 
         public delegate void BuiltInCall(List<InterpreterDataType> parameters);
         public BuiltInCall? Execute;
+
+        public bool IsValidOverloadOf(CallableNode cn) =>
+            ParameterVariables
+                .Where((pv, i) => !cn.ParameterVariables[i].EqualsForOverload(pv))
+                .Any();
     }
 
     public class BuiltInFunctionNode : CallableNode
@@ -1487,21 +1552,30 @@ namespace Shank
             Enums = new Dictionary<string, EnumNode>();
         }
 
-        private bool IsOverload(CallableNode fn1, CallableNode fn2) =>
-            fn1.ParameterVariables.Where((pv, i) => fn2.ParameterVariables[i].EqualsForOverload(pv))
-                .Any();
-
-        public void AddToFunctions(FunctionNode fn)
+        public void AddToFunctions(CallableNode fn)
         {
-            if (Functions2.TryAdd(fn.Name, []))
+            // If there is no name collision (i.e. the given function is not an overload),
+            // then it can be added with no further action needed.
+            if (Functions2.TryAdd(fn.Name, [fn]))
             {
                 return;
             }
 
-            if (Functions2[fn.Name].Any(existingFn => !IsOverload(existingFn, fn)))
+            // If there are any existing functions with the given function's name for which the
+            // given function CANNOT be an overload (because their signatures are too similar),
+            // then throw an exception.
+            if (Functions2[fn.Name].Any(existingFn => !fn.IsValidOverloadOf(existingFn)))
             {
                 throw new InvalidOperationException("Overload failed.");
             }
+
+            // The given function has been confirmed as an overload and as valid to add.
+            Functions2[fn.Name].Add(fn);
+        }
+
+        public FunctionNode GetFromFunctions(FunctionCallNode fcn)
+        {
+            return new FunctionNode("hi");
         }
 
         public void AddToGlobalVariables(List<VariableNode> variables)
