@@ -95,7 +95,7 @@ namespace Shank
                             targetDeclaration
                         );
 
-                        CheckRange(an, variables, targetDefinition, parentModule);
+                        CheckRange(an, variables, targetDeclaration, parentModule);
                     }
                     else
                     {
