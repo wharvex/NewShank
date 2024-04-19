@@ -78,6 +78,9 @@ namespace Shank
             // When we encounter a variable x NOT as the target of an assignment, then we look x up
             // in variablesSet, and if its Value is false, then we throw an exception.
 
+            // TODO: How to lookup/store the name of a "complex" VRN in variablesSet, i.e. one with
+            // an Extension?
+
             foreach (var s in statements)
             {
                 bool foundFunction = false;
@@ -85,6 +88,11 @@ namespace Shank
                 {
                     if (variables.TryGetValue(an.Target.Name, out var targetDeclaration))
                     {
+                        OutputHelper.DebugPrintTxt(
+                            string.Join(", ", an.Target.GetNestedNamesAsList()),
+                            3
+                        );
+
                         var targetTypeNull = GetTargetTypeForAssignmentCheck(
                             targetDeclaration,
                             an.Target,

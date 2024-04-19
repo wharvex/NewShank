@@ -1,5 +1,5 @@
 record anythingHolder generic T
-    T data
+    data : T
 
 define start()
 variables myAnythingHolder : anythingHolder integer

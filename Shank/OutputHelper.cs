@@ -15,7 +15,7 @@ public class OutputHelper
 {
     private static readonly JsonSerializerOptions Options = new() { WriteIndented = true };
 
-    public static void DebugPrint(string output, int i)
+    public static void DebugPrintJson(string output, int i)
     {
         // If you're using windows, the value of docPath should be:
         // C:\Users\[you]\AppData\Roaming
@@ -24,6 +24,20 @@ public class OutputHelper
         var docPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         using var outputFile = new StreamWriter(
             Path.Combine(docPath, $"ShankDebugOutput{i}.json"),
+            true
+        );
+        outputFile.WriteLine(output);
+    }
+
+    public static void DebugPrintTxt(string output, int i)
+    {
+        // If you're using windows, the value of docPath should be:
+        // C:\Users\[you]\AppData\Roaming
+        // Which should also be the output of the following command in PowerShell:
+        // $env:appdata
+        var docPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        using var outputFile = new StreamWriter(
+            Path.Combine(docPath, $"ShankDebugOutput{i}.txt"),
             true
         );
         outputFile.WriteLine(output);

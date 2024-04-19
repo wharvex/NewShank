@@ -57,7 +57,7 @@ namespace Shank
                 var l = new Lexer();
                 tokens.AddRange(l.Lex(lines));
 
-                OutputHelper.DebugPrint(OutputHelper.GetDebugJsonForTokenList(tokens), 1);
+                OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForTokenList(tokens), 1);
                 var p = new Parser(tokens);
 
                 var brokeOutOfWhile = false;
@@ -119,11 +119,11 @@ namespace Shank
                     {
                         Interpreter.setStartModule();
                         BuiltInFunctions.Register(currentModule.getFunctions());
-                        SemanticAnalysis.checkModules();
-                        OutputHelper.DebugPrint(
+                        OutputHelper.DebugPrintJson(
                             OutputHelper.GetDebugJsonForModuleNode(currentModule),
                             2
                         );
+                        SemanticAnalysis.checkModules();
                         var interpreterErrorOccurred = false;
                         try
                         {
