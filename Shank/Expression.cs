@@ -161,6 +161,8 @@ namespace Shank
         public ASTNode GetConstantSafe() =>
             Constant ?? throw new InvalidOperationException("Expected Constant to not be null");
 
+        // Original (bad) approach for implementing overloads. See 'EqualsWrtTypeAndVar' for
+        // revised approach.
         public string ToStringForOverload(
             Dictionary<string, ASTNode> imports,
             Dictionary<string, RecordNode> records,
@@ -1383,18 +1385,6 @@ namespace Shank
 
         public VrnExtType ExtensionType { get; set; }
 
-        public bool IsSet { get; set; }
-
-        public void RequiresSet()
-        {
-            if (!IsSet)
-            {
-                throw new InvalidOperationException(
-                    "Expected the variable with name " + Name + " to be set."
-                );
-            }
-        }
-
         public ASTNode GetExtensionSafe() =>
             Extension ?? throw new InvalidOperationException("Expected Extension to not be null.");
 
@@ -1571,7 +1561,6 @@ namespace Shank
         {
             Target = target;
             Expression = expression;
-            target.IsSet = true;
         }
 
         /// <summary>

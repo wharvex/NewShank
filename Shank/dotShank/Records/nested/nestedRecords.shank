@@ -1,9 +1,14 @@
-record Sky
-    Cloud cloud
-
-record Cloud
-    boolean isRainCloud
+record node
+    data : integer
+    next : refersTo node
 
 define start()
-variables sky : Sky
-    sky.cloud.isRainCloud := true
+variables head, n : refersTo node
+    allocateMemory var head
+    allocateMemory var n
+    head.data := 5
+    head.next := n
+    head.next.data := 3
+    write head.data, head.next.data
+    freeMemory var n
+    freeMemory var head
