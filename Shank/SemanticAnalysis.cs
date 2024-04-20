@@ -135,18 +135,23 @@ namespace Shank
                     fn.OverloadNameExt = overloadNameExt;
 
                     if (parentModule.getFunctions().ContainsKey(fn.Name))
+                    {
                         foundFunction = true;
+                        if (parentModule.getFunctions()[fn.Name] is not BuiltInFunctionNode)
+                            CheckParameterRanges(fn.Parameters, variables, (FunctionNode)parentModule.getFunctions()[fn.Name]);
+                    }
                     else
                     {
                         foreach (
-                            KeyValuePair<
-                                string,
-                                LinkedList<string>
-                            > import in parentModule.getImportNames()
+                            var import in parentModule.getImportNames()
                         )
                         {
                             if (Modules[import.Key].getExportNames().Contains(fn.Name))
+                            {
                                 foundFunction = true;
+                                CheckParameterRanges(fn.Parameters, variables, (FunctionNode)parentModule.Imported[fn.Name]);
+                            }
+
                         }
                     }
                     if (
@@ -178,6 +183,54 @@ namespace Shank
             }
         }
 
+        private static void CheckParameterRanges(List<ParameterNode> param, Dictionary<string, VariableNode> variables, FunctionNode fn)
+        {
+            var sourceParams = fn.ParameterVariables;
+            for(int i = 0; i < param.Count; i++)
+            {
+                if (param[i].Variable is not null)
+                {
+                    var vrn = param[i].Variable;
+                    var from = variables[vrn.Name].From;
+                    var to = variables[vrn.Name].To;
+                    var targetFrom = sourceParams[i].From;
+                    var targetTo = sourceParams[i].To;
+                    if (from is null || targetFrom is null)
+                        continue;
+                    if(from is IntNode)
+                    {
+                        if (((IntNode)from).Value < ((IntNode)targetFrom).Value || ((IntNode)to).Value > ((IntNode)targetTo).Value)
+                            throw new Exception($"Mismatched range in a call to {fn.Name}");
+                    }
+                    else
+                    {
+                        if (((FloatNode)from).Value < ((FloatNode)targetFrom).Value || ((FloatNode)to).Value < ((FloatNode)targetFrom).Value)
+                            throw new Exception($"Mismatched range in a call to {fn.Name}");
+                    }
+                }
+                else
+                {
+                    var actualFrom = GetMaxRange(param[i].Constant, variables);
+                    var actualTo = GetMinRange(param[i].Constant, variables);
+                    var targetFrom = sourceParams[i].From;
+                    var targetTo = sourceParams[i].To;
+                    if (targetFrom is null)
+                        continue;
+
+                    if (targetFrom is IntNode)
+                    {
+                        if (((IntNode)targetFrom).Value > actualFrom || ((IntNode)targetTo).Value < actualTo)
+                            throw new Exception($"Mismatched range in a call to {fn.Name}");
+                    }
+                    else
+                    {
+                        if (((FloatNode)targetFrom).Value < actualFrom || ((FloatNode)targetTo).Value < actualTo)
+                            throw new Exception($"Mismatched range in a call to {fn.Name}");
+                    }
+                }
+                
+            }
+        }
         private static void CheckRange(
             AssignmentNode an,
             Dictionary<string, VariableNode> variablesLookup,
@@ -185,90 +238,7 @@ namespace Shank
             ModuleNode parentModule
         )
         {
-            //if(an.target.ExtensionType is ASTNode.VrnExtType.RecordMember)
-            //{
-            //    //arrays should be handled down in int or float
-            //    var recordMemberVRN = (VariableReferenceNode)an.target.Extension;
-            //    var dict = GetRecordsAndImports(parentModule.Records, parentModule.GetImportedSafe());
-            //    var recordMember = ((RecordNode)dict[an.target.Name]).GetFromMembersByNameSafe(recordMemberVRN.Name);
-            //    if (recordMember.Type is VariableNode.DataType.Integer)
-            //    {
-            //        var from = (IntNode)recordMember.From;
-            //        var to = (IntNode)recordMember.To;
-            //        if (from is null || to is null)
-            //            return;
-            //        var rhs = (IntNode)an.expression;
-            //        try
-            //        {
-            //            if (rhs.Value < from.Value || rhs.Value > to.Value)
-            //            {
-            //                throw new Exception($"The variable {an.target.Name} can only be assigned values from {from.ToString()} to {to.ToString()}.");
-            //            }
-            //        }
-            //        catch (InvalidCastException e)
-            //        {
-            //            throw new Exception("Integer types can only be assigned a range of two integers.");
-            //        }
-            //    }
-            //    if (recordMember.Type is VariableNode.DataType.Real)
-            //    {
-            //        var from = (IntNode)recordMember.From;
-            //        var to = (IntNode)recordMember.To;
-            //        if (from is null || to is null)
-            //            return;
-            //        var rhs = (IntNode)an.expression;
-            //        try
-            //        {
-            //            if (rhs.Value < from.Value || rhs.Value > to.Value)
-            //            {
-            //                throw new Exception($"The variable {an.target.Name} can only be assigned values from {from.ToString()} to {to.ToString()}.");
-            //            }
-            //        }
-            //        catch (InvalidCastException e)
-            //        {
-            //            throw new Exception("Integer types can only be assigned a range of two integers.");
-            //        }
-            //    }
 
-            //}
-            if (an.Expression is IntNode i)
-            {
-                try
-                {
-                    var from = (IntNode)variablesLookup[an.Target.Name].From;
-                    var to = (IntNode)variablesLookup[an.Target.Name].To;
-                    if (from is null || to is null)
-                        return;
-                    if (i.Value < from.Value || i.Value > to.Value)
-                        throw new Exception(
-                            $"The variable {an.Target.Name} can only be assigned values from {from.ToString()} to {to.ToString()}."
-                        );
-                }
-                catch (InvalidCastException e)
-                {
-                    throw new Exception(
-                        "Integer types can only be assigned a range of two integers."
-                    );
-                }
-            }
-            if (an.Expression is FloatNode f)
-            {
-                try
-                {
-                    var from = (FloatNode)variablesLookup[an.Target.Name].From;
-                    var to = (FloatNode)variablesLookup[an.Target.Name].To;
-                    if (from is null || to is null)
-                        return;
-                    if (f.Value < from.Value || f.Value > to.Value)
-                        throw new Exception(
-                            $"The variable {an.Target.Name} can only be assigned values from {from.ToString()} to {to.ToString()}."
-                        );
-                }
-                catch (InvalidCastException e)
-                {
-                    throw new Exception("Real types can only be assigned a range of two reals.");
-                }
-            }
             if (an.Expression is StringNode s)
             {
                 try
@@ -291,6 +261,115 @@ namespace Shank
                     );
                 }
             }
+            else
+            {
+                try
+                {
+                    if (variablesLookup[an.Target.Name].Type is VariableNode.DataType.Real)
+                    {
+                        var from = (FloatNode)variablesLookup[an.Target.Name].From;
+                        var to = (FloatNode)variablesLookup[an.Target.Name].To;
+                        if (from is null || to is null)
+                            return;
+                        float upper = GetMaxRange(an.Expression, variablesLookup);
+                        float lower = GetMinRange(an.Expression, variablesLookup);
+                        if (lower < from.Value || upper > to.Value)
+                            throw new Exception(
+                                $"The variable {an.Target.Name} can only be assigned expressions that won't overstep its range."
+                            );
+
+                    }
+                    else
+                    {
+                        var from = (IntNode)variablesLookup[an.Target.Name].From;
+                        var to = (IntNode)variablesLookup[an.Target.Name].To;
+                        if (from is null || to is null)
+                            return;
+                        int upper = (int)GetMaxRange(an.Expression, variablesLookup);
+                        int lower = (int)GetMinRange(an.Expression, variablesLookup);
+                        if (lower < from.Value || upper > to.Value)
+                            throw new Exception(
+                                $"The variable {an.Target.Name} can only be assigned expressions that wont overstep its range."
+                            );
+                    }
+                }
+
+                catch (InvalidCastException e)
+                {
+                    throw new Exception(
+                        "Incorrect type of range."
+                    );
+                }
+            }
+        }
+
+        private static float GetMaxRange(ASTNode node, Dictionary<string, VariableNode> variables)
+        {
+            if(node is MathOpNode mon)
+            {
+                switch (mon.Op)
+                {
+                    case ASTNode.MathOpType.plus:
+                        return GetMaxRange(mon.Left, variables) + GetMaxRange(mon.Right, variables);
+                    case ASTNode.MathOpType.minus:
+                        return GetMaxRange(mon.Left, variables) - GetMinRange(mon.Right, variables);
+                    case ASTNode.MathOpType.times:
+                        return GetMaxRange(mon.Left, variables) * GetMaxRange(mon.Right, variables);
+                    case ASTNode.MathOpType.divide:
+                        return GetMinRange(mon.Left, variables) / GetMaxRange(mon.Right, variables);
+                    case ASTNode.MathOpType.modulo:
+                        return GetMaxRange(mon.Right, variables) - 1;
+                }
+            }
+            if (node is IntNode i)
+                return i.Value;
+            if (node is FloatNode f)
+                return f.Value;
+            if (node is VariableReferenceNode vrn)
+            {
+                if (variables[vrn.Name].To is null || variables[vrn.Name].From is null)
+                    throw new Exception("Ranged variables can only be assigned variables with a range.");
+                if (variables[vrn.Name].Type is VariableNode.DataType.Integer)
+                    return ((IntNode)variables[vrn.Name].To).Value;
+                else
+                    return ((FloatNode)variables[vrn.Name].To).Value;
+            }
+            throw new Exception("Unrecognized node type in math expression while checking range");
+           
+        }
+
+        private static float GetMinRange(ASTNode node, Dictionary<string, VariableNode> variables)
+        {
+            if (node is MathOpNode mon)
+            {
+                switch (mon.Op)
+                {
+                    case ASTNode.MathOpType.plus:
+                        return GetMinRange(mon.Left, variables) + GetMinRange(mon.Right, variables);
+                    case ASTNode.MathOpType.minus:
+                        return GetMinRange(mon.Left, variables) - GetMaxRange(mon.Right, variables);
+                    case ASTNode.MathOpType.times:
+                        return GetMinRange(mon.Left, variables) * GetMinRange(mon.Right, variables);
+                    case ASTNode.MathOpType.divide:
+                        return GetMaxRange(mon.Left, variables) / GetMinRange(mon.Right, variables);
+                    case ASTNode.MathOpType.modulo:
+                        return 0;
+                }
+            }
+            if (node is IntNode i)
+                return i.Value;
+            if (node is FloatNode f)
+                return f.Value;
+            if (node is VariableReferenceNode vrn)
+            {
+                if (variables[vrn.Name].To is null || variables[vrn.Name].From is null)
+                    throw new Exception("Ranged variables can only be assigned variables with a range.");
+                if (variables[vrn.Name].Type is VariableNode.DataType.Integer)
+                    return ((IntNode)variables[vrn.Name].From).Value;
+                else
+                    return ((FloatNode)variables[vrn.Name].From).Value;
+            }
+            throw new Exception("Unrecognized node type in math expression while checking range");
         }
 
         private static RecordMemberNode GetNestedRecordMemberNode(
@@ -333,7 +412,14 @@ namespace Shank
                     && !variables.ContainsKey(((VariableReferenceNode)ben.Right).Name)
                 )
                     throw new Exception("Cannot compare two enum elements.");
-                var variable = variables[vrn.Name];
+                VariableNode variable;
+
+                //checking whether the left or right side of the equation is the variable
+                //this allows for the value of an enum to be on either side
+                if (variables.ContainsKey(vrn.Name))
+                    variable = variables[vrn.Name];
+                else
+                    variable = variables[((VariableReferenceNode)ben.Right).Name];
                 switch (variable.Type)
                 {
                     case VariableNode.DataType.Integer:
@@ -598,6 +684,16 @@ namespace Shank
                         EnumNode? enumDefinition = null;
                         foreach (var e in parentModule.getEnums())
                         {
+                            foreach (var v in variables)
+                            {
+                                if (v.Value.InitialValue is null)
+                                    continue;
+                                if (v.Value.IsConstant && e.Value.EnumElements.Contains(v.Value.InitialValue.ToString()))
+                                {
+                                    enumDefinition = e.Value;
+                                    break;
+                                }
+                            }
                             if (e.Value.EnumElements.Contains(vrn.Name))
                             {
                                 enumDefinition = e.Value;
@@ -615,11 +711,13 @@ namespace Shank
                                 break;
                             }
                         }
+
                         if (enumDefinition == null)
                             throw new Exception(
                                 $"Could not find the definition for an enum containing the element {vrn.Name}."
                             );
-                        if (enumDefinition.Type != target.UnknownType)
+                        if (enumDefinition.Type != target.UnknownType &&
+                            (target.Type != VariableNode.DataType.Record && target.Type != VariableNode.DataType.Reference ))
                             throw new Exception(
                                 $"Cannot assign an enum of type {enumDefinition.Type} to the enum element {target.UnknownType}."
                             );

@@ -503,5 +503,217 @@ namespace ShankUnitTests
             initializeInterpreter(files);
             SemanticAnalysis.checkModules();
         }
+
+        [TestMethod]
+        public void RangeIntAssignedSingleVariable()
+        {
+            string[] file = {
+                "define start()\n",
+                "variables i : integer from 0 to 7\n",
+                "variables j : integer from 1 to 6\n",
+                "\ti := j\n"
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddLast(file);
+            initializeInterpreter(files);
+            SemanticAnalysis.checkModules();
+        }
+
+        [TestMethod]
+        public void RangeIntAssignedVariableExpression()
+        {
+            string[] file = {
+                "define start()\n",
+                "variables i : integer from 0 to 10\n",
+                "variables j : integer from 1 to 4\n",
+                "variables k : integer from 0 to 2",
+                "\ti := j + k\n"
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddLast(file);
+            initializeInterpreter(files);
+            SemanticAnalysis.checkModules();
+        }
+
+        [TestMethod]
+        public void RangeIntFunctionParams()
+        {
+            string[] file = {
+                "define start()\n",
+                "variables i : integer from 0 to 10\n",
+                "\tsmallAdd 1, 2, var i\n",
+                "define smallAdd(a, b : integer from 0 to 5; var c : integer from 0 to 10)\n",
+                "\tc := a + b\n"
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddLast(file);
+            initializeInterpreter(files);
+            SemanticAnalysis.checkModules();
+        }
+
+        [TestMethod]
+        public void RangeIntAssignedVariableAndInt()
+        {
+            string[] file = {
+                "define start()\n",
+                "variables i : integer from 0 to 7\n",
+                "variables j : integer from 1 to 4\n",
+                "\ti := j + 2\n"
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddLast(file);
+            initializeInterpreter(files);
+            SemanticAnalysis.checkModules();
+        }
+        [TestMethod]
+        [ExpectedException(typeof(Exception))]
+        public void RangeIntAssignedSingleVariableFail()
+        {
+            string[] file = {
+                "define start()\n",
+                "variables i : integer from 0 to 7\n",
+                "variables j : integer from 1 to 8\n",
+                "\ti := j\n"
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddLast(file);
+            initializeInterpreter(files);
+            SemanticAnalysis.checkModules();
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(Exception))]
+
+        public void RangeIntAssignedVariableExpressionFail()
+        {
+            string[] file = {
+                "define start()\n",
+                "variables i : integer from 0 to 10\n",
+                "variables j : integer from 1 to 4\n",
+                "variables k : integer from 0 to 7\n",
+                "\ti := j + k\n"
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddLast(file);
+            initializeInterpreter(files);
+            SemanticAnalysis.checkModules();
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(Exception))]
+        public void RangeIntFunctionParamsFail()
+        {
+            string[] file = {
+                "define start()\n",
+                "variables i : integer from 0 to 11\n",
+                "\tsmallAdd 6, 2, var i\n",
+                "define smallAdd(a, b : integer from 0 to 5; var c : integer from 0 to 10)\n",
+                "\tc := a + b\n"
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddLast(file);
+            initializeInterpreter(files);
+            SemanticAnalysis.checkModules();
+        }
+
+        [TestMethod]
+        public void RangeIntFunctionParamPass()
+        {
+            string[] file = {
+                "define start()\n",
+                "variables i : integer from 0 to 10\n",
+                "\tsmallAdd 1, 2, var i\n",
+                "define smallAdd(a, b : integer from 0 to 5; var c : integer from 0 to 10)\n",
+                "\tc := a + b\n"
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddLast(file);
+            initializeInterpreter(files);
+            SemanticAnalysis.checkModules();
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(Exception))]
+        public void RangeStringFunctionParamFail()
+        {
+            string[] file = {
+                "define start()\n",
+                "variables s : string from 0 to 20\n",
+                "\ts := \"panda\"",
+                "\twriteStr s\n",
+                "define writeStr(s : string from 0 to 15)\n",
+                "\twrite s\n"
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddLast(file);
+            initializeInterpreter(files);
+            SemanticAnalysis.checkModules();
+        }
+        [TestMethod]
+        public void RangeStringFunctionParamPass()
+        {
+            string[] file = {
+                "define start()\n",
+                "variables s : string from 0 to 8\n",
+                "\ts := \"panda\"",
+                "\twriteStr s\n",
+                "define writeStr(s : string from 0 to 15)\n",
+                "\twrite s\n"
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddLast(file);
+            initializeInterpreter(files);
+            SemanticAnalysis.checkModules();
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(Exception))]
+        public void RangeIntAssignedVariableAndIntFail()
+        {
+            string[] file = {
+                "define start()\n",
+                "variables i : integer from 0 to 7\n",
+                "variables j : integer from 1 to 4\n",
+                "\ti := j + 7\n"
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddLast(file);
+            initializeInterpreter(files);
+            SemanticAnalysis.checkModules();
+        }
+
+        [TestMethod]
+        public void RangeVariableAssignedBigExpression()
+        {
+            string[] file = {
+                "define start()\n",
+                "variables i : integer from 0 to 20\n",
+                "variables j : integer from 1 to 4\n",
+                "variables k : integer from 3 to 5\n",
+                "\tj := 2\n",
+                "\tk := 3\n",
+                "\ti := j + 7 / k * 2\n"
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddLast(file);
+            initializeInterpreter(files);
+            SemanticAnalysis.checkModules();
+        }
+
+        [TestMethod]
+        public void RangeVariableModuleInt()
+        {
+            string[] file = {
+                "define start()\n",
+                "variables i : integer from 0 to 7\n",
+                "variables j : integer from 1 to 4\n",
+                "\ti :=  1293891 mod j\n"
+            };
+            LinkedList<string[]> files = new LinkedList<string[]>();
+            files.AddLast(file);
+            initializeInterpreter(files);
+            SemanticAnalysis.checkModules();
+        }
+
     }
 }

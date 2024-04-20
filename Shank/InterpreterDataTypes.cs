@@ -131,8 +131,13 @@ public class EnumDataType : InterpreterDataType
         Value = edt.Value;
     }
 
+    public EnumDataType(string value)
+    {
+        Value = value;
+    }
+
     public string Value { set; get; }
-    public EnumNode Type { get; set; }
+    public EnumNode? Type { get; set; }
 
     public override void FromString(string input)
     {
@@ -308,6 +313,11 @@ public class RecordDataType : InterpreterDataType
     public RecordDataType GetValueRecord(string key)
     {
         return (RecordDataType)Value[key];
+    }
+
+    public EnumDataType GetValueEnum(string key)
+    {
+        return (EnumDataType)Value[key];
     }
 
     public override string ToString()

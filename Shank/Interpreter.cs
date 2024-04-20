@@ -290,7 +290,7 @@ public class Interpreter
                 VariableNode.DataType.Character => ResolveChar(an.Expression, variables),
                 VariableNode.DataType.Record => ResolveRecord(an.Expression, variables),
                 VariableNode.DataType.Reference => ResolveReference(an.Expression, variables),
-                //VariableNode.DataType.Enum => ResolveEnum()
+                VariableNode.DataType.Enum => ResolveEnum(an.Expression, variables),
 
                 _
                     => throw new NotImplementedException(
@@ -372,7 +372,19 @@ public class Interpreter
                 return variable.Name;
             }
         }
-        throw new Exception("Enums must be asigned Enums");
+        throw new Exception("Enums must be assigned Enums");
+    }
+
+    private static EnumDataType ResolveEnum(
+        ASTNode node,
+        Dictionary<string, InterpreterDataType> variables
+        )
+    {
+        if(node is VariableReferenceNode vrn)
+        {
+            return new EnumDataType(vrn.Name);
+        }
+        throw new Exception("Enums must be assigned Enums");
     }
 
     private static void ProcessFunctionCall(
@@ -656,6 +668,7 @@ public class Interpreter
                             pn.Variable
                                 ?? throw new Exception("Could not find extension for nested record")
                         ),
+                    VariableNode.DataType.Enum => rdt.GetValueEnum(rmVrn.Name),
                     _
                         => throw new NotImplementedException(
                             "It has not been implemented yet to pass a complex Record member"
@@ -758,6 +771,22 @@ public class Interpreter
             case VariableNode.DataType.Enum:
                 if (parentModule.getEnums().ContainsKey(vn.GetUnknownTypeSafe()))
                     return new EnumDataType(parentModule.getEnums()[vn.GetUnknownTypeSafe()]);
+                else if (vn.IsConstant && !parentModule.Imported.ContainsKey(vn.GetUnknownTypeSafe()))
+                {
+                    EnumNode? enmNode = null;
+                    string? s = null;
+                    foreach(var enm in parentModule.getEnums())
+                    {
+                        if (enm.Value.EnumElements.Contains(vn.GetUnknownTypeSafe()))
+                        {
+                            s = vn.GetUnknownTypeSafe();
+                            enmNode = enm.Value;
+                            break;
+                        }
+                    }
+                    return new EnumDataType(enmNode ?? throw new Exception("Could not find a constant enums base declaration."),
+                                            s ?? throw new Exception("Could not find constant enum assignment."));
+                }
                 else if (!((EnumNode)parentModule.Imported[vn.GetUnknownTypeSafe()]).IsPublic)
                     throw new Exception(
                         $"Cannot create an enum of type {vn.GetUnknownTypeSafe()} as it was never exported"
@@ -866,6 +895,18 @@ public class Interpreter
                             ASTNode.BooleanExpressionOpType.ne
                                 => variables[left.Name].ToString()
                                     != variables[right.Name].ToString(),
+                            ASTNode.BooleanExpressionOpType.lt
+                                => EnumLessThan((EnumDataType)variables[left.Name], (EnumDataType)variables[right.Name]),
+                            ASTNode.BooleanExpressionOpType.gt
+                                => !EnumLessThan((EnumDataType)variables[left.Name], (EnumDataType)variables[right.Name]),
+                            ASTNode.BooleanExpressionOpType.le
+                                => EnumLessThan((EnumDataType)variables[left.Name], (EnumDataType)variables[right.Name]) 
+                                    || variables[left.Name].ToString()
+                                        == variables[right.Name].ToString(),
+                            ASTNode.BooleanExpressionOpType.ge
+                                => !EnumLessThan((EnumDataType)variables[left.Name], (EnumDataType)variables[right.Name])
+                                    || variables[left.Name].ToString()
+                                    == variables[right.Name].ToString(),
                             _ => throw new Exception("Enums can only be compared with <> and =.")
                         };
                     }
@@ -877,8 +918,18 @@ public class Interpreter
                                 => left.Name == variables[right.Name].ToString(),
                             ASTNode.BooleanExpressionOpType.ne
                                 => left.Name != variables[right.Name].ToString(),
+                            ASTNode.BooleanExpressionOpType.lt
+                                => EnumLessThan((EnumDataType)variables[right.Name], left.Name),
+                            ASTNode.BooleanExpressionOpType.gt
+                                => !EnumLessThan((EnumDataType)variables[right.Name], left.Name),
+                            ASTNode.BooleanExpressionOpType.le
+                                => EnumLessThan((EnumDataType)variables[right.Name], left.Name)
+                                || left.Name == variables[right.Name].ToString(),
+                            ASTNode.BooleanExpressionOpType.ge
+                                => !EnumLessThan((EnumDataType)variables[right.Name], left.Name)
+                                || left.Name == variables[right.Name].ToString(),
                             _ => throw new Exception("Enums can only be compared with <> and =.")
-                        };
+                        } ;
                     }
                     else if (variables.ContainsKey(left.Name) && !variables.ContainsKey(right.Name))
                     {
@@ -888,6 +939,16 @@ public class Interpreter
                                 => variables[left.Name].ToString() == right.Name,
                             ASTNode.BooleanExpressionOpType.ne
                                 => variables[left.Name].ToString() != right.Name,
+                            ASTNode.BooleanExpressionOpType.lt
+                                => EnumLessThan((EnumDataType)variables[left.Name], right.Name),
+                            ASTNode.BooleanExpressionOpType.gt
+                                => !EnumLessThan((EnumDataType)variables[left.Name], right.Name),
+                            ASTNode.BooleanExpressionOpType.le
+                                => EnumLessThan((EnumDataType)variables[left.Name], right.Name)
+                                || right.Name == variables[left.Name].ToString(),
+                            ASTNode.BooleanExpressionOpType.ge
+                                => !EnumLessThan((EnumDataType)variables[left.Name], right.Name)
+                                || right.Name == variables[left.Name].ToString(),
                             _ => throw new Exception("Enums can only be compared with <> and =.")
                         };
                     }
@@ -897,6 +958,34 @@ public class Interpreter
         catch { } // It might not have been an enum to enum
 
         throw new Exception("Unable to calculate truth of expression.");
+    }
+
+    private static bool EnumLessThan(EnumDataType left, EnumDataType right)
+    {
+        var enumElements = left.Type.EnumElements.ToArray();
+        int leftIndex = 0, rightIndex = 0;
+        for(int i = 0; i < enumElements.Length; i++)
+        {
+            if (enumElements[i] == left.Value)
+                leftIndex = i;
+            if (enumElements[i] == right.Value)
+                rightIndex = i;
+        }
+        return leftIndex < rightIndex;
+    }
+
+    private static bool EnumLessThan(EnumDataType left, string right)
+    {
+        var enumElements = left.Type.EnumElements.ToArray();
+        int leftIndex = 0, rightIndex = 0;
+        for (int i = 0; i < enumElements.Length; i++)
+        {
+            if (enumElements[i] == left.Value)
+                leftIndex = i;
+            if (enumElements[i] == right)
+                rightIndex = i;
+        }
+        return leftIndex < rightIndex;
     }
 
     public static string ResolveString(

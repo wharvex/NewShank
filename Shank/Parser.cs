@@ -950,7 +950,29 @@ public class Parser
                         }
                         else
                         {
-                            throw new SyntaxErrorException("Expected a value", Peek(0));
+                            var enm = MatchAndRemove(Token.TokenType.Identifier);
+                            var paren = MatchAndRemove(Token.TokenType.LeftParen);
+                            if (enm != null)
+                            {
+                                if (paren == null)
+                                {
+                                    retVal.Add(
+                                        new VariableNode()
+                                        {
+                                            InitialValue = new StringNode(enm.Value),
+                                            Type = VariableNode.DataType.Enum,
+                                            IsConstant = true,
+                                            Name = name.Value ?? "",
+                                            ModuleName = parentModuleName,
+                                            UnknownType = enm.Value
+                                        }
+                                    );
+                                }
+                                else
+                                    throw new Exception("Constant records have not been implemented yet");
+                            }
+                            else
+                                throw new SyntaxErrorException("Expected a value", Peek(0));
                         }
                     }
                 }
