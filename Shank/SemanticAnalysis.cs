@@ -138,20 +138,25 @@ namespace Shank
                     {
                         foundFunction = true;
                         if (parentModule.getFunctions()[fn.Name] is not BuiltInFunctionNode)
-                            CheckParameterRanges(fn.Parameters, variables, (FunctionNode)parentModule.getFunctions()[fn.Name]);
+                            CheckParameterRanges(
+                                fn.Parameters,
+                                variables,
+                                (FunctionNode)parentModule.getFunctions()[fn.Name]
+                            );
                     }
                     else
                     {
-                        foreach (
-                            var import in parentModule.getImportNames()
-                        )
+                        foreach (var import in parentModule.getImportNames())
                         {
                             if (Modules[import.Key].getExportNames().Contains(fn.Name))
                             {
                                 foundFunction = true;
-                                CheckParameterRanges(fn.Parameters, variables, (FunctionNode)parentModule.Imported[fn.Name]);
+                                CheckParameterRanges(
+                                    fn.Parameters,
+                                    variables,
+                                    (FunctionNode)parentModule.Imported[fn.Name]
+                                );
                             }
-
                         }
                     }
                     if (
@@ -183,10 +188,14 @@ namespace Shank
             }
         }
 
-        private static void CheckParameterRanges(List<ParameterNode> param, Dictionary<string, VariableNode> variables, FunctionNode fn)
+        private static void CheckParameterRanges(
+            List<ParameterNode> param,
+            Dictionary<string, VariableNode> variables,
+            FunctionNode fn
+        )
         {
             var sourceParams = fn.ParameterVariables;
-            for(int i = 0; i < param.Count; i++)
+            for (int i = 0; i < param.Count; i++)
             {
                 if (param[i].Variable is not null)
                 {
@@ -197,14 +206,20 @@ namespace Shank
                     var targetTo = sourceParams[i].To;
                     if (from is null || targetFrom is null)
                         continue;
-                    if(from is IntNode)
+                    if (from is IntNode)
                     {
-                        if (((IntNode)from).Value < ((IntNode)targetFrom).Value || ((IntNode)to).Value > ((IntNode)targetTo).Value)
+                        if (
+                            ((IntNode)from).Value < ((IntNode)targetFrom).Value
+                            || ((IntNode)to).Value > ((IntNode)targetTo).Value
+                        )
                             throw new Exception($"Mismatched range in a call to {fn.Name}");
                     }
                     else
                     {
-                        if (((FloatNode)from).Value < ((FloatNode)targetFrom).Value || ((FloatNode)to).Value < ((FloatNode)targetFrom).Value)
+                        if (
+                            ((FloatNode)from).Value < ((FloatNode)targetFrom).Value
+                            || ((FloatNode)to).Value < ((FloatNode)targetFrom).Value
+                        )
                             throw new Exception($"Mismatched range in a call to {fn.Name}");
                     }
                 }
@@ -219,18 +234,24 @@ namespace Shank
 
                     if (targetFrom is IntNode)
                     {
-                        if (((IntNode)targetFrom).Value > actualFrom || ((IntNode)targetTo).Value < actualTo)
+                        if (
+                            ((IntNode)targetFrom).Value > actualFrom
+                            || ((IntNode)targetTo).Value < actualTo
+                        )
                             throw new Exception($"Mismatched range in a call to {fn.Name}");
                     }
                     else
                     {
-                        if (((FloatNode)targetFrom).Value < actualFrom || ((FloatNode)targetTo).Value < actualTo)
+                        if (
+                            ((FloatNode)targetFrom).Value < actualFrom
+                            || ((FloatNode)targetTo).Value < actualTo
+                        )
                             throw new Exception($"Mismatched range in a call to {fn.Name}");
                     }
                 }
-                
             }
         }
+
         private static void CheckRange(
             AssignmentNode an,
             Dictionary<string, VariableNode> variablesLookup,
@@ -238,7 +259,6 @@ namespace Shank
             ModuleNode parentModule
         )
         {
-
             if (an.Expression is StringNode s)
             {
                 try
@@ -277,7 +297,6 @@ namespace Shank
                             throw new Exception(
                                 $"The variable {an.Target.Name} can only be assigned expressions that won't overstep its range."
                             );
-
                     }
                     else
                     {
@@ -293,19 +312,16 @@ namespace Shank
                             );
                     }
                 }
-
                 catch (InvalidCastException e)
                 {
-                    throw new Exception(
-                        "Incorrect type of range."
-                    );
+                    throw new Exception("Incorrect type of range.");
                 }
             }
         }
 
         private static float GetMaxRange(ASTNode node, Dictionary<string, VariableNode> variables)
         {
-            if(node is MathOpNode mon)
+            if (node is MathOpNode mon)
             {
                 switch (mon.Op)
                 {
@@ -328,14 +344,15 @@ namespace Shank
             if (node is VariableReferenceNode vrn)
             {
                 if (variables[vrn.Name].To is null || variables[vrn.Name].From is null)
-                    throw new Exception("Ranged variables can only be assigned variables with a range.");
+                    throw new Exception(
+                        "Ranged variables can only be assigned variables with a range."
+                    );
                 if (variables[vrn.Name].Type is VariableNode.DataType.Integer)
                     return ((IntNode)variables[vrn.Name].To).Value;
                 else
                     return ((FloatNode)variables[vrn.Name].To).Value;
             }
             throw new Exception("Unrecognized node type in math expression while checking range");
-           
         }
 
         private static float GetMinRange(ASTNode node, Dictionary<string, VariableNode> variables)
@@ -363,7 +380,9 @@ namespace Shank
             if (node is VariableReferenceNode vrn)
             {
                 if (variables[vrn.Name].To is null || variables[vrn.Name].From is null)
-                    throw new Exception("Ranged variables can only be assigned variables with a range.");
+                    throw new Exception(
+                        "Ranged variables can only be assigned variables with a range."
+                    );
                 if (variables[vrn.Name].Type is VariableNode.DataType.Integer)
                     return ((IntNode)variables[vrn.Name].From).Value;
                 else
@@ -688,7 +707,12 @@ namespace Shank
                             {
                                 if (v.Value.InitialValue is null)
                                     continue;
-                                if (v.Value.IsConstant && e.Value.EnumElements.Contains(v.Value.InitialValue.ToString()))
+                                if (
+                                    v.Value.IsConstant
+                                    && e.Value.EnumElements.Contains(
+                                        v.Value.InitialValue.ToString()
+                                    )
+                                )
                                 {
                                     enumDefinition = e.Value;
                                     break;
@@ -716,8 +740,13 @@ namespace Shank
                             throw new Exception(
                                 $"Could not find the definition for an enum containing the element {vrn.Name}."
                             );
-                        if (enumDefinition.Type != target.UnknownType &&
-                            (target.Type != VariableNode.DataType.Record && target.Type != VariableNode.DataType.Reference ))
+                        if (
+                            enumDefinition.Type != target.UnknownType
+                            && (
+                                target.Type != VariableNode.DataType.Record
+                                && target.Type != VariableNode.DataType.Reference
+                            )
+                        )
                             throw new Exception(
                                 $"Cannot assign an enum of type {enumDefinition.Type} to the enum element {target.UnknownType}."
                             );

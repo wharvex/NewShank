@@ -278,7 +278,8 @@ namespace ShankUnitTests
         [TestMethod]
         public void CompareEnumVariablesGreaterThanFalse()
         {
-            string[] file = {
+            string[] file =
+            {
                 "enum colors = [red, green, blue]\n",
                 "define start()\n",
                 "variables e, s : colors\n",
@@ -301,7 +302,8 @@ namespace ShankUnitTests
         [TestMethod]
         public void CompareEnumVariablesGreaterThanTrue()
         {
-            string[] file = {
+            string[] file =
+            {
                 "enum colors = [red, green, blue]\n",
                 "define start()\n",
                 "variables e, s : colors\n",
@@ -324,7 +326,8 @@ namespace ShankUnitTests
         [TestMethod]
         public void CompareEnumVariablesGreaterOrEqualFalse()
         {
-            string[] file = {
+            string[] file =
+            {
                 "enum colors = [red, green, blue]\n",
                 "define start()\n",
                 "variables e, s : colors\n",
@@ -343,10 +346,12 @@ namespace ShankUnitTests
             Console.Write(Interpreter.testOutput.ToString());
             Assert.AreEqual("false ", Interpreter.testOutput.ToString());
         }
+
         [TestMethod]
         public void CompareEnumVariablesGreaterOrEqualDifferentValuesTrue()
         {
-            string[] file = {
+            string[] file =
+            {
                 "enum colors = [red, green, blue]\n",
                 "define start()\n",
                 "variables e, s : colors\n",
@@ -369,7 +374,8 @@ namespace ShankUnitTests
         [TestMethod]
         public void CompareEnumVariablesGreaterOrEqualSameValuesTrue()
         {
-            string[] file = {
+            string[] file =
+            {
                 "enum colors = [red, green, blue]\n",
                 "define start()\n",
                 "variables e, s : colors\n",
@@ -392,7 +398,8 @@ namespace ShankUnitTests
         [TestMethod]
         public void CompareEnumValueWithVariableLessOrEqual()
         {
-            string[] file = {
+            string[] file =
+            {
                 "enum colors = [red, green, blue]\n",
                 "define start()\n",
                 "variables e, s : colors\n",
@@ -414,7 +421,8 @@ namespace ShankUnitTests
         [TestMethod]
         public void CompareEnumVariableWithValueGreaterOrEqual()
         {
-            string[] file = {
+            string[] file =
+            {
                 "enum colors = [red, green, blue]\n",
                 "define start()\n",
                 "variables e : colors\n",
@@ -432,7 +440,6 @@ namespace ShankUnitTests
             Console.Write(Interpreter.testOutput.ToString());
             Assert.AreEqual("false ", Interpreter.testOutput.ToString());
         }
-
 
         [TestMethod]
         public void constantEnum()
@@ -454,7 +461,6 @@ namespace ShankUnitTests
         [TestMethod]
         public void EnumInRecord()
         {
-
             string[] file =
             {
                 "record rec\n",
@@ -470,7 +476,6 @@ namespace ShankUnitTests
             initializeInterpreter(files);
             runInterpreter();
             Assert.AreEqual("red ", Interpreter.testOutput.ToString());
-
         }
     }
 }

@@ -969,7 +969,9 @@ public class Parser
                                     );
                                 }
                                 else
-                                    throw new Exception("Constant records have not been implemented yet");
+                                    throw new Exception(
+                                        "Constant records have not been implemented yet"
+                                    );
                             }
                             else
                                 throw new SyntaxErrorException("Expected a value", Peek(0));

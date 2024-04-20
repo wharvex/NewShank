@@ -507,7 +507,8 @@ namespace ShankUnitTests
         [TestMethod]
         public void RangeIntAssignedSingleVariable()
         {
-            string[] file = {
+            string[] file =
+            {
                 "define start()\n",
                 "variables i : integer from 0 to 7\n",
                 "variables j : integer from 1 to 6\n",
@@ -522,7 +523,8 @@ namespace ShankUnitTests
         [TestMethod]
         public void RangeIntAssignedVariableExpression()
         {
-            string[] file = {
+            string[] file =
+            {
                 "define start()\n",
                 "variables i : integer from 0 to 10\n",
                 "variables j : integer from 1 to 4\n",
@@ -538,7 +540,8 @@ namespace ShankUnitTests
         [TestMethod]
         public void RangeIntFunctionParams()
         {
-            string[] file = {
+            string[] file =
+            {
                 "define start()\n",
                 "variables i : integer from 0 to 10\n",
                 "\tsmallAdd 1, 2, var i\n",
@@ -554,7 +557,8 @@ namespace ShankUnitTests
         [TestMethod]
         public void RangeIntAssignedVariableAndInt()
         {
-            string[] file = {
+            string[] file =
+            {
                 "define start()\n",
                 "variables i : integer from 0 to 7\n",
                 "variables j : integer from 1 to 4\n",
@@ -565,11 +569,13 @@ namespace ShankUnitTests
             initializeInterpreter(files);
             SemanticAnalysis.checkModules();
         }
+
         [TestMethod]
         [ExpectedException(typeof(Exception))]
         public void RangeIntAssignedSingleVariableFail()
         {
-            string[] file = {
+            string[] file =
+            {
                 "define start()\n",
                 "variables i : integer from 0 to 7\n",
                 "variables j : integer from 1 to 8\n",
@@ -583,10 +589,10 @@ namespace ShankUnitTests
 
         [TestMethod]
         [ExpectedException(typeof(Exception))]
-
         public void RangeIntAssignedVariableExpressionFail()
         {
-            string[] file = {
+            string[] file =
+            {
                 "define start()\n",
                 "variables i : integer from 0 to 10\n",
                 "variables j : integer from 1 to 4\n",
@@ -603,7 +609,8 @@ namespace ShankUnitTests
         [ExpectedException(typeof(Exception))]
         public void RangeIntFunctionParamsFail()
         {
-            string[] file = {
+            string[] file =
+            {
                 "define start()\n",
                 "variables i : integer from 0 to 11\n",
                 "\tsmallAdd 6, 2, var i\n",
@@ -619,7 +626,8 @@ namespace ShankUnitTests
         [TestMethod]
         public void RangeIntFunctionParamPass()
         {
-            string[] file = {
+            string[] file =
+            {
                 "define start()\n",
                 "variables i : integer from 0 to 10\n",
                 "\tsmallAdd 1, 2, var i\n",
@@ -636,7 +644,8 @@ namespace ShankUnitTests
         [ExpectedException(typeof(Exception))]
         public void RangeStringFunctionParamFail()
         {
-            string[] file = {
+            string[] file =
+            {
                 "define start()\n",
                 "variables s : string from 0 to 20\n",
                 "\ts := \"panda\"",
@@ -649,10 +658,12 @@ namespace ShankUnitTests
             initializeInterpreter(files);
             SemanticAnalysis.checkModules();
         }
+
         [TestMethod]
         public void RangeStringFunctionParamPass()
         {
-            string[] file = {
+            string[] file =
+            {
                 "define start()\n",
                 "variables s : string from 0 to 8\n",
                 "\ts := \"panda\"",
@@ -670,7 +681,8 @@ namespace ShankUnitTests
         [ExpectedException(typeof(Exception))]
         public void RangeIntAssignedVariableAndIntFail()
         {
-            string[] file = {
+            string[] file =
+            {
                 "define start()\n",
                 "variables i : integer from 0 to 7\n",
                 "variables j : integer from 1 to 4\n",
@@ -685,7 +697,8 @@ namespace ShankUnitTests
         [TestMethod]
         public void RangeVariableAssignedBigExpression()
         {
-            string[] file = {
+            string[] file =
+            {
                 "define start()\n",
                 "variables i : integer from 0 to 20\n",
                 "variables j : integer from 1 to 4\n",
@@ -703,7 +716,8 @@ namespace ShankUnitTests
         [TestMethod]
         public void RangeVariableModuleInt()
         {
-            string[] file = {
+            string[] file =
+            {
                 "define start()\n",
                 "variables i : integer from 0 to 7\n",
                 "variables j : integer from 1 to 4\n",
@@ -714,6 +728,5 @@ namespace ShankUnitTests
             initializeInterpreter(files);
             SemanticAnalysis.checkModules();
         }
-
     }
 }

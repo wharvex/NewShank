@@ -378,9 +378,9 @@ public class Interpreter
     private static EnumDataType ResolveEnum(
         ASTNode node,
         Dictionary<string, InterpreterDataType> variables
-        )
+    )
     {
-        if(node is VariableReferenceNode vrn)
+        if (node is VariableReferenceNode vrn)
         {
             return new EnumDataType(vrn.Name);
         }
@@ -771,11 +771,13 @@ public class Interpreter
             case VariableNode.DataType.Enum:
                 if (parentModule.getEnums().ContainsKey(vn.GetUnknownTypeSafe()))
                     return new EnumDataType(parentModule.getEnums()[vn.GetUnknownTypeSafe()]);
-                else if (vn.IsConstant && !parentModule.Imported.ContainsKey(vn.GetUnknownTypeSafe()))
+                else if (
+                    vn.IsConstant && !parentModule.Imported.ContainsKey(vn.GetUnknownTypeSafe())
+                )
                 {
                     EnumNode? enmNode = null;
                     string? s = null;
-                    foreach(var enm in parentModule.getEnums())
+                    foreach (var enm in parentModule.getEnums())
                     {
                         if (enm.Value.EnumElements.Contains(vn.GetUnknownTypeSafe()))
                         {
@@ -784,8 +786,13 @@ public class Interpreter
                             break;
                         }
                     }
-                    return new EnumDataType(enmNode ?? throw new Exception("Could not find a constant enums base declaration."),
-                                            s ?? throw new Exception("Could not find constant enum assignment."));
+                    return new EnumDataType(
+                        enmNode
+                            ?? throw new Exception(
+                                "Could not find a constant enums base declaration."
+                            ),
+                        s ?? throw new Exception("Could not find constant enum assignment.")
+                    );
                 }
                 else if (!((EnumNode)parentModule.Imported[vn.GetUnknownTypeSafe()]).IsPublic)
                     throw new Exception(
@@ -896,17 +903,29 @@ public class Interpreter
                                 => variables[left.Name].ToString()
                                     != variables[right.Name].ToString(),
                             ASTNode.BooleanExpressionOpType.lt
-                                => EnumLessThan((EnumDataType)variables[left.Name], (EnumDataType)variables[right.Name]),
+                                => EnumLessThan(
+                                    (EnumDataType)variables[left.Name],
+                                    (EnumDataType)variables[right.Name]
+                                ),
                             ASTNode.BooleanExpressionOpType.gt
-                                => !EnumLessThan((EnumDataType)variables[left.Name], (EnumDataType)variables[right.Name]),
+                                => !EnumLessThan(
+                                    (EnumDataType)variables[left.Name],
+                                    (EnumDataType)variables[right.Name]
+                                ),
                             ASTNode.BooleanExpressionOpType.le
-                                => EnumLessThan((EnumDataType)variables[left.Name], (EnumDataType)variables[right.Name]) 
+                                => EnumLessThan(
+                                    (EnumDataType)variables[left.Name],
+                                    (EnumDataType)variables[right.Name]
+                                )
                                     || variables[left.Name].ToString()
                                         == variables[right.Name].ToString(),
                             ASTNode.BooleanExpressionOpType.ge
-                                => !EnumLessThan((EnumDataType)variables[left.Name], (EnumDataType)variables[right.Name])
+                                => !EnumLessThan(
+                                    (EnumDataType)variables[left.Name],
+                                    (EnumDataType)variables[right.Name]
+                                )
                                     || variables[left.Name].ToString()
-                                    == variables[right.Name].ToString(),
+                                        == variables[right.Name].ToString(),
                             _ => throw new Exception("Enums can only be compared with <> and =.")
                         };
                     }
@@ -924,12 +943,12 @@ public class Interpreter
                                 => !EnumLessThan((EnumDataType)variables[right.Name], left.Name),
                             ASTNode.BooleanExpressionOpType.le
                                 => EnumLessThan((EnumDataType)variables[right.Name], left.Name)
-                                || left.Name == variables[right.Name].ToString(),
+                                    || left.Name == variables[right.Name].ToString(),
                             ASTNode.BooleanExpressionOpType.ge
                                 => !EnumLessThan((EnumDataType)variables[right.Name], left.Name)
-                                || left.Name == variables[right.Name].ToString(),
+                                    || left.Name == variables[right.Name].ToString(),
                             _ => throw new Exception("Enums can only be compared with <> and =.")
-                        } ;
+                        };
                     }
                     else if (variables.ContainsKey(left.Name) && !variables.ContainsKey(right.Name))
                     {
@@ -945,10 +964,10 @@ public class Interpreter
                                 => !EnumLessThan((EnumDataType)variables[left.Name], right.Name),
                             ASTNode.BooleanExpressionOpType.le
                                 => EnumLessThan((EnumDataType)variables[left.Name], right.Name)
-                                || right.Name == variables[left.Name].ToString(),
+                                    || right.Name == variables[left.Name].ToString(),
                             ASTNode.BooleanExpressionOpType.ge
                                 => !EnumLessThan((EnumDataType)variables[left.Name], right.Name)
-                                || right.Name == variables[left.Name].ToString(),
+                                    || right.Name == variables[left.Name].ToString(),
                             _ => throw new Exception("Enums can only be compared with <> and =.")
                         };
                     }
@@ -963,8 +982,9 @@ public class Interpreter
     private static bool EnumLessThan(EnumDataType left, EnumDataType right)
     {
         var enumElements = left.Type.EnumElements.ToArray();
-        int leftIndex = 0, rightIndex = 0;
-        for(int i = 0; i < enumElements.Length; i++)
+        int leftIndex = 0,
+            rightIndex = 0;
+        for (int i = 0; i < enumElements.Length; i++)
         {
             if (enumElements[i] == left.Value)
                 leftIndex = i;
@@ -977,7 +997,8 @@ public class Interpreter
     private static bool EnumLessThan(EnumDataType left, string right)
     {
         var enumElements = left.Type.EnumElements.ToArray();
-        int leftIndex = 0, rightIndex = 0;
+        int leftIndex = 0,
+            rightIndex = 0;
         for (int i = 0; i < enumElements.Length; i++)
         {
             if (enumElements[i] == left.Value)
