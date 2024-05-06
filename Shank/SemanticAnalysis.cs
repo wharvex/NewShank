@@ -769,11 +769,6 @@ namespace Shank
             }
         }
 
-        //public static VariableNode.DataType GetRecordMemberType(ASTNode anExpression)
-        //{
-
-        //}
-
         public static void checkModules()
         {
             Modules = Interpreter.getModules();
@@ -1071,7 +1066,7 @@ namespace Shank
             Modules = new Dictionary<string, ModuleNode>();
             startModule = null;
             Interpreter.testOutput = new StringBuilder();
-            Program.unitTestResults = new();
+            Program.UnitTestResults = new();
         }
     }
 }

@@ -221,18 +221,18 @@ namespace ShankUnitTests
             files.AddLast(file);
             initializeInterpreter(files);
             Program.Main(args);
-            Assert.AreEqual(2, Program.unitTestResults.Count);
+            Assert.AreEqual(2, Program.UnitTestResults.Count);
             Assert.AreEqual(
-                Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).parentTestName,
+                Program.UnitTestResults.ElementAt(0).Asserts.ElementAt(0).parentTestName,
                 "simpleTest"
             );
-            Assert.AreEqual(true, Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).passed);
+            Assert.AreEqual(true, Program.UnitTestResults.ElementAt(0).Asserts.ElementAt(0).passed);
 
             Assert.AreEqual(
-                Program.unitTestResults.ElementAt(1).Asserts.ElementAt(0).parentTestName,
+                Program.UnitTestResults.ElementAt(1).Asserts.ElementAt(0).parentTestName,
                 "subTest"
             );
-            Assert.AreEqual(true, Program.unitTestResults.ElementAt(1).Asserts.ElementAt(0).passed);
+            Assert.AreEqual(true, Program.UnitTestResults.ElementAt(1).Asserts.ElementAt(0).passed);
         }
 
         [TestMethod]
@@ -260,18 +260,18 @@ namespace ShankUnitTests
             initializeInterpreter(files);
             Program.Main(args);
 
-            Assert.AreEqual(1, Program.unitTestResults.Count);
+            Assert.AreEqual(1, Program.UnitTestResults.Count);
             Assert.AreEqual(
-                Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).parentTestName,
+                Program.UnitTestResults.ElementAt(0).Asserts.ElementAt(0).parentTestName,
                 "simpleTest"
             );
-            Assert.AreEqual(true, Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).passed);
+            Assert.AreEqual(true, Program.UnitTestResults.ElementAt(0).Asserts.ElementAt(0).passed);
 
             Assert.AreEqual(
-                Program.unitTestResults.ElementAt(0).Asserts.ElementAt(1).parentTestName,
+                Program.UnitTestResults.ElementAt(0).Asserts.ElementAt(1).parentTestName,
                 "simpleTest2"
             );
-            Assert.AreEqual(true, Program.unitTestResults.ElementAt(0).Asserts.ElementAt(1).passed);
+            Assert.AreEqual(true, Program.UnitTestResults.ElementAt(0).Asserts.ElementAt(1).passed);
         }
 
         [TestMethod]
@@ -298,12 +298,12 @@ namespace ShankUnitTests
             initializeInterpreter(files);
             Program.Main(args);
 
-            Assert.AreEqual(1, Program.unitTestResults.Count);
+            Assert.AreEqual(1, Program.UnitTestResults.Count);
             Assert.AreEqual(
-                Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).parentTestName,
+                Program.UnitTestResults.ElementAt(0).Asserts.ElementAt(0).parentTestName,
                 "simpleTest"
             );
-            Assert.AreEqual(true, Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).passed);
+            Assert.AreEqual(true, Program.UnitTestResults.ElementAt(0).Asserts.ElementAt(0).passed);
         }
 
         [TestMethod]
@@ -343,39 +343,39 @@ namespace ShankUnitTests
             files.AddLast(file);
             initializeInterpreter(files);
             Program.Main(args);
-            Assert.AreEqual(2, Program.unitTestResults.Count);
-            Assert.AreEqual(3, Program.unitTestResults.ElementAt(0).Asserts.Count);
-            Assert.AreEqual(2, Program.unitTestResults.ElementAt(1).Asserts.Count);
+            Assert.AreEqual(2, Program.UnitTestResults.Count);
+            Assert.AreEqual(3, Program.UnitTestResults.ElementAt(0).Asserts.Count);
+            Assert.AreEqual(2, Program.UnitTestResults.ElementAt(1).Asserts.Count);
 
             Assert.AreEqual(
                 "addTest",
-                Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).parentTestName
+                Program.UnitTestResults.ElementAt(0).Asserts.ElementAt(0).parentTestName
             );
-            Assert.AreEqual(true, Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).passed);
+            Assert.AreEqual(true, Program.UnitTestResults.ElementAt(0).Asserts.ElementAt(0).passed);
 
             Assert.AreEqual(
                 "addTest",
-                Program.unitTestResults.ElementAt(0).Asserts.ElementAt(1).parentTestName
+                Program.UnitTestResults.ElementAt(0).Asserts.ElementAt(1).parentTestName
             );
-            Assert.AreEqual(true, Program.unitTestResults.ElementAt(0).Asserts.ElementAt(1).passed);
+            Assert.AreEqual(true, Program.UnitTestResults.ElementAt(0).Asserts.ElementAt(1).passed);
 
             Assert.AreEqual(
                 "addTest2",
-                Program.unitTestResults.ElementAt(0).Asserts.ElementAt(2).parentTestName
+                Program.UnitTestResults.ElementAt(0).Asserts.ElementAt(2).parentTestName
             );
-            Assert.AreEqual(true, Program.unitTestResults.ElementAt(0).Asserts.ElementAt(2).passed);
+            Assert.AreEqual(true, Program.UnitTestResults.ElementAt(0).Asserts.ElementAt(2).passed);
 
             Assert.AreEqual(
                 "subTest",
-                Program.unitTestResults.ElementAt(1).Asserts.ElementAt(0).parentTestName
+                Program.UnitTestResults.ElementAt(1).Asserts.ElementAt(0).parentTestName
             );
-            Assert.AreEqual(true, Program.unitTestResults.ElementAt(1).Asserts.ElementAt(0).passed);
+            Assert.AreEqual(true, Program.UnitTestResults.ElementAt(1).Asserts.ElementAt(0).passed);
 
             Assert.AreEqual(
                 "subTest2",
-                Program.unitTestResults.ElementAt(1).Asserts.ElementAt(1).parentTestName
+                Program.UnitTestResults.ElementAt(1).Asserts.ElementAt(1).parentTestName
             );
-            Assert.AreEqual(true, Program.unitTestResults.ElementAt(1).Asserts.ElementAt(1).passed);
+            Assert.AreEqual(true, Program.UnitTestResults.ElementAt(1).Asserts.ElementAt(1).passed);
         }
 
         [TestMethod]
@@ -414,18 +414,18 @@ namespace ShankUnitTests
             initializeInterpreter(files);
             Program.Main(args);
 
-            Assert.AreEqual(2, Program.unitTestResults.Count);
+            Assert.AreEqual(2, Program.UnitTestResults.Count);
             Assert.AreEqual(
-                Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).parentTestName,
+                Program.UnitTestResults.ElementAt(0).Asserts.ElementAt(0).parentTestName,
                 "addTest"
             );
-            Assert.IsTrue(Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).passed);
+            Assert.IsTrue(Program.UnitTestResults.ElementAt(0).Asserts.ElementAt(0).passed);
 
             Assert.AreEqual(
-                Program.unitTestResults.ElementAt(1).Asserts.ElementAt(0).parentTestName,
+                Program.UnitTestResults.ElementAt(1).Asserts.ElementAt(0).parentTestName,
                 "subTest"
             );
-            Assert.IsTrue(Program.unitTestResults.ElementAt(1).Asserts.ElementAt(0).passed);
+            Assert.IsTrue(Program.UnitTestResults.ElementAt(1).Asserts.ElementAt(0).passed);
         }
 
         [TestMethod]
@@ -449,14 +449,14 @@ namespace ShankUnitTests
             initializeInterpreter(files);
             Program.Main(args);
 
-            Assert.AreEqual(1, Program.unitTestResults.Count);
-            Assert.AreEqual(1, Program.unitTestResults.ElementAt(0).Asserts.Count);
+            Assert.AreEqual(1, Program.UnitTestResults.Count);
+            Assert.AreEqual(1, Program.UnitTestResults.ElementAt(0).Asserts.Count);
 
             Assert.AreEqual(
-                Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).parentTestName,
+                Program.UnitTestResults.ElementAt(0).Asserts.ElementAt(0).parentTestName,
                 "simpleTest"
             );
-            Assert.IsTrue(Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).passed);
+            Assert.IsTrue(Program.UnitTestResults.ElementAt(0).Asserts.ElementAt(0).passed);
         }
 
         [TestMethod]
@@ -480,14 +480,14 @@ namespace ShankUnitTests
             initializeInterpreter(files);
             Program.Main(args);
 
-            Assert.AreEqual(1, Program.unitTestResults.Count);
-            Assert.AreEqual(1, Program.unitTestResults.ElementAt(0).Asserts.Count);
+            Assert.AreEqual(1, Program.UnitTestResults.Count);
+            Assert.AreEqual(1, Program.UnitTestResults.ElementAt(0).Asserts.Count);
 
             Assert.AreEqual(
-                Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).parentTestName,
+                Program.UnitTestResults.ElementAt(0).Asserts.ElementAt(0).parentTestName,
                 "simpleTest"
             );
-            Assert.IsTrue(Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).passed);
+            Assert.IsTrue(Program.UnitTestResults.ElementAt(0).Asserts.ElementAt(0).passed);
         }
 
         [TestMethod]
@@ -511,14 +511,14 @@ namespace ShankUnitTests
             initializeInterpreter(files);
             Program.Main(args);
 
-            Assert.AreEqual(1, Program.unitTestResults.Count);
-            Assert.AreEqual(1, Program.unitTestResults.ElementAt(0).Asserts.Count);
+            Assert.AreEqual(1, Program.UnitTestResults.Count);
+            Assert.AreEqual(1, Program.UnitTestResults.ElementAt(0).Asserts.Count);
 
             Assert.AreEqual(
-                Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).parentTestName,
+                Program.UnitTestResults.ElementAt(0).Asserts.ElementAt(0).parentTestName,
                 "simpleTest"
             );
-            Assert.IsTrue(Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).passed);
+            Assert.IsTrue(Program.UnitTestResults.ElementAt(0).Asserts.ElementAt(0).passed);
         }
 
         [TestMethod]
@@ -547,21 +547,21 @@ namespace ShankUnitTests
             files.AddLast(file);
             initializeInterpreter(files);
             Program.Main(args);
-            Assert.AreEqual(2, Program.unitTestResults.Count);
-            Assert.AreEqual(1, Program.unitTestResults.ElementAt(0).Asserts.Count);
-            Assert.AreEqual(1, Program.unitTestResults.ElementAt(1).Asserts.Count);
+            Assert.AreEqual(2, Program.UnitTestResults.Count);
+            Assert.AreEqual(1, Program.UnitTestResults.ElementAt(0).Asserts.Count);
+            Assert.AreEqual(1, Program.UnitTestResults.ElementAt(1).Asserts.Count);
 
             Assert.AreEqual(
                 "add2",
-                Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).parentTestName
+                Program.UnitTestResults.ElementAt(0).Asserts.ElementAt(0).parentTestName
             );
-            Assert.AreEqual(true, Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).passed);
+            Assert.AreEqual(true, Program.UnitTestResults.ElementAt(0).Asserts.ElementAt(0).passed);
 
             Assert.AreEqual(
                 "add3",
-                Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).parentTestName
+                Program.UnitTestResults.ElementAt(0).Asserts.ElementAt(0).parentTestName
             );
-            Assert.AreEqual(true, Program.unitTestResults.ElementAt(0).Asserts.ElementAt(0).passed);
+            Assert.AreEqual(true, Program.UnitTestResults.ElementAt(0).Asserts.ElementAt(0).passed);
         }
     }
 }

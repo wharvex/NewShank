@@ -16,7 +16,7 @@ namespace ShankUnitTests
 
         public static void initializeInterpreter(LinkedList<string[]> files)
         {
-            Interpreter.reset();
+            Interpreter.Reset();
             SemanticAnalysis.reset();
             Dictionary<string, ModuleNode> modules = getModulesFromParser(files);
             Interpreter.setModules(modules);

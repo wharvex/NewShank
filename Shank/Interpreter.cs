@@ -7,10 +7,9 @@ namespace Shank;
 
 public class Interpreter
 {
-    //public static Dictionary<string, CallableNode> Functions = new();
-    public static Dictionary<string, ModuleNode> Modules = new Dictionary<string, ModuleNode>();
+    public static Dictionary<string, ModuleNode> Modules { get; set; } = [];
 
-    private static ModuleNode? startModule;
+    private static ModuleNode? _startModule;
     public static StringBuilder testOutput = new StringBuilder();
 
     /// <summary>
@@ -80,6 +79,10 @@ public class Interpreter
         return ret;
     }
 
+    private static ModuleNode GetStartModuleSafe() =>
+        _startModule
+        ?? throw new InvalidOperationException("Expected Interpreter._startModule to not be Null.");
+
     /// <summary>
     /// Interpret the given function.
     /// </summary>
@@ -98,7 +101,7 @@ public class Interpreter
         if (fn is TestNode)
         {
             bool foundTestResult = false;
-            foreach (var testResult in Program.unitTestResults)
+            foreach (var testResult in Program.UnitTestResults)
             {
                 if (testResult.parentFunctionName == (((TestNode)fn).targetFunctionName))
                 {
@@ -108,10 +111,10 @@ public class Interpreter
             }
             if (!foundTestResult)
             {
-                Program.unitTestResults.AddLast(
+                Program.UnitTestResults.AddLast(
                     new TestResult(((TestNode)fn).Name, ((TestNode)fn).targetFunctionName)
                 );
-                Program.unitTestResults.Last().lineNum = fn.LineNum;
+                Program.UnitTestResults.Last().lineNum = fn.LineNum;
             }
         }
         // Interpret instructions
@@ -146,7 +149,7 @@ public class Interpreter
         if (fn is TestNode)
         {
             bool foundTestResult = false;
-            foreach (var testResult in Program.unitTestResults)
+            foreach (var testResult in Program.UnitTestResults)
             {
                 if (testResult.parentFunctionName == (((TestNode)fn).targetFunctionName))
                 {
@@ -156,10 +159,10 @@ public class Interpreter
             }
             if (!foundTestResult)
             {
-                Program.unitTestResults.AddLast(
+                Program.UnitTestResults.AddLast(
                     new TestResult(((TestNode)fn).Name, ((TestNode)fn).targetFunctionName)
                 );
-                Program.unitTestResults.Last().lineNum = fn.LineNum;
+                Program.UnitTestResults.Last().lineNum = fn.LineNum;
             }
         }
         // Interpret instructions
@@ -396,13 +399,13 @@ public class Interpreter
         ASTNode? calledFunction = null;
         bool callingModuleCanAccessFunction = false;
 
-        if (startModule == null)
+        if (_startModule == null)
             throw new Exception("Interpreter error, start function could not be found.");
 
-        if (startModule.getFunctions().ContainsKey(fc.Name))
-            calledFunction = startModule.getFunctions()[fc.Name]; // find the function
-        else if (startModule.getImportedFunctions().ContainsKey(fc.Name))
-            calledFunction = startModule.getImportedFunctions()[fc.Name];
+        if (_startModule.getFunctions().ContainsKey(fc.Name))
+            calledFunction = _startModule.getFunctions()[fc.Name]; // find the function
+        else if (_startModule.getImportedFunctions().ContainsKey(fc.Name))
+            calledFunction = _startModule.getImportedFunctions()[fc.Name];
         else
         {
             //this loop allows tests to search their own module for functions
@@ -424,7 +427,7 @@ public class Interpreter
                     "Could not find the function "
                         + fc.Name
                         + " in the module "
-                        + startModule.getName()
+                        + _startModule.getName()
                         + ". It may not have been exported."
                 );
             }
@@ -451,8 +454,8 @@ public class Interpreter
         }
         //check if the function is a builtIn, which all modules should have access to,
         //but they're only stored in the module with the start function to prevent collisions
-        if (startModule.getFunctions().ContainsKey(fc.Name))
-            if (startModule.getFunctions()[fc.Name] is BuiltInFunctionNode)
+        if (_startModule.getFunctions().ContainsKey(fc.Name))
+            if (_startModule.getFunctions()[fc.Name] is BuiltInFunctionNode)
                 callingModuleCanAccessFunction = true;
 
         //if we haven't found the function name, its an error at this point
@@ -572,10 +575,10 @@ public class Interpreter
         {
             AssertResult ar = new AssertResult(callingFunction.Name);
             Program
-                .unitTestResults.ElementAt(Program.unitTestResults.Count - 1)
+                .UnitTestResults.ElementAt(Program.UnitTestResults.Count - 1)
                 .Asserts.AddLast(ar);
             Program
-                .unitTestResults.ElementAt(Program.unitTestResults.Count - 1)
+                .UnitTestResults.ElementAt(Program.UnitTestResults.Count - 1)
                 .Asserts.Last()
                 .lineNum = fc.LineNum;
         }
@@ -1202,17 +1205,38 @@ public class Interpreter
         {
             if (currentModule.Value.getFunctions().ContainsKey("start"))
             {
-                startModule = currentModule.Value;
-                return startModule;
+                _startModule = currentModule.Value;
+                return _startModule;
             }
         }
 
         return null;
     }
 
+    public static void SetStartModule()
+    {
+        var maybeStartModules = Modules
+            .Where(kvp => kvp.Value.Functions.ContainsKey("start"))
+            .Select(kvp => kvp.Value)
+            .ToList();
+
+        _startModule = maybeStartModules.Count switch
+        {
+            1 => maybeStartModules[0],
+            > 1
+                => throw new InvalidOperationException(
+                    "Multiple start functions not allowed. This should be a SemanticErrorException."
+                ),
+            < 1
+                => throw new InvalidOperationException(
+                    "At least one start function required. This should be a SemanticErrorException."
+                ),
+        };
+    }
+
     public static ModuleNode? getStartModule()
     {
-        return startModule;
+        return _startModule;
     }
 
     public static int ResolveIntBeforeVarDecs(ASTNode node)
@@ -1247,13 +1271,13 @@ public class Interpreter
             throw new ArgumentException("Invalid node type for integer", nameof(node));
     }
 
-    //used for reseting the single static interpreter in between unit tests
-    public static void reset()
+    // Used for resetting the single static interpreter between unit tests.
+    public static void Reset()
     {
-        Modules = new Dictionary<string, ModuleNode>();
-        startModule = null;
+        Modules = [];
+        _startModule = null;
         testOutput = new StringBuilder();
-        Program.unitTestResults = new();
+        Program.UnitTestResults = [];
     }
 
     public static void setModules(Dictionary<string, ModuleNode> modules)

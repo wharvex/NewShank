@@ -1,0 +1,11 @@
+record anythingHolder generic T, U
+    data : T
+    data2 : refersTo U
+
+record student
+    name : string
+    gpa : real
+
+define start()
+variables anythingHolderInstance : anythingHolder integer, student
+    anythingHolderInstance.data := 1

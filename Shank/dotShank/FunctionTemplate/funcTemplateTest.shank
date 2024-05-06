@@ -1,0 +1,31 @@
+declare comparator generic T
+    T
+    T
+    var boolean
+
+declare comparatorConsumer generic T
+    refersTo comparator
+    T
+    T
+    var boolean
+
+define stringComparator : comparator(first, second, result)
+constants lf setBy Length first, lf; ls setBy Length second, ls
+    result := lf = ls
+
+{ 
+    If a line is preceded by 2 ^s,
+    treat it as a continuation of the prev line 
+}
+define comparatorConsumerInstance : comparatorConsumer(
+^^ comparatorInstance,
+^^ first,
+^^ second,
+^^ result
+^^ )
+    comparatorInstance first, second, result
+
+define start()
+variables startResult : boolean
+    
+    

@@ -1634,7 +1634,7 @@ namespace Shank
     public class ModuleNode : ASTNode
     {
         public Dictionary<string, EnumNode> Enums { get; init; }
-        public string name { get; set; }
+        public string Name { get; set; }
         public Dictionary<string, CallableNode> Functions { get; init; }
         public Dictionary<string, List<CallableNode>> Functions2 { get; } = [];
         public Dictionary<string, RecordNode> Records { get; init; }
@@ -1655,7 +1655,7 @@ namespace Shank
 
         public ModuleNode(string name)
         {
-            this.name = name;
+            this.Name = name;
             Functions = new Dictionary<string, CallableNode>();
             Records = [];
             Exported = new Dictionary<string, ASTNode>();
@@ -1838,7 +1838,7 @@ namespace Shank
                         "Could not find '"
                             + exportName
                             + "' in the current list of functions, enums or records in module "
-                            + name
+                            + Name
                     );
                 }
             }
@@ -1944,12 +1944,12 @@ namespace Shank
 
         public string getName()
         {
-            return name;
+            return Name;
         }
 
         public void setName(string nameIn)
         {
-            name = nameIn;
+            Name = nameIn;
         }
 
         public void addTest(TestNode t)

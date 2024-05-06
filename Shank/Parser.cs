@@ -38,6 +38,16 @@ public class Parser
         Token.TokenType.RefersTo,
         Token.TokenType.Identifier
     ];
+    private readonly Token.TokenType[] _indentZeroTokenTypes =
+    [
+        Token.TokenType.Define,
+        Token.TokenType.Record,
+        Token.TokenType.Enum,
+        Token.TokenType.Variables,
+        Token.TokenType.Export,
+        Token.TokenType.Import,
+        Token.TokenType.Test
+    ];
 
     public Parser(List<Token> tokens)
     {
@@ -241,14 +251,93 @@ public class Parser
             else
             {
                 throw new SyntaxErrorException(
-                    "Any statement at indent zero must begin with the keyword "
-                        + "`import`, `export`, `define`, `enum`, `test`, `record`, or `variables`."
-                        + " The following is invalid: ",
+                    "Any statement at indent zero must begin with one of the following keywords:\n"
+                        + "import\nexport\ndefine\nenum\ntest\nrecord\nvariables\n"
+                        + "The following is invalid: ",
                     Peek(0)
                 );
             }
         }
         return module;
+    }
+
+    public ModuleNode Module2()
+    {
+        // Get the module name if there is one, or set it to default.
+        var moduleName = MatchAndRemove(Token.TokenType.Module) is null
+            ? "default"
+            : MatchAndRemove(Token.TokenType.Identifier)?.GetValueSafe()
+                ?? throw new SyntaxErrorException("Expected a module name", Peek(0));
+        RequiresEndOfLine();
+
+        // Create the module.
+        var ret = new ModuleNode(moduleName);
+
+        // Require a token that can start an "indent-zero" language construct in Shank.
+        var indentZeroToken =
+            MatchAndRemoveMultiple(_indentZeroTokenTypes)
+            ?? throw new SyntaxErrorException("Cannot parse a blank file or module", Peek(0));
+
+        // Continue parsing constructs until an indent-zero token is not found.
+        while (indentZeroToken is not null)
+        {
+            // Handle the construct based on what type it is.
+            switch (indentZeroToken.Type)
+            {
+                case Token.TokenType.Export:
+                    ret.addExportNames(Export());
+                    break;
+                case Token.TokenType.Import:
+                    // An import statement starts with the `import' keyword, then a mandatory module
+                    // name to import from, then optional square brackets surrounding one or more
+                    // names of specific constructs from that module to import.
+
+                    // Require the import module name.
+                    var importModuleName =
+                        MatchAndRemove(Token.TokenType.Identifier)?.GetValueSafe()
+                        ?? throw new SyntaxErrorException(
+                            "Expected an import module name",
+                            Peek(0)
+                        );
+
+                    // Check for the optional square brackets.
+                    if (PeekSafe(1).Type is Token.TokenType.LeftBracket)
+                    {
+                        ret.addImportNames(importModuleName, checkForFunctions());
+                    }
+                    else
+                    {
+                        ret.addImportName(importModuleName);
+                    }
+                    break;
+                case Token.TokenType.Define:
+                    ret.addFunction(Function(moduleName));
+                    break;
+                case Token.TokenType.Record:
+                    ret.AddRecord(Record(moduleName));
+                    break;
+                case Token.TokenType.Test:
+                    ret.addTest(Test(moduleName));
+                    break;
+                case Token.TokenType.Enum:
+                    ret.addEnum(MakeEnum(moduleName));
+                    break;
+                case Token.TokenType.Variables:
+                    ret.AddToGlobalVariables(ProcessVariables(moduleName));
+                    break;
+                default:
+                    throw new NotImplementedException(
+                        "Support for parsing indent zero token "
+                            + indentZeroToken
+                            + " has not been implemented."
+                    );
+            }
+
+            // Check for another construct.
+            indentZeroToken = MatchAndRemoveMultiple(_indentZeroTokenTypes);
+        }
+
+        return ret;
     }
 
     public FunctionNode? Function(string? moduleName)

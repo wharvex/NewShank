@@ -1,9 +1,9 @@
-module test2
-export add
-import test3 
+module test1
+import test2
 
-define add(a, b : integer; var c : integer)
-variables p : integer
-	addFunc a, b, var p
-	c := p
-	doNothing p
+define start()
+variables p, s : integer
+	add 1, 2, var p
+	write p
+	s := 4
+	

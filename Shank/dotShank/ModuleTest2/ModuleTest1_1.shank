@@ -1,9 +1,0 @@
-module test1
-import test2
-
-define start()
-variables p, s : integer
-	add 1, 2, var p
-	write p
-	s := 4
-	

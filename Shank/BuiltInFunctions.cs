@@ -444,8 +444,8 @@
 
             //}
 
-            Program.unitTestResults.Last().Asserts.Last().passed = i.Equals(j);
-            Program.unitTestResults.Last().Asserts.Last().comparedValues =
+            Program.UnitTestResults.Last().Asserts.Last().passed = i.Equals(j);
+            Program.UnitTestResults.Last().Asserts.Last().comparedValues =
                 $"Expected<{i}>, Actual<{j}>";
         }
 

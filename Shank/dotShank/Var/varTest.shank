@@ -1,0 +1,8 @@
+define basicChanger(num : integer)
+    num := 1
+
+define start()
+variables startNum : integer
+    startNum := 7
+    basicChanger startNum
+    write startNum

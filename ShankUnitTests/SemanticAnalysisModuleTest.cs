@@ -364,7 +364,7 @@ namespace ShankUnitTests
                 "define addThree(a : integer; var c : integer)\n",
                 "\t c := a + 3\n"
             };
-            Interpreter.reset();
+            Interpreter.Reset();
             SemanticAnalysis.reset();
             ModuleNode module1 = ModuleParserTests.getModuleFromParser(file1);
             ModuleNode module2 = ModuleParserTests.getModuleFromParser(file2);
@@ -403,7 +403,7 @@ namespace ShankUnitTests
                 "\tp := a + b\n"
             };
             SemanticAnalysis.reset();
-            Interpreter.reset();
+            Interpreter.Reset();
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file1);
             files.AddLast(file2);

@@ -271,7 +271,7 @@ namespace ShankUnitTests
         [TestMethod]
         public void ProgramMergeModuleLogic()
         {
-            Interpreter.reset();
+            Interpreter.Reset();
             string[] file1 =
             {
                 "define start()\n",
