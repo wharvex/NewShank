@@ -1,0 +1,3 @@
+define start()
+    write "here", "are", "some", "variadic", "arguments"
+    write "and", "a", "new", "line"

@@ -43,6 +43,11 @@ public class OutputHelper
         outputFile.WriteLine(output);
     }
 
+    public static string GetDebugJsonForProgramNode(ProgramNode pn)
+    {
+        return JsonSerializer.Serialize(pn, ProgramNodeContext.Default.ProgramNode);
+    }
+
     public static string GetDebugJsonForModuleNode(ModuleNode mn)
     {
         return JsonSerializer.Serialize(mn, ModuleNodeContext.Default.ModuleNode);
@@ -58,6 +63,10 @@ public class OutputHelper
         return JsonSerializer.Serialize(rdt, RecordDataTypeContext.Default.RecordDataType);
     }
 }
+
+[JsonSourceGenerationOptions(WriteIndented = true, UseStringEnumConverter = true)]
+[JsonSerializable(typeof(ProgramNode))]
+internal partial class ProgramNodeContext : JsonSerializerContext { }
 
 [JsonSourceGenerationOptions(WriteIndented = true, UseStringEnumConverter = true)]
 [JsonSerializable(typeof(ModuleNode))]

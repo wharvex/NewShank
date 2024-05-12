@@ -201,7 +201,7 @@ public class Parser
         return null;
     }
 
-    public ModuleNode? Module()
+    public ModuleNode? Module2()
     {
         ModuleNode? module = null;
         string? moduleName;
@@ -261,17 +261,25 @@ public class Parser
         return module;
     }
 
-    public ModuleNode Module2()
+    public ModuleNode Module()
     {
         // Get the module name if there is one, or set it to default.
         var moduleName = MatchAndRemove(Token.TokenType.Module) is null
             ? "default"
             : MatchAndRemove(Token.TokenType.Identifier)?.GetValueSafe()
                 ?? throw new SyntaxErrorException("Expected a module name", Peek(0));
-        RequiresEndOfLine();
+
+        // Require EOL if a module declaration was found.
+        if (!moduleName.Equals("default"))
+        {
+            RequiresEndOfLine();
+        }
 
         // Create the module.
         var ret = new ModuleNode(moduleName);
+
+        // Allow the file to start with blank lines.
+        ConsumeBlankLines();
 
         // Require a token that can start an "indent-zero" language construct in Shank.
         var indentZeroToken =
@@ -323,7 +331,7 @@ public class Parser
                     ret.addEnum(MakeEnum(moduleName));
                     break;
                 case Token.TokenType.Variables:
-                    ret.AddToGlobalVariables(ProcessVariables(moduleName));
+                    ret.AddToGlobalVariables(ProcessVariablesDoWhile(moduleName));
                     break;
                 default:
                     throw new NotImplementedException(
@@ -332,6 +340,7 @@ public class Parser
                             + " has not been implemented."
                     );
             }
+            ConsumeBlankLines();
 
             // Check for another construct.
             indentZeroToken = MatchAndRemoveMultiple(_indentZeroTokenTypes);
@@ -736,6 +745,22 @@ public class Parser
 
             MatchAndRemove(Token.TokenType.EndOfLine);
         }
+        return retVal;
+    }
+
+    private List<VariableNode> ProcessVariablesDoWhile(string? parentModule)
+    {
+        var retVal = new List<VariableNode>();
+
+        do
+        {
+            var nextOnes = GetVariables(parentModule);
+
+            // TODO: We are potentially adding null to retVal here.
+            retVal.AddRange(nextOnes);
+
+            MatchAndRemove(Token.TokenType.EndOfLine);
+        } while (MatchAndRemove(Token.TokenType.Variables) != null);
         return retVal;
     }
 

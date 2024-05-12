@@ -3,82 +3,126 @@
 public class CmdLineArgsHelper
 {
     public string MainArg { get; init; }
-    public CmdLineArgsContents ContentsType { get; init; } = CmdLineArgsContents.Invalid;
-    public List<string> InPaths { get; } = [];
+    public CmdLineArgsContents ContentsType { get; init; }
+    public List<string> InPaths { get; init; }
+    private readonly string[] _cmdLineArgs;
+    private readonly int _utLocation;
 
     public CmdLineArgsHelper(string[] cmdLineArgs)
     {
-        if (cmdLineArgs.Length > 0)
-        {
-            MainArg = cmdLineArgs[0];
-            var hasValidTestFlag = cmdLineArgs.Length > 1 && cmdLineArgs[1].Equals("-ut");
+        _cmdLineArgs = cmdLineArgs;
 
-            if (Directory.Exists(MainArg))
-            {
-                ContentsType = hasValidTestFlag
-                    ? CmdLineArgsContents.TestDirectory
-                    : CmdLineArgsContents.Directory;
-            }
-            else if (File.Exists(MainArg))
-            {
-                ContentsType = hasValidTestFlag
-                    ? CmdLineArgsContents.TestFile
-                    : CmdLineArgsContents.File;
-            }
-        }
-        else
-        {
-            MainArg = Directory.GetCurrentDirectory();
-        }
+        ValidateCmdLineArgsLen();
+
+        var utLocations = CalculateUtLocations();
+
+        ValidateUtLocationsCount(utLocations.Count);
+
+        _utLocation = utLocations.FirstOrDefault(-1);
+
+        MainArg = CalculateMainArg();
+
+        ContentsType = CalculateContentsType(_utLocation > -1);
+
+        var inPaths = CalculateInPaths();
+
+        ValidateInPathsCount(inPaths.Count);
+
+        InPaths = inPaths;
     }
 
     public bool HasTestFlag() =>
         ContentsType is CmdLineArgsContents.TestDirectory or CmdLineArgsContents.TestFile;
 
-    public void AddToInPaths()
+    private void ValidateCmdLineArgsLen()
     {
-        switch (ContentsType)
+        if (_cmdLineArgs.Length > 2)
         {
-            case CmdLineArgsContents.Directory:
-            case CmdLineArgsContents.TestDirectory:
-                AddToInPaths(Directory.GetFiles(MainArg, "*.shank", SearchOption.AllDirectories));
-                break;
-            case CmdLineArgsContents.File:
-            case CmdLineArgsContents.TestFile:
-                AddToInPaths(MainArg);
-                break;
-            case CmdLineArgsContents.Invalid:
-                throw new InvalidOperationException("Invalid Command Line Arguments.");
-            default:
-                throw new NotImplementedException(
-                    "Support for Command Line Arguments Configuration "
-                        + ContentsType
-                        + " has not been implemented."
-                );
+            throw new InvalidOperationException("Too many command line args.");
         }
+    }
 
-        if (InPaths.Count == 0)
+    private static void ValidateUtLocationsCount(int utLocationsCount)
+    {
+        if (utLocationsCount > 1)
+        {
+            throw new InvalidOperationException("More than one -ut flag not allowed.");
+        }
+    }
+
+    private static void ValidateInPathsCount(int inPathsCount)
+    {
+        if (inPathsCount == 0)
         {
             throw new InvalidOperationException("No Shank files found.");
         }
     }
 
-    private void AddToInPaths(string inPath)
+    private List<string> CalculateInPaths() =>
+        ContentsType switch
+        {
+            CmdLineArgsContents.Directory
+            or CmdLineArgsContents.TestDirectory
+                => [..Directory.GetFiles(MainArg, "*.shank", SearchOption.AllDirectories)],
+            CmdLineArgsContents.File or CmdLineArgsContents.TestFile => [MainArg],
+            _
+                => throw new NotImplementedException(
+                    "Support for command line arguments contents type "
+                        + ContentsType
+                        + " has not been implemented."
+                )
+        };
+
+    private CmdLineArgsContents CalculateContentsType(bool hasUt) =>
+        IsMainArgDir() switch
+        {
+            true when hasUt => CmdLineArgsContents.TestDirectory,
+            true when !hasUt => CmdLineArgsContents.Directory,
+            false when hasUt => CmdLineArgsContents.TestFile,
+            false when !hasUt => CmdLineArgsContents.File,
+            _
+                => throw new InvalidOperationException(
+                    "Invalid configuration of `mainArgIsDir' and `hasUt' values."
+                )
+        };
+
+    private string CalculateMainArg() =>
+        _cmdLineArgs.Length switch
+        {
+            0 => Directory.GetCurrentDirectory(),
+            1 when _utLocation is 0 => Directory.GetCurrentDirectory(),
+            1 when _utLocation is -1 => _cmdLineArgs[0],
+            2 when _utLocation is 1 => _cmdLineArgs[0],
+            2 when _utLocation is 0 => _cmdLineArgs[1],
+            _
+                => throw new InvalidOperationException(
+                    "Bad command line args configuration for determining the main arg."
+                )
+        };
+
+    private bool IsMainArgDir()
     {
-        InPaths.Add(inPath);
+        if (Directory.Exists(MainArg))
+        {
+            return true;
+        }
+
+        if (File.Exists(MainArg))
+        {
+            return false;
+        }
+
+        throw new InvalidOperationException("File or folder not found.");
     }
 
-    private void AddToInPaths(IEnumerable<string> inPaths)
-    {
-        InPaths.AddRange(inPaths);
-    }
+    private List<int> CalculateUtLocations() =>
+        Enumerable.Range(0, _cmdLineArgs.Length).Where(i => _cmdLineArgs[i].Equals("-ut")).ToList();
 
     public enum CmdLineArgsContents
     {
-        Invalid,
         Directory,
         File,
         TestDirectory,
-        TestFile,
+        TestFile
     }
 }

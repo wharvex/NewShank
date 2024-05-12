@@ -1,0 +1,9 @@
+enum colors = [red, green, blue]
+
+define start()
+variables i : integer
+variables e : colors
+    i := 3
+    e := red
+    if e = red then
+        write "red"
