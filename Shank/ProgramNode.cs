@@ -5,6 +5,9 @@ public class ProgramNode : ASTNode
     public Dictionary<string, ModuleNode> Modules { get; } = [];
     public ModuleNode? StartModule { get; set; }
 
+    public ModuleNode GetStartModuleSafe() =>
+        StartModule ?? throw new InvalidOperationException("Expected StartModule to not be null.");
+
     public void AddToModules(ModuleNode m)
     {
         // Add the module and return if there is no name collision.

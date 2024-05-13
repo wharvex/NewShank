@@ -33,7 +33,7 @@ namespace ShankUnitTests
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(code);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
         }
 
         [TestMethod]
@@ -59,7 +59,7 @@ namespace ShankUnitTests
             files.AddFirst(file1);
             files.AddLast(file2);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
         }
 
         //importing from a module that also imports
@@ -100,7 +100,7 @@ namespace ShankUnitTests
             files.AddLast(file3);
 
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
         }
 
         [TestMethod]
@@ -139,7 +139,7 @@ namespace ShankUnitTests
             files.AddLast(file1);
 
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
         }
 
         [TestMethod]
@@ -182,7 +182,7 @@ namespace ShankUnitTests
             files.AddLast(file1);
 
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
         }
 
         [TestMethod]
@@ -209,7 +209,7 @@ namespace ShankUnitTests
             files.AddLast(file1);
             files.AddLast(file2);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
         }
 
         //CATCHING ERRORS TESTS
@@ -230,7 +230,7 @@ namespace ShankUnitTests
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file1);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
         }
 
         [TestMethod]
@@ -260,7 +260,7 @@ namespace ShankUnitTests
             files.AddLast(file1);
             files.AddLast(file2);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
         }
 
         [TestMethod]
@@ -287,7 +287,7 @@ namespace ShankUnitTests
             files.AddLast(file1);
             files.AddLast(file2);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
         }
 
         [TestMethod]
@@ -317,7 +317,7 @@ namespace ShankUnitTests
             files.AddLast(file1);
             files.AddLast(file2);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
         }
 
         [TestMethod]
@@ -343,7 +343,7 @@ namespace ShankUnitTests
             files.AddLast(file1);
             files.AddLast(file2);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
         }
 
         [TestMethod]
@@ -373,7 +373,7 @@ namespace ShankUnitTests
             Interpreter.Modules.Add("default", module1);
             Interpreter.setStartModule();
             BuiltInFunctions.Register(Interpreter.getStartModule().getFunctions());
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
         }
 
         [TestMethod]
@@ -436,7 +436,7 @@ namespace ShankUnitTests
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file1);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
         }
 
         [TestMethod]
@@ -451,7 +451,7 @@ namespace ShankUnitTests
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
         }
 
         [TestMethod]
@@ -470,7 +470,7 @@ namespace ShankUnitTests
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
         }
 
         [TestMethod]
@@ -485,7 +485,7 @@ namespace ShankUnitTests
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
         }
 
         [TestMethod]
@@ -501,7 +501,7 @@ namespace ShankUnitTests
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
         }
 
         [TestMethod]
@@ -517,7 +517,7 @@ namespace ShankUnitTests
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
         }
 
         [TestMethod]
@@ -534,7 +534,7 @@ namespace ShankUnitTests
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
         }
 
         [TestMethod]
@@ -551,7 +551,7 @@ namespace ShankUnitTests
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
         }
 
         [TestMethod]
@@ -567,7 +567,7 @@ namespace ShankUnitTests
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
         }
 
         [TestMethod]
@@ -584,7 +584,7 @@ namespace ShankUnitTests
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
         }
 
         [TestMethod]
@@ -602,7 +602,7 @@ namespace ShankUnitTests
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
         }
 
         [TestMethod]
@@ -620,7 +620,7 @@ namespace ShankUnitTests
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
         }
 
         [TestMethod]
@@ -637,7 +637,7 @@ namespace ShankUnitTests
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
         }
 
         [TestMethod]
@@ -656,7 +656,7 @@ namespace ShankUnitTests
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
         }
 
         [TestMethod]
@@ -674,7 +674,7 @@ namespace ShankUnitTests
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
         }
 
         [TestMethod]
@@ -691,7 +691,7 @@ namespace ShankUnitTests
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
         }
 
         [TestMethod]
@@ -710,7 +710,7 @@ namespace ShankUnitTests
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
         }
 
         [TestMethod]
@@ -726,7 +726,7 @@ namespace ShankUnitTests
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
         }
     }
 }

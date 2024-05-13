@@ -40,7 +40,7 @@ namespace ShankUnitTests
                 {
                     var interpreterErrorOccurred = false;
                     BuiltInFunctions.Register(currentModule.getFunctions());
-                    SemanticAnalysis.checkModules();
+                    SemanticAnalysis.CheckModules();
                     Interpreter.InterpretFunction(s, new List<InterpreterDataType>());
 
                     if (interpreterErrorOccurred)

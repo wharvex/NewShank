@@ -475,6 +475,14 @@ public class FunctionNode : CallableNode
 
     public List<string>? GenericTypeParameterNames { get; set; }
 
+    public void ApplyActionToTests(
+        Action<TestNode, List<InterpreterDataType>, ModuleNode?> action,
+        ModuleNode module
+    )
+    {
+        Tests.ToList().ForEach(testKvp => action(testKvp.Value, [], module));
+    }
+
     public VariableNode GetVariableNodeByName(string searchName)
     {
         return LocalVariables
@@ -1706,6 +1714,22 @@ public class ModuleNode : ASTNode
         return ret;
     }
 
+    public List<FunctionNode> GetFunctionsAsList() =>
+        Functions
+            .Where(cnKvp => cnKvp.Value is FunctionNode)
+            .Select(funcKvp => (FunctionNode)funcKvp.Value)
+            .ToList();
+
+    public FunctionNode GetStartFunctionSafe() =>
+        GetStartFunction()
+        ?? throw new InvalidOperationException("Expected GetStartFunction to not return null.");
+
+    public FunctionNode? GetStartFunction() =>
+        Functions
+            .Where(kvp => kvp.Key.Equals("start") && kvp.Value is FunctionNode)
+            .Select(startKvp => (FunctionNode)startKvp.Value)
+            .FirstOrDefault();
+
     public void updateImports(
         Dictionary<string, CallableNode> recievedFunctions,
         Dictionary<string, EnumNode> recievedEnums,
@@ -1957,6 +1981,17 @@ public class AssertResult
     {
         this.parentTestName = parentTestName;
     }
+
+    public override string ToString()
+    {
+        return parentTestName
+            + " assertIsEqual (line: "
+            + lineNum
+            + ") "
+            + comparedValues
+            + " : "
+            + (passed ? "passed" : "failed");
+    }
 }
 
 public class TestResult
@@ -1970,6 +2005,16 @@ public class TestResult
     {
         this.testName = testName;
         this.parentFunctionName = parentFunctionName;
+    }
+
+    public override string ToString()
+    {
+        return "Test "
+            + testName
+            + " (line: "
+            + lineNum
+            + " ) results:\n"
+            + string.Join("\n", Asserts);
     }
 }
 

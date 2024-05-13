@@ -16,29 +16,7 @@ public class Program
         var program = new ProgramNode();
 
         // Scan and Parse each input file.
-        foreach (var inPath in cmdLineArgsHelper.InPaths)
-        {
-            List<Token> tokens = [];
-            var lexer = new Lexer();
-
-            // Read the file and turn it into tokens.
-            var lines = File.ReadAllLines(inPath);
-            tokens.AddRange(lexer.Lex(lines));
-
-            // Save the tokens to $env:APPDATA\ShankDebugOutput1.json
-            OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForTokenList(tokens), 1);
-
-            var parser = new Parser(tokens);
-
-            // Parse the tokens and turn them into an AST.
-            while (tokens.Count > 0)
-            {
-                var module = parser.Module();
-                program.AddToModules(module);
-            }
-        }
-
-        Interpreter.Modules = program.Modules;
+        cmdLineArgsHelper.InPaths.ForEach(ip => ScanAndParse(ip, program));
 
         // Set the program's entry point.
         program.SetStartModule();
@@ -46,61 +24,76 @@ public class Program
         // Save the pre-SA AST to $env:APPDATA\ShankDebugOutput4.json
         OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForProgramNode(program), 4);
 
-        // Interpretation and testing.
+        // Add Builtin Functions to program.StartModule's functions.
+        BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
+
+        // Check the program for semantic issues.
+        SemanticAnalysis.CheckModules(program);
+
+        // Interpret the program in normal or unit test mode.
+        InterpretAndTest(cmdLineArgsHelper, program);
+    }
+
+    private static void ScanAndParse(string inPath, ProgramNode program)
+    {
+        List<Token> tokens = [];
+        var lexer = new Lexer();
+
+        // Read the file and turn it into tokens.
+        var lines = File.ReadAllLines(inPath);
+        tokens.AddRange(lexer.Lex(lines));
+
+        // Save the tokens to $env:APPDATA\ShankDebugOutput1.json
+        OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForTokenList(tokens), 1);
+
+        var parser = new Parser(tokens);
+
+        // Parse the tokens and turn them into an AST.
+        while (tokens.Count > 0)
+        {
+            var module = parser.Module();
+            program.AddToModules(module);
+        }
+    }
+
+    private static void InterpretAndTest(CmdLineArgsHelper cmdLineArgsHelper, ProgramNode program)
+    {
+        Interpreter.Modules = program.Modules;
+        Interpreter.StartModule = program.GetStartModuleSafe();
+
         if (!cmdLineArgsHelper.HasTestFlag())
         {
-            foreach (KeyValuePair<string, ModuleNode> currentModulePair in Interpreter.Modules)
-            {
-                var currentModule = currentModulePair.Value;
-
-                if (
-                    currentModule.getFunctions().ContainsKey("start")
-                    && currentModule.getFunctions()["start"] is FunctionNode s
-                )
-                {
-                    Interpreter.SetStartModule();
-                    OutputHelper.DebugPrintJson(
-                        OutputHelper.GetDebugJsonForModuleNode(currentModule),
-                        2
-                    );
-                    BuiltInFunctions.Register(currentModule.getFunctions());
-                    SemanticAnalysis.checkModules();
-                    Interpreter.InterpretFunction(s, [], currentModule);
-                }
-            }
+            It1(program);
         }
-        // Unit test interpreter mode
+        // Unit test interpreter mode.
         else
         {
-            Interpreter.setStartModule();
-            SemanticAnalysis.checkModules();
-            BuiltInFunctions.Register(Interpreter.getStartModule().getFunctions());
-            foreach (var module in Interpreter.Modules)
-            {
-                foreach (var function in module.Value.getFunctions())
-                {
-                    if (function.Value is BuiltInFunctionNode)
-                        continue;
-                    foreach (var test in ((FunctionNode)function.Value).Tests)
-                    {
-                        Interpreter.InterpretFunction(test.Value, new List<InterpreterDataType>());
-                    }
-                }
-                Console.WriteLine($"Tests from {module.Key}:");
-                foreach (var testResult in UnitTestResults)
-                {
-                    Console.WriteLine(
-                        $"  Test {testResult.testName} (line: {testResult.lineNum}) results:"
-                    );
-                    foreach (var assertResult in testResult.Asserts)
-                    {
-                        Console.WriteLine(
-                            $"      {assertResult.parentTestName} assertIsEqual (line: {assertResult.lineNum}) "
-                                + $"{assertResult.comparedValues} : {(assertResult.passed ? "passed" : "failed")}"
-                        );
-                    }
-                }
-            }
+            It2();
         }
+    }
+
+    private static void It1(ProgramNode program)
+    {
+        Interpreter.InterpretFunction(
+            program.GetStartModuleSafe().GetStartFunctionSafe(),
+            [],
+            program.GetStartModuleSafe()
+        );
+    }
+
+    private static void It2()
+    {
+        Interpreter
+            .GetModulesAsList()
+            .ForEach(module =>
+            {
+                module
+                    .GetFunctionsAsList()
+                    .ForEach(f => f.ApplyActionToTests(Interpreter.InterpretFunction, module));
+
+                Console.WriteLine(
+                    "[[ Tests from " + module.Name + " ]]\n" + string.Join("\n", UnitTestResults)
+                );
+            });
     }
 }

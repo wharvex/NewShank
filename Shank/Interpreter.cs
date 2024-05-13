@@ -7,10 +7,16 @@ namespace Shank;
 
 public class Interpreter
 {
-    public static Dictionary<string, ModuleNode> Modules { get; set; } = [];
+    public static Dictionary<string, ModuleNode>? Modules { get; set; }
 
-    private static ModuleNode? _startModule;
+    public static ModuleNode? StartModule { get; set; }
     public static StringBuilder testOutput = new StringBuilder();
+
+    public static Dictionary<string, ModuleNode> GetModulesSafe() =>
+        Modules ?? throw new InvalidOperationException("Expected Modules to not be null.");
+
+    public static List<ModuleNode> GetModulesAsList() =>
+        GetModulesSafe().Select(kvp => kvp.Value).ToList();
 
     /// <summary>
     /// Get an IDT-by-name dictionary of all the variables which a function can access.
@@ -80,7 +86,7 @@ public class Interpreter
     }
 
     private static ModuleNode GetStartModuleSafe() =>
-        _startModule
+        StartModule
         ?? throw new InvalidOperationException("Expected Interpreter._startModule to not be Null.");
 
     /// <summary>
@@ -390,6 +396,7 @@ public class Interpreter
         throw new Exception("Enums must be assigned Enums");
     }
 
+    // TODO: Clean up this method
     private static void ProcessFunctionCall(
         Dictionary<string, InterpreterDataType> variables,
         FunctionCallNode fc,
@@ -399,13 +406,13 @@ public class Interpreter
         ASTNode? calledFunction = null;
         bool callingModuleCanAccessFunction = false;
 
-        if (_startModule == null)
+        if (StartModule == null)
             throw new Exception("Interpreter error, start function could not be found.");
 
-        if (_startModule.getFunctions().ContainsKey(fc.Name))
-            calledFunction = _startModule.getFunctions()[fc.Name]; // find the function
-        else if (_startModule.getImportedFunctions().ContainsKey(fc.Name))
-            calledFunction = _startModule.getImportedFunctions()[fc.Name];
+        if (StartModule.getFunctions().ContainsKey(fc.Name))
+            calledFunction = StartModule.getFunctions()[fc.Name]; // find the function
+        else if (StartModule.getImportedFunctions().ContainsKey(fc.Name))
+            calledFunction = StartModule.getImportedFunctions()[fc.Name];
         else
         {
             //this loop allows tests to search their own module for functions
@@ -427,7 +434,7 @@ public class Interpreter
                     "Could not find the function "
                         + fc.Name
                         + " in the module "
-                        + _startModule.getName()
+                        + StartModule.getName()
                         + ". It may not have been exported."
                 );
             }
@@ -454,8 +461,8 @@ public class Interpreter
         }
         //check if the function is a builtIn, which all modules should have access to,
         //but they're only stored in the module with the start function to prevent collisions
-        if (_startModule.getFunctions().ContainsKey(fc.Name))
-            if (_startModule.getFunctions()[fc.Name] is BuiltInFunctionNode)
+        if (StartModule.getFunctions().ContainsKey(fc.Name))
+            if (StartModule.getFunctions()[fc.Name] is BuiltInFunctionNode)
                 callingModuleCanAccessFunction = true;
 
         //if we haven't found the function name, its an error at this point
@@ -1205,8 +1212,8 @@ public class Interpreter
         {
             if (currentModule.Value.getFunctions().ContainsKey("start"))
             {
-                _startModule = currentModule.Value;
-                return _startModule;
+                StartModule = currentModule.Value;
+                return StartModule;
             }
         }
 
@@ -1220,7 +1227,7 @@ public class Interpreter
             .Select(kvp => kvp.Value)
             .ToList();
 
-        _startModule = maybeStartModules.Count switch
+        StartModule = maybeStartModules.Count switch
         {
             1 => maybeStartModules[0],
             > 1
@@ -1236,7 +1243,7 @@ public class Interpreter
 
     public static ModuleNode? getStartModule()
     {
-        return _startModule;
+        return StartModule;
     }
 
     public static int ResolveIntBeforeVarDecs(ASTNode node)
@@ -1275,7 +1282,7 @@ public class Interpreter
     public static void Reset()
     {
         Modules = [];
-        _startModule = null;
+        StartModule = null;
         testOutput = new StringBuilder();
         Program.UnitTestResults = [];
     }

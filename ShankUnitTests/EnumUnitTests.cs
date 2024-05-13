@@ -105,7 +105,7 @@ namespace ShankUnitTests
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
         }
 
         [TestMethod]
@@ -122,7 +122,7 @@ namespace ShankUnitTests
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
         }
 
         [TestMethod]
@@ -140,7 +140,7 @@ namespace ShankUnitTests
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
         }
 
         [TestMethod]
@@ -160,7 +160,7 @@ namespace ShankUnitTests
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
         }
 
         [TestMethod]
@@ -179,7 +179,7 @@ namespace ShankUnitTests
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
             runInterpreter();
             Console.Write(Interpreter.testOutput.ToString());
             Assert.AreEqual("red ", Interpreter.testOutput.ToString());
@@ -201,7 +201,7 @@ namespace ShankUnitTests
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
             runInterpreter();
             Console.Write(Interpreter.testOutput.ToString());
             Assert.AreEqual("red ", Interpreter.testOutput.ToString());
@@ -224,7 +224,7 @@ namespace ShankUnitTests
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
             runInterpreter();
             Console.Write(Interpreter.testOutput.ToString());
             Assert.AreEqual("true ", Interpreter.testOutput.ToString());
@@ -248,7 +248,7 @@ namespace ShankUnitTests
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
             runInterpreter();
             Console.Write(Interpreter.testOutput.ToString());
             Assert.AreEqual("false ", Interpreter.testOutput.ToString());
@@ -272,7 +272,7 @@ namespace ShankUnitTests
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
         }
 
         [TestMethod]
@@ -293,7 +293,7 @@ namespace ShankUnitTests
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
             runInterpreter();
             Console.Write(Interpreter.testOutput.ToString());
             Assert.AreEqual("false ", Interpreter.testOutput.ToString());
@@ -317,7 +317,7 @@ namespace ShankUnitTests
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
             runInterpreter();
             Console.Write(Interpreter.testOutput.ToString());
             Assert.AreEqual("true ", Interpreter.testOutput.ToString());
@@ -341,7 +341,7 @@ namespace ShankUnitTests
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
             runInterpreter();
             Console.Write(Interpreter.testOutput.ToString());
             Assert.AreEqual("false ", Interpreter.testOutput.ToString());
@@ -365,7 +365,7 @@ namespace ShankUnitTests
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
             runInterpreter();
             Console.Write(Interpreter.testOutput.ToString());
             Assert.AreEqual("true ", Interpreter.testOutput.ToString());
@@ -389,7 +389,7 @@ namespace ShankUnitTests
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
             runInterpreter();
             Console.Write(Interpreter.testOutput.ToString());
             Assert.AreEqual("true ", Interpreter.testOutput.ToString());
@@ -412,7 +412,7 @@ namespace ShankUnitTests
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
             runInterpreter();
             Console.Write(Interpreter.testOutput.ToString());
             Assert.AreEqual("false ", Interpreter.testOutput.ToString());
@@ -435,7 +435,7 @@ namespace ShankUnitTests
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file);
             initializeInterpreter(files);
-            SemanticAnalysis.checkModules();
+            SemanticAnalysis.CheckModules();
             runInterpreter();
             Console.Write(Interpreter.testOutput.ToString());
             Assert.AreEqual("false ", Interpreter.testOutput.ToString());
