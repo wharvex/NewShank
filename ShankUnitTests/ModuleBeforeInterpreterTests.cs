@@ -60,7 +60,7 @@ namespace ShankUnitTests
             LinkedList<string[]> list = new LinkedList<string[]>();
             list.AddFirst(file2);
             initializeInterpreter(list);
-            SemanticAnalysis.handleExports();
+            SemanticAnalysis.HandleExports();
             Assert.AreEqual(Interpreter.getModules()["test2"].getExportedFunctions().Count, 1);
             Assert.IsTrue(
                 Interpreter.getModules()["test2"].getExportedFunctions().ContainsKey("add")
@@ -92,7 +92,7 @@ namespace ShankUnitTests
             list.AddFirst(file1);
             list.AddLast(file2);
             initializeInterpreter(list);
-            SemanticAnalysis.handleExports();
+            SemanticAnalysis.HandleExports();
             Assert.AreEqual(Interpreter.getModules()["test1"].getExportedFunctions().Count, 1);
             Assert.AreEqual(Interpreter.getModules()["test2"].getExportedFunctions().Count, 1);
 
@@ -119,7 +119,7 @@ namespace ShankUnitTests
             LinkedList<string[]> list = new LinkedList<string[]>();
             list.AddLast(file2);
             initializeInterpreter(list);
-            SemanticAnalysis.handleExports();
+            SemanticAnalysis.HandleExports();
             Assert.AreEqual(Interpreter.getModules()["test2"].getExportedFunctions().Count, 2);
 
             Assert.IsTrue(
@@ -153,7 +153,7 @@ namespace ShankUnitTests
             list.AddFirst(file1);
             list.AddLast(file2);
             initializeInterpreter(list);
-            SemanticAnalysis.handleImports();
+            SemanticAnalysis.HandleImports();
 
             Assert.AreEqual(Interpreter.getModules()["test1"].getImportNames().Count, 1);
             Assert.AreEqual(Interpreter.getModules()["test1"].getImportNames()["test2"].Count, 1);
@@ -188,7 +188,7 @@ namespace ShankUnitTests
             list.AddFirst(file1);
             list.AddLast(file2);
             initializeInterpreter(list);
-            SemanticAnalysis.handleImports();
+            SemanticAnalysis.HandleImports();
 
             Assert.AreEqual(Interpreter.getModules()["test1"].getImportNames().Count, 1);
             Assert.AreEqual(Interpreter.getModules()["test1"].getImportNames()["test2"].Count, 2);
@@ -227,7 +227,7 @@ namespace ShankUnitTests
             list.AddFirst(file1);
             list.AddLast(file2);
             initializeInterpreter(list);
-            SemanticAnalysis.handleImports();
+            SemanticAnalysis.HandleImports();
 
             //the list of available functions from test2 should only be 1
             Assert.AreEqual(Interpreter.getModules()["test1"].getImportNames()["test2"].Count, 1);
@@ -276,7 +276,7 @@ namespace ShankUnitTests
             list.AddFirst(file1);
             list.AddLast(file2);
             initializeInterpreter(list);
-            SemanticAnalysis.handleImports();
+            SemanticAnalysis.HandleImports();
 
             //the list of available functions from test2 should only be 1
             Assert.AreEqual(Interpreter.getModules()["test1"].getImportNames()["test2"].Count, 1);
@@ -332,7 +332,7 @@ namespace ShankUnitTests
             list.AddLast(file2);
             list.AddLast(file3);
             initializeInterpreter(list);
-            SemanticAnalysis.handleImports();
+            SemanticAnalysis.HandleImports();
 
             //module test1 should have both add and addFunc, but should only be able to call add
             Assert.AreEqual(Interpreter.getModules()["test1"].getImportNames().Count, 1);
@@ -392,7 +392,7 @@ namespace ShankUnitTests
             list.AddLast(file2);
             list.AddLast(file3);
             initializeInterpreter(list);
-            SemanticAnalysis.handleImports();
+            SemanticAnalysis.HandleImports();
 
             Assert.AreEqual(Interpreter.getModules()["test1"].getImportNames().Count, 2);
             Assert.AreEqual(Interpreter.getModules()["test1"].getImportedFunctions().Count, 2);
@@ -434,7 +434,7 @@ namespace ShankUnitTests
             LinkedList<string[]> list = new LinkedList<string[]>();
             list.AddFirst(file2);
             initializeInterpreter(list);
-            SemanticAnalysis.handleExports();
+            SemanticAnalysis.HandleExports();
             Assert.AreEqual(Interpreter.getModules()["test2"].getExportedFunctions().Count, 2);
             Assert.IsTrue(
                 Interpreter.getModules()["test2"].getExportedFunctions().ContainsKey("add")
@@ -468,7 +468,7 @@ namespace ShankUnitTests
             list.AddFirst(file1);
             list.AddLast(file2);
             initializeInterpreter(list);
-            SemanticAnalysis.handleImports();
+            SemanticAnalysis.HandleImports();
 
             Assert.AreEqual(Interpreter.getModules()["test1"].getImportNames().Count, 1);
             Assert.AreEqual(Interpreter.getModules()["test1"].getImportNames()["test2"].Count, 1);
@@ -494,7 +494,7 @@ namespace ShankUnitTests
             LinkedList<string[]> list = new LinkedList<string[]>();
             list.AddFirst(file2);
             initializeInterpreter(list);
-            SemanticAnalysis.handleExports();
+            SemanticAnalysis.HandleExports();
             Assert.AreEqual(Interpreter.getModules()["test2"].getExportedFunctions().Count, 2);
             Assert.IsTrue(
                 Interpreter.getModules()["test2"].getExportedFunctions().ContainsKey("add")
@@ -531,7 +531,7 @@ namespace ShankUnitTests
             list.AddFirst(file1);
             list.AddLast(file2);
             initializeInterpreter(list);
-            SemanticAnalysis.handleImports();
+            SemanticAnalysis.HandleImports();
 
             Assert.AreEqual(Interpreter.getModules()["test1"].getImportNames().Count, 1);
             Assert.AreEqual(Interpreter.getModules()["test1"].getImportNames()["test2"].Count, 1);

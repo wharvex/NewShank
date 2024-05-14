@@ -7,6 +7,9 @@ public class SemanticAnalysis
     public static Dictionary<string, ModuleNode>? Modules { get; set; }
     public static ModuleNode? StartModule { get; set; }
 
+    private static Dictionary<string, ModuleNode> GetModulesSafe() =>
+        Modules ?? throw new InvalidOperationException("Expected Modules to not be null.");
+
     private static ModuleNode GetStartModuleSafe() =>
         StartModule ?? throw new InvalidOperationException("Expected StartModule to not be null.");
 
@@ -82,7 +85,7 @@ public class SemanticAnalysis
 
         foreach (var s in statements)
         {
-            bool foundFunction = false;
+            var foundFunction = false;
             if (s is AssignmentNode an)
             {
                 if (variables.TryGetValue(an.Target.Name, out var targetDeclaration))
@@ -385,21 +388,6 @@ public class SemanticAnalysis
                 return ((FloatNode)variables[vrn.Name].From).Value;
         }
         throw new Exception("Unrecognized node type in math expression while checking range");
-    }
-
-    private static RecordMemberNode GetNestedRecordMemberNode(
-        RecordNode rn,
-        AssignmentNode an,
-        ModuleNode parentModule
-    )
-    {
-        RecordMemberNode rmn = rn.GetFromMembersByNameSafe(an.Target.Name);
-        while (rmn.UnknownType is not null)
-        {
-            //rmn = ((RecordNode)GetRecordsAndImports(parentModule.Records, parentModule.Imported)[rmn.UnknownType]).GetFromMembersByNameSafe(rmn.)
-        }
-
-        return rmn;
     }
 
     private static void CheckComparison(
@@ -758,13 +746,13 @@ public class SemanticAnalysis
         }
     }
 
-    // TODO: Clean up this method
+    // Only used by ShankUnitTests project.
     public static void CheckModules()
     {
         Modules = Interpreter.getModules();
         setStartModule();
-        handleExports();
-        handleImports();
+        HandleExports();
+        HandleImports();
         handleUnknownTypes();
         handleTests();
         foreach (KeyValuePair<string, ModuleNode> module in Modules)
@@ -825,9 +813,9 @@ public class SemanticAnalysis
     public static void CheckModules(ProgramNode pn)
     {
         Modules = pn.Modules;
-        setStartModule();
-        handleExports();
-        handleImports();
+        StartModule = pn.GetStartModuleSafe();
+        HandleExports();
+        HandleImports();
         handleUnknownTypes();
         handleTests();
         foreach (KeyValuePair<string, ModuleNode> module in Modules)
@@ -902,7 +890,7 @@ public class SemanticAnalysis
         return null;
     }
 
-    public static void handleImports()
+    public static void HandleImports()
     {
         foreach (string currentImport in StartModule.getImportNames().Keys)
         {
@@ -972,11 +960,11 @@ public class SemanticAnalysis
         }
     }
 
-    public static void handleExports()
+    public static void HandleExports()
     {
         foreach (KeyValuePair<string, ModuleNode> currentModule in Modules)
         {
-            currentModule.Value.updateExports();
+            currentModule.Value.UpdateExports();
         }
     }
 

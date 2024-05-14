@@ -1803,7 +1803,7 @@ public class ModuleNode : ASTNode
         }
     }
 
-    public void updateExports()
+    public void UpdateExports()
     {
         foreach (var exportName in ExportTargetNames)
         {

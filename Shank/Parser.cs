@@ -1,7 +1,4 @@
-﻿using System.Text.Json;
-using LLVMSharp;
-
-namespace Shank;
+﻿namespace Shank;
 
 public class Parser
 {

@@ -11,16 +11,16 @@ using System.Web;
 
 namespace Shank;
 
+/// <summary>
+/// If you're using Windows, these output files should save to something like:
+/// C:\Users\[you]\AppData\Roaming
+/// You should be able to get the exact path by running the following command in PowerShell:
+/// $env:appdata
+/// </summary>
 public class OutputHelper
 {
-    private static readonly JsonSerializerOptions Options = new() { WriteIndented = true };
-
     public static void DebugPrintJson(string output, int i)
     {
-        // If you're using windows, the value of docPath should be:
-        // C:\Users\[you]\AppData\Roaming
-        // Which should also be the output of the following command in PowerShell:
-        // $env:appdata
         var docPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         using var outputFile = new StreamWriter(
             Path.Combine(docPath, $"ShankDebugOutput{i}.json"),
@@ -31,10 +31,6 @@ public class OutputHelper
 
     public static void DebugPrintTxt(string output, int i)
     {
-        // If you're using windows, the value of docPath should be:
-        // C:\Users\[you]\AppData\Roaming
-        // Which should also be the output of the following command in PowerShell:
-        // $env:appdata
         var docPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         using var outputFile = new StreamWriter(
             Path.Combine(docPath, $"ShankDebugOutput{i}.txt"),

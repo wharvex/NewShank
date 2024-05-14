@@ -4,7 +4,7 @@ namespace Shank;
 
 public class Lexer
 {
-    private enum modeType
+    private enum ModeType
     {
         Start,
         Number,
@@ -14,8 +14,8 @@ public class Lexer
         DoubleQuote
     }
 
-    private modeType mode = modeType.Start;
-    private Dictionary<string, Token.TokenType> ReservedWords =
+    private ModeType Mode { get; set; } = ModeType.Start;
+    private Dictionary<string, Token.TokenType> ReservedWords { get; } =
         new()
         {
             { "integer", Token.TokenType.Integer },
@@ -52,42 +52,291 @@ public class Lexer
             { "refersTo", Token.TokenType.RefersTo }
         };
 
-    private void ModeChange(List<Token> retVal, StringBuilder currentBuffer, int lineNumber)
+    /// <summary>
+    /// This method prepares for a mode change.
+    /// It creates an appropriate Token if needed.
+    /// It always clears the current buffer, unless there is an error.
+    /// It sets ModeType to `Start' if ModeType is not `Comment', unless there is an error.
+    /// It is called at the end of every line, so we don't set ModeType to `Start' if ModeType is
+    /// `Comment' because we want to let comments span multiple lines.
+    /// </summary>
+    /// <param name="retVal">The Token list</param>
+    /// <param name="currentBuffer">Stores what will be the Token's Value property if needed</param>
+    /// <param name="lineNumber"></param>
+    /// <exception cref="TokenizationErrorException">If character literal is too long</exception>
+    private void ModeChangePrep(List<Token> retVal, StringBuilder currentBuffer, int lineNumber)
     {
-        switch (mode)
+        switch (Mode)
         {
-            case modeType.Number:
+            case ModeType.Number:
                 retVal.Add(new Token(Token.TokenType.Number, lineNumber, currentBuffer.ToString()));
-                currentBuffer.Clear();
                 break;
-            case modeType.Name:
+            case ModeType.Name:
                 var val = currentBuffer.ToString();
                 retVal.Add(
-                    ReservedWords.ContainsKey(val)
-                        ? new Token(ReservedWords[val], lineNumber)
+                    ReservedWords.TryGetValue(val, out var reservedWord)
+                        ? new Token(reservedWord, lineNumber)
                         : new Token(Token.TokenType.Identifier, lineNumber, val)
                 );
-                currentBuffer.Clear();
                 break;
-            case modeType.SingleQuote:
+            case ModeType.SingleQuote:
+                if (currentBuffer.Length > 1)
+                {
+                    throw new TokenizationErrorException(
+                        "Character literals can only be one character long.",
+                        lineNumber,
+                        currentBuffer.ToString()
+                    );
+                }
                 retVal.Add(
                     new Token(Token.TokenType.CharContents, lineNumber, currentBuffer.ToString())
                 );
-                if (currentBuffer.Length > 1)
-                    throw new Exception(
-                        $"Character literals can only be one character long. Found: {currentBuffer}"
-                    );
-                currentBuffer.Clear();
                 break;
-            case modeType.DoubleQuote:
+            case ModeType.DoubleQuote:
                 retVal.Add(
                     new Token(Token.TokenType.StringContents, lineNumber, currentBuffer.ToString())
                 );
-                currentBuffer.Clear();
                 break;
         }
-        if (mode != modeType.Comment)
-            mode = modeType.Start;
+
+        currentBuffer.Clear();
+
+        if (Mode != ModeType.Comment)
+        {
+            Mode = ModeType.Start;
+        }
+    }
+
+    private static void UpdateIndents(
+        int thisIndentLevel,
+        ref int currentIndentLevel,
+        int lineNumber,
+        List<Token> retVal
+    )
+    {
+        while (thisIndentLevel > currentIndentLevel)
+        {
+            currentIndentLevel++;
+            retVal.Add(new Token(Token.TokenType.Indent, lineNumber));
+        }
+
+        while (thisIndentLevel < currentIndentLevel)
+        {
+            currentIndentLevel--;
+            retVal.Add(new Token(Token.TokenType.Dedent, lineNumber));
+        }
+    }
+
+    private static void SpacesAndIndents(
+        ref int index,
+        int lineNumber,
+        ref int currentIndentLevel,
+        string line,
+        List<Token> retVal
+    )
+    {
+        // Find the first line index that is not a space or a tab.
+        var firstNonSpaceIdx = Enumerable
+            .Range(index, line.Length)
+            .Where(i => line[i] != ' ' && line[i] != '\t')
+            .FirstOrDefault(-1);
+
+        // If there is no such index, then this method is done.
+        if (firstNonSpaceIdx < 0)
+        {
+            return;
+        }
+
+        // Count the initial spaces in the line.
+        var initialSpaces = Enumerable.Range(index, firstNonSpaceIdx).Count(i => line[i] == ' ');
+
+        // Calculate the initial tabs in the line.
+        var initialTabs = firstNonSpaceIdx - index - initialSpaces;
+
+        // Translate tabs into spaces.
+        initialSpaces += initialTabs * 4;
+
+        // Update the line index.
+        index = firstNonSpaceIdx;
+
+        // Get the indent level for this line based on the initial spaces count.
+        var thisIndentLevel = initialSpaces / 4;
+
+        // Match currentIndentLevel to this line and add Indent/Dedent tokens to retVal accordingly.
+        UpdateIndents(thisIndentLevel, ref currentIndentLevel, lineNumber, retVal);
+    }
+
+    private void MainSwitch(
+        char character,
+        StringBuilder currentBuffer,
+        List<Token> retVal,
+        int lineNumber,
+        ref int index,
+        string line
+    )
+    {
+        switch (character)
+        {
+            case >= 'A'
+            and <= 'Z'
+            or (>= 'a' and <= 'z') when Mode != ModeType.Name:
+                ModeChangePrep(retVal, currentBuffer, lineNumber);
+                Mode = ModeType.Name;
+                currentBuffer.Append(character);
+                break;
+            case >= 'A'
+            and <= 'Z'
+            or (>= 'a' and <= 'z')
+            or (>= '0' and <= '9') when Mode == ModeType.Name:
+                currentBuffer.Append(character);
+                break;
+            case (>= '0' and <= '9' or '.') when (Mode is ModeType.Start or ModeType.Number):
+                Mode = ModeType.Number;
+                currentBuffer.Append(character);
+                break;
+            case '-'
+            or '+' when Mode is ModeType.Number or ModeType.Name:
+                ModeChangePrep(retVal, currentBuffer, lineNumber);
+                retVal.Add(
+                    new Token(
+                        character == '+' ? Token.TokenType.Plus : Token.TokenType.Minus,
+                        lineNumber
+                    )
+                );
+                break;
+            case '.' when Mode is ModeType.Name:
+                ModeChangePrep(retVal, currentBuffer, lineNumber);
+                retVal.Add(new Token(Token.TokenType.Dot, lineNumber));
+                break;
+            case '-'
+            or '+' when Mode is ModeType.Start:
+                ModeChangePrep(retVal, currentBuffer, lineNumber);
+                if (index < line.Length - 1)
+                {
+                    var next = line[index + 1];
+                    if (next is >= '0' and <= '9')
+                    {
+                        Mode = ModeType.Number;
+                        currentBuffer.Append(character);
+                    }
+                    else
+                        retVal.Add(
+                            new Token(
+                                character == '+' ? Token.TokenType.Plus : Token.TokenType.Minus,
+                                lineNumber
+                            )
+                        );
+                }
+                else
+                {
+                    // Last thing in the line is a minus. This doesn't make sense...
+                    retVal.Add(new Token(Token.TokenType.Minus, lineNumber));
+                }
+
+                break;
+            case ':':
+                ModeChangePrep(retVal, currentBuffer, lineNumber);
+                if (index < line.Length - 1)
+                {
+                    var next = line[index + 1];
+                    if (next == '=')
+                    {
+                        index++;
+                        retVal.Add(new Token(Token.TokenType.Assignment, lineNumber));
+                        break;
+                    }
+                }
+
+                retVal.Add(new Token(Token.TokenType.Colon, lineNumber));
+                break;
+            case '>':
+                ModeChangePrep(retVal, currentBuffer, lineNumber);
+                if (index < line.Length - 1)
+                {
+                    var next = line[index + 1];
+                    if (next == '=')
+                    {
+                        index++;
+                        retVal.Add(new Token(Token.TokenType.GreaterEqual, lineNumber));
+                        break;
+                    }
+                }
+
+                retVal.Add(new Token(Token.TokenType.Greater, lineNumber));
+                break;
+            case '<':
+                ModeChangePrep(retVal, currentBuffer, lineNumber);
+                if (index < line.Length - 1)
+                {
+                    var next = line[index + 1];
+                    if (next == '=')
+                    {
+                        index++;
+                        retVal.Add(new Token(Token.TokenType.LessEqual, lineNumber));
+                        break;
+                    }
+
+                    if (next == '>')
+                    {
+                        index++;
+                        retVal.Add(new Token(Token.TokenType.NotEqual, lineNumber));
+                        break;
+                    }
+                }
+
+                retVal.Add(new Token(Token.TokenType.LessThan, lineNumber));
+                break;
+            case ';':
+                ModeChangePrep(retVal, currentBuffer, lineNumber);
+                retVal.Add(new Token(Token.TokenType.Semicolon, lineNumber));
+                break;
+            case ',':
+                ModeChangePrep(retVal, currentBuffer, lineNumber);
+                retVal.Add(new Token(Token.TokenType.Comma, lineNumber));
+                break;
+            case '=':
+                ModeChangePrep(retVal, currentBuffer, lineNumber);
+                retVal.Add(new Token(Token.TokenType.Equal, lineNumber));
+                break;
+            case '[':
+                ModeChangePrep(retVal, currentBuffer, lineNumber);
+                retVal.Add(new Token(Token.TokenType.LeftBracket, lineNumber));
+                break;
+            case ']':
+                ModeChangePrep(retVal, currentBuffer, lineNumber);
+                retVal.Add(new Token(Token.TokenType.RightBracket, lineNumber));
+                break;
+            case ('*' or '/'):
+                ModeChangePrep(retVal, currentBuffer, lineNumber);
+                retVal.Add(
+                    new Token(
+                        character == '*' ? Token.TokenType.Times : Token.TokenType.Divide,
+                        lineNumber
+                    )
+                );
+                break;
+            case '{':
+                ModeChangePrep(retVal, currentBuffer, lineNumber);
+                Mode = ModeType.Comment;
+                break;
+            case ')':
+                ModeChangePrep(retVal, currentBuffer, lineNumber);
+                retVal.Add(new Token(Token.TokenType.RightParen, lineNumber));
+                break;
+            case '(':
+                ModeChangePrep(retVal, currentBuffer, lineNumber);
+                retVal.Add(new Token(Token.TokenType.LeftParen, lineNumber));
+                break;
+            case '\'':
+                Mode = ModeType.SingleQuote;
+                break;
+            case '"':
+                Mode = ModeType.DoubleQuote;
+                break;
+            case ' ':
+                ModeChangePrep(retVal, currentBuffer, lineNumber);
+                break;
+        }
     }
 
     public List<Token> Lex(string[] lines)
@@ -100,243 +349,51 @@ public class Lexer
         foreach (var line in lines)
         {
             lineNumber++;
-            int spaces = 0,
-                index = 0;
+            var index = 0;
 
-            for (index = 0; index < line.Length; index++)
-                if (line[index] == ' ')
-                    spaces++;
-                else if (line[index] == '\t')
-                    spaces += 4;
-                else
-                    break;
-            var thisIndentLevel = spaces / 4;
-            if (index < line.Length) // there is still more to go - this wasn't an empty line
-            {
-                while (thisIndentLevel > currentIndentLevel)
-                {
-                    currentIndentLevel++;
-                    retVal.Add(new Token(Token.TokenType.Indent, lineNumber));
-                }
+            SpacesAndIndents(ref index, lineNumber, ref currentIndentLevel, line, retVal);
 
-                while (thisIndentLevel < currentIndentLevel)
-                {
-                    currentIndentLevel--;
-                    retVal.Add(new Token(Token.TokenType.Dedent, lineNumber));
-                }
-            }
-
-            for (; index < line.Length; index++) // continue on
+            // Main For-Loop
+            for (; index < line.Length; index++)
             {
                 var character = line[index];
-                if (mode == modeType.Comment)
+                switch (Mode)
                 {
-                    switch (character)
-                    {
-                        case '*':
-                            if (index < line.Length - 1)
-                            {
-                                var next = line[index + 1];
-                                if (next == ')')
-                                    mode = modeType.Start;
-                                index++;
-                            }
-
-                            break;
-                    }
-                }
-                else if (mode == modeType.SingleQuote)
-                {
-                    if (character == '\'')
-                        ModeChange(retVal, currentBuffer, lineNumber);
-                    else
+                    case ModeType.Comment when character != '}':
+                        break;
+                    case ModeType.Comment:
+                        Mode = ModeType.Start;
+                        index++;
+                        break;
+                    case ModeType.SingleQuote when character == '\'':
+                        ModeChangePrep(retVal, currentBuffer, lineNumber);
+                        break;
+                    case ModeType.SingleQuote:
                         currentBuffer.Append(character);
-                }
-                else if (mode == modeType.DoubleQuote)
-                {
-                    if (character == '\"')
-                        ModeChange(retVal, currentBuffer, lineNumber);
-                    else
+                        break;
+                    case ModeType.DoubleQuote when character == '\"':
+                        ModeChangePrep(retVal, currentBuffer, lineNumber);
+                        break;
+                    case ModeType.DoubleQuote:
                         currentBuffer.Append(character);
-                }
-                else
-                {
-                    switch (character)
-                    {
-                        case >= 'A'
-                        and <= 'Z'
-                        or (>= 'a' and <= 'z') when mode != modeType.Name:
-                            if (mode != modeType.Name)
-                                ModeChange(retVal, currentBuffer, lineNumber);
-                            mode = modeType.Name;
-                            currentBuffer.Append(character);
-                            break;
-                        case >= 'A'
-                        and <= 'Z'
-                        or (>= 'a' and <= 'z')
-                        or (>= '0' and <= '9') when mode == modeType.Name:
-                            currentBuffer.Append(character);
-                            break;
-                        case (>= '0' and <= '9' or '.')
-                            when (mode is modeType.Start or modeType.Number):
-                            mode = modeType.Number;
-                            currentBuffer.Append(character);
-                            break;
-                        case '-'
-                        or '+' when mode is modeType.Number or modeType.Name:
-                            ModeChange(retVal, currentBuffer, lineNumber);
-                            retVal.Add(
-                                new Token(
-                                    character == '+' ? Token.TokenType.Plus : Token.TokenType.Minus,
-                                    lineNumber
-                                )
-                            );
-                            break;
-                        case '.' when mode is modeType.Name:
-                            ModeChange(retVal, currentBuffer, lineNumber);
-                            retVal.Add(new Token(Token.TokenType.Dot, lineNumber));
-                            break;
-                        case '-'
-                        or '+' when mode is modeType.Start:
-                            ModeChange(retVal, currentBuffer, lineNumber);
-                            if (index < line.Length - 1)
-                            {
-                                var next = line[index + 1];
-                                if (next is >= '0' and <= '9')
-                                {
-                                    mode = modeType.Number;
-                                    currentBuffer.Append(character);
-                                }
-                                else
-                                    retVal.Add(
-                                        new Token(
-                                            character == '+'
-                                                ? Token.TokenType.Plus
-                                                : Token.TokenType.Minus,
-                                            lineNumber
-                                        )
-                                    );
-                            }
-                            else
-                            {
-                                // Last thing in the line is a minus. This doesn't make sense...
-                                retVal.Add(new Token(Token.TokenType.Minus, lineNumber));
-                            }
-
-                            break;
-                        case ':':
-                            ModeChange(retVal, currentBuffer, lineNumber);
-                            if (index < line.Length - 1)
-                            {
-                                var next = line[index + 1];
-                                if (next == '=')
-                                {
-                                    index++;
-                                    retVal.Add(new Token(Token.TokenType.Assignment, lineNumber));
-                                    continue;
-                                }
-                            }
-
-                            retVal.Add(new Token(Token.TokenType.Colon, lineNumber));
-                            break;
-                        case '>':
-                            ModeChange(retVal, currentBuffer, lineNumber);
-                            if (index < line.Length - 1)
-                            {
-                                var next = line[index + 1];
-                                if (next == '=')
-                                {
-                                    index++;
-                                    retVal.Add(new Token(Token.TokenType.GreaterEqual, lineNumber));
-                                    continue;
-                                }
-                            }
-
-                            retVal.Add(new Token(Token.TokenType.Greater, lineNumber));
-                            break;
-                        case '<':
-                            ModeChange(retVal, currentBuffer, lineNumber);
-                            if (index < line.Length - 1)
-                            {
-                                var next = line[index + 1];
-                                if (next == '=')
-                                {
-                                    index++;
-                                    retVal.Add(new Token(Token.TokenType.LessEqual, lineNumber));
-                                    continue;
-                                }
-
-                                if (next == '>')
-                                {
-                                    index++;
-                                    retVal.Add(new Token(Token.TokenType.NotEqual, lineNumber));
-                                    continue;
-                                }
-                            }
-
-                            retVal.Add(new Token(Token.TokenType.LessThan, lineNumber));
-                            break;
-                        case ';':
-                            ModeChange(retVal, currentBuffer, lineNumber);
-                            retVal.Add(new Token(Token.TokenType.Semicolon, lineNumber));
-                            break;
-                        case ',':
-                            ModeChange(retVal, currentBuffer, lineNumber);
-                            retVal.Add(new Token(Token.TokenType.Comma, lineNumber));
-                            break;
-                        case '=':
-                            ModeChange(retVal, currentBuffer, lineNumber);
-                            retVal.Add(new Token(Token.TokenType.Equal, lineNumber));
-                            break;
-                        case '[':
-                            ModeChange(retVal, currentBuffer, lineNumber);
-                            retVal.Add(new Token(Token.TokenType.LeftBracket, lineNumber));
-                            break;
-                        case ']':
-                            ModeChange(retVal, currentBuffer, lineNumber);
-                            retVal.Add(new Token(Token.TokenType.RightBracket, lineNumber));
-                            break;
-                        case ('*' or '/'):
-                            ModeChange(retVal, currentBuffer, lineNumber);
-                            retVal.Add(
-                                new Token(
-                                    character == '*'
-                                        ? Token.TokenType.Times
-                                        : Token.TokenType.Divide,
-                                    lineNumber
-                                )
-                            );
-                            break;
-                        case ')':
-                            ModeChange(retVal, currentBuffer, lineNumber);
-                            retVal.Add(new Token(Token.TokenType.RightParen, lineNumber));
-                            break;
-                        case '(':
-                            ModeChange(retVal, currentBuffer, lineNumber);
-                            if (index < line.Length - 1)
-                            {
-                                var next = line[index + 1];
-                                if (next == '*')
-                                    mode = modeType.Comment;
-                            }
-
-                            if (mode != modeType.Comment)
-                                retVal.Add(new Token(Token.TokenType.LeftParen, lineNumber));
-                            break;
-                        case '\'':
-                            mode = modeType.SingleQuote;
-                            break;
-                        case '"':
-                            mode = modeType.DoubleQuote;
-                            break;
-                        case ' ':
-                            ModeChange(retVal, currentBuffer, lineNumber);
-                            break;
-                    }
+                        break;
+                    default:
+                        MainSwitch(character, currentBuffer, retVal, lineNumber, ref index, line);
+                        break;
                 }
             }
 
-            ModeChange(retVal, currentBuffer, lineNumber);
+            if (Mode is ModeType.SingleQuote or ModeType.DoubleQuote)
+            {
+                throw new TokenizationErrorException(
+                    "Unclosed string/character literal is invalid to produce a token.",
+                    lineNumber,
+                    currentBuffer.ToString()
+                );
+            }
+
+            // Line end mode change.
+            ModeChangePrep(retVal, currentBuffer, lineNumber);
             retVal.Add(new Token(Token.TokenType.EndOfLine, lineNumber));
         }
 
