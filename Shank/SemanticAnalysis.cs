@@ -403,18 +403,13 @@ public class SemanticAnalysis
             if (ben.Right is not IntNode)
                 throw new Exception("Can only compare integers to other integers.");
         }
-        else if (ben.Left is FloatNode rn)
+        else if (ben.Left is FloatNode)
         {
             if (ben.Right is not FloatNode)
                 throw new Exception("Can only compare floats to other floats.");
         }
         else if (ben.Left is VariableReferenceNode vrn)
         {
-            if (
-                !variables.ContainsKey(vrn.Name)
-                && !variables.ContainsKey(((VariableReferenceNode)ben.Right).Name)
-            )
-                throw new Exception("Cannot compare two enum elements.");
             VariableNode variable;
 
             //checking whether the left or right side of the equation is the variable
@@ -422,14 +417,17 @@ public class SemanticAnalysis
             if (variables.ContainsKey(vrn.Name))
                 variable = variables[vrn.Name];
             else
+                // TODO: This will produce an InvalidCastException if ben.Right is not a VRN.
                 variable = variables[((VariableReferenceNode)ben.Right).Name];
             switch (variable.Type)
             {
                 case VariableNode.DataType.Integer:
                     if (
                         ben.Right is not IntNode
-                        || variables[((VariableReferenceNode)ben.Right).Name].Type
-                            != VariableNode.DataType.Integer
+                        || (
+                            ben.Right is VariableReferenceNode vrn2
+                            && variables[vrn2.Name].Type != VariableNode.DataType.Integer
+                        )
                     )
                         throw new Exception(
                             "Integers can only be compared to integers or integer variables."
@@ -438,8 +436,10 @@ public class SemanticAnalysis
                 case VariableNode.DataType.Real:
                     if (
                         ben.Right is not FloatNode
-                        || variables[((VariableReferenceNode)ben.Right).Name].Type
-                            != VariableNode.DataType.Real
+                        || (
+                            ben.Right is VariableReferenceNode vrn3
+                            && variables[vrn3.Name].Type != VariableNode.DataType.Real
+                        )
                     )
                         throw new Exception(
                             "Floats can only be compared to floats or float variables."

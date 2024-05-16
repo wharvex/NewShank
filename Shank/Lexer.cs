@@ -166,6 +166,15 @@ public class Lexer
         UpdateIndents(thisIndentLevel, ref currentIndentLevel, lineNumber, retVal);
     }
 
+    private static bool NextCharIsBetween(char c1, char c2, string line, int index) =>
+        index < line.Length - 1 && line[index + 1] >= c1 && line[index + 1] <= c2;
+
+    private static bool NextCharIs(char c, string line, int index) =>
+        index < line.Length - 1 && line[index + 1] == c;
+
+    private static bool NextCharIsEither(char c1, char c2, string line, int index) =>
+        index < line.Length - 1 && (line[index + 1] == c1 || line[index + 1] == c2);
+
     private void MainSwitch(
         char character,
         StringBuilder currentBuffer,
@@ -211,79 +220,54 @@ public class Lexer
             case '-'
             or '+' when Mode is ModeType.Start:
                 ModeChangePrep(retVal, currentBuffer, lineNumber);
-                if (index < line.Length - 1)
+                if (NextCharIsBetween('0', '9', line, index))
                 {
-                    var next = line[index + 1];
-                    if (next is >= '0' and <= '9')
-                    {
-                        Mode = ModeType.Number;
-                        currentBuffer.Append(character);
-                    }
-                    else
-                        retVal.Add(
-                            new Token(
-                                character == '+' ? Token.TokenType.Plus : Token.TokenType.Minus,
-                                lineNumber
-                            )
-                        );
+                    Mode = ModeType.Number;
+                    currentBuffer.Append(character);
+                    break;
                 }
-                else
-                {
-                    // Last thing in the line is a minus. This doesn't make sense...
-                    retVal.Add(new Token(Token.TokenType.Minus, lineNumber));
-                }
-
+                retVal.Add(
+                    new Token(
+                        character == '+' ? Token.TokenType.Plus : Token.TokenType.Minus,
+                        lineNumber
+                    )
+                );
                 break;
             case ':':
                 ModeChangePrep(retVal, currentBuffer, lineNumber);
-                if (index < line.Length - 1)
+                if (NextCharIs('=', line, index))
                 {
-                    var next = line[index + 1];
-                    if (next == '=')
-                    {
-                        index++;
-                        retVal.Add(new Token(Token.TokenType.Assignment, lineNumber));
-                        break;
-                    }
+                    index++;
+                    retVal.Add(new Token(Token.TokenType.Assignment, lineNumber));
+                    break;
                 }
-
                 retVal.Add(new Token(Token.TokenType.Colon, lineNumber));
                 break;
             case '>':
                 ModeChangePrep(retVal, currentBuffer, lineNumber);
-                if (index < line.Length - 1)
+                if (NextCharIs('=', line, index))
                 {
-                    var next = line[index + 1];
-                    if (next == '=')
-                    {
-                        index++;
-                        retVal.Add(new Token(Token.TokenType.GreaterEqual, lineNumber));
-                        break;
-                    }
+                    index++;
+                    retVal.Add(new Token(Token.TokenType.GreaterEqual, lineNumber));
+                    break;
                 }
-
                 retVal.Add(new Token(Token.TokenType.Greater, lineNumber));
                 break;
             case '<':
                 ModeChangePrep(retVal, currentBuffer, lineNumber);
-                if (index < line.Length - 1)
+                if (NextCharIsEither('=', '>', line, index))
                 {
-                    var next = line[index + 1];
-                    if (next == '=')
-                    {
-                        index++;
-                        retVal.Add(new Token(Token.TokenType.LessEqual, lineNumber));
-                        break;
-                    }
-
-                    if (next == '>')
-                    {
-                        index++;
-                        retVal.Add(new Token(Token.TokenType.NotEqual, lineNumber));
-                        break;
-                    }
+                    index++;
+                    retVal.Add(
+                        new Token(
+                            line[index] == '='
+                                ? Token.TokenType.LessEqual
+                                : Token.TokenType.NotEqual,
+                            lineNumber
+                        )
+                    );
+                    break;
                 }
-
                 retVal.Add(new Token(Token.TokenType.LessThan, lineNumber));
                 break;
             case ';':

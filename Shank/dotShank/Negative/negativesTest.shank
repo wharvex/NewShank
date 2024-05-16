@@ -1,0 +1,15 @@
+define start()
+variables a, b, c, d : integer
+    a := -1
+    b := +1
+    c := a + b
+    d := a - b
+
+    if c <= 0 then
+        write "lte works"
+
+    if d <> 0 then
+        write "ne works"
+
+    write "-1 + 1:", c
+    write "-1 - 1:", d
