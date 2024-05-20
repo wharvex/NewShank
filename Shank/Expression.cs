@@ -1105,6 +1105,7 @@ public class RecordNode : ASTNode
     public string? ParentModuleName { get; init; }
 
     public List<StatementNode> Members { get; init; }
+    public List<VariableNode> Members2 { get; init; }
     public bool IsPublic { get; set; }
 
     public RecordNode(string name, string moduleName, List<string>? genericTypeParameterNames)
@@ -1113,6 +1114,7 @@ public class RecordNode : ASTNode
         ParentModuleName = moduleName;
         GenericTypeParameterNames = genericTypeParameterNames;
         Members = [];
+        Members2 = [];
         IsPublic = false;
     }
 
@@ -1179,6 +1181,15 @@ public class VariableNode : ASTNode
         Enum,
         None,
         Multiple
+    };
+
+    public enum DeclarationContext
+    {
+        RecordDeclaration,
+        EnumDeclaration,
+        FunctionSignature,
+        VariablesLine,
+        ConstantsLine
     };
 
     public DataType Type { get; set; }

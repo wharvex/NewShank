@@ -399,9 +399,7 @@ public class Parser
 
     private RecordNode Record(string moduleName)
     {
-        var name =
-            MatchAndRemove(Token.TokenType.Identifier)
-            ?? throw new SyntaxErrorException("Expected a record name", Peek(0));
+        var name = RequiresAndReturnsToken(Token.TokenType.Identifier);
 
         var genericTypeParameterNames = ParseGenericKeywordAndTypeParams();
 
@@ -431,27 +429,30 @@ public class Parser
 
     private void BodyFunction(FunctionNode function)
     {
-        Body(function.Statements);
+        StatementsBody(function.Statements);
     }
 
     private void BodyRecord(RecordNode record)
     {
-        Body(record.Members, true);
+        StatementsBody(record.Members, true);
     }
 
-    private void Body(List<StatementNode> statements, bool isRecord = false)
+    private void StatementsBody(List<StatementNode> statements, bool isRecord = false)
     {
-        if (MatchAndRemove(Token.TokenType.Indent) is null)
-        {
-            throw new SyntaxErrorException("Expected an indent", Peek(0));
-        }
+        RequiresToken(Token.TokenType.Indent);
 
         Statements(statements, isRecord);
 
-        if (MatchAndRemove(Token.TokenType.Dedent) is null)
-        {
-            throw new SyntaxErrorException("Expected a dedent", Peek(0));
-        }
+        RequiresToken(Token.TokenType.Dedent);
+    }
+
+    private void Body(List<ASTNode> bodyContents, Action<List<ASTNode>> bodyContentsParser)
+    {
+        RequiresToken(Token.TokenType.Indent);
+
+        bodyContentsParser(bodyContents);
+
+        RequiresToken(Token.TokenType.Dedent);
     }
 
     private void Statements(List<StatementNode> statements, bool isRecord = false)
@@ -470,10 +471,20 @@ public class Parser
         } while (s is not null);
     }
 
+    private void Statements2(List<ASTNode> statements)
+    {
+        StatementNode? s = Statement2();
+        while (s is not null)
+        {
+            statements.Add(s);
+            s = Statement2();
+        }
+    }
+
     private StatementNode? Statement(bool isRecord = false)
     {
-        // Try to parse a statement as a record member declaration based on the value of an
-        // "isRecord" flag. We need to use this flag because two arbitrary identifiers in a row
+        // In order to know if we should parse a statement as a record member declaration, we use
+        // an "isRecord" flag. We need to use this flag because two arbitrary identifiers in a row
         // could be a record member declaration or a function call from the Parser's point of view,
         // so we need to know the context.
         return Assignment()
@@ -482,6 +493,11 @@ public class Parser
             ?? For()
             ?? If()
             ?? (isRecord ? RecordMember() : FunctionCall());
+    }
+
+    private StatementNode? Statement2()
+    {
+        return Assignment() ?? While() ?? Repeat() ?? For() ?? If() ?? FunctionCall();
     }
 
     private RecordMemberNode? RecordMember()
@@ -594,33 +610,32 @@ public class Parser
             throw new SyntaxErrorException("Expected a then in the if.", Peek(0));
         MatchAndRemove(Token.TokenType.EndOfLine);
         var body = new List<StatementNode>();
-        Body(body);
-        return new IfNode(boolExp, body, elseAndElseIf());
+        StatementsBody(body);
+        return new IfNode(boolExp, body, ElseAndElseIf());
     }
 
-    private IfNode? elseAndElseIf()
+    private IfNode? ElseAndElseIf()
     {
         if (MatchAndRemove(Token.TokenType.Elsif) != null)
         {
-            var boolExp = BooleanExpression();
-            if (boolExp == null)
-                throw new SyntaxErrorException(
+            var boolExp =
+                BooleanExpression()
+                ?? throw new SyntaxErrorException(
                     "Expected a boolean expression in the elsif.",
                     Peek(0)
                 );
-            if (MatchAndRemove(Token.TokenType.Then) == null)
-                throw new SyntaxErrorException("Expected a then in the if.", Peek(0));
-            MatchAndRemove(Token.TokenType.EndOfLine);
+            RequiresToken(Token.TokenType.Then);
+            RequiresEndOfLine();
             var body = new List<StatementNode>();
-            Body(body);
-            return new IfNode(boolExp, body, elseAndElseIf());
+            StatementsBody(body);
+            return new IfNode(boolExp, body, ElseAndElseIf());
         }
 
         if (MatchAndRemove(Token.TokenType.Else) != null)
         {
             MatchAndRemove(Token.TokenType.EndOfLine);
             var body = new List<StatementNode>();
-            Body(body);
+            StatementsBody(body);
             return new ElseNode(body);
         }
         return null;
@@ -633,7 +648,7 @@ public class Parser
         var boolExp = BooleanExpression();
         MatchAndRemove(Token.TokenType.EndOfLine);
         var statements = new List<StatementNode>();
-        Body(statements);
+        StatementsBody(statements);
         return new WhileNode(boolExp, statements);
     }
 
@@ -643,7 +658,7 @@ public class Parser
             return null;
         MatchAndRemove(Token.TokenType.EndOfLine);
         var statements = new List<StatementNode>();
-        Body(statements);
+        StatementsBody(statements);
         if (MatchAndRemove(Token.TokenType.Until) == null)
             throw new SyntaxErrorException("Expected an until to end the repeat.", Peek(0));
         var boolExp = BooleanExpression();
@@ -681,7 +696,7 @@ public class Parser
             );
         MatchAndRemove(Token.TokenType.EndOfLine);
         var statements = new List<StatementNode>();
-        Body(statements);
+        StatementsBody(statements);
         return new ForNode(indexVariable, fromExp, toExp, statements);
     }
 
@@ -934,6 +949,73 @@ public class Parser
         return GetVariables(names, isConstant, parentModuleName ?? "default");
     }
 
+    private bool GetMutability(
+        VariableNode.DeclarationContext declarationContext,
+        bool hasVar,
+        Token? varToken
+    ) =>
+        declarationContext switch
+        {
+            VariableNode.DeclarationContext.RecordDeclaration when hasVar
+                => throw new SyntaxErrorException(
+                    "Keyword `var' not allowed in a record declaration.",
+                    varToken
+                ),
+            VariableNode.DeclarationContext.RecordDeclaration => false,
+            VariableNode.DeclarationContext.EnumDeclaration when hasVar
+                => throw new SyntaxErrorException(
+                    "Keyword `var' not allowed in an enum declaration.",
+                    varToken
+                ),
+            VariableNode.DeclarationContext.EnumDeclaration => false,
+            VariableNode.DeclarationContext.FunctionSignature when hasVar => false,
+            VariableNode.DeclarationContext.FunctionSignature when !hasVar => true,
+            VariableNode.DeclarationContext.VariablesLine when hasVar
+                => throw new SyntaxErrorException(
+                    "Keyword `var' not allowed in a variables line.",
+                    varToken
+                ),
+            VariableNode.DeclarationContext.VariablesLine => false,
+            VariableNode.DeclarationContext.ConstantsLine when hasVar
+                => throw new SyntaxErrorException(
+                    "Keyword `var' not allowed in a constants line.",
+                    varToken
+                ),
+            VariableNode.DeclarationContext.ConstantsLine => true,
+            _
+                => throw new NotImplementedException(
+                    "Invalid variable declaration context `"
+                        + declarationContext
+                        + "' for determining variable mutability."
+                )
+        };
+
+    private List<VariableNode>? GetVariables2(
+        string parentModuleName,
+        VariableNode.DeclarationContext declarationContext
+    )
+    {
+        var varToken = MatchAndRemove(Token.TokenType.Var);
+        var hasVar = varToken is not null;
+        var isConstant = GetMutability(declarationContext, hasVar, varToken);
+
+        // Get variable names.
+        List<string> names = [];
+        if (MatchAndRemove(Token.TokenType.Identifier) is { } nameToken)
+        {
+            ParseCommaSeparatedIdentifiers(nameToken, names);
+        }
+        else
+        {
+            return null;
+        }
+
+        // Require a colon.
+        RequiresToken(Token.TokenType.Colon);
+
+        return GetVariables(names, isConstant, parentModuleName);
+    }
+
     private void RequiresToken(Token.TokenType tokenType)
     {
         if (MatchAndRemove(tokenType) is null)
@@ -941,6 +1023,10 @@ public class Parser
             throw new SyntaxErrorException("Expected a " + tokenType, Peek(0));
         }
     }
+
+    private Token RequiresAndReturnsToken(Token.TokenType tokenType) =>
+        MatchAndRemove(tokenType)
+        ?? throw new SyntaxErrorException("Expected a " + tokenType, Peek(0));
 
     private void ParseCommaSeparatedTokens(
         Token firstToken,
