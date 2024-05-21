@@ -16,14 +16,18 @@ public class MathOpNode : ASTNode
     public MathOpType Op { get; init; }
     public ASTNode Left { get; init; }
     public ASTNode Right { get; init; }
-    
 
     public override string ToString()
     {
         return $"{Left.ToString()} {Op} {Right.ToString()}";
     }
 
-    public override LLVMValueRef Visit(IVisitor visitor, Context context, LLVMBuilderRef builder, LLVMModuleRef module)
+    public override LLVMValueRef Visit(
+        IVisitor visitor,
+        Context context,
+        LLVMBuilderRef builder,
+        LLVMModuleRef module
+    )
     {
         throw new NotImplementedException();
     }

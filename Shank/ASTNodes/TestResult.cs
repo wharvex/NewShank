@@ -16,10 +16,10 @@ public class TestResult
     public override string ToString()
     {
         return "Test "
-               + testName
-               + " (line: "
-               + lineNum
-               + " ) results:\n"
-               + string.Join("\n", Asserts);
+            + testName
+            + " (line: "
+            + lineNum
+            + " ) results:\n"
+            + string.Join("\n", Asserts);
     }
 }

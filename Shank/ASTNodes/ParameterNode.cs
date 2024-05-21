@@ -9,8 +9,6 @@ namespace Shank.ASTNodes;
  */
 public class ParameterNode : ASTNode
 {
-    
-
     public ParameterNode(ASTNode constant)
     {
         IsVariable = false;
@@ -175,7 +173,12 @@ public class ParameterNode : ASTNode
             return $"   {Constant}";
     }
 
-    public override LLVMValueRef Visit(IVisitor visitor, Context context, LLVMBuilderRef builder, LLVMModuleRef module)
+    public override LLVMValueRef Visit(
+        IVisitor visitor,
+        Context context,
+        LLVMBuilderRef builder,
+        LLVMModuleRef module
+    )
     {
         throw new NotImplementedException();
     }

@@ -93,21 +93,24 @@ public class VariableReferenceNode : ASTNode
         {
             VariableNode.DataType.Record
                 => ((RecordNode)recordsAndImports[name])
-                .GetFromMembersByNameSafe(GetRecordMemberReferenceSafe().Name)
-                .Type,
+                    .GetFromMembersByNameSafe(GetRecordMemberReferenceSafe().Name)
+                    .Type,
             VariableNode.DataType.Array => variables[name].GetArrayTypeSafe(),
             _ => variables[name].Type
         };
     }
-
-    
 
     public override string ToString()
     {
         return $"{Name + (Extension != null ? (", Index: " + Extension) : string.Empty)}";
     }
 
-    public override LLVMValueRef Visit(IVisitor visitor, Context context, LLVMBuilderRef builder, LLVMModuleRef module)
+    public override LLVMValueRef Visit(
+        IVisitor visitor,
+        Context context,
+        LLVMBuilderRef builder,
+        LLVMModuleRef module
+    )
     {
         throw new NotImplementedException();
     }

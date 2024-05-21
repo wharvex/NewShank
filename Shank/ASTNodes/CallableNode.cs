@@ -39,7 +39,6 @@ public abstract class CallableNode : ASTNode
         IsPublic = false;
     }
 
-
     protected CallableNode(string name, string moduleName, bool isPublicIn)
     {
         Name = name;
@@ -54,7 +53,12 @@ public abstract class CallableNode : ASTNode
     public bool IsValidOverloadOf(CallableNode cn) =>
         ParameterVariables.Where((pv, i) => !cn.ParameterVariables[i].EqualsForOverload(pv)).Any();
 
-    public override LLVMValueRef Visit(IVisitor visitor, Context context, LLVMBuilderRef builder, LLVMModuleRef module)
+    public override LLVMValueRef Visit(
+        IVisitor visitor,
+        Context context,
+        LLVMBuilderRef builder,
+        LLVMModuleRef module
+    )
     {
         throw new UnauthorizedAccessException(); //questionable is this a good idea or not
     }

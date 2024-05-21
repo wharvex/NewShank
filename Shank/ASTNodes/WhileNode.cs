@@ -18,8 +18,6 @@ public class WhileNode : StatementNode
         return arr;
     }
 
-    
-
     public override string ToString()
     {
         return $" WHILE: {Expression} {StatementListToString(Children)}";

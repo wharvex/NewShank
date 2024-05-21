@@ -31,8 +31,6 @@ public class AssignmentNode : StatementNode
         return arr;
     }
 
-    
-
     public override string ToString()
     {
         return $"{Target} := {Expression}";

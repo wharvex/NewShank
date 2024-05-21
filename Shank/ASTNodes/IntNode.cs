@@ -5,8 +5,6 @@ namespace Shank.ASTNodes;
 
 public class IntNode : ASTNode
 {
-    
-
     // TODO: change to a long, if we want 64 bit integers by default
     public IntNode(int value)
     {
@@ -19,6 +17,7 @@ public class IntNode : ASTNode
     {
         return $"{Value}";
     }
+
     // public LLVMValueRef Accept(LLVMBuilderRef builder, LLVMModuleRef module)
     // {
     //     // value requires a ulong cast, because that is what CreateConstInt requires
@@ -29,7 +28,12 @@ public class IntNode : ASTNode
     // {
     //     throw new NotImplementedException();
     // }
-    public override LLVMValueRef Visit(IVisitor visitor, Context context, LLVMBuilderRef builder, LLVMModuleRef module)
+    public override LLVMValueRef Visit(
+        IVisitor visitor,
+        Context context,
+        LLVMBuilderRef builder,
+        LLVMModuleRef module
+    )
     {
         throw new NotImplementedException();
     }
