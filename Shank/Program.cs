@@ -10,8 +10,8 @@ public class Program
         // works out what sort of args it has (e.g. do they indicate a whole directory or just a
         // file, do they include the unit test flag, etc.) and then populates its `InPaths' property
         // with the appropriate input file paths.
-        var cmdLineArgsHelper = new CmdLineArgsHelper(args);
-
+        // var cmdLineArgsHelper = new CmdLineArgsHelper(args);
+        var cmdLineArgsHelper = new CmdLineArgsHelper(new string[]{"GCD.shank"});
         // Create the root of the AST.
         var program = new ProgramNode();
 
@@ -29,9 +29,10 @@ public class Program
 
         // Check the program for semantic issues.
         SemanticAnalysis.CheckModules(program);
-
+        
         // Interpret the program in normal or unit test mode.
-        InterpretAndTest(cmdLineArgsHelper, program);
+        // InterpretAndTest(cmdLineArgsHelper, program);
+        TestLLVM(program, "IR/output.ll");
     }
 
     private static void ScanAndParse(string inPath, ProgramNode program)
@@ -95,5 +96,12 @@ public class Program
                     "[[ Tests from " + module.Name + " ]]\n" + string.Join("\n", UnitTestResults)
                 );
             });
+    }
+
+    public static void TestLLVM(ProgramNode programNode, string outFile)
+    {
+
+        LLVMCodeGen a = new LLVMCodeGen();
+        a.CodeGen(outFile, programNode);
     }
 }

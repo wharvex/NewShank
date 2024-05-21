@@ -1,13 +1,13 @@
 using LLVMSharp.Interop;
-
+using System.IO;
 namespace Shank;
 
 public class LLVMCodeGen
 {
     public LLVMModuleRef ModuleRef;
-    public void CodeGen(string fileDir)
+    public void CodeGen(string fileDir, ProgramNode programNode)
     {
-        LLVM.InitializeAllTargetInfos(); //m
+        LLVM.InitializeAllTargetInfos(); 
         LLVM.InitializeAllTargets();
         LLVM.InitializeAllTargetMCs();
         LLVM.InitializeAllAsmPrinters();
@@ -15,6 +15,17 @@ public class LLVMCodeGen
         var module = LLVMModuleRef.CreateWithName("main");
         
         LLVMBuilderRef builder = module.Context.CreateBuilder();
+        FileStream fs;
+        
+
+        string directory = Path.GetDirectoryName(fileDir);
+        if (!Directory.Exists(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+        File.WriteAllText(fileDir, module.ToString());
+        Console.WriteLine("code successfully compiled");
+        Console.WriteLine("IR code gen file path: " + fileDir);
 
     }
 }
