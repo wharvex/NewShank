@@ -11,7 +11,7 @@ public class Program
         // file, do they include the unit test flag, etc.) and then populates its `InPaths' property
         // with the appropriate input file paths.
         // var cmdLineArgsHelper = new CmdLineArgsHelper(args);
-        var cmdLineArgsHelper = new CmdLineArgsHelper(new string[] { "TestLLVM.shank" });
+        var cmdLineArgsHelper = new CmdLineArgsHelper(args);
         // Create the root of the AST.
         var program = new ProgramNode();
 
@@ -31,7 +31,7 @@ public class Program
         SemanticAnalysis.CheckModules(program);
 
         // Interpret the program in normal or unit test mode.
-        // InterpretAndTest(cmdLineArgsHelper, program);
+        InterpretAndTest(cmdLineArgsHelper, program);
         TestLLVM(program, "IR/output.ll");
     }
 

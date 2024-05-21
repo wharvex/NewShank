@@ -7,6 +7,10 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">$(NETCoreSdkRuntimeIdentifier)</RuntimeIdentifier>
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Remove="dotShank\Generics\NewFolder\**" />
     <EmbeddedResource Remove="dotShank\Generics\NewFolder\**" />
