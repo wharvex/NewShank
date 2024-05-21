@@ -1,4 +1,6 @@
-﻿namespace Shank;
+﻿using LLVMSharp.Interop;
+
+namespace Shank;
 
 public class ProgramNode : ASTNode
 {
@@ -32,9 +34,9 @@ public class ProgramNode : ASTNode
         {
             // TryGetValue always makes its "out" argument nullable, even if the kvp's Value is not.
             return m
-                ?? throw new InvalidOperationException(
-                    "Expected module `" + name + "' to not be null."
-                );
+                   ?? throw new InvalidOperationException(
+                       "Expected module `" + name + "' to not be null."
+                   );
         }
 
         return null;
@@ -63,5 +65,11 @@ public class ProgramNode : ASTNode
                     "At least one start function required. This should be a SemanticErrorException."
                 ),
         };
+        }
+
+    public override LLVMValueRef Accept(LLVMBuilderRef builder, LLVMModuleRef module)
+    {
+        throw new NotImplementedException();
     }
 }
+
