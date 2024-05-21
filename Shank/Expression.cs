@@ -2,6 +2,7 @@ using System.Dynamic;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json.Serialization;
+using LLVMSharp;
 using LLVMSharp.Interop;
 
 //To compile to RISC-V: llc -march=riscv64 output_ir_3.ll -o out3.s
@@ -305,9 +306,11 @@ public class IntNode : ASTNode
 {
     public override LLVMValueRef Accept(LLVMBuilderRef builder, LLVMModuleRef module)
     {
-        throw new NotImplementedException();
+        // value requires a ulong cast, because that is what CreateConstInt requires
+        return LLVMValueRef.CreateConstInt(module.Context.Int64Type, (ulong)Value);
     }
 
+    // TODO: change to a long, if we want 64 bit integers by default
     public IntNode(int value)
     {
         Value = value;
@@ -325,7 +328,7 @@ public class FloatNode : ASTNode
 {
     public override LLVMValueRef Accept(LLVMBuilderRef builder, LLVMModuleRef module)
     {
-        throw new NotImplementedException();
+        return LLVMValueRef.CreateConstReal(LLVMTypeRef.Double, Value);
     }
 
     public FloatNode(float value)
@@ -345,7 +348,7 @@ public class BoolNode : ASTNode
 {
     public override LLVMValueRef Accept(LLVMBuilderRef builder, LLVMModuleRef module)
     {
-        throw new NotImplementedException();
+        return LLVMValueRef.CreateConstInt(module.Context.Int1Type, (ulong)Value);
     }
 
     public BoolNode(bool value)
@@ -365,7 +368,7 @@ public class CharNode : ASTNode
 {
     public override LLVMValueRef Accept(LLVMBuilderRef builder, LLVMModuleRef module)
     {
-        throw new NotImplementedException();
+        return LLVMValueRef.CreateConstInt(module.Context.Int8Type, Value, true);
     }
 
     public CharNode(char value)
@@ -385,7 +388,8 @@ public class StringNode : ASTNode
 {
     public override LLVMValueRef Accept(LLVMBuilderRef builder, LLVMModuleRef module)
     {
-        throw new NotImplementedException();
+        // Should, we give this a name in SSA, by doing
+        return builder.BuildGlobalStringPtr(Value);
     }
 
     public StringNode(string value)
