@@ -21,7 +21,7 @@ public class LLVMCodeGen
         string directory = Path.GetDirectoryName(fileDir);
         if (!Directory.Exists(directory))
         {
-            Directory.CreateDirectory(directory);
+            Directory.CreateDirectory(directory); //l
         }
         File.WriteAllText(fileDir, module.ToString());
         Console.WriteLine("code successfully compiled");
