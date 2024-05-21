@@ -1,11 +1,8 @@
-
 using LLVMSharp.Interop;
+
 namespace Shank;
 
 public class LLVMCodeGen
 {
-    public void CodeGen(string fileDir)
-    {
-        
-    }
+    public void CodeGen(string fileDir) { }
 }
