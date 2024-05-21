@@ -198,66 +198,6 @@ public class Parser
         return null;
     }
 
-    public ModuleNode? Module2()
-    {
-        ModuleNode? module = null;
-        string? moduleName;
-        if (MatchAndRemove(Token.TokenType.Module) == null)
-        {
-            moduleName = null;
-        }
-        else
-        {
-            var token = MatchAndRemove(Token.TokenType.Identifier);
-            if (token == null || token.Value == null)
-            {
-                throw new SyntaxErrorException(
-                    "A file declared as a module must be followed by an identifier, not ",
-                    Peek(0)
-                );
-            }
-            moduleName = token.Value;
-            MatchAndRemove(Token.TokenType.EndOfLine);
-        }
-        module = new ModuleNode(moduleName);
-        while (_tokens.Count > 0)
-        {
-            if (MatchAndRemove(Token.TokenType.EndOfLine) != null)
-                continue;
-            else if (MatchAndRemove(Token.TokenType.Export) != null)
-            {
-                module.addExportNames(Export());
-            }
-            else if (MatchAndRemove(Token.TokenType.Import) != null)
-            {
-                if (PeekAndCheck(1).Type == Token.TokenType.LeftBracket)
-                    module.addImportNames(Import(), checkForFunctions());
-                else
-                    module.addImportName(Import());
-            }
-            else if (MatchAndRemove(Token.TokenType.Define) != null)
-                module.addFunction(Function(moduleName));
-            else if (MatchAndRemove(Token.TokenType.Record) != null)
-                module.AddRecord(Record(moduleName));
-            else if (MatchAndRemove(Token.TokenType.Test) != null)
-                module.addTest(Test(moduleName));
-            else if (MatchAndRemove(Token.TokenType.Enum) != null)
-                module.addEnum(MakeEnum(moduleName));
-            else if (PeekSafe(0).Type == Token.TokenType.Variables)
-                module.AddToGlobalVariables(ProcessVariables(moduleName));
-            else
-            {
-                throw new SyntaxErrorException(
-                    "Any statement at indent zero must begin with one of the following keywords:\n"
-                        + "import\nexport\ndefine\nenum\ntest\nrecord\nvariables\n"
-                        + "The following is invalid: ",
-                    Peek(0)
-                );
-            }
-        }
-        return module;
-    }
-
     public ModuleNode Module()
     {
         // Get the module name if there is one, or set it to default.
@@ -346,11 +286,8 @@ public class Parser
         return ret;
     }
 
-    public FunctionNode? Function(string? moduleName)
+    public FunctionNode Function(string moduleName)
     {
-        // If moduleName is null, set it to "default".
-        moduleName ??= "default";
-
         // Process function name.
         var name =
             MatchAndRemove(Token.TokenType.Identifier)
@@ -365,7 +302,7 @@ public class Parser
         var done = false;
         while (!done)
         {
-            var vars = GetVariables(moduleName);
+            var vars = GetVariables(moduleName, VariableNode.DeclarationContext.FunctionSignature);
             done = vars == null;
             if (vars != null)
             {
@@ -744,13 +681,16 @@ public class Parser
     /// </summary>
     /// <param name="parentModule"></param>
     /// <returns></returns>
-    private List<VariableNode> ProcessVariables(string? parentModule)
+    private List<VariableNode> ProcessVariables(string parentModule)
     {
         var retVal = new List<VariableNode>();
 
         while (MatchAndRemove(Token.TokenType.Variables) != null)
         {
-            var nextOnes = GetVariables(parentModule);
+            var nextOnes = GetVariables(
+                parentModule,
+                VariableNode.DeclarationContext.VariablesLine
+            );
 
             // TODO: We are potentially adding null to retVal here.
             retVal.AddRange(nextOnes);
@@ -760,15 +700,18 @@ public class Parser
         return retVal;
     }
 
-    private List<VariableNode> ProcessVariablesDoWhile(string? parentModule)
+    private List<VariableNode> ProcessVariablesDoWhile(string parentModule)
     {
         var retVal = new List<VariableNode>();
 
         do
         {
-            var nextOnes = GetVariables(parentModule);
+            var nextOnes = GetVariables(
+                parentModule,
+                VariableNode.DeclarationContext.VariablesLine
+            );
 
-            // TODO: We are potentially adding null to retVal here.
+            // TODO: List.AddRange throws an ArgumentNullException if nextOnes is null.
             retVal.AddRange(nextOnes);
 
             MatchAndRemove(Token.TokenType.EndOfLine);
@@ -776,7 +719,7 @@ public class Parser
         return retVal;
     }
 
-    private List<VariableNode> GetVariables(
+    private List<VariableNode> CreateVariables(
         List<string> names,
         bool isConstant,
         string parentModuleName
@@ -788,27 +731,28 @@ public class Parser
 
         return typeToken.Type switch
         {
-            Token.TokenType.Array => GetVariablesArray(names, isConstant, parentModuleName),
+            Token.TokenType.Array => CreateVariablesArray(names, isConstant, parentModuleName),
             Token.TokenType.Identifier
-                => GetVariablesUnknown(
+                => CreateVariablesUnknown(
                     names,
                     isConstant,
                     parentModuleName,
                     typeToken.GetValueSafe()
                 ),
             _ when _shankTokenTypesMinusArray.Contains(typeToken.Type)
-                => GetVariablesBasic(
+                => CreateVariablesBasic(
                     names,
                     isConstant,
                     parentModuleName,
                     GetDataTypeFromTokenType(typeToken.Type)
                 ),
-            Token.TokenType.RefersTo => GetRefersToVariables(names, isConstant, parentModuleName),
+            Token.TokenType.RefersTo
+                => CreateRefersToVariables(names, isConstant, parentModuleName),
             _ => throw new SyntaxErrorException("Expected a valid type", Peek(0))
         };
     }
 
-    private List<VariableNode> GetRefersToVariables(
+    private List<VariableNode> CreateRefersToVariables(
         List<string> names,
         bool isConstant,
         string parentModuleName
@@ -833,7 +777,7 @@ public class Parser
         return ret;
     }
 
-    private List<VariableNode> GetVariablesBasic(
+    private List<VariableNode> CreateVariablesBasic(
         List<string> names,
         bool isConstant,
         string parentModuleName,
@@ -858,14 +802,14 @@ public class Parser
         return ret;
     }
 
-    private List<VariableNode> GetVariablesArray(
+    private List<VariableNode> CreateVariablesArray(
         List<string> names,
         bool isConstant,
         string parentModuleName
     )
     {
         // Parse the first part of the declaration.
-        var ret = GetVariablesBasic(
+        var ret = CreateVariablesBasic(
             names,
             isConstant,
             parentModuleName,
@@ -887,7 +831,7 @@ public class Parser
         return ret;
     }
 
-    private List<VariableNode> GetVariablesUnknown(
+    private List<VariableNode> CreateVariablesUnknown(
         List<string> names,
         bool isConstant,
         string parentModuleName,
@@ -895,7 +839,7 @@ public class Parser
     )
     {
         // Parse the first part of the declaration.
-        var ret = GetVariablesBasic(
+        var ret = CreateVariablesBasic(
             names,
             isConstant,
             parentModuleName,
@@ -923,33 +867,7 @@ public class Parser
         return ret;
     }
 
-    private List<VariableNode>? GetVariables(string? parentModuleName)
-    {
-        // TODO: GetVariables is used to parse function definition parameters (the contents of the
-        // parentheses that follow a function name) AND the lines immediately following a function
-        // signature that start with the 'variables' keyword.
-        // It only makes sense for the 'var' keyword to appear in a function definition parameters
-        // context, but here we are allowing it regardless of the context.
-        var isConstant = MatchAndRemove(Token.TokenType.Var) is null;
-
-        // Get variable names.
-        List<string> names = [];
-        if (MatchAndRemove(Token.TokenType.Identifier) is { } nameToken)
-        {
-            ParseCommaSeparatedIdentifiers(nameToken, names);
-        }
-        else
-        {
-            return null;
-        }
-
-        // Require a colon.
-        RequiresToken(Token.TokenType.Colon);
-
-        return GetVariables(names, isConstant, parentModuleName ?? "default");
-    }
-
-    private bool GetMutability(
+    private static bool GetMutability(
         VariableNode.DeclarationContext declarationContext,
         bool hasVar,
         Token? varToken
@@ -990,7 +908,7 @@ public class Parser
                 )
         };
 
-    private List<VariableNode>? GetVariables2(
+    private List<VariableNode>? GetVariables(
         string parentModuleName,
         VariableNode.DeclarationContext declarationContext
     )
@@ -1013,7 +931,7 @@ public class Parser
         // Require a colon.
         RequiresToken(Token.TokenType.Colon);
 
-        return GetVariables(names, isConstant, parentModuleName);
+        return CreateVariables(names, isConstant, parentModuleName);
     }
 
     private void RequiresToken(Token.TokenType tokenType)
@@ -1441,7 +1359,8 @@ public class Parser
         return functionsToImport;
     }
 
-    private TestNode Test(string? parentModuleName)
+    // TODO: A lot of code in this method duplicates the code from where normal functions are parsed.
+    private TestNode Test(string parentModuleName)
     {
         TestNode test;
         Token? token;
@@ -1475,7 +1394,10 @@ public class Parser
         var done = false;
         while (!done)
         {
-            var vars = GetVariables(parentModuleName);
+            var vars = GetVariables(
+                parentModuleName,
+                VariableNode.DeclarationContext.FunctionSignature
+            );
             done = vars == null;
             if (vars != null)
             {

@@ -20,7 +20,6 @@ namespace Shank;
 [JsonDerivedType(typeof(FunctionNode))]
 public abstract class ASTNode
 {
-
     public string NodeName { get; init; }
     public string InheritsDirectlyFrom { get; init; }
     public int Line { get; init; }
@@ -58,9 +57,8 @@ public abstract class ASTNode
         InheritsDirectlyFrom = GetType().BaseType?.Name ?? "None";
         Line = Parser.Line;
     }
+
     public abstract LLVMValueRef Accept(LLVMBuilderRef builder, LLVMModuleRef module);
-
-
 }
 
 public class FunctionCallNode : StatementNode
@@ -125,7 +123,6 @@ public class FunctionCallNode : StatementNode
 
         return b.ToString();
     }
-    
 }
 
 /**
@@ -133,11 +130,12 @@ public class FunctionCallNode : StatementNode
  * For the parameters of FunctionNodes, see VariableNode.
  */
 public class ParameterNode : ASTNode
-{ 
+{
     public override LLVMValueRef Accept(LLVMBuilderRef builder, LLVMModuleRef module)
     {
         throw new NotImplementedException();
     }
+
     public ParameterNode(ASTNode constant)
     {
         IsVariable = false;
@@ -309,6 +307,7 @@ public class IntNode : ASTNode
     {
         throw new NotImplementedException();
     }
+
     public IntNode(int value)
     {
         Value = value;
@@ -328,6 +327,7 @@ public class FloatNode : ASTNode
     {
         throw new NotImplementedException();
     }
+
     public FloatNode(float value)
     {
         Value = value;
@@ -347,6 +347,7 @@ public class BoolNode : ASTNode
     {
         throw new NotImplementedException();
     }
+
     public BoolNode(bool value)
     {
         Value = value;
@@ -366,6 +367,7 @@ public class CharNode : ASTNode
     {
         throw new NotImplementedException();
     }
+
     public CharNode(char value)
     {
         Value = value;
@@ -385,6 +387,7 @@ public class StringNode : ASTNode
     {
         throw new NotImplementedException();
     }
+
     public StringNode(string value)
     {
         Value = value;
@@ -406,6 +409,7 @@ public abstract class CallableNode : ASTNode
     {
         throw new NotImplementedException();
     }
+
     public string Name { get; set; }
 
     public string? parentModuleName { get; set; }
@@ -452,7 +456,6 @@ public abstract class CallableNode : ASTNode
 
 public class BuiltInFunctionNode : CallableNode
 {
-    
     public BuiltInFunctionNode(string name, BuiltInCall execute)
         : base(name, execute) { }
 
@@ -1132,7 +1135,6 @@ public class RecordMemberNode : StatementNode
 
 public class RecordNode : ASTNode
 {
-    
     public string Name { get; init; }
 
     public List<string>? GenericTypeParameterNames { get; init; }
@@ -1173,6 +1175,7 @@ public class RecordNode : ASTNode
     {
         return ParentModuleName ?? throw new Exception("Parent module name of RecordNode is null.");
     }
+
     public override LLVMValueRef Accept(LLVMBuilderRef builder, LLVMModuleRef module)
     {
         throw new NotImplementedException();
@@ -1181,7 +1184,6 @@ public class RecordNode : ASTNode
 
 public class EnumNode : ASTNode
 {
-    
     public string Type { get; set; }
     public string ParentModuleName { get; set; }
     public LinkedList<String> EnumElements;
@@ -1194,16 +1196,15 @@ public class EnumNode : ASTNode
         EnumElements = new LinkedList<string>(enumElements);
         IsPublic = false;
     }
+
     public override LLVMValueRef Accept(LLVMBuilderRef builder, LLVMModuleRef module)
     {
         throw new NotImplementedException();
     }
-    
 }
 
 public class VariableNode : ASTNode
 {
-    
     public string? Name { get; set; }
     public string? ModuleName { get; set; }
 
@@ -1354,6 +1355,7 @@ public class VariableNode : ASTNode
             + " "
             + (To == null ? string.Empty : " To: " + To);
     }
+
     public override LLVMValueRef Accept(LLVMBuilderRef builder, LLVMModuleRef module)
     {
         throw new NotImplementedException();
@@ -1362,7 +1364,6 @@ public class VariableNode : ASTNode
 
 public class MathOpNode : ASTNode
 {
-    
     public MathOpNode(ASTNode left, MathOpType op, ASTNode right)
     {
         Left = left;
@@ -1373,15 +1374,16 @@ public class MathOpNode : ASTNode
     public MathOpType Op { get; init; }
     public ASTNode Left { get; init; }
     public ASTNode Right { get; init; }
+
     public override LLVMValueRef Accept(LLVMBuilderRef builder, LLVMModuleRef module)
     {
         throw new NotImplementedException();
     }
+
     public override string ToString()
     {
         return $"{Left.ToString()} {Op} {Right.ToString()}";
     }
-    
 }
 
 [JsonDerivedType(typeof(RecordMemberNode))]
@@ -1393,7 +1395,6 @@ public class MathOpNode : ASTNode
 [JsonDerivedType(typeof(RepeatNode))]
 public class StatementNode : ASTNode
 {
-    
     protected static string StatementListToString(List<StatementNode> statements)
     {
         var b = new StringBuilder();
@@ -1406,6 +1407,7 @@ public class StatementNode : ASTNode
         object[] arr = { };
         return arr;
     }
+
     public override LLVMValueRef Accept(LLVMBuilderRef builder, LLVMModuleRef module)
     {
         throw new NotImplementedException();
@@ -1414,7 +1416,6 @@ public class StatementNode : ASTNode
 
 public class VariableReferenceNode : ASTNode
 {
-    
     public VariableReferenceNode(string name)
     {
         Name = name;
@@ -1431,9 +1432,7 @@ public class VariableReferenceNode : ASTNode
         {
             ((VariableReferenceNode)Extension).EnclosingVrnName = Name;
         }
-        
     }
-    
 
     public string Name { get; init; }
 
@@ -1510,16 +1509,16 @@ public class VariableReferenceNode : ASTNode
             _ => variables[name].Type
         };
     }
+
     public override LLVMValueRef Accept(LLVMBuilderRef builder, LLVMModuleRef module)
     {
         throw new NotImplementedException();
     }
+
     public override string ToString()
-    
     {
         return $"{Name + (Extension != null ? (", Index: " + Extension) : string.Empty)}";
     }
-    
 }
 
 public class WhileNode : StatementNode
@@ -1539,10 +1538,12 @@ public class WhileNode : StatementNode
 
         return arr;
     }
+
     public override LLVMValueRef Accept(LLVMBuilderRef builder, LLVMModuleRef module)
     {
         throw new NotImplementedException();
     }
+
     public override string ToString()
     {
         return $" WHILE: {Expression} {StatementListToString(Children)}";
@@ -1645,6 +1646,7 @@ public class BooleanExpressionNode : ASTNode
     {
         throw new NotImplementedException();
     }
+
     public BooleanExpressionNode(ASTNode left, BooleanExpressionOpType op, ASTNode right)
     {
         Left = left;
@@ -1689,10 +1691,12 @@ public class AssignmentNode : StatementNode
 
         return arr;
     }
+
     public override LLVMValueRef Accept(LLVMBuilderRef builder, LLVMModuleRef module)
     {
         throw new NotImplementedException();
     }
+
     public override string ToString()
     {
         return $"{Target} := {Expression}";
@@ -1701,7 +1705,6 @@ public class AssignmentNode : StatementNode
 
 public class ModuleNode : ASTNode
 {
-    
     public Dictionary<string, EnumNode> Enums { get; init; }
     public string Name { get; set; }
     public Dictionary<string, CallableNode> Functions { get; init; }
@@ -1920,6 +1923,7 @@ public class ModuleNode : ASTNode
             }
         }
     }
+
     public override LLVMValueRef Accept(LLVMBuilderRef builder, LLVMModuleRef module)
     {
         throw new NotImplementedException();
@@ -2056,7 +2060,6 @@ public class ModuleNode : ASTNode
     {
         return Tests;
     }
-    
 }
 
 public class AssertResult
