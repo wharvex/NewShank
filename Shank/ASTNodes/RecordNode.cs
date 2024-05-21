@@ -10,7 +10,7 @@ public class RecordNode : ASTNode
 
     public List<string>? GenericTypeParameterNames { get; init; }
 
-    public string? ParentModuleName { get; init; }
+    public string ParentModuleName { get; init; }
 
     public List<StatementNode> Members { get; init; }
     public List<VariableNode> Members2 { get; init; }

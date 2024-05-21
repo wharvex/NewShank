@@ -374,6 +374,9 @@ public class Parser
     private void BodyRecord(RecordNode record)
     {
         StatementsBody(record.Members, true);
+        var members = record.Members2.Select(vn => (ASTNode)vn).ToList();
+        Body(members, record.ParentModuleName, GetVariablesRecord);
+        record.Members2.AddRange(members.Select(an => (VariableNode)an));
     }
 
     private void StatementsBody(List<StatementNode> statements, bool isRecord = false)
@@ -385,11 +388,15 @@ public class Parser
         RequiresToken(Token.TokenType.Dedent);
     }
 
-    private void Body(List<ASTNode> bodyContents, Action<List<ASTNode>> bodyContentsParser)
+    private void Body(
+        List<ASTNode> bodyContents,
+        string parentModuleName,
+        Action<List<ASTNode>, string> bodyContentsParser
+    )
     {
         RequiresToken(Token.TokenType.Indent);
 
-        bodyContentsParser(bodyContents);
+        bodyContentsParser(bodyContents, parentModuleName);
 
         RequiresToken(Token.TokenType.Dedent);
     }
@@ -934,6 +941,13 @@ public class Parser
         RequiresToken(Token.TokenType.Colon);
 
         return CreateVariables(names, isConstant, parentModuleName);
+    }
+
+    private void GetVariablesRecord(List<ASTNode> vars, string parentModuleName)
+    {
+        vars.AddRange(
+            GetVariables(parentModuleName, VariableNode.DeclarationContext.RecordDeclaration) ?? []
+        );
     }
 
     private void RequiresToken(Token.TokenType tokenType)
