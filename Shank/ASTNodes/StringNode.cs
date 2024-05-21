@@ -6,7 +6,6 @@ namespace Shank;
 
 public class StringNode : ASTNode
 {
-
     public StringNode(string value)
     {
         Value = value;
@@ -19,7 +18,12 @@ public class StringNode : ASTNode
         return $"{Value}";
     }
 
-    public override LLVMValueRef Visit(IVisitor visitor, Context context, LLVMBuilderRef builder, LLVMModuleRef module)
+    public override LLVMValueRef Visit(
+        IVisitor visitor,
+        Context context,
+        LLVMBuilderRef builder,
+        LLVMModuleRef module
+    )
     {
         throw new NotImplementedException();
     }

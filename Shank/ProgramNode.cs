@@ -68,8 +68,13 @@ public class ProgramNode : ASTNode
                 ),
         };
     }
-    
-    public override LLVMValueRef Visit(IVisitor visitor, Context context, LLVMBuilderRef builder, LLVMModuleRef module)
+
+    public override LLVMValueRef Visit(
+        IVisitor visitor,
+        Context context,
+        LLVMBuilderRef builder,
+        LLVMModuleRef module
+    )
     {
         throw new NotImplementedException();
     }

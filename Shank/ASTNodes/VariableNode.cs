@@ -62,15 +62,15 @@ public class VariableNode : ASTNode
     public DataType GetArrayTypeSafe()
     {
         return ArrayType
-               ?? throw new InvalidOperationException("Expected ArrayType to not be null.");
+            ?? throw new InvalidOperationException("Expected ArrayType to not be null.");
     }
 
     public string GetUnknownTypeSafe()
     {
         return UnknownType
-               ?? throw new InvalidOperationException(
-                   "Expected " + nameof(UnknownType) + " to not be null."
-               );
+            ?? throw new InvalidOperationException(
+                "Expected " + nameof(UnknownType) + " to not be null."
+            );
     }
 
     public string GetModuleNameSafe() => ModuleName ?? "default";
@@ -145,19 +145,24 @@ public class VariableNode : ASTNode
     public override string ToString()
     {
         return Name
-               + " : "
-               + (Type == DataType.Array ? "Array of " + ArrayType : Type)
-               + " "
-               + (IsConstant ? "const" : string.Empty)
-               + " "
-               + (InitialValue == null ? string.Empty : InitialValue)
-               + " "
-               + (From == null ? string.Empty : " From: " + From)
-               + " "
-               + (To == null ? string.Empty : " To: " + To);
+            + " : "
+            + (Type == DataType.Array ? "Array of " + ArrayType : Type)
+            + " "
+            + (IsConstant ? "const" : string.Empty)
+            + " "
+            + (InitialValue == null ? string.Empty : InitialValue)
+            + " "
+            + (From == null ? string.Empty : " From: " + From)
+            + " "
+            + (To == null ? string.Empty : " To: " + To);
     }
-    
-    public override LLVMValueRef Visit(IVisitor visitor, Context context, LLVMBuilderRef builder, LLVMModuleRef module)
+
+    public override LLVMValueRef Visit(
+        IVisitor visitor,
+        Context context,
+        LLVMBuilderRef builder,
+        LLVMModuleRef module
+    )
     {
         throw new NotImplementedException();
     }

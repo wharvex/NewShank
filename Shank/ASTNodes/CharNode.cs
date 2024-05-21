@@ -6,8 +6,6 @@ namespace Shank;
 
 public class CharNode : ASTNode
 {
-    
-
     public CharNode(char value)
     {
         Value = value;
@@ -20,7 +18,12 @@ public class CharNode : ASTNode
         return $"{Value}";
     }
 
-    public override LLVMValueRef Visit(IVisitor visitor, Context context, LLVMBuilderRef builder, LLVMModuleRef module)
+    public override LLVMValueRef Visit(
+        IVisitor visitor,
+        Context context,
+        LLVMBuilderRef builder,
+        LLVMModuleRef module
+    )
     {
         throw new NotImplementedException();
     }

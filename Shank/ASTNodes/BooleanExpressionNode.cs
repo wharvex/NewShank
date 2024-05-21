@@ -6,8 +6,6 @@ namespace Shank;
 
 public class BooleanExpressionNode : ASTNode
 {
-    
-
     public BooleanExpressionNode(ASTNode left, BooleanExpressionOpType op, ASTNode right)
     {
         Left = left;
@@ -24,7 +22,12 @@ public class BooleanExpressionNode : ASTNode
         return $"({Left.ToString()} {Op} {Right.ToString()})";
     }
 
-    public override LLVMValueRef Visit(IVisitor visitor, Context context, LLVMBuilderRef builder, LLVMModuleRef module)
+    public override LLVMValueRef Visit(
+        IVisitor visitor,
+        Context context,
+        LLVMBuilderRef builder,
+        LLVMModuleRef module
+    )
     {
         throw new NotImplementedException();
     }

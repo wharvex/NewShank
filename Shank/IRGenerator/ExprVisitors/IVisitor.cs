@@ -5,6 +5,10 @@ namespace Shank.ExprVisitors;
 
 public interface IVisitor
 {
-    
-    public LLVMValueRef Accept(IntNode node, Context context, LLVMBuilderRef builder, LLVMModuleRef module);
+    public LLVMValueRef Accept(
+        IntNode node,
+        Context context,
+        LLVMBuilderRef builder,
+        LLVMModuleRef module
+    );
 }

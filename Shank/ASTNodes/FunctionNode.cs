@@ -48,24 +48,24 @@ public class FunctionNode : CallableNode
     public VariableNode GetVariableNodeByName(string searchName)
     {
         return LocalVariables
-                   .Concat(ParameterVariables)
-                   .FirstOrDefault(
-                       vn =>
-                           (
-                               vn
-                               ?? throw new InvalidOperationException(
-                                   "Something went wrong internally. There should not be"
-                                   + " null entries in FunctionNode.LocalVariables or"
-                                   + " FunctionNode.ParameterVariables."
-                               )
-                           ).Name?.Equals(searchName)
-                           ?? throw new InvalidOperationException(vn + " has no Name."),
-                       null
-                   )
-               ?? throw new ArgumentOutOfRangeException(
-                   nameof(searchName),
-                   "No variable found with given searchName."
-               );
+                .Concat(ParameterVariables)
+                .FirstOrDefault(
+                    vn =>
+                        (
+                            vn
+                            ?? throw new InvalidOperationException(
+                                "Something went wrong internally. There should not be"
+                                    + " null entries in FunctionNode.LocalVariables or"
+                                    + " FunctionNode.ParameterVariables."
+                            )
+                        ).Name?.Equals(searchName)
+                        ?? throw new InvalidOperationException(vn + " has no Name."),
+                    null
+                )
+            ?? throw new ArgumentOutOfRangeException(
+                nameof(searchName),
+                "No variable found with given searchName."
+            );
     }
 
     public override string ToString()

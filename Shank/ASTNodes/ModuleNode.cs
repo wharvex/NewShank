@@ -100,9 +100,9 @@ public class ModuleNode : ASTNode
                     ret.Add(
                         i.Key,
                         i.Value
-                        ?? throw new InvalidOperationException(
-                            "Expected the value associated with " + i.Key + " to not be null."
-                        )
+                            ?? throw new InvalidOperationException(
+                                "Expected the value associated with " + i.Key + " to not be null."
+                            )
                     )
             );
         return ret;
@@ -217,14 +217,13 @@ public class ModuleNode : ASTNode
             {
                 throw new Exception(
                     "Could not find '"
-                    + exportName
-                    + "' in the current list of functions, enums or records in module "
-                    + Name
+                        + exportName
+                        + "' in the current list of functions, enums or records in module "
+                        + Name
                 );
             }
         }
     }
-    
 
     //merges two unnamed modules into one
     public void mergeModule(ModuleNode moduleIn)
@@ -358,7 +357,12 @@ public class ModuleNode : ASTNode
         return Tests;
     }
 
-    public override LLVMValueRef Visit(IVisitor visitor, Context context, LLVMBuilderRef builder, LLVMModuleRef module)
+    public override LLVMValueRef Visit(
+        IVisitor visitor,
+        Context context,
+        LLVMBuilderRef builder,
+        LLVMModuleRef module
+    )
     {
         throw new NotImplementedException();
     }

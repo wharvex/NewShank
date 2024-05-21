@@ -21,11 +21,11 @@ public class AssertResult
     public override string ToString()
     {
         return parentTestName
-               + " assertIsEqual (line: "
-               + lineNum
-               + ") "
-               + comparedValues
-               + " : "
-               + (passed ? "passed" : "failed");
+            + " assertIsEqual (line: "
+            + lineNum
+            + ") "
+            + comparedValues
+            + " : "
+            + (passed ? "passed" : "failed");
     }
 }
