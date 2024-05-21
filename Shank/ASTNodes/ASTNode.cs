@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using LLVMSharp.Interop;
+using Shank.ExprVisitors;
 
 namespace Shank.ASTNodes;
 
@@ -53,5 +54,9 @@ public abstract class ASTNode
         Line = Parser.Line;
     }
 
-    public abstract LLVMValueRef Accept(LLVMBuilderRef builder, LLVMModuleRef module);
+    // public abstract LLVMValueRef Accept(LLVMBuilderRef builder, LLVMModuleRef module);
+    public abstract LLVMValueRef Visit(IVisitor visitor,
+        Context context,
+        LLVMBuilderRef builder,
+        LLVMModuleRef module);
 }

@@ -1,4 +1,5 @@
 using LLVMSharp.Interop;
+using Shank.ExprVisitors;
 
 namespace Shank.ASTNodes;
 
@@ -8,10 +9,7 @@ namespace Shank.ASTNodes;
  */
 public class ParameterNode : ASTNode
 {
-    public override LLVMValueRef Accept(LLVMBuilderRef builder, LLVMModuleRef module)
-    {
-        throw new NotImplementedException();
-    }
+    
 
     public ParameterNode(ASTNode constant)
     {
@@ -175,5 +173,10 @@ public class ParameterNode : ASTNode
             return $"   {(IsVariable ? "var " : "")} {Variable.Name}";
         else
             return $"   {Constant}";
+    }
+
+    public override LLVMValueRef Visit(IVisitor visitor, Context context, LLVMBuilderRef builder, LLVMModuleRef module)
+    {
+        throw new NotImplementedException();
     }
 }

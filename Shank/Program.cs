@@ -32,7 +32,7 @@ public class Program
 
         // Interpret the program in normal or unit test mode.
         InterpretAndTest(cmdLineArgsHelper, program);
-        TestLLVM(program, "IR/output.ll");
+        // TestLLVM(program, "IR/output.ll");
     }
 
     private static void ScanAndParse(string inPath, ProgramNode program)
