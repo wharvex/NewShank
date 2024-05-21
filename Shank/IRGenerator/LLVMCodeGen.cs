@@ -5,6 +5,7 @@ namespace Shank;
 public class LLVMCodeGen
 {
     public LLVMModuleRef ModuleRef;
+
     public void CodeGen(string fileDir)
     {
         LLVM.InitializeAllTargetInfos(); //m
@@ -13,8 +14,7 @@ public class LLVMCodeGen
         LLVM.InitializeAllAsmPrinters();
         LLVM.InitializeAllAsmParsers();
         var module = LLVMModuleRef.CreateWithName("main");
-        
-        LLVMBuilderRef builder = module.Context.CreateBuilder();
 
+        LLVMBuilderRef builder = module.Context.CreateBuilder();
     }
 }
