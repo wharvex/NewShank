@@ -7,7 +7,7 @@ public class LLVMCodeGen
     public LLVMModuleRef ModuleRef;
     public void CodeGen(string fileDir)
     {
-        LLVM.InitializeAllTargetInfos();
+        LLVM.InitializeAllTargetInfos(); //m
         LLVM.InitializeAllTargets();
         LLVM.InitializeAllTargetMCs();
         LLVM.InitializeAllAsmPrinters();
