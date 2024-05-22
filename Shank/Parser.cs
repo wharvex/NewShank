@@ -965,10 +965,22 @@ public class Parser
 
     private void GetVariablesRecord(List<ASTNode> vars, string parentModuleName)
     {
-        vars.AddRange(
-            GetVariables(parentModuleName, VariableNode.DeclarationContext.RecordDeclaration) ?? []
-        );
-        RequiresEndOfLine();
+        var newVars =
+            GetVariables(parentModuleName, VariableNode.DeclarationContext.RecordDeclaration)
+            ?? throw new SyntaxErrorException(
+                "A record declaration needs at least one constituent member.",
+                Peek(0)
+            );
+
+        do
+        {
+            RequiresEndOfLine();
+            vars.AddRange(newVars);
+            newVars = GetVariables(
+                parentModuleName,
+                VariableNode.DeclarationContext.RecordDeclaration
+            );
+        } while (newVars is not null);
     }
 
     private void RequiresToken(Token.TokenType tokenType)
