@@ -31,8 +31,7 @@ public class FunctionNode : CallableNode
         Name = name;
     }
 
-
-    //DEPRECIATED 
+    //DEPRECIATED
     public string OverloadNameExt { get; set; } = "";
 
     public List<VariableNode> LocalVariables { get; set; } = [];
@@ -605,7 +604,6 @@ public class FunctionNode : CallableNode
         }
 
         Console.WriteLine($"LLVM IR\n=========\n{module}");
-
 
         //Deprecated
 
