@@ -45,6 +45,8 @@ public class VariableNode : ASTNode //StatementNode?
     // If Type is Array, then ArrayType is the type of its elements, or else it is null.
     public DataType? ArrayType { get; set; }
 
+    public TypeUsage? ArrayTypeEnhanced { get; set; }
+
     // UnknownType is the base name of an enum or record.
     // If Type is not Unknown or Enum or Record, then UnknownType should be null.
     public string? UnknownType { get; set; }

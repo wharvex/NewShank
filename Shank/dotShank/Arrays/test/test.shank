@@ -1,3 +1,6 @@
+record Sky
+    cloud : string
+
 define start()
-variables myArray : array from 0 to 20 of integer
-    myArray := myArray
+variables myArray : array from 0 to 20 of Sky
+    write "hello"

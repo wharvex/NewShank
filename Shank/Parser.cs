@@ -830,15 +830,35 @@ public class Parser
 
         // Get the array type.
         var arrayType =
-            MatchAndRemoveMultiple(_shankTokenTypesMinusArray)
+            MatchAndRemoveMultiple(_shankTokenTypesPlusIdentifier)
             ?? throw new SyntaxErrorException("Expected a type", Peek(0));
 
         // Set the array type on all the VariableNodes.
-        ret.ForEach(d => d.ArrayType = GetDataTypeFromTokenType(arrayType.Type));
+        if (arrayType.Type != Token.TokenType.Identifier)
+        {
+            ret.ForEach(d => d.ArrayType = GetDataTypeFromTokenType(arrayType.Type));
+        }
+        ret.ForEach(d => d.ArrayTypeEnhanced = GetTypeUsageFromToken(arrayType));
 
         // Return the VariableNodes.
         return ret;
     }
+
+    private TypeUsage GetTypeUsageFromToken(Token t) =>
+        t.Type switch
+        {
+            Token.TokenType.Integer => new TypeUsage(VariableNode.DataType.Integer),
+            Token.TokenType.Real => new TypeUsage(VariableNode.DataType.Real),
+            Token.TokenType.Boolean => new TypeUsage(VariableNode.DataType.Boolean),
+            Token.TokenType.Character => new TypeUsage(VariableNode.DataType.Character),
+            Token.TokenType.String => new TypeUsage(VariableNode.DataType.String),
+            Token.TokenType.Identifier
+                => new TypeUsage(VariableNode.DataType.Unknown, t.GetValueSafe()),
+            _
+                => throw new NotImplementedException(
+                    "Bad TokenType for generating a TypeUsage: " + t.Type
+                )
+        };
 
     private List<VariableNode> CreateVariablesUnknown(
         List<string> names,

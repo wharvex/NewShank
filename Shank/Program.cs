@@ -11,7 +11,7 @@ public class Program
         // file, do they include the unit test flag, etc.) and then populates its `InPaths' property
         // with the appropriate input file paths.
         // var cmdLineArgsHelper = new CmdLineArgsHelper(args);
-        RunCompiler(args);
+        //RunCompiler(args);
         var cmdLineArgsHelper = new CmdLineArgsHelper(args);
         // Create the root of the AST.
         var program = new ProgramNode();
