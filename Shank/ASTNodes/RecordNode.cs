@@ -32,10 +32,10 @@ public class RecordNode : ASTNode
             ?? throw new ArgumentNullException(nameof(sn), "Expected StatementNode to not be null")
         );
 
-    public RecordMemberNode? GetFromMembersByName(string name) =>
-        (RecordMemberNode?)Members.FirstOrDefault(s => ToMember(s).Name.Equals(name), null);
+    public VariableNode? GetFromMembersByName(string name) =>
+        Members2.FirstOrDefault(v => v?.Name?.Equals(name) ?? false, null);
 
-    public RecordMemberNode GetFromMembersByNameSafe(string name) =>
+    public VariableNode GetFromMembersByNameSafe(string name) =>
         GetFromMembersByName(name)
         ?? throw new ArgumentOutOfRangeException(
             nameof(name),
