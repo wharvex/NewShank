@@ -35,7 +35,12 @@ public abstract class StatementNode : ASTNode
         LLVMModuleRef module
     );
 
-    public override LLVMValueRef Visit(IVisitor visitor, Context context, LLVMBuilderRef builder, LLVMModuleRef module)
+    public override LLVMValueRef Visit(
+        IVisitor visitor,
+        Context context,
+        LLVMBuilderRef builder,
+        LLVMModuleRef module
+    )
     {
         // statement nodes ues visit statement as they do not return something
         throw new NotImplementedException();

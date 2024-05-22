@@ -26,7 +26,12 @@ public class WhileNode : StatementNode
         return $" WHILE: {Expression} {StatementListToString(Children)}";
     }
 
-    public override void VisitStatement(IVisitor visitor, Context context, LLVMBuilderRef builder, LLVMModuleRef module)
+    public override void VisitStatement(
+        IVisitor visitor,
+        Context context,
+        LLVMBuilderRef builder,
+        LLVMModuleRef module
+    )
     {
         // since the condition checking happens first we need another block (unlike in repeat)
         // when the condition happens after the body, we can jump immediatly back to the body, but in a while loop
@@ -43,6 +48,5 @@ public class WhileNode : StatementNode
         Children.ForEach(c => c.Visit(visitor, context, builder, module));
         builder.BuildBr(whileCond);
         builder.PositionAtEnd(whileDone);
-
     }
 }

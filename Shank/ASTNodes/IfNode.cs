@@ -31,11 +31,12 @@ public class IfNode : StatementNode
     {
         return $"If: {Expression} {StatementListToString(Children)} {((NextIfNode == null) ? string.Empty : Environment.NewLine + NextIfNode)}";
     }
+
     public override void VisitStatement(
-            IVisitor visitor,
-            Context context,
-            LLVMBuilderRef builder,
-            LLVMModuleRef module
+        IVisitor visitor,
+        Context context,
+        LLVMBuilderRef builder,
+        LLVMModuleRef module
     )
     {
         if (Expression != null)
@@ -51,7 +52,10 @@ public class IfNode : StatementNode
             var condition = Expression.Visit(visitor, context, builder, module);
             var ifBlock = module.Context.AppendBasicBlock(context.CurrentFunction, "if block");
             var elseBlock = module.Context.AppendBasicBlock(context.CurrentFunction, "else block");
-            var afterBlock = module.Context.AppendBasicBlock(context.CurrentFunction, "after if statement");
+            var afterBlock = module.Context.AppendBasicBlock(
+                context.CurrentFunction,
+                "after if statement"
+            );
             builder.BuildCondBr(condition, ifBlock, elseBlock);
 
             builder.PositionAtEnd(ifBlock);
@@ -64,7 +68,6 @@ public class IfNode : StatementNode
         }
         else
         {
-
             Children.ForEach(c => c.Visit(visitor, context, builder, module));
         }
     }

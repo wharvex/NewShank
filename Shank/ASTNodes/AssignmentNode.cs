@@ -32,7 +32,12 @@ public class AssignmentNode : StatementNode
         return arr;
     }
 
-    public override void VisitStatement(IVisitor visitor, Context context, LLVMBuilderRef builder, LLVMModuleRef module)
+    public override void VisitStatement(
+        IVisitor visitor,
+        Context context,
+        LLVMBuilderRef builder,
+        LLVMModuleRef module
+    )
     {
         throw new NotImplementedException();
     }

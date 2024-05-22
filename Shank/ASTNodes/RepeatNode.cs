@@ -18,7 +18,13 @@ public class RepeatNode : StatementNode
     {
         return $" REPEAT: {Expression} {StatementListToString(Children)}";
     }
-    public override void VisitStatement(IVisitor visitor, Context context, LLVMBuilderRef builder, LLVMModuleRef module)
+
+    public override void VisitStatement(
+        IVisitor visitor,
+        Context context,
+        LLVMBuilderRef builder,
+        LLVMModuleRef module
+    )
     {
         var whileBody = module.Context.AppendBasicBlock(context.CurrentFunction, "while.body");
         var whileDone = module.Context.AppendBasicBlock(context.CurrentFunction, "while.done");
@@ -30,6 +36,5 @@ public class RepeatNode : StatementNode
         var condition = Expression.Visit(visitor, context, builder, module);
         builder.BuildCondBr(condition, whileBody, whileDone);
         builder.PositionAtEnd(whileDone);
-
     }
 }

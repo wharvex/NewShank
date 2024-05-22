@@ -36,10 +36,10 @@ public class ForNode : StatementNode
     }
 
     public override void VisitStatement(
-            IVisitor visitor,
-            Context context,
-            LLVMBuilderRef builder,
-            LLVMModuleRef module
+        IVisitor visitor,
+        Context context,
+        LLVMBuilderRef builder,
+        LLVMModuleRef module
     )
     {
         var forStart = module.Context.AppendBasicBlock(context.CurrentFunction, "for.start");
@@ -58,8 +58,10 @@ public class ForNode : StatementNode
         // right now we assume, from, to, and the variable are all integers
         // in the future we should check and give some error at runtime/compile time if not
         // TODO: signed or unsigned comparison
-        var condition = builder.BuildAnd(builder.BuildICmp(LLVMIntPredicate.LLVMIntSGE, currentIterable, fromValue),
-            builder.BuildICmp(LLVMIntPredicate.LLVMIntSLE, currentIterable, toValue));
+        var condition = builder.BuildAnd(
+            builder.BuildICmp(LLVMIntPredicate.LLVMIntSGE, currentIterable, fromValue),
+            builder.BuildICmp(LLVMIntPredicate.LLVMIntSLE, currentIterable, toValue)
+        );
         builder.BuildCondBr(condition, forBody, afterFor);
         builder.PositionAtEnd(forBody);
         Children.ForEach(c => c.Visit(visitor, context, builder, module));
