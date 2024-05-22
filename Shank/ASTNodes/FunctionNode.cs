@@ -107,6 +107,15 @@ public class FunctionNode : CallableNode
         var fnRetTy = module.Context.VoidType;
         var args = ParameterVariables.Select(s => context.GetLLVMTypeFromShankType(s.Type, s.UnknownType)?? throw new  CompilerException($"type of parameter {s.Name} is not found", s.Line));
         var function = module.AddFunction(Name, LLVMTypeRef.CreateFunction(fnRetTy, args.ToArray()));
+        foreach (var (name, index) in ParameterVariables.Select((param, index) => (param.GetNameSafe(), index)))
+        {
+            var param = function.GetParam((uint)index);
+            param.Name = name;
+        }
+
+        function.Linkage = LLVMLinkage.LLVMExternalLinkage;
+        
+        var block = function.AppendBasicBlock("entry");
         return function;
 
     }
