@@ -32,14 +32,21 @@ public class AssignmentNode : StatementNode
         return arr;
     }
 
-    public override void VisitStatement(Context context, LLVMBuilderRef builder, LLVMModuleRef module)
+    public override void VisitStatement(
+        Context context,
+        LLVMBuilderRef builder,
+        LLVMModuleRef module
+    )
     {
-        builder.BuildStore(Expression.Visit(
+        builder.BuildStore(
+            Expression.Visit(
                 context.GetExprFromType(context.GetVaraible(Target.Name).TypeRef),
                 context,
                 builder,
-                module),
-            context.GetVaraible(Target.Name).ValueRef);
+                module
+            ),
+            context.GetVaraible(Target.Name).ValueRef
+        );
     }
 
     public override string ToString()

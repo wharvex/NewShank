@@ -44,9 +44,7 @@ public class VariableNode : ASTNode
     public DataType Type { get; set; }
 
     public LLVMTypeRef GetLLVMType(Context context, DataType type) =>
-        context
-            .GetLLVMTypeFromShankType(type)
-        ?? throw new Exception($"Type {Type} doesnt exist");
+        context.GetLLVMTypeFromShankType(type) ?? throw new Exception($"Type {Type} doesnt exist");
 
     // If Type is Array, then ArrayType is the type of its elements, or else it is null.
     public DataType? ArrayType { get; set; }
@@ -70,15 +68,15 @@ public class VariableNode : ASTNode
     public DataType GetArrayTypeSafe()
     {
         return ArrayType
-               ?? throw new InvalidOperationException("Expected ArrayType to not be null.");
+            ?? throw new InvalidOperationException("Expected ArrayType to not be null.");
     }
 
     public string GetUnknownTypeSafe()
     {
         return UnknownType
-               ?? throw new InvalidOperationException(
-                   "Expected " + nameof(UnknownType) + " to not be null."
-               );
+            ?? throw new InvalidOperationException(
+                "Expected " + nameof(UnknownType) + " to not be null."
+            );
     }
 
     public string GetModuleNameSafe() => ModuleName ?? "default";
@@ -153,16 +151,16 @@ public class VariableNode : ASTNode
     public override string ToString()
     {
         return Name
-               + " : "
-               + (Type == DataType.Array ? "Array of " + ArrayType : Type)
-               + " "
-               + (IsConstant ? "const" : string.Empty)
-               + " "
-               + (InitialValue == null ? string.Empty : InitialValue)
-               + " "
-               + (From == null ? string.Empty : " From: " + From)
-               + " "
-               + (To == null ? string.Empty : " To: " + To);
+            + " : "
+            + (Type == DataType.Array ? "Array of " + ArrayType : Type)
+            + " "
+            + (IsConstant ? "const" : string.Empty)
+            + " "
+            + (InitialValue == null ? string.Empty : InitialValue)
+            + " "
+            + (From == null ? string.Empty : " From: " + From)
+            + " "
+            + (To == null ? string.Empty : " To: " + To);
     }
 
     public override LLVMValueRef Visit(
@@ -175,7 +173,8 @@ public class VariableNode : ASTNode
         string name = GetNameSafe();
         LLVMValueRef v = builder.BuildAlloca(
             context.GetLLVMTypeFromShankType(Type) ?? throw new Exception("null type"),
-            GetNameSafe());
+            GetNameSafe()
+        );
         context.AddVaraible(GetNameSafe(), v, GetLLVMType(context, Type), false);
         return v;
     }

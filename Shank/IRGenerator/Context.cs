@@ -61,7 +61,7 @@ public class Context
         };
 
     /// <summary>
-    /// helper function. it retusns the visitor type 
+    /// helper function. it retusns the visitor type
     /// </summary>
     /// <param name="dataType"></param>
     /// <returns></returns>
@@ -78,9 +78,8 @@ public class Context
             throw new Exception("undefined type");
     }
 
-
     /// <summary>
-    /// gets the varaible 
+    /// gets the varaible
     /// </summary>
     /// <param name="name"></param>
     /// <returns></returns>
@@ -105,7 +104,7 @@ public class Context
     /// adds a varaivle to the dictionary
     /// </summary>
     /// <param name="name">var name (the key)</param>
-    /// 
+    ///
     /// <param name="valueRef">the LLVMref (needed for assignments)</param>
     /// <param name="type">Data type the varaible is</param>
     /// <param name="isGlobal">IsGlobal</param>
