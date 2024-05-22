@@ -1,4 +1,6 @@
+using LLVMSharp.Interop;
 using Shank.ASTNodes;
+using Shank.ExprVisitors;
 
 namespace Shank;
 
@@ -41,4 +43,13 @@ public class RecordMemberNode : StatementNode
     //        ? Type
     //        : (SemanticAnalysis.GetNamespaceOfRecordsAndEnumsAndImports(module)[GetUnknownTypeSafe()] as RecordNode)?.;
     //}
+    public override void VisitStatement(
+        Visitor visitor,
+        Context context,
+        LLVMBuilderRef builder,
+        LLVMModuleRef module
+    )
+    {
+        throw new NotImplementedException();
+    }
 }
