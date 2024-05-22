@@ -1,4 +1,6 @@
 using System.Text;
+using LLVMSharp.Interop;
+using Shank.ExprVisitors;
 
 namespace Shank.ASTNodes;
 
@@ -50,6 +52,11 @@ public class FunctionCallNode : StatementNode
         }
         object[] arr = { "FUNCTION", Name, b.ToString() };
         return arr;
+    }
+
+    public override void VisitStatement(IVisitor visitor, Context context, LLVMBuilderRef builder, LLVMModuleRef module)
+    {
+        throw new NotImplementedException();
     }
 
     public override string ToString()

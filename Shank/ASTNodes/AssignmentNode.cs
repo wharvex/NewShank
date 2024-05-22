@@ -1,5 +1,6 @@
 using LLVMSharp.Interop;
 using Shank.ASTNodes;
+using Shank.ExprVisitors;
 
 namespace Shank;
 
@@ -29,6 +30,11 @@ public class AssignmentNode : StatementNode
         object[] arr = { "", Target.Name, Expression.ToString() };
 
         return arr;
+    }
+
+    public override void VisitStatement(IVisitor visitor, Context context, LLVMBuilderRef builder, LLVMModuleRef module)
+    {
+        throw new NotImplementedException();
     }
 
     public override string ToString()
