@@ -31,10 +31,12 @@ public class FunctionNode : CallableNode
         Name = name;
     }
 
+
+    //DEPRECIATED 
     public string OverloadNameExt { get; set; } = "";
 
     public List<VariableNode> LocalVariables { get; set; } = [];
-    public string Name;
+    public string FunctionName;
     public List<StatementNode> Statements { get; set; } = [];
 
     public Dictionary<string, TestNode> Tests { get; set; } = [];
@@ -604,6 +606,9 @@ public class FunctionNode : CallableNode
         }
 
         Console.WriteLine($"LLVM IR\n=========\n{module}");
+
+
+        //Deprecated
 
         //builder.BuildRetVoid();
         //
