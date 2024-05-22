@@ -758,26 +758,22 @@ public class Interpreter
                     return new RecordDataType(
                         parentModule.Records[vn.GetUnknownTypeSafe()].Members
                     );
-                else
-                {
-                    if (
-                        parentModule.Imported.ContainsKey(vn.GetUnknownTypeSafe())
-                        && !parentModule
-                            .ImportTargetNames[
-                                (
-                                    (RecordNode)
-                                        parentModule.GetImportedSafe()[vn.GetUnknownTypeSafe()]
-                                ).GetParentModuleSafe()
-                            ]
-                            .Contains(vn.GetUnknownTypeSafe())
-                    )
-                        throw new Exception(
-                            $"Could not find definition for the record {vn.GetUnknownTypeSafe()}."
-                        );
-                    return new RecordDataType(
-                        ((RecordNode)parentModule.Imported[vn.GetUnknownTypeSafe()]).Members
+                if (
+                    parentModule.Imported.ContainsKey(vn.GetUnknownTypeSafe())
+                    && !parentModule
+                        .ImportTargetNames[
+                            (
+                                (RecordNode)parentModule.GetImportedSafe()[vn.GetUnknownTypeSafe()]
+                            ).GetParentModuleSafe()
+                        ]
+                        .Contains(vn.GetUnknownTypeSafe())
+                )
+                    throw new Exception(
+                        $"Could not find definition for the record {vn.GetUnknownTypeSafe()}."
                     );
-                }
+                return new RecordDataType(
+                    ((RecordNode)parentModule.Imported[vn.GetUnknownTypeSafe()]).Members
+                );
             }
             case VariableNode.DataType.Enum:
                 if (parentModule.getEnums().ContainsKey(vn.GetUnknownTypeSafe()))

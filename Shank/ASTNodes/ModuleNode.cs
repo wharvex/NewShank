@@ -13,12 +13,14 @@ public class ModuleNode : ASTNode
     public Dictionary<string, RecordNode> Records { get; init; }
     public Dictionary<string, VariableNode> GlobalVariables { get; } = [];
 
-    //Dictionary associating names to something to be imported/exported
-    //has a type of ASTNode? as references will later be added
     public Dictionary<string, ASTNode> Exported { get; set; }
     public Dictionary<string, ASTNode> Imported { get; set; }
 
-    //ImportTargetNames holds a module and the list of functions that this module has imported
+    /// <summary>
+    /// This dictionary is used to lookup by a module's name all the specific language construct
+    /// names (e.g. function names, record names, etc.) that were "specifically" imported from that
+    /// module using the square brackets import syntax.
+    /// </summary>
     public Dictionary<string, LinkedList<string>> ImportTargetNames { get; set; }
 
     //the names of functions to be exported
@@ -124,6 +126,7 @@ public class ModuleNode : ASTNode
             .Select(startKvp => (FunctionNode)startKvp.Value)
             .FirstOrDefault();
 
+    // TODO: This method needs some work.
     public void updateImports(
         Dictionary<string, CallableNode> recievedFunctions,
         Dictionary<string, EnumNode> recievedEnums,

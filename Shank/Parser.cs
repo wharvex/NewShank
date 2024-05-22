@@ -373,7 +373,7 @@ public class Parser
 
     private void BodyRecord(RecordNode record)
     {
-        StatementsBody(record.Members, true);
+        //StatementsBody(record.Members, true);
         var members = record.Members2.Select(vn => (ASTNode)vn).ToList();
         Body(members, record.ParentModuleName, GetVariablesRecord);
         record.Members2.AddRange(members.Select(an => (VariableNode)an));
@@ -948,13 +948,14 @@ public class Parser
         vars.AddRange(
             GetVariables(parentModuleName, VariableNode.DeclarationContext.RecordDeclaration) ?? []
         );
+        RequiresEndOfLine();
     }
 
     private void RequiresToken(Token.TokenType tokenType)
     {
         if (MatchAndRemove(tokenType) is null)
         {
-            throw new SyntaxErrorException("Expected a " + tokenType, Peek(0));
+            throw new SyntaxErrorException("Expected " + tokenType, Peek(0));
         }
     }
 
