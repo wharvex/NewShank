@@ -11,6 +11,7 @@ public class Program
         // file, do they include the unit test flag, etc.) and then populates its `InPaths' property
         // with the appropriate input file paths.
         // var cmdLineArgsHelper = new CmdLineArgsHelper(args);
+        RunCompiler(args);
         var cmdLineArgsHelper = new CmdLineArgsHelper(args);
         // Create the root of the AST.
         var program = new ProgramNode();
@@ -34,6 +35,29 @@ public class Program
         // Interpret the program in normal or unit test mode.
         InterpretAndTest(cmdLineArgsHelper, program);
         // TestLLVM(program, "IR/output.ll");
+    }
+
+    public static void RunCompiler(string[] args)
+    {
+        Console.WriteLine("==========COMPILER===============");
+        var cmdLineArgsHelper = new CmdLineArgsHelper(args);
+        // Create the root of the AST.
+        var program = new ProgramNode();
+
+        // Scan and Parse each input file.
+        cmdLineArgsHelper.InPaths.ForEach(ip => ScanAndParse(ip, program));
+
+        // Set the program's entry point.
+        program.SetStartModule();
+
+        // Save the pre-SA AST to $env:APPDATA\ShankDebugOutput4.json
+        OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForProgramNode(program), 4);
+
+        // Check the program for semantic issues.
+        SemanticAnalysis.CheckModules(program);
+        // Interpret the program in normal or unit test mode.
+        TestLLVM(program, "IR/output.ll");
+        Console.WriteLine("==========INTERPRETER===============");
     }
 
     private static void ScanAndParse(string inPath, ProgramNode program)
