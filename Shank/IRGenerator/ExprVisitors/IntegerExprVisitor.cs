@@ -5,7 +5,7 @@ namespace Shank.ExprVisitors;
 
 public class IntegerExprVisitor : Visitor
 {
-    public LLVMValueRef Accept(
+    public override LLVMValueRef Accept(
         IntNode node,
         Context context,
         LLVMBuilderRef builder,
@@ -15,7 +15,7 @@ public class IntegerExprVisitor : Visitor
         return LLVMValueRef.CreateConstInt(module.Context.Int64Type, (ulong)node.Value);
     }
 
-    public LLVMValueRef Accept(
+    public override LLVMValueRef Accept(
         VariableReferenceNode node,
         Context context,
         LLVMBuilderRef builder,
@@ -25,7 +25,7 @@ public class IntegerExprVisitor : Visitor
         throw new NotImplementedException();
     }
 
-    public LLVMValueRef Accept(
+    public override LLVMValueRef Accept(
         MathOpNode node,
         Context context,
         LLVMBuilderRef builder,

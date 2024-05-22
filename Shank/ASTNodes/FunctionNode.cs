@@ -53,24 +53,24 @@ public class FunctionNode : CallableNode
     public VariableNode GetVariableNodeByName(string searchName)
     {
         return LocalVariables
-                .Concat(ParameterVariables)
-                .FirstOrDefault(
-                    vn =>
-                        (
-                            vn
-                            ?? throw new InvalidOperationException(
-                                "Something went wrong internally. There should not be"
-                                    + " null entries in FunctionNode.LocalVariables or"
-                                    + " FunctionNode.ParameterVariables."
-                            )
-                        ).Name?.Equals(searchName)
-                        ?? throw new InvalidOperationException(vn + " has no Name."),
-                    null
-                )
-            ?? throw new ArgumentOutOfRangeException(
-                nameof(searchName),
-                "No variable found with given searchName."
-            );
+                   .Concat(ParameterVariables)
+                   .FirstOrDefault(
+                       vn =>
+                           (
+                               vn
+                               ?? throw new InvalidOperationException(
+                                   "Something went wrong internally. There should not be"
+                                   + " null entries in FunctionNode.LocalVariables or"
+                                   + " FunctionNode.ParameterVariables."
+                               )
+                           ).Name?.Equals(searchName)
+                           ?? throw new InvalidOperationException(vn + " has no Name."),
+                       null
+                   )
+               ?? throw new ArgumentOutOfRangeException(
+                   nameof(searchName),
+                   "No variable found with given searchName."
+               );
     }
 
     public override string ToString()
@@ -132,6 +132,7 @@ public class FunctionNode : CallableNode
         function.Linkage = LLVMLinkage.LLVMExternalLinkage;
 
         var block = function.AppendBasicBlock("entry");
+        builder.PositionAtEnd(block);
         return function;
     }
 
@@ -334,7 +335,8 @@ public class FunctionNode : CallableNode
         var incrementedValue = builder.BuildAdd(i, increment, "i");
         var allocated_left = hash_variables[s_tokens[1].ToString()];
         builder.BuildStore(incrementedValue, allocated_left);
-        hash_variables[s_tokens[1].ToString()] = allocated_left; //we store the pointer variable referencing the memory location for i
+        hash_variables[s_tokens[1].ToString()] =
+            allocated_left; //we store the pointer variable referencing the memory location for i
 
         // Go back to the loop condition block, i.e. branch
         builder.BuildBr(loopCondBlock);
@@ -665,6 +667,10 @@ public class FunctionNode : CallableNode
 
     public override void Visit(Context context, LLVMBuilderRef builder, LLVMModuleRef module)
     {
+        LocalVariables.ForEach(s => s.Visit(new IntegerExprVisitor(),
+            context, builder, module));
         Statements.ForEach(s => s.VisitStatement(context, builder, module));
+        context.ResetLocal();
+        // context.Variables(new()) = new();
     }
 }

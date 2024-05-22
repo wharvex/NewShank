@@ -5,7 +5,7 @@ namespace Shank.ExprVisitors;
 
 public class FloatExprVisitor : Visitor
 {
-    public LLVMValueRef Accept(
+    public override LLVMValueRef Accept(
         IntNode node,
         Context context,
         LLVMBuilderRef builder,
@@ -15,7 +15,7 @@ public class FloatExprVisitor : Visitor
         throw new NotImplementedException();
     }
 
-    public LLVMValueRef Accept(
+    public override LLVMValueRef Accept(
         FloatNode node,
         Context context,
         LLVMBuilderRef builder,
@@ -35,7 +35,7 @@ public class FloatExprVisitor : Visitor
         throw new NotImplementedException();
     }
 
-    public LLVMValueRef Accept(
+    public override LLVMValueRef Accept(
         CharNode node,
         Context context,
         LLVMBuilderRef builder,
@@ -45,7 +45,7 @@ public class FloatExprVisitor : Visitor
         throw new NotImplementedException();
     }
 
-    public LLVMValueRef Accept(
+    public override LLVMValueRef Accept(
         BoolNode node,
         Context context,
         LLVMBuilderRef builder,
@@ -55,7 +55,7 @@ public class FloatExprVisitor : Visitor
         throw new NotImplementedException();
     }
 
-    public LLVMValueRef Accept(
+    public override LLVMValueRef Accept(
         StringNode node,
         Context context,
         LLVMBuilderRef builder,
@@ -65,7 +65,7 @@ public class FloatExprVisitor : Visitor
         throw new NotImplementedException();
     }
 
-    public LLVMValueRef Accept(
+    public override LLVMValueRef Accept(
         MathOpNode node,
         Context context,
         LLVMBuilderRef builder,
@@ -75,7 +75,7 @@ public class FloatExprVisitor : Visitor
         throw new NotImplementedException();
     }
 
-    public LLVMValueRef Accept(
+    public override LLVMValueRef Accept(
         BooleanExpressionNode node,
         Context context,
         LLVMBuilderRef builder,

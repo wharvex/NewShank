@@ -29,6 +29,6 @@ public class MathOpNode : ASTNode
         LLVMModuleRef module
     )
     {
-        throw new NotImplementedException();
+        return visitor.Accept(this, context, builder, module);
     }
 }
