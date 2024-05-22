@@ -34,9 +34,12 @@ public class Program
 
         // Interpret the program in normal or unit test mode.
         InterpretAndTest(cmdLineArgsHelper, program);
-        // TestLLVM(program, "IR/output.ll");
     }
 
+    /// <summary>
+    /// runs the compiler
+    /// </summary>
+    /// <param name="args"></param>
     public static void RunCompiler(string[] args)
     {
         Console.WriteLine("==========COMPILER===============");
