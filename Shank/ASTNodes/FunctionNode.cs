@@ -615,5 +615,4 @@ public class FunctionNode : CallableNode
         string updatedIrContent = irContent.Replace("ptr", "i64*");
         File.WriteAllText(outPath, updatedIrContent);
     }
-    
 }

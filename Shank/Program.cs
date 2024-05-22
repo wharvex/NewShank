@@ -13,7 +13,7 @@ public class Program
         // var cmdLineArgsHelper = new CmdLineArgsHelper(args);
         var cmdLineArgsHelper = new CmdLineArgsHelper(args);
         // Create the root of the AST.
-        var program = new ProgramNode(); 
+        var program = new ProgramNode();
 
         // Scan and Parse each input file.
         cmdLineArgsHelper.InPaths.ForEach(ip => ScanAndParse(ip, program));

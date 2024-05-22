@@ -4,7 +4,7 @@ using Shank.ExprVisitors;
 
 namespace Shank;
 
-public class VariableNode : ASTNode //StatementNode? 
+public class VariableNode : ASTNode //StatementNode?
 {
     public string? Name { get; set; }
     public string? ModuleName { get; set; }
@@ -168,8 +168,5 @@ public class VariableNode : ASTNode //StatementNode?
         throw new NotImplementedException();
     }
 
-    public void Visit()
-    {
-        
-    }
+    public void Visit() { }
 }

@@ -5,17 +5,32 @@ namespace Shank.ExprVisitors;
 
 public class IntegerExprVisitor : Visitor
 {
-    public LLVMValueRef Accept(IntNode node, Context context, LLVMBuilderRef builder, LLVMModuleRef module)
+    public LLVMValueRef Accept(
+        IntNode node,
+        Context context,
+        LLVMBuilderRef builder,
+        LLVMModuleRef module
+    )
     {
         return LLVMValueRef.CreateConstInt(module.Context.Int64Type, (ulong)node.Value);
     }
 
-    public LLVMValueRef Accept(VariableReferenceNode node, Context context, LLVMBuilderRef builder,
-        LLVMModuleRef module)
+    public LLVMValueRef Accept(
+        VariableReferenceNode node,
+        Context context,
+        LLVMBuilderRef builder,
+        LLVMModuleRef module
+    )
     {
         throw new NotImplementedException();
     }
-    public LLVMValueRef Accept(MathOpNode node, Context context, LLVMBuilderRef builder, LLVMModuleRef module)
+
+    public LLVMValueRef Accept(
+        MathOpNode node,
+        Context context,
+        LLVMBuilderRef builder,
+        LLVMModuleRef module
+    )
     {
         LLVMValueRef R = node.Right.Visit(this, context, builder, module);
         LLVMValueRef L = node.Left.Visit(this, context, builder, module);

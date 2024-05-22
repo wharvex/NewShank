@@ -30,7 +30,6 @@ public class ForNode : StatementNode
         return arr;
     }
 
-
     public override string ToString()
     {
         return $" For: {Variable} From: {From} To: {To} {Environment.NewLine} {StatementListToString(Children)}";
