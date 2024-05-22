@@ -1,5 +1,6 @@
 using System.Text;
 using LLVMSharp.Interop;
+using Shank.ExprVisitors;
 
 namespace Shank;
 
@@ -11,6 +12,7 @@ public class FunctionNode : CallableNode
         // This is a delegate instance, like an anonymous interface implementation in Java.
         Execute = (List<InterpreterDataType> paramList) =>
             Interpreter.InterpretFunction(this, paramList);
+        Name = name;
     }
 
     public FunctionNode(string name, string moduleName)
@@ -18,6 +20,7 @@ public class FunctionNode : CallableNode
     {
         Execute = (List<InterpreterDataType> paramList) =>
             Interpreter.InterpretFunction(this, paramList);
+        Name = name;
     }
 
     public FunctionNode(string name)
@@ -25,12 +28,13 @@ public class FunctionNode : CallableNode
     {
         Execute = (List<InterpreterDataType> paramList) =>
             Interpreter.InterpretFunction(this, paramList);
+        Name = name;
     }
 
     public string OverloadNameExt { get; set; } = "";
 
     public List<VariableNode> LocalVariables { get; set; } = [];
-
+    public string Name;
     public List<StatementNode> Statements { get; set; } = [];
 
     public Dictionary<string, TestNode> Tests { get; set; } = [];
@@ -48,24 +52,24 @@ public class FunctionNode : CallableNode
     public VariableNode GetVariableNodeByName(string searchName)
     {
         return LocalVariables
-                .Concat(ParameterVariables)
-                .FirstOrDefault(
-                    vn =>
-                        (
-                            vn
-                            ?? throw new InvalidOperationException(
-                                "Something went wrong internally. There should not be"
-                                    + " null entries in FunctionNode.LocalVariables or"
-                                    + " FunctionNode.ParameterVariables."
-                            )
-                        ).Name?.Equals(searchName)
-                        ?? throw new InvalidOperationException(vn + " has no Name."),
-                    null
-                )
-            ?? throw new ArgumentOutOfRangeException(
-                nameof(searchName),
-                "No variable found with given searchName."
-            );
+                   .Concat(ParameterVariables)
+                   .FirstOrDefault(
+                       vn =>
+                           (
+                               vn
+                               ?? throw new InvalidOperationException(
+                                   "Something went wrong internally. There should not be"
+                                   + " null entries in FunctionNode.LocalVariables or"
+                                   + " FunctionNode.ParameterVariables."
+                               )
+                           ).Name?.Equals(searchName)
+                           ?? throw new InvalidOperationException(vn + " has no Name."),
+                       null
+                   )
+               ?? throw new ArgumentOutOfRangeException(
+                   nameof(searchName),
+                   "No variable found with given searchName."
+               );
     }
 
     public override string ToString()
@@ -77,11 +81,13 @@ public class FunctionNode : CallableNode
             b.AppendLine("Parameters:");
             ParameterVariables.ForEach(p => b.AppendLine($"   {p}"));
         }
+
         if (LocalVariables.Any())
         {
             b.AppendLine("Local Variables:");
             LocalVariables.ForEach(p => b.AppendLine($"   {p}"));
         }
+
         if (Statements.Any())
         {
             b.AppendLine("-------------------------------------");
@@ -237,6 +243,7 @@ public class FunctionNode : CallableNode
             );
             builder.BuildStore(start, i); //store i with a value of start
         }
+
         hash_variables[s_tokens[1].ToString()] = i;
 
         //Create the for loop condition
@@ -290,7 +297,8 @@ public class FunctionNode : CallableNode
         var incrementedValue = builder.BuildAdd(i, increment, "i");
         var allocated_left = hash_variables[s_tokens[1].ToString()];
         builder.BuildStore(incrementedValue, allocated_left);
-        hash_variables[s_tokens[1].ToString()] = allocated_left; //we store the pointer variable referencing the memory location for i
+        hash_variables[s_tokens[1].ToString()] =
+            allocated_left; //we store the pointer variable referencing the memory location for i
 
         // Go back to the loop condition block, i.e. branch
         builder.BuildBr(loopCondBlock);
@@ -501,6 +509,7 @@ public class FunctionNode : CallableNode
                 {
                     hash_variables.Add(localVar.Name ?? "", allocated);
                 }
+
                 var allocatedValue = LLVMValueRef.CreateConstInt(
                     context.Int64Type,
                     ulong.Parse(localVar.InitialValue?.ToString() ?? "")
@@ -614,5 +623,20 @@ public class FunctionNode : CallableNode
         string irContent = File.ReadAllText(outPath);
         string updatedIrContent = irContent.Replace("ptr", "i64*");
         File.WriteAllText(outPath, updatedIrContent);
+    }
+
+    public override LLVMValueRef Visit(Visitor visitor,
+        Context context,
+        LLVMBuilderRef builder,
+        LLVMModuleRef module)
+    {
+        LLVMTypeRef funcType = LLVMTypeRef.CreateFunction(LLVMTypeRef.Void, new LLVMTypeRef[0] { }, false);
+        LLVMValueRef function = module.AddFunction(Name, funcType);
+        return function;
+    }
+
+    public override void Visit(Context context, LLVMBuilderRef builder, LLVMModuleRef module)
+    {
+        Statements.ForEach(s => s.VisitStatement(context, builder, module));
     }
 }

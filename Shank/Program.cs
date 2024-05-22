@@ -25,8 +25,9 @@ public class Program
         OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForProgramNode(program), 4);
 
         // Add Builtin Functions to program.StartModule's functions.
-        BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
 
+        //TODO: 
+        BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
         // Check the program for semantic issues.
         SemanticAnalysis.CheckModules(program);
 

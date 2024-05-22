@@ -13,7 +13,7 @@ namespace Shank;
 [JsonDerivedType(typeof(ForNode))]
 [JsonDerivedType(typeof(WhileNode))]
 [JsonDerivedType(typeof(RepeatNode))]
-public abstract class StatementNode : ASTNode
+public  class StatementNode : ASTNode
 {
     protected static string StatementListToString(List<StatementNode> statements)
     {
@@ -28,12 +28,14 @@ public abstract class StatementNode : ASTNode
         return arr;
     }
 
-    public abstract void VisitStatement(
-        Visitor visitor,
+    public void VisitStatement(
         Context context,
         LLVMBuilderRef builder,
         LLVMModuleRef module
-    );
+    )
+    {
+        
+    }
 
     public override LLVMValueRef Visit(
         Visitor visitor,
@@ -46,5 +48,8 @@ public abstract class StatementNode : ASTNode
         throw new NotImplementedException();
     }
 
-    public void Visit(Context context, LLVMBuilderRef builder, LLVMModuleRef module) { }
+    public void Visit(Context context, LLVMBuilderRef builder, LLVMModuleRef module)
+    {
+        
+    }
 }

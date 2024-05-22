@@ -53,13 +53,15 @@ public abstract class CallableNode : ASTNode
     public bool IsValidOverloadOf(CallableNode cn) =>
         ParameterVariables.Where((pv, i) => !cn.ParameterVariables[i].EqualsForOverload(pv)).Any();
 
-    public override LLVMValueRef Visit(
+    public abstract override LLVMValueRef Visit(
         Visitor visitor,
         Context context,
         LLVMBuilderRef builder,
         LLVMModuleRef module
-    )
-    {
-        throw new UnauthorizedAccessException(); //questionable is this a good idea or not
-    }
+    );
+
+    public abstract void Visit(
+        Context context,
+        LLVMBuilderRef builder,
+        LLVMModuleRef module);
 }

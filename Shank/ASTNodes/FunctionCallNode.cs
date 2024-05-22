@@ -50,12 +50,12 @@ public class FunctionCallNode : StatementNode
         {
             Parameters.ForEach(p => b.AppendLine($"   {p}"));
         }
+
         object[] arr = { "FUNCTION", Name, b.ToString() };
         return arr;
     }
 
-    public override void VisitStatement(
-        Visitor visitor,
+    public  void VisitStatement(
         Context context,
         LLVMBuilderRef builder,
         LLVMModuleRef module

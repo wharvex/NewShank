@@ -4,12 +4,12 @@ using Shank.ExprVisitors;
 
 namespace Shank;
 
-public class ModuleNode : ASTNode
+public class ModuleNode : StatementNode
 {
     public Dictionary<string, EnumNode> Enums { get; init; }
     public string Name { get; set; }
     public Dictionary<string, CallableNode> Functions { get; init; }
-    public Dictionary<string, List<CallableNode>> Functions2 { get; } = [];
+    public Dictionary<string, List<CallableNode>> Functions2 { get; } = []; //not finished for overloaded functions
     public Dictionary<string, RecordNode> Records { get; init; }
     public Dictionary<string, VariableNode> GlobalVariables { get; } = [];
 
@@ -100,9 +100,9 @@ public class ModuleNode : ASTNode
                     ret.Add(
                         i.Key,
                         i.Value
-                            ?? throw new InvalidOperationException(
-                                "Expected the value associated with " + i.Key + " to not be null."
-                            )
+                        ?? throw new InvalidOperationException(
+                            "Expected the value associated with " + i.Key + " to not be null."
+                        )
                     )
             );
         return ret;
@@ -140,6 +140,7 @@ public class ModuleNode : ASTNode
                 ((CallableNode)Imported[function.Key]).IsPublic = true;
                 continue;
             }
+
             string pmn =
                 function.Value.parentModuleName
                 ?? throw new Exception("Could not get parent module name while updating imports.");
@@ -164,6 +165,7 @@ public class ModuleNode : ASTNode
                 ((EnumNode)Imported[Enum.Key]).IsPublic = true;
                 continue;
             }
+
             if (ImportTargetNames.ContainsKey(Enum.Value.ParentModuleName))
             {
                 if (ImportTargetNames[Enum.Value.ParentModuleName] != null)
@@ -175,6 +177,7 @@ public class ModuleNode : ASTNode
                 }
             }
         }
+
         foreach (var record in recievedRecords)
         {
             if (!Imported.ContainsKey(record.Key))
@@ -184,6 +187,7 @@ public class ModuleNode : ASTNode
                 ((RecordNode)Imported[record.Key]).IsPublic = true;
                 continue;
             }
+
             if (ImportTargetNames.ContainsKey(record.Value.ParentModuleName))
             {
                 if (ImportTargetNames[record.Value.ParentModuleName] != null)
@@ -217,9 +221,9 @@ public class ModuleNode : ASTNode
             {
                 throw new Exception(
                     "Could not find '"
-                        + exportName
-                        + "' in the current list of functions, enums or records in module "
-                        + Name
+                    + exportName
+                    + "' in the current list of functions, enums or records in module "
+                    + Name
                 );
             }
         }
@@ -232,6 +236,7 @@ public class ModuleNode : ASTNode
         {
             Functions.Add(function.Key, function.Value);
         }
+
         if (moduleIn.getImportNames().Any())
             throw new Exception("An unnamed module cannot import.");
         if (moduleIn.getExportNames().Any())
@@ -357,13 +362,16 @@ public class ModuleNode : ASTNode
         return Tests;
     }
 
-    public override LLVMValueRef Visit(
-        Visitor visitor,
-        Context context,
-        LLVMBuilderRef builder,
-        LLVMModuleRef module
-    )
+
+    public void VisitStatement(Context context, LLVMBuilderRef builder, LLVMModuleRef module)
     {
-        throw new NotImplementedException();
+        foreach (var f in Functions)
+        {
+            context = new(f.Value.Visit(new IntegerExprVisitor(), 
+                context, 
+                builder, 
+                module), this);
+            f.Value.Visit(context, builder, module);
+        }
     }
 }

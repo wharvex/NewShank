@@ -26,8 +26,7 @@ public class WhileNode : StatementNode
         return $" WHILE: {Expression} {StatementListToString(Children)}";
     }
 
-    public override void VisitStatement(
-        Visitor visitor,
+    public  void VisitStatement(
         Context context,
         LLVMBuilderRef builder,
         LLVMModuleRef module
@@ -45,7 +44,7 @@ public class WhileNode : StatementNode
         var condition = Expression.Visit(new BoolNodeVisitor(), context, builder, module);
         builder.BuildCondBr(condition, whileBody, whileDone);
         builder.PositionAtEnd(whileBody);
-        Children.ForEach(c => c.Visit(visitor, context, builder, module));
+        Children.ForEach(c => c.VisitStatement(context, builder, module));
         builder.BuildBr(whileCond);
         builder.PositionAtEnd(whileDone);
     }

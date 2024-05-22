@@ -19,8 +19,7 @@ public class RepeatNode : StatementNode
         return $" REPEAT: {Expression} {StatementListToString(Children)}";
     }
 
-    public override void VisitStatement(
-        Visitor visitor,
+    public  void VisitStatement(
         Context context,
         LLVMBuilderRef builder,
         LLVMModuleRef module
@@ -31,9 +30,9 @@ public class RepeatNode : StatementNode
         // first execute the body
         builder.BuildBr(whileBody);
         builder.PositionAtEnd(whileBody);
-        Children.ForEach(c => c.Visit(visitor, context, builder, module));
+        Children.ForEach(c => c.VisitStatement(context, builder, module));
         // and then test the condition
-        var condition = Expression.Visit(visitor, context, builder, module);
+        var condition = Expression.Visit(new BoolNodeVisitor(), context, builder, module);
         builder.BuildCondBr(condition, whileBody, whileDone);
         builder.PositionAtEnd(whileDone);
     }

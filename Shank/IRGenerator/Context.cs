@@ -4,11 +4,14 @@ namespace Shank;
 
 public class Context
 {
-    public Context(LLVMValueRef startFunction)
+    public Context(LLVMValueRef startFunction, ModuleNode moduleNode)
     {
         CurrentFunction = startFunction;
+        ModuleNode = moduleNode;
     }
 
+
+    public ModuleNode ModuleNode { get; set; }
     public LLVMValueRef CurrentFunction { get; set; }
     public Dictionary<string, LLVMTypeRef> CustomTypes { get; } = new();
     public Dictionary<string, LLVMValueRef> Functions { get; } = new();

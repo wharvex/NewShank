@@ -1,5 +1,6 @@
 using System.IO;
 using LLVMSharp.Interop;
+using Shank.ExprVisitors;
 
 namespace Shank;
 
@@ -20,12 +21,16 @@ public class LLVMCodeGen
         FileStream fs;
 
         string directory = Path.GetDirectoryName(fileDir);
+        programNode.Visit(null, builder, module);
         if (!Directory.Exists(directory))
         {
             Directory.CreateDirectory(directory); //l
         }
+
         File.WriteAllText(fileDir, module.ToString());
         Console.WriteLine("code successfully compiled");
         Console.WriteLine("IR code gen file path: " + fileDir);
+        Console.WriteLine("IR result");
+        Console.WriteLine($"{module.ToString()}");
     }
 }
