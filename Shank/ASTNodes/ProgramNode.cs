@@ -36,9 +36,9 @@ public class ProgramNode : ASTNode
         {
             // TryGetValue always makes its "out" argument nullable, even if the kvp's Value is not.
             return m
-                   ?? throw new InvalidOperationException(
-                       "Expected module `" + name + "' to not be null."
-                   );
+                ?? throw new InvalidOperationException(
+                    "Expected module `" + name + "' to not be null."
+                );
         }
 
         return null;
@@ -69,9 +69,7 @@ public class ProgramNode : ASTNode
         };
     }
 
-    public void Visit(Context context,
-        LLVMBuilderRef builder,
-        LLVMModuleRef module)
+    public void Visit(Context context, LLVMBuilderRef builder, LLVMModuleRef module)
     {
         foreach (var keyValuePair in Modules)
         {

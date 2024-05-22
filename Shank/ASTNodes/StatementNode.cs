@@ -48,7 +48,5 @@ public class StatementNode : ASTNode
         throw new NotImplementedException();
     }
 
-    public void Visit(Context context, LLVMBuilderRef builder, LLVMModuleRef module)
-    {
-    }
+    public void Visit(Context context, LLVMBuilderRef builder, LLVMModuleRef module) { }
 }

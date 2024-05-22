@@ -26,7 +26,7 @@ public class Program
 
         // Add Builtin Functions to program.StartModule's functions.
 
-        //TODO: 
+        //TODO:
         BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
         // Check the program for semantic issues.
         SemanticAnalysis.CheckModules(program);

@@ -60,8 +60,5 @@ public abstract class CallableNode : ASTNode
         LLVMModuleRef module
     );
 
-    public abstract void Visit(
-        Context context,
-        LLVMBuilderRef builder,
-        LLVMModuleRef module);
+    public abstract void Visit(Context context, LLVMBuilderRef builder, LLVMModuleRef module);
 }

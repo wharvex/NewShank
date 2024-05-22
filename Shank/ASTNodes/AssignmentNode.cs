@@ -32,11 +32,8 @@ public class AssignmentNode : StatementNode
         return arr;
     }
 
-    public  void VisitStatement(Context context, LLVMBuilderRef builder, LLVMModuleRef module)
-    {
-        
-    }
-    
+    public void VisitStatement(Context context, LLVMBuilderRef builder, LLVMModuleRef module) { }
+
     public override string ToString()
     {
         return $"{Target} := {Expression}";
