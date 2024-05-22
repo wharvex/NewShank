@@ -1,6 +1,9 @@
 define start()
 variables n : integer
-    n := 10;
-    n := n + 1;
-    n := 0;
+    n := 10
+    n := n + 1
+    n := 0
     
+define foo(t: integer; h: boolean; s: string; f: array of character)
+variables n : integer
+     n:= 40

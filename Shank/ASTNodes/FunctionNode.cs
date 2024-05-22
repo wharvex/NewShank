@@ -99,6 +99,17 @@ public class FunctionNode : CallableNode
         return b.ToString();
     }
 
+    public override LLVMValueRef Visit(Visitor visitor, Context context, LLVMBuilderRef builder, LLVMModuleRef module)
+    {
+        // TODO: split into generatin prototype and body
+        // so that we all functions are defined before we compile any of the function body
+
+        var fnRetTy = module.Context.VoidType;
+        var args = ParameterVariables.Select(s => context.GetLLVMTypeFromShankType(s.Type, s.UnknownType)?? throw new  CompilerException($"type of parameter {s.Name} is not found", s.Line));
+        var function = module.AddFunction(Name, LLVMTypeRef.CreateFunction(fnRetTy, args.ToArray()));
+        return function;
+
+    }
     /*
     For assignment statement
     EvalExpression() is called if the Right Hand Side is an expression.
@@ -625,22 +636,6 @@ public class FunctionNode : CallableNode
         string irContent = File.ReadAllText(outPath);
         string updatedIrContent = irContent.Replace("ptr", "i64*");
         File.WriteAllText(outPath, updatedIrContent);
-    }
-
-    public override LLVMValueRef Visit(
-        Visitor visitor,
-        Context context,
-        LLVMBuilderRef builder,
-        LLVMModuleRef module
-    )
-    {
-        LLVMTypeRef funcType = LLVMTypeRef.CreateFunction(
-            LLVMTypeRef.Void,
-            new LLVMTypeRef[0] { },
-            false
-        );
-        LLVMValueRef function = module.AddFunction(Name, funcType);
-        return function;
     }
 
     public override void Visit(Context context, LLVMBuilderRef builder, LLVMModuleRef module)
