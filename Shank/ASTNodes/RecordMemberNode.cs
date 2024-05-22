@@ -43,11 +43,7 @@ public class RecordMemberNode : StatementNode
     //        ? Type
     //        : (SemanticAnalysis.GetNamespaceOfRecordsAndEnumsAndImports(module)[GetUnknownTypeSafe()] as RecordNode)?.;
     //}
-    public  void VisitStatement(
-        Context context,
-        LLVMBuilderRef builder,
-        LLVMModuleRef module
-    )
+    public void VisitStatement(Context context, LLVMBuilderRef builder, LLVMModuleRef module)
     {
         throw new NotImplementedException();
     }

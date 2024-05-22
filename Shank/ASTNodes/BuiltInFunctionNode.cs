@@ -9,7 +9,13 @@ public class BuiltInFunctionNode : CallableNode
         : base(name, execute) { }
 
     public bool IsVariadic = false;
-    public override LLVMValueRef Visit(Visitor visitor, Context context, LLVMBuilderRef builder, LLVMModuleRef module)
+
+    public override LLVMValueRef Visit(
+        Visitor visitor,
+        Context context,
+        LLVMBuilderRef builder,
+        LLVMModuleRef module
+    )
     {
         throw new NotImplementedException();
     }

@@ -10,7 +10,6 @@ public class Context
         ModuleNode = moduleNode;
     }
 
-
     public ModuleNode ModuleNode { get; set; }
     public LLVMValueRef CurrentFunction { get; set; }
     public Dictionary<string, LLVMTypeRef> CustomTypes { get; } = new();

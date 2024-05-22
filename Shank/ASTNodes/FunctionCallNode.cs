@@ -55,11 +55,7 @@ public class FunctionCallNode : StatementNode
         return arr;
     }
 
-    public  void VisitStatement(
-        Context context,
-        LLVMBuilderRef builder,
-        LLVMModuleRef module
-    )
+    public void VisitStatement(Context context, LLVMBuilderRef builder, LLVMModuleRef module)
     {
         throw new NotImplementedException();
     }

@@ -35,11 +35,7 @@ public class ForNode : StatementNode
         return $" For: {Variable} From: {From} To: {To} {Environment.NewLine} {StatementListToString(Children)}";
     }
 
-    public  void VisitStatement(
-        Context context,
-        LLVMBuilderRef builder,
-        LLVMModuleRef module
-    )
+    public void VisitStatement(Context context, LLVMBuilderRef builder, LLVMModuleRef module)
     {
         var forStart = module.Context.AppendBasicBlock(context.CurrentFunction, "for.start");
         var afterFor = module.Context.AppendBasicBlock(context.CurrentFunction, "for.after");
@@ -51,12 +47,12 @@ public class ForNode : StatementNode
         // we have to compile the to and from in the loop so that the get run each time, we go through the loop
         // in case we modify them in the loop
 
-        
-        
+
+
         var fromValue = From.Visit(new IntegerExprVisitor(), context, builder, module);
         var toValue = To.Visit(new IntegerExprVisitor(), context, builder, module);
         var currentIterable = Variable.Visit(new IntegerExprVisitor(), context, builder, module);
-        
+
         // right now we assume, from, to, and the variable are all integers
         // in the future we should check and give some error at runtime/compile time if not
         // TODO: signed or unsigned comparison
@@ -66,7 +62,7 @@ public class ForNode : StatementNode
         );
         builder.BuildCondBr(condition, forBody, afterFor);
         builder.PositionAtEnd(forBody);
-        Children.ForEach(c => c.VisitStatement( context, builder, module));
+        Children.ForEach(c => c.VisitStatement(context, builder, module));
         builder.BuildBr(forIncremnet);
         builder.PositionAtEnd(forIncremnet);
         // TODO: increment

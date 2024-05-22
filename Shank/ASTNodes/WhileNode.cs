@@ -26,11 +26,7 @@ public class WhileNode : StatementNode
         return $" WHILE: {Expression} {StatementListToString(Children)}";
     }
 
-    public  void VisitStatement(
-        Context context,
-        LLVMBuilderRef builder,
-        LLVMModuleRef module
-    )
+    public void VisitStatement(Context context, LLVMBuilderRef builder, LLVMModuleRef module)
     {
         // since the condition checking happens first we need another block (unlike in repeat)
         // when the condition happens after the body, we can jump immediatly back to the body, but in a while loop

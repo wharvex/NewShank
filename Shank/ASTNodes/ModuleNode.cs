@@ -102,9 +102,9 @@ public class ModuleNode : StatementNode
                     ret.Add(
                         i.Key,
                         i.Value
-                        ?? throw new InvalidOperationException(
-                            "Expected the value associated with " + i.Key + " to not be null."
-                        )
+                            ?? throw new InvalidOperationException(
+                                "Expected the value associated with " + i.Key + " to not be null."
+                            )
                     )
             );
         return ret;
@@ -224,9 +224,9 @@ public class ModuleNode : StatementNode
             {
                 throw new Exception(
                     "Could not find '"
-                    + exportName
-                    + "' in the current list of functions, enums or records in module "
-                    + Name
+                        + exportName
+                        + "' in the current list of functions, enums or records in module "
+                        + Name
                 );
             }
         }
@@ -365,15 +365,11 @@ public class ModuleNode : StatementNode
         return Tests;
     }
 
-
     public void VisitStatement(Context context, LLVMBuilderRef builder, LLVMModuleRef module)
     {
         foreach (var f in Functions)
         {
-            context = new(f.Value.Visit(new IntegerExprVisitor(), 
-                context, 
-                builder, 
-                module), this);
+            context = new(f.Value.Visit(new IntegerExprVisitor(), context, builder, module), this);
             f.Value.Visit(context, builder, module);
         }
     }

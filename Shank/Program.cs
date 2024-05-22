@@ -9,11 +9,8 @@ public class Program
         // Instantiate CmdLineArgsHelper with the `shank' command arguments. CLAH's constructor
         // works out what sort of args it has (e.g. do they indicate a whole directory or just a
         // file, do they include the unit test flag, etc.) and then populates its `InPaths' property
-        // var cmdLineArgsHelper = new CmdLineArgsHelper(args);
-
-        //Runs the compiler for us
-        RunCompiler(args);
         // with the appropriate input file paths.
+        // var cmdLineArgsHelper = new CmdLineArgsHelper(args);
         var cmdLineArgsHelper = new CmdLineArgsHelper(args);
         // Create the root of the AST.
         var program = new ProgramNode();
@@ -26,45 +23,17 @@ public class Program
 
         // Save the pre-SA AST to $env:APPDATA\ShankDebugOutput4.json
         OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForProgramNode(program), 4);
+
         // Add Builtin Functions to program.StartModule's functions.
-        //TODO: comment out when want to test code gen (consider linkers)
+
+        //TODO: 
         BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
         // Check the program for semantic issues.
         SemanticAnalysis.CheckModules(program);
+
         // Interpret the program in normal or unit test mode.
         InterpretAndTest(cmdLineArgsHelper, program);
-
-
-        //TODO: steps to test LLVM stuff
-        //1. Comment out  -  BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
-        //(until we add linkers. we cant have this)
-        //2. Run code. 
         // TestLLVM(program, "IR/output.ll");
-    }
-
-    private static void RunCompiler(string[] args)
-    {
-        Console.WriteLine("=============COMPILER==============");
-        var cmdLineArgsHelper = new CmdLineArgsHelper(args);
-        // Create the root of the AST.
-        var program = new ProgramNode();
-
-        // Scan and Parse each input file.
-        cmdLineArgsHelper.InPaths.ForEach(ip => ScanAndParse(ip, program));
-
-        // Set the program's entry point.
-        program.SetStartModule();
-
-        // Save the pre-SA AST to $env:APPDATA\ShankDebugOutput4.json
-
-        OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForProgramNode(program), 4);
-
-        // Check the program for semantic issues.
-        SemanticAnalysis.CheckModules(program);
-
-        //Run LLVM function
-        TestLLVM(program, "IR/output.ll");
-        Console.WriteLine("=============INTERPRETER==============");
     }
 
     private static void ScanAndParse(string inPath, ProgramNode program)
