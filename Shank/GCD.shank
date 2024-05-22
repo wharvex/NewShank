@@ -4,6 +4,8 @@
 
 define gcd (a,b : integer)
 variables r : integer
+    a := 0
+    r := 1/a
 	while a mod b > 0 
 		r := a mod b
 		a := b

@@ -56,7 +56,7 @@ public abstract class ASTNode
 
     // public abstract LLVMValueRef Accept(LLVMBuilderRef builder, LLVMModuleRef module);
     public abstract LLVMValueRef Visit(
-        IVisitor visitor,
+        Visitor visitor,
         Context context,
         LLVMBuilderRef builder,
         LLVMModuleRef module

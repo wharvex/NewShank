@@ -1,3 +1,6 @@
 namespace Shank;
 
-public class Context { }
+public class Context
+{
+    
+}

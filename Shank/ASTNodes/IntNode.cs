@@ -19,13 +19,13 @@ public class IntNode : ASTNode
     }
 
     public override LLVMValueRef Visit(
-        IVisitor visitor,
+        Visitor visitor,
         Context context,
         LLVMBuilderRef builder,
         LLVMModuleRef module
     )
     {
         // value requires a ulong cast, because that is what CreateConstInt requires
-        return LLVMValueRef.CreateConstInt(module.Context.Int64Type, (ulong)Value);
+        return visitor.Accept(this, context, builder, module);
     }
 }

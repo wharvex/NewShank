@@ -597,12 +597,12 @@ public class FunctionNode : CallableNode
         Console.WriteLine($"LLVM IR\n=========\n{module}");
 
         //builder.BuildRetVoid();
-
-        LLVM.InitializeAllTargetInfos();
-        LLVM.InitializeAllTargets();
-        LLVM.InitializeAllTargetMCs();
-        LLVM.InitializeAllAsmParsers();
-        LLVM.InitializeAllAsmPrinters();
+        //
+        // LLVM.InitializeAllTargetInfos();
+        // LLVM.InitializeAllTargets();
+        // LLVM.InitializeAllTargetMCs();
+        // LLVM.InitializeAllAsmParsers();
+        // LLVM.InitializeAllAsmPrinters();
 
         /*
         ptr -> i64*
@@ -615,4 +615,5 @@ public class FunctionNode : CallableNode
         string updatedIrContent = irContent.Replace("ptr", "i64*");
         File.WriteAllText(outPath, updatedIrContent);
     }
+    
 }

@@ -20,7 +20,7 @@ public class StringNode : ASTNode
     }
 
     public override LLVMValueRef Visit(
-        IVisitor visitor,
+        Visitor visitor,
         Context context,
         LLVMBuilderRef builder,
         LLVMModuleRef module

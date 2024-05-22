@@ -4,7 +4,7 @@ using Shank.ExprVisitors;
 
 namespace Shank;
 
-public class VariableNode : ASTNode
+public class VariableNode : ASTNode //StatementNode? 
 {
     public string? Name { get; set; }
     public string? ModuleName { get; set; }
@@ -158,12 +158,18 @@ public class VariableNode : ASTNode
     }
 
     public override LLVMValueRef Visit(
-        IVisitor visitor,
+        Visitor visitor,
         Context context,
         LLVMBuilderRef builder,
         LLVMModuleRef module
     )
     {
+        //
         throw new NotImplementedException();
+    }
+
+    public void Visit()
+    {
+        
     }
 }
