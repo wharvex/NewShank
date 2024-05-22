@@ -1,3 +1,4 @@
+using LLVMSharp;
 using LLVMSharp.Interop;
 using Shank.ASTNodes;
 using Shank.ExprVisitors;
@@ -25,6 +26,8 @@ public class StringNode : ASTNode
         LLVMModuleRef module
     )
     {
-        throw new NotImplementedException();
+        // TODO: maybe make a string type that keeps track of length
+        // meaning we do not rely do c style strings
+        return builder.BuildGlobalStringPtr(Value);
     }
 }

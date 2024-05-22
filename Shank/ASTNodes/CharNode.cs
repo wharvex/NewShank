@@ -25,6 +25,7 @@ public class CharNode : ASTNode
         LLVMModuleRef module
     )
     {
-        throw new NotImplementedException();
+        // characters are equivalant to an unsigned 8 bit integer
+        return LLVMValueRef.CreateConstInt(module.Context.Int8Type, Value, true);
     }
 }

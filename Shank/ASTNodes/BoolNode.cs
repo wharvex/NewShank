@@ -25,6 +25,6 @@ public class BoolNode : ASTNode
         LLVMModuleRef module
     )
     {
-        throw new NotImplementedException();
+        return LLVMValueRef.CreateConstInt(module.Context.Int1Type, (ulong)(Value ? 1 : 0));
     }
 }
