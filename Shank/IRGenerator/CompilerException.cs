@@ -1,9 +1,9 @@
 namespace Shank;
 
-public class CompilerException: Exception
+public class CompilerException : Exception
 {
-    
     private readonly int _lineNum;
+
     public CompilerException(string message, int lineNum)
         : base(message)
     {
@@ -14,5 +14,4 @@ public class CompilerException: Exception
     {
         return Message + "\n at line " + _lineNum;
     }
-    
 }

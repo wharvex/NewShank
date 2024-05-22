@@ -99,17 +99,29 @@ public class FunctionNode : CallableNode
         return b.ToString();
     }
 
-    public override LLVMValueRef Visit(Visitor visitor, Context context, LLVMBuilderRef builder, LLVMModuleRef module)
+    public override LLVMValueRef Visit(
+        Visitor visitor,
+        Context context,
+        LLVMBuilderRef builder,
+        LLVMModuleRef module
+    )
     {
         // TODO: split into generatin prototype and body
         // so that we all functions are defined before we compile any of the function body
 
         var fnRetTy = module.Context.VoidType;
-        var args = ParameterVariables.Select(s => context.GetLLVMTypeFromShankType(s.Type, s.UnknownType)?? throw new  CompilerException($"type of parameter {s.Name} is not found", s.Line));
-        var function = module.AddFunction(Name, LLVMTypeRef.CreateFunction(fnRetTy, args.ToArray()));
+        var args = ParameterVariables.Select(
+            s =>
+                context.GetLLVMTypeFromShankType(s.Type, s.UnknownType)
+                ?? throw new CompilerException($"type of parameter {s.Name} is not found", s.Line)
+        );
+        var function = module.AddFunction(
+            Name,
+            LLVMTypeRef.CreateFunction(fnRetTy, args.ToArray())
+        );
         return function;
-
     }
+
     /*
     For assignment statement
     EvalExpression() is called if the Right Hand Side is an expression.
