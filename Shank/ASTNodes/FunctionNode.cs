@@ -119,14 +119,18 @@ public class FunctionNode : CallableNode
             LLVMTypeRef.CreateFunction(fnRetTy, args.ToArray())
         );
 
-        foreach (var (name, index) in ParameterVariables.Select((param, index) => (param.GetNameSafe(), index)))
+        foreach (
+            var (name, index) in ParameterVariables.Select(
+                (param, index) => (param.GetNameSafe(), index)
+            )
+        )
         {
             var param = function.GetParam((uint)index);
             param.Name = name;
         }
 
         function.Linkage = LLVMLinkage.LLVMExternalLinkage;
-        
+
         var block = function.AppendBasicBlock("entry");
         return function;
     }
