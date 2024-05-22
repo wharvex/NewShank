@@ -756,7 +756,7 @@ public class Interpreter
             {
                 if (parentModule.Records.ContainsKey(vn.GetUnknownTypeSafe()))
                     return new RecordDataType(
-                        parentModule.Records[vn.GetUnknownTypeSafe()].Members
+                        parentModule.Records[vn.GetUnknownTypeSafe()].Members2
                     );
                 if (
                     parentModule.Imported.ContainsKey(vn.GetUnknownTypeSafe())
@@ -827,7 +827,7 @@ public class Interpreter
                 {
                     VariableNode.UnknownTypeResolver.Record
                         => new RecordDataType(
-                            parentModule.Records[vn.GetUnknownTypeSafe()].Members
+                            parentModule.Records[vn.GetUnknownTypeSafe()].Members2
                         ),
                     VariableNode.UnknownTypeResolver.None
                         => throw new InvalidOperationException(
