@@ -5,16 +5,7 @@ namespace Shank.ExprVisitors;
 
 public class FloatExprVisitor : Visitor
 {
-    public override LLVMValueRef Accept(
-        IntNode node,
-        Context context,
-        LLVMBuilderRef builder,
-        LLVMModuleRef module
-    )
-    {
-        return LLVMValueRef.CreateConstReal(LLVMTypeRef.Double, node.Value);
-    }
-
+    
     public override LLVMValueRef Accept(
         FloatNode node,
         Context context,
