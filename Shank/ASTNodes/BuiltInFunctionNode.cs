@@ -19,9 +19,4 @@ public class BuiltInFunctionNode : CallableNode
     {
         throw new NotImplementedException();
     }
-
-    public override void Visit(Context context, LLVMBuilderRef builder, LLVMModuleRef module)
-    {
-        throw new NotImplementedException();
-    }
 }

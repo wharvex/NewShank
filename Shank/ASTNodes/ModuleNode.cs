@@ -367,10 +367,10 @@ public class ModuleNode : StatementNode
 
     public void VisitStatement(Context context, LLVMBuilderRef builder, LLVMModuleRef module)
     {
-        foreach (var f in Functions)
-        {
-            context = new(f.Value.Visit(new IntegerExprVisitor(), context, builder, module), this);
-            f.Value.Visit(context, builder, module);
-        }
+        // TODO: compile types
+        // generate function prototypes
+        GetFunctionsAsList().ForEach(f=>f.VisitPrototype(context, module));
+        GetFunctionsAsList().ForEach(f=>f.Visit(new IntegerExprVisitor(), context,builder, module));
+
     }
 }

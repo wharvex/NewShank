@@ -106,33 +106,56 @@ public class FunctionNode : CallableNode
         LLVMModuleRef module
     )
     {
-        // TODO: split into generatin prototype and body
-        // so that we all functions are defined before we compile any of the function body
-        var fnRetTy = module.Context.VoidType;
-        var args = ParameterVariables.Select(
-            s =>
-                context.GetLLVMTypeFromShankType(s.Type, s.UnknownType)
-                ?? throw new CompilerException($"type of parameter {s.Name} is not found", s.Line)
-        );
-        var function = module.AddFunction(
-            Name,
-            LLVMTypeRef.CreateFunction(fnRetTy, args.ToArray())
-        );
-
+        var function = context.GetFunction(Name);
+        context.CurrentFunction = function;
+        context.ResetLocal();
         foreach (
-            var (name, index) in ParameterVariables.Select(
-                (param, index) => (param.GetNameSafe(), index)
+            var (param, index) in ParameterVariables.Select(
+                (param, index) => (param, index)
             )
         )
         {
-            var param = function.GetParam((uint)index);
-            param.Name = name;
+            var llvmParam = function.GetParam((uint)index);
+            var name = param.GetNameSafe();
+            context.AddVaraible(name, llvmParam, llvmParam.TypeOf, false);
         }
 
         function.Linkage = LLVMLinkage.LLVMExternalLinkage;
 
         var block = function.AppendBasicBlock("entry");
         builder.PositionAtEnd(block);
+        LocalVariables.ForEach(variable => variable.Visit(visitor, context, builder, module));
+        Statements.ForEach(s=>s.VisitStatement(context, builder, module));
+        return function;
+    }
+
+    // we separate function prototype compilation from function body 
+    public LLVMValueRef VisitPrototype(Context context, LLVMModuleRef module)
+    {
+        // we could also return errors from the return type as it is not being used any where
+        var fnRetTy = module.Context.VoidType;
+        var args = ParameterVariables.Select(
+            s =>
+                context.GetLLVMTypeFromShankType(s.Type, s.UnknownType)
+                ?? throw new CompilerException($"type of parameter {s.Name} is not found",
+                    s.Line)
+        );
+        var function = module.AddFunction(
+            Name,
+            LLVMTypeRef.CreateFunction(fnRetTy, args.ToArray())
+        );
+        foreach (
+            var (param, index) in ParameterVariables.Select(
+                (param, index) => (param, index)
+            )
+        )
+        {
+            var llvmParam = function.GetParam((uint)index);
+            var name = param.GetNameSafe();
+            llvmParam.Name = name;
+        }
+
+        context.addFunction(Name, function);
         return function;
     }
 
@@ -662,14 +685,5 @@ public class FunctionNode : CallableNode
         string irContent = File.ReadAllText(outPath);
         string updatedIrContent = irContent.Replace("ptr", "i64*");
         File.WriteAllText(outPath, updatedIrContent);
-    }
-
-    public override void Visit(Context context, LLVMBuilderRef builder, LLVMModuleRef module)
-    {
-        LocalVariables.ForEach(s => s.Visit(new IntegerExprVisitor(), context, builder, module));
-        Statements.ForEach(s => s.VisitStatement(context, builder, module));
-        context.ResetLocal();
-        builder.BuildRetVoid();
-        // context.Variables(new()) = new();
     }
 }

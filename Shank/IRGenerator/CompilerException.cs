@@ -1,14 +1,9 @@
 namespace Shank;
 
-public class CompilerException : Exception
+public class CompilerException(string message, int lineNum) : Exception(message)
 {
-    private readonly int _lineNum;
-
-    public CompilerException(string message, int lineNum)
-        : base(message)
-    {
-        _lineNum = lineNum;
-    }
+    
+    private readonly int _lineNum = lineNum;
 
     public override string ToString()
     {

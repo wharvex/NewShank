@@ -20,9 +20,8 @@ public struct LlvmVaraible
 
 public class Context
 {
-    public Context(LLVMValueRef startFunction, ModuleNode moduleNode)
+    public Context(ModuleNode moduleNode)
     {
-        CurrentFunction = startFunction;
         moduleNode = moduleNode;
     }
 
@@ -127,5 +126,15 @@ public class Context
     public void ResetLocal()
     {
         Variables = new();
+    }
+
+    public void addFunction(string name, LLVMValueRef function)
+    {
+        Functions[name] = function;
+    }
+
+    public LLVMValueRef GetFunction(string name)
+    {
+        return Functions[name];
     }
 }

@@ -34,7 +34,7 @@ public class LLVMCodeGen
         var out_string = "";
         targetMachine.TryEmitToFile(module, "a.out", LLVMCodeGenFileType.LLVMObjectFile, out out_string);
         */
-        programNode.Visit(null, builder, module);
+        programNode.Visit(new Context(null), builder, module);
         if (!Directory.Exists(directory))
         {
             Directory.CreateDirectory(directory); //l
