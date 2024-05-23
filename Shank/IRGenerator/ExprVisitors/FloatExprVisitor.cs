@@ -5,7 +5,6 @@ namespace Shank.ExprVisitors;
 
 public class FloatExprVisitor : Visitor
 {
-    
     public override LLVMValueRef Accept(
         FloatNode node,
         Context context,

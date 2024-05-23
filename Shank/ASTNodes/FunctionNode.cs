@@ -53,24 +53,24 @@ public class FunctionNode : CallableNode
     public VariableNode GetVariableNodeByName(string searchName)
     {
         return LocalVariables
-                   .Concat(ParameterVariables)
-                   .FirstOrDefault(
-                       vn =>
-                           (
-                               vn
-                               ?? throw new InvalidOperationException(
-                                   "Something went wrong internally. There should not be"
-                                   + " null entries in FunctionNode.LocalVariables or"
-                                   + " FunctionNode.ParameterVariables."
-                               )
-                           ).Name?.Equals(searchName)
-                           ?? throw new InvalidOperationException(vn + " has no Name."),
-                       null
-                   )
-               ?? throw new ArgumentOutOfRangeException(
-                   nameof(searchName),
-                   "No variable found with given searchName."
-               );
+                .Concat(ParameterVariables)
+                .FirstOrDefault(
+                    vn =>
+                        (
+                            vn
+                            ?? throw new InvalidOperationException(
+                                "Something went wrong internally. There should not be"
+                                    + " null entries in FunctionNode.LocalVariables or"
+                                    + " FunctionNode.ParameterVariables."
+                            )
+                        ).Name?.Equals(searchName)
+                        ?? throw new InvalidOperationException(vn + " has no Name."),
+                    null
+                )
+            ?? throw new ArgumentOutOfRangeException(
+                nameof(searchName),
+                "No variable found with given searchName."
+            );
     }
 
     public override string ToString()
@@ -98,7 +98,6 @@ public class FunctionNode : CallableNode
 
         return b.ToString();
     }
-
 
     // we separate function prototype compilation from function body
     public LLVMValueRef VisitPrototype(Context context, LLVMModuleRef module)
@@ -324,8 +323,7 @@ public class FunctionNode : CallableNode
         var incrementedValue = builder.BuildAdd(i, increment, "i");
         var allocated_left = hash_variables[s_tokens[1].ToString()];
         builder.BuildStore(incrementedValue, allocated_left);
-        hash_variables[s_tokens[1].ToString()] =
-            allocated_left; //we store the pointer variable referencing the memory location for i
+        hash_variables[s_tokens[1].ToString()] = allocated_left; //we store the pointer variable referencing the memory location for i
 
         // Go back to the loop condition block, i.e. branch
         builder.BuildBr(loopCondBlock);
