@@ -30,10 +30,21 @@ public class LLVMCodeGen
         var cpu = "generic";
         var features = "";
         var opt = LLVMCodeGenOptLevel.LLVMCodeGenLevelNone;
-        var targetMachine = target.CreateTargetMachine(targetTriple, cpu, features, opt, LLVMRelocMode.LLVMRelocPIC,
-            LLVMCodeModel.LLVMCodeModelMedium);
+        var targetMachine = target.CreateTargetMachine(
+            targetTriple,
+            cpu,
+            features,
+            opt,
+            LLVMRelocMode.LLVMRelocPIC,
+            LLVMCodeModel.LLVMCodeModelMedium
+        );
         var out_string = "";
-        targetMachine.TryEmitToFile(module, "a.out", LLVMCodeGenFileType.LLVMObjectFile, out out_string);
+        targetMachine.TryEmitToFile(
+            module,
+            "a.out",
+            LLVMCodeGenFileType.LLVMObjectFile,
+            out out_string
+        );
 
         if (!Directory.Exists(directory))
         {

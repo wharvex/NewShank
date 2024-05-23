@@ -12,6 +12,7 @@ public class BoolNode : ASTNode
     }
 
     public bool Value { get; set; }
+
     public int GetValueAsInt() => Value ? 1 : 0; //Get as int (used for the "ulong" requirment)
 
     public override string ToString()

@@ -17,7 +17,6 @@ public class BooleanExpressionNode : ASTNode
     public ASTNode Left { get; init; }
     public ASTNode Right { get; init; }
 
-
     public override LLVMValueRef Visit(
         Visitor visitor,
         Context context,
