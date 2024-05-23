@@ -3,7 +3,7 @@ using Shank.ASTNodes;
 
 namespace Shank.ExprVisitors;
 
-public class BoolNodeVisitor : Visitor
+public class BoolExprVisitor : Visitor
 {
     public override LLVMValueRef Accept(
         IntNode node,

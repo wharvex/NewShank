@@ -84,4 +84,14 @@ public abstract class Visitor
     {
         throw new Exception();
     }
+
+    public virtual LLVMValueRef Accept(
+        RecordNode node,
+        Context context,
+        LLVMBuilderRef builder,
+        LLVMModuleRef module
+    )
+    {
+        throw new Exception();
+    }
 }

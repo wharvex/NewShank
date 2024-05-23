@@ -25,6 +25,6 @@ public class FloatNode : ASTNode
         LLVMModuleRef module
     )
     {
-        return LLVMValueRef.CreateConstReal(LLVMTypeRef.Double, Value);
+        return visitor.Accept(this, context, builder, module);
     }
 }

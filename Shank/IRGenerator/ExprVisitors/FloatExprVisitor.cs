@@ -12,7 +12,7 @@ public class FloatExprVisitor : Visitor
         LLVMModuleRef module
     )
     {
-        throw new NotImplementedException();
+        return LLVMValueRef.CreateConstReal(LLVMTypeRef.Double, node.Value);
     }
 
     public override LLVMValueRef Accept(
@@ -22,48 +22,20 @@ public class FloatExprVisitor : Visitor
         LLVMModuleRef module
     )
     {
-        throw new NotImplementedException();
+        return LLVMValueRef.CreateConstReal(LLVMTypeRef.Double, node.Value);
     }
 
-    public LLVMValueRef Accept(
+    public override LLVMValueRef Accept(
         VariableReferenceNode node,
         Context context,
         LLVMBuilderRef builder,
         LLVMModuleRef module
     )
     {
-        throw new NotImplementedException();
+        LlvmVaraible varaible = context.GetVaraible(node.Name);
+        return builder.BuildLoad2(varaible.TypeRef, varaible.ValueRef);
     }
 
-    public override LLVMValueRef Accept(
-        CharNode node,
-        Context context,
-        LLVMBuilderRef builder,
-        LLVMModuleRef module
-    )
-    {
-        throw new NotImplementedException();
-    }
-
-    public override LLVMValueRef Accept(
-        BoolNode node,
-        Context context,
-        LLVMBuilderRef builder,
-        LLVMModuleRef module
-    )
-    {
-        throw new NotImplementedException();
-    }
-
-    public override LLVMValueRef Accept(
-        StringNode node,
-        Context context,
-        LLVMBuilderRef builder,
-        LLVMModuleRef module
-    )
-    {
-        throw new NotImplementedException();
-    }
 
     public override LLVMValueRef Accept(
         MathOpNode node,
@@ -72,16 +44,15 @@ public class FloatExprVisitor : Visitor
         LLVMModuleRef module
     )
     {
-        throw new NotImplementedException();
-    }
-
-    public override LLVMValueRef Accept(
-        BooleanExpressionNode node,
-        Context context,
-        LLVMBuilderRef builder,
-        LLVMModuleRef module
-    )
-    {
-        throw new NotImplementedException();
+        LLVMValueRef R = node.Right.Visit(this, context, builder, module);
+        LLVMValueRef L = node.Left.Visit(this, context, builder, module);
+        return node.Op switch
+        {
+            ASTNode.MathOpType.plus => builder.BuildFAdd(L, R, "addtmp"),
+            ASTNode.MathOpType.minus => builder.BuildFSub(L, R, "subtmp"),
+            ASTNode.MathOpType.times => builder.BuildFMul(L, R, "multmp"),
+            ASTNode.MathOpType.divide => builder.BuildFDiv(L, R, "divtmp"),
+            _ => throw new Exception("unsupported operation")
+        };
     }
 }

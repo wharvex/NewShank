@@ -73,7 +73,9 @@ public class Context
         else if (typeRef == LLVMTypeRef.Int8)
             return new CharExprVisitor();
         else if (typeRef == LLVMTypeRef.Int1)
-            return new BoolNodeVisitor();
+            return new BoolExprVisitor();
+        else if (typeRef == LLVMTypeRef.Double)
+            return new FloatExprVisitor();
         else
             throw new Exception("undefined type");
     }

@@ -28,7 +28,7 @@ public class RepeatNode : StatementNode
         builder.PositionAtEnd(whileBody);
         Children.ForEach(c => c.VisitStatement(context, builder, module));
         // and then test the condition
-        var condition = Expression.Visit(new BoolNodeVisitor(), context, builder, module);
+        var condition = Expression.Visit(new BoolExprVisitor(), context, builder, module);
         builder.BuildCondBr(condition, whileBody, whileDone);
         builder.PositionAtEnd(whileDone);
     }

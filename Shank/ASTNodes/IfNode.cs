@@ -44,7 +44,7 @@ public class IfNode : StatementNode
         // and we visit(compile) the IfNode for when the condition is false if needed, followed by a goto to the after branch
         // note we could make this a bit better by checking if next is null and then make the conditional branch to after block in the false cas
         {
-            var condition = Expression.Visit(new BoolNodeVisitor(), context, builder, module);
+            var condition = Expression.Visit(new BoolExprVisitor(), context, builder, module);
             var ifBlock = module.Context.AppendBasicBlock(context.CurrentFunction, "if block");
             var elseBlock = module.Context.AppendBasicBlock(context.CurrentFunction, "else block");
             var afterBlock = module.Context.AppendBasicBlock(

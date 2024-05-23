@@ -22,7 +22,8 @@ public class IntegerExprVisitor : Visitor
         LLVMModuleRef module
     )
     {
-        throw new NotImplementedException();
+        LlvmVaraible varaible = context.GetVaraible(node.Name);
+        return builder.BuildLoad2(varaible.TypeRef, varaible.ValueRef);
     }
 
     public override LLVMValueRef Accept(

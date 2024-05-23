@@ -1,7 +1,7 @@
 namespace ShankUnitTests;
 
 [TestClass]
-public class ExpressionTest
+public class LLVMTest
 {
     [TestMethod]
     public void Expression()

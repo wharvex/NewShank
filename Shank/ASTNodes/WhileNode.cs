@@ -37,7 +37,7 @@ public class WhileNode : StatementNode
         var whileDone = module.Context.AppendBasicBlock(context.CurrentFunction, "while.done");
         builder.BuildBr(whileCond);
         builder.PositionAtEnd(whileCond);
-        var condition = Expression.Visit(new BoolNodeVisitor(), context, builder, module);
+        var condition = Expression.Visit(new BoolExprVisitor(), context, builder, module);
         builder.BuildCondBr(condition, whileBody, whileDone);
         builder.PositionAtEnd(whileBody);
         Children.ForEach(c => c.VisitStatement(context, builder, module));
