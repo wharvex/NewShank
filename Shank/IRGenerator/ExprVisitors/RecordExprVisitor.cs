@@ -13,6 +13,7 @@ public class RecordExprVisitor : Visitor
     {
         throw new NotImplementedException();
     }
+
     public override LLVMValueRef Accept(
         VariableReferenceNode node,
         Context context,
@@ -22,5 +23,4 @@ public class RecordExprVisitor : Visitor
     {
         throw new NotImplementedException();
     }
-
 }

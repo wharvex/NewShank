@@ -93,8 +93,8 @@ public class VariableReferenceNode : ASTNode
         {
             VariableNode.DataType.Record
                 => ((RecordNode)recordsAndImports[name])
-                .GetFromMembersByNameSafe(GetRecordMemberReferenceSafe().Name)
-                .Type,
+                    .GetFromMembersByNameSafe(GetRecordMemberReferenceSafe().Name)
+                    .Type,
             VariableNode.DataType.Array => variables[name].GetArrayTypeSafe(),
             _ => variables[name].Type
         };

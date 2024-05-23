@@ -36,7 +36,6 @@ public class FloatExprVisitor : Visitor
         return builder.BuildLoad2(varaible.TypeRef, varaible.ValueRef);
     }
 
-
     public override LLVMValueRef Accept(
         MathOpNode node,
         Context context,
