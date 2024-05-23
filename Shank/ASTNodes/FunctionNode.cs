@@ -53,24 +53,24 @@ public class FunctionNode : CallableNode
     public VariableNode GetVariableNodeByName(string searchName)
     {
         return LocalVariables
-                .Concat(ParameterVariables)
-                .FirstOrDefault(
-                    vn =>
-                        (
-                            vn
-                            ?? throw new InvalidOperationException(
-                                "Something went wrong internally. There should not be"
-                                    + " null entries in FunctionNode.LocalVariables or"
-                                    + " FunctionNode.ParameterVariables."
-                            )
-                        ).Name?.Equals(searchName)
-                        ?? throw new InvalidOperationException(vn + " has no Name."),
-                    null
-                )
-            ?? throw new ArgumentOutOfRangeException(
-                nameof(searchName),
-                "No variable found with given searchName."
-            );
+                   .Concat(ParameterVariables)
+                   .FirstOrDefault(
+                       vn =>
+                           (
+                               vn
+                               ?? throw new InvalidOperationException(
+                                   "Something went wrong internally. There should not be"
+                                   + " null entries in FunctionNode.LocalVariables or"
+                                   + " FunctionNode.ParameterVariables."
+                               )
+                           ).Name?.Equals(searchName)
+                           ?? throw new InvalidOperationException(vn + " has no Name."),
+                       null
+                   )
+               ?? throw new ArgumentOutOfRangeException(
+                   nameof(searchName),
+                   "No variable found with given searchName."
+               );
     }
 
     public override string ToString()
@@ -99,30 +99,6 @@ public class FunctionNode : CallableNode
         return b.ToString();
     }
 
-    // we separate function prototype compilation from function body
-    public LLVMValueRef VisitPrototype(Context context, LLVMModuleRef module)
-    {
-        // we could also return errors from the return type as it is not being used any where
-        var fnRetTy = module.Context.VoidType;
-        var args = ParameterVariables.Select(
-            s =>
-                context.GetLLVMTypeFromShankType(s.Type, s.UnknownType)
-                ?? throw new CompilerException($"type of parameter {s.Name} is not found", s.Line)
-        );
-        var function = module.AddFunction(
-            Name,
-            LLVMTypeRef.CreateFunction(fnRetTy, args.ToArray())
-        );
-        foreach (var (param, index) in ParameterVariables.Select((param, index) => (param, index)))
-        {
-            var llvmParam = function.GetParam((uint)index);
-            var name = param.GetNameSafe();
-            llvmParam.Name = name;
-        }
-
-        context.addFunction(Name, function);
-        return function;
-    }
 
     /*
     For assignment statement
@@ -323,7 +299,8 @@ public class FunctionNode : CallableNode
         var incrementedValue = builder.BuildAdd(i, increment, "i");
         var allocated_left = hash_variables[s_tokens[1].ToString()];
         builder.BuildStore(incrementedValue, allocated_left);
-        hash_variables[s_tokens[1].ToString()] = allocated_left; //we store the pointer variable referencing the memory location for i
+        hash_variables[s_tokens[1].ToString()] =
+            allocated_left; //we store the pointer variable referencing the memory location for i
 
         // Go back to the loop condition block, i.e. branch
         builder.BuildBr(loopCondBlock);
@@ -652,6 +629,32 @@ public class FunctionNode : CallableNode
         File.WriteAllText(outPath, updatedIrContent);
     }
 
+// we separate function prototype compilation from function body
+    public LLVMValueRef VisitPrototype(Context context, LLVMModuleRef module)
+    {
+        // we could also return errors from the return type as it is not being used any where
+        var fnRetTy = module.Context.Int32Type;
+        var args = ParameterVariables.Select(
+            s =>
+                context.GetLLVMTypeFromShankType(s.Type, s.UnknownType)
+                ?? throw new CompilerException($"type of parameter {s.Name} is not found", s.Line)
+        );
+        Name = (Name.Equals("start") ? "main" : Name);
+        var function = module.AddFunction(
+            Name,
+            LLVMTypeRef.CreateFunction(fnRetTy, args.ToArray())
+        );
+        foreach (var (param, index) in ParameterVariables.Select((param, index) => (param, index)))
+        {
+            var llvmParam = function.GetParam((uint)index);
+            var name = param.GetNameSafe();
+            llvmParam.Name = name;
+        }
+
+        context.addFunction(Name, function);
+        return function;
+    }
+
     public override LLVMValueRef Visit(
         Visitor visitor,
         Context context,
@@ -675,7 +678,7 @@ public class FunctionNode : CallableNode
         builder.PositionAtEnd(block);
         LocalVariables.ForEach(variable => variable.Visit(visitor, context, builder, module));
         Statements.ForEach(s => s.VisitStatement(context, builder, module));
-        builder.BuildRetVoid();
+        builder.BuildRet(LLVMValueRef.CreateConstInt(module.Context.Int32Type, (ulong)1));
         context.ResetLocal();
         return function;
     }

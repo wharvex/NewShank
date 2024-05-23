@@ -52,7 +52,7 @@ public class BoolExprVisitor : Visitor
         LLVMModuleRef module
     )
     {
-        throw new NotImplementedException();
+        return LLVMValueRef.CreateConstInt(module.Context.Int1Type, (ulong)(node.GetValueAsInt()));
     }
 
     public override LLVMValueRef Accept(

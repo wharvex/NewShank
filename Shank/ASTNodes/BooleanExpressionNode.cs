@@ -17,10 +17,6 @@ public class BooleanExpressionNode : ASTNode
     public ASTNode Left { get; init; }
     public ASTNode Right { get; init; }
 
-    public override string ToString()
-    {
-        return $"({Left.ToString()} {Op} {Right.ToString()})";
-    }
 
     public override LLVMValueRef Visit(
         Visitor visitor,
@@ -29,6 +25,11 @@ public class BooleanExpressionNode : ASTNode
         LLVMModuleRef module
     )
     {
-        throw new NotImplementedException();
+        return visitor.Accept(this, context, builder, module);
+    }
+
+    public override string ToString()
+    {
+        return $"({Left.ToString()} {Op} {Right.ToString()})";
     }
 }

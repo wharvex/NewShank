@@ -12,6 +12,7 @@ public class BoolNode : ASTNode
     }
 
     public bool Value { get; set; }
+    public int GetValueAsInt() => Value ? 1 : 0; //Get as int (used for the "ulong" requirment)
 
     public override string ToString()
     {
@@ -25,6 +26,6 @@ public class BoolNode : ASTNode
         LLVMModuleRef module
     )
     {
-        return LLVMValueRef.CreateConstInt(module.Context.Int1Type, (ulong)(Value ? 1 : 0));
+        return visitor.Accept(this, context, builder, module);
     }
 }
