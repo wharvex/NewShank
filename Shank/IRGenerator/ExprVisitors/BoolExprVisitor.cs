@@ -124,43 +124,23 @@ public class BoolExprVisitor : Visitor
         LLVMModuleRef module
     )
     {
-        
-        LLVMValueRef L = node.Left.Visit(this, context,
-            builder,
-            module);
-        LLVMValueRef R = node.Right.Visit(this, context,
-            builder,
-            module);
-        
+        LLVMValueRef L = node.Left.Visit(this, context, builder, module);
+        LLVMValueRef R = node.Right.Visit(this, context, builder, module);
+
         if (_types(node.Left, node.Right, context) == Types.INTEGER)
         {
             return node.Op switch
             {
-                ASTNode.BooleanExpressionOpType.eq => builder.BuildICmp(
-                    LLVMIntPredicate.LLVMIntEQ,
-                    L,
-                    R,
-                    "cmp"),
-                ASTNode.BooleanExpressionOpType.lt => builder.BuildICmp(
-                    LLVMIntPredicate.LLVMIntSLT,
-                    L,
-                    R,
-                    "cmp"),
-                ASTNode.BooleanExpressionOpType.le => builder.BuildICmp(
-                    LLVMIntPredicate.LLVMIntSLE,
-                    L,
-                    R,
-                    "cmp"),
-                ASTNode.BooleanExpressionOpType.gt => builder.BuildICmp(
-                    LLVMIntPredicate.LLVMIntSGT,
-                    L,
-                    R,
-                    "cmp"),
-                ASTNode.BooleanExpressionOpType.ge => builder.BuildICmp(
-                    LLVMIntPredicate.LLVMIntSGE,
-                    L,
-                    R,
-                    "cmp"),
+                ASTNode.BooleanExpressionOpType.eq
+                    => builder.BuildICmp(LLVMIntPredicate.LLVMIntEQ, L, R, "cmp"),
+                ASTNode.BooleanExpressionOpType.lt
+                    => builder.BuildICmp(LLVMIntPredicate.LLVMIntSLT, L, R, "cmp"),
+                ASTNode.BooleanExpressionOpType.le
+                    => builder.BuildICmp(LLVMIntPredicate.LLVMIntSLE, L, R, "cmp"),
+                ASTNode.BooleanExpressionOpType.gt
+                    => builder.BuildICmp(LLVMIntPredicate.LLVMIntSGT, L, R, "cmp"),
+                ASTNode.BooleanExpressionOpType.ge
+                    => builder.BuildICmp(LLVMIntPredicate.LLVMIntSGE, L, R, "cmp"),
 
                 _ => throw new Exception("not accepted op")
             };
@@ -169,31 +149,16 @@ public class BoolExprVisitor : Visitor
         {
             return node.Op switch
             {
-                ASTNode.BooleanExpressionOpType.eq => builder.BuildFCmp(
-                    LLVMRealPredicate.LLVMRealOEQ,
-                    L,
-                    R,
-                    "cmp"),
-                ASTNode.BooleanExpressionOpType.lt => builder.BuildFCmp(
-                    LLVMRealPredicate.LLVMRealOLT,
-                    L,
-                    R,
-                    "cmp"),
-                ASTNode.BooleanExpressionOpType.le => builder.BuildFCmp(
-                    LLVMRealPredicate.LLVMRealOLE,
-                    L,
-                    R,
-                    "cmp"),
-                ASTNode.BooleanExpressionOpType.gt => builder.BuildFCmp(
-                    LLVMRealPredicate.LLVMRealOGT,
-                    L,
-                    R,
-                    "cmp"),
-                ASTNode.BooleanExpressionOpType.ge => builder.BuildFCmp(
-                    LLVMRealPredicate.LLVMRealOGE,
-                    L,
-                    R,
-                    "cmp"),
+                ASTNode.BooleanExpressionOpType.eq
+                    => builder.BuildFCmp(LLVMRealPredicate.LLVMRealOEQ, L, R, "cmp"),
+                ASTNode.BooleanExpressionOpType.lt
+                    => builder.BuildFCmp(LLVMRealPredicate.LLVMRealOLT, L, R, "cmp"),
+                ASTNode.BooleanExpressionOpType.le
+                    => builder.BuildFCmp(LLVMRealPredicate.LLVMRealOLE, L, R, "cmp"),
+                ASTNode.BooleanExpressionOpType.gt
+                    => builder.BuildFCmp(LLVMRealPredicate.LLVMRealOGT, L, R, "cmp"),
+                ASTNode.BooleanExpressionOpType.ge
+                    => builder.BuildFCmp(LLVMRealPredicate.LLVMRealOGE, L, R, "cmp"),
 
                 _ => throw new Exception("")
             };

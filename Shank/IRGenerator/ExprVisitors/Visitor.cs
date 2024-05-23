@@ -23,7 +23,6 @@ public abstract class Visitor
     {
         throw new Exception();
     }
-    
 
     public virtual LLVMValueRef Accept(
         FloatNode node,

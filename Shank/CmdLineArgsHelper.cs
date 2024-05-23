@@ -42,8 +42,6 @@ public class CmdLineArgsHelper
         }
     }
 
-    
-
     private static void ValidateUtLocationsCount(int utLocationsCount)
     {
         if (utLocationsCount > 1)
@@ -64,14 +62,14 @@ public class CmdLineArgsHelper
         ContentsType switch
         {
             CmdLineArgsContents.Directory
-                or CmdLineArgsContents.TestDirectory
+            or CmdLineArgsContents.TestDirectory
                 => [..Directory.GetFiles(MainArg, "*.shank", SearchOption.AllDirectories)],
             CmdLineArgsContents.File or CmdLineArgsContents.TestFile => [MainArg],
             _
                 => throw new NotImplementedException(
                     "Support for command line arguments contents type "
-                    + ContentsType
-                    + " has not been implemented."
+                        + ContentsType
+                        + " has not been implemented."
                 )
         };
 
