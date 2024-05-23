@@ -12,7 +12,8 @@ public class CharExprVisitor : Visitor
         LLVMModuleRef module
     )
     {
-        throw new NotImplementedException();
+        LlvmVaraible varaible = context.GetVaraible(node.Name);
+        return builder.BuildLoad2(varaible.TypeRef, varaible.ValueRef);
     }
 
     public override LLVMValueRef Accept(
@@ -22,16 +23,6 @@ public class CharExprVisitor : Visitor
         LLVMModuleRef module
     )
     {
-        throw new NotImplementedException();
-    }
-
-    public override LLVMValueRef Accept(
-        MathOpNode node,
-        Context context,
-        LLVMBuilderRef builder,
-        LLVMModuleRef module
-    )
-    {
-        throw new NotImplementedException();
+        return LLVMValueRef.CreateConstInt(module.Context.Int8Type, (ulong)node.Value);
     }
 }

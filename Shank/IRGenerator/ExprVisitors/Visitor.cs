@@ -5,6 +5,15 @@ namespace Shank.ExprVisitors;
 
 public abstract class Visitor
 {
+    /// <summary>
+    /// Integer nodes (ie 1,2,3,4...)
+    /// </summary>
+    /// <param name="node">the node</param>
+    /// <param name="context">stores varaibles (unused here)</param>
+    /// <param name="builder">LLVM boilerplate</param>
+    /// <param name="module"></param>
+    /// <returns>an LLVM value ref containing an i64 int</returns>
+    /// <exception cref="Exception"></exception>
     public virtual LLVMValueRef Accept(
         IntNode node,
         Context context,
@@ -14,6 +23,7 @@ public abstract class Visitor
     {
         throw new Exception();
     }
+    
 
     public virtual LLVMValueRef Accept(
         FloatNode node,
@@ -52,7 +62,7 @@ public abstract class Visitor
         LLVMModuleRef module
     )
     {
-        throw new Exception();
+        throw new Exception("in Vsitor.cs");
     }
 
     public virtual LLVMValueRef Accept(

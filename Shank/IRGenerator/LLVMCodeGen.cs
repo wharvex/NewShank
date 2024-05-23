@@ -55,7 +55,8 @@ public class LLVMCodeGen
         Console.WriteLine("code successfully compiled");
         Console.WriteLine($"IR code gen path {fileDir} ");
         Console.WriteLine($"Object file path {fileDir} ");
-        // Console.WriteLine("IR result");
+        Console.WriteLine("IR result");
         Console.WriteLine($"{module.ToString()}");
+        module.Dump();
     }
 }

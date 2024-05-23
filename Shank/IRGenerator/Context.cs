@@ -49,8 +49,8 @@ public class Context
             VariableNode.DataType.Integer => LLVMTypeRef.Int64,
             VariableNode.DataType.Real => LLVMTypeRef.Double,
             VariableNode.DataType.String => LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0),
-            VariableNode.DataType.Boolean => LLVMTypeRef.Int8,
-            VariableNode.DataType.Character => LLVMTypeRef.Int1,
+            VariableNode.DataType.Boolean => LLVMTypeRef.Int1,
+            VariableNode.DataType.Character => LLVMTypeRef.Int8,
             // if it's a custom type we look it up in the context
             VariableNode.DataType.Reference when unknownType != null
                 => LLVMTypeRef.CreatePointer(CustomTypes[unknownType], 0),
