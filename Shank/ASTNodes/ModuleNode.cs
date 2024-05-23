@@ -369,8 +369,8 @@ public class ModuleNode : StatementNode
     {
         // TODO: compile types
         // generate function prototypes
-        GetFunctionsAsList().ForEach(f=>f.VisitPrototype(context, module));
-        GetFunctionsAsList().ForEach(f=>f.Visit(new IntegerExprVisitor(), context,builder, module));
-
+        GetFunctionsAsList().ForEach(f => f.VisitPrototype(context, module));
+        GetFunctionsAsList()
+            .ForEach(f => f.Visit(new IntegerExprVisitor(), context, builder, module));
     }
 }

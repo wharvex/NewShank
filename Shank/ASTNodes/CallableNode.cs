@@ -59,5 +59,4 @@ public abstract class CallableNode : ASTNode
         LLVMBuilderRef builder,
         LLVMModuleRef module
     );
-
 }

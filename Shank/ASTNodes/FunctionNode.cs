@@ -109,11 +109,7 @@ public class FunctionNode : CallableNode
         var function = context.GetFunction(Name);
         context.CurrentFunction = function;
         context.ResetLocal();
-        foreach (
-            var (param, index) in ParameterVariables.Select(
-                (param, index) => (param, index)
-            )
-        )
+        foreach (var (param, index) in ParameterVariables.Select((param, index) => (param, index)))
         {
             var llvmParam = function.GetParam((uint)index);
             var name = param.GetNameSafe();
@@ -125,11 +121,11 @@ public class FunctionNode : CallableNode
         var block = function.AppendBasicBlock("entry");
         builder.PositionAtEnd(block);
         LocalVariables.ForEach(variable => variable.Visit(visitor, context, builder, module));
-        Statements.ForEach(s=>s.VisitStatement(context, builder, module));
+        Statements.ForEach(s => s.VisitStatement(context, builder, module));
         return function;
     }
 
-    // we separate function prototype compilation from function body 
+    // we separate function prototype compilation from function body
     public LLVMValueRef VisitPrototype(Context context, LLVMModuleRef module)
     {
         // we could also return errors from the return type as it is not being used any where
@@ -137,18 +133,13 @@ public class FunctionNode : CallableNode
         var args = ParameterVariables.Select(
             s =>
                 context.GetLLVMTypeFromShankType(s.Type, s.UnknownType)
-                ?? throw new CompilerException($"type of parameter {s.Name} is not found",
-                    s.Line)
+                ?? throw new CompilerException($"type of parameter {s.Name} is not found", s.Line)
         );
         var function = module.AddFunction(
             Name,
             LLVMTypeRef.CreateFunction(fnRetTy, args.ToArray())
         );
-        foreach (
-            var (param, index) in ParameterVariables.Select(
-                (param, index) => (param, index)
-            )
-        )
+        foreach (var (param, index) in ParameterVariables.Select((param, index) => (param, index)))
         {
             var llvmParam = function.GetParam((uint)index);
             var name = param.GetNameSafe();
