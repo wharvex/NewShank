@@ -21,12 +21,24 @@ public class LLVMCodeGen
         FileStream fs;
 
         string directory = Path.GetDirectoryName(fileDir);
+        /*
+        outputting directly to an object file
+        https://llvm.org/docs/tutorial/MyFirstLanguageFrontend/LangImpl08.html
+        var targetTriple = LLVMTargetRef.DefaultTriple;
+        var target = LLVMTargetRef.GetTargetFromTriple(targetTriple);
+        var cpu = "generic";
+        var features = "";
+        var opt = LLVMCodeGenOptLevel.LLVMCodeGenLevelAggressive;
+        var targetMachine = target.CreateTargetMachine(targetTriple, cpu, features, opt, LLVMRelocMode.LLVMRelocPIC,
+            LLVMCodeModel.LLVMCodeModelMedium);
+        var out_string = "";
+        targetMachine.TryEmitToFile(module, "a.out", LLVMCodeGenFileType.LLVMObjectFile, out out_string);
+        */
         programNode.Visit(null, builder, module);
         if (!Directory.Exists(directory))
         {
             Directory.CreateDirectory(directory); //l
         }
-
         File.WriteAllText(fileDir, module.ToString());
         Console.WriteLine("code successfully compiled");
         Console.WriteLine("IR code gen file path: " + fileDir);
