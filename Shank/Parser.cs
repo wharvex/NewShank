@@ -887,9 +887,7 @@ public class Parser
         ret.ForEach(
             vn =>
                 vn.GenericTypeArgs =
-                    typeArgs.Count > 0
-                        ? typeArgs.Select(ta => GetDataTypeFromTokenType(ta.Type)).ToList()
-                        : null
+                    typeArgs.Count > 0 ? typeArgs.Select(GetTypeUsageFromToken).ToList() : null
         );
 
         // Return the VariableNodes.

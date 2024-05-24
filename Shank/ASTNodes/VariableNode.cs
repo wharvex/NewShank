@@ -51,11 +51,15 @@ public class VariableNode : ASTNode
 
     public TypeUsage? ArrayTypeEnhanced { get; set; }
 
-    // UnknownType is the base name of an enum or record.
-    // If Type is not Unknown or Enum or Record, then UnknownType should be null.
+    /// <summary>
+    /// If this variable was declared with an Identifier as its type_unit, then UnknownType is the
+    /// Value of that Identifier.
+    /// If this variable was not declared with an Identifier as its type_unit, then UnknownType
+    /// should be null.
+    /// </summary>
     public string? UnknownType { get; set; }
 
-    public List<DataType>? GenericTypeArgs { get; set; }
+    public List<TypeUsage>? GenericTypeArgs { get; set; }
 
     public bool IsConstant { get; set; }
     public ASTNode? InitialValue { get; set; }
