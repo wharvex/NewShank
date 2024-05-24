@@ -33,8 +33,8 @@ public class FloatExprVisitor : Visitor
         LLVMModuleRef module
     )
     {
-        LLVMValueRef R = node.Right.Visit(this, context, builder, module);
         LLVMValueRef L = node.Left.Visit(this, context, builder, module);
+        LLVMValueRef R = node.Right.Visit(this, context, builder, module);
         return node.Op switch
         {
             ASTNode.MathOpType.plus => builder.BuildFAdd(L, R, "addtmp"),

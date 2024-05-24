@@ -12,48 +12,15 @@ public enum Types
 
 public class BoolExprVisitor : Visitor
 {
-    private Types _types(ASTNode L, ASTNode R, Context context)
+    private Types _types(LLVMTypeRef typeRef, Context context)
     {
-        if (L is BoolNode || L is IntNode || L is CharNode)
-        {
+        if (typeRef == LLVMTypeRef.Int64 || typeRef == LLVMTypeRef.Int1
+                                         || typeRef == LLVMTypeRef.Int8)
             return Types.INTEGER;
-        }
-        else if (R is BoolNode || R is IntNode || R is CharNode)
-        {
-            return Types.INTEGER;
-        }
-        else if (L is FloatNode || R is FloatNode)
-        {
+        else if (typeRef == LLVMTypeRef.Double)
             return Types.FLOAT;
-        }
-        else if (L is VariableReferenceNode)
-        {
-            VariableReferenceNode v = (VariableReferenceNode)L;
-            LlvmVaraible varaible = context.GetVaraible(v.Name);
-            if (varaible.TypeRef == LLVMTypeRef.Float)
-            {
-                return Types.FLOAT;
-            }
-            else
-            {
-                return Types.INTEGER;
-            }
-        }
-        else if (R is VariableReferenceNode)
-        {
-            VariableReferenceNode v = (VariableReferenceNode)R;
-            LlvmVaraible varaible = context.GetVaraible(v.Name);
-            if (varaible.TypeRef == LLVMTypeRef.Float)
-            {
-                return Types.FLOAT;
-            }
-            else
-            {
-                return Types.INTEGER;
-            }
-        }
-
-        throw new Exception("unsupported type");
+        else
+            throw new Exception("undefined type");
     }
 
     public override LLVMValueRef Accept(
@@ -63,7 +30,7 @@ public class BoolExprVisitor : Visitor
         LLVMModuleRef module
     )
     {
-        throw new NotImplementedException();
+        return LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, (ulong)node.Value);
     }
 
     public override LLVMValueRef Accept(
@@ -73,7 +40,7 @@ public class BoolExprVisitor : Visitor
         LLVMModuleRef module
     )
     {
-        throw new NotImplementedException();
+        return LLVMValueRef.CreateConstReal(LLVMTypeRef.Double, node.Value);
     }
 
     public override LLVMValueRef Accept(
@@ -127,7 +94,7 @@ public class BoolExprVisitor : Visitor
         LLVMValueRef L = node.Left.Visit(this, context, builder, module);
         LLVMValueRef R = node.Right.Visit(this, context, builder, module);
 
-        if (_types(node.Left, node.Right, context) == Types.INTEGER)
+        if (_types(L.TypeOf, context) == Types.INTEGER)
         {
             return node.Op switch
             {
@@ -145,7 +112,7 @@ public class BoolExprVisitor : Visitor
                 _ => throw new Exception("not accepted op")
             };
         }
-        else if (_types(node.Left, node.Right, context) == Types.FLOAT)
+        else if (_types(L.TypeOf, context) == Types.FLOAT)
         {
             return node.Op switch
             {
@@ -165,5 +132,36 @@ public class BoolExprVisitor : Visitor
         }
 
         throw new Exception("undefined bool");
+    }
+
+    public override LLVMValueRef Accept(MathOpNode node, Context context, LLVMBuilderRef builder, LLVMModuleRef module)
+    {
+        LLVMValueRef L = node.Left.Visit(this, context, builder, module);
+        LLVMValueRef R = node.Right.Visit(this, context, builder, module);
+        if (_types(L.TypeOf, context) == Types.INTEGER)
+        {
+            return node.Op switch
+            {
+                ASTNode.MathOpType.plus => builder.BuildAdd(L, R, "addtmp"),
+                ASTNode.MathOpType.minus => builder.BuildSub(L, R, "subtmp"),
+                ASTNode.MathOpType.times => builder.BuildMul(L, R, "multmp"),
+                ASTNode.MathOpType.divide => builder.BuildSDiv(L, R, "divtmp"),
+                ASTNode.MathOpType.modulo => builder.BuildURem(L, R, "modtmp"),
+                _ => throw new Exception("unsupported operation")
+            };
+        }
+        else if (_types(L.TypeOf, context) == Types.FLOAT)
+        {
+            return node.Op switch
+            {
+                ASTNode.MathOpType.plus => builder.BuildFAdd(L, R, "addtmp"),
+                ASTNode.MathOpType.minus => builder.BuildFSub(L, R, "subtmp"),
+                ASTNode.MathOpType.times => builder.BuildFMul(L, R, "multmp"),
+                ASTNode.MathOpType.divide => builder.BuildFDiv(L, R, "divtmp"),
+                _ => throw new Exception("unsupported operation")
+            };
+        }
+
+        throw new Exception("unsupported operation");
     }
 }

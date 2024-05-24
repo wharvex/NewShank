@@ -19,7 +19,7 @@ public class RepeatNode : StatementNode
         return $" REPEAT: {Expression} {StatementListToString(Children)}";
     }
 
-    public void VisitStatement(Context context, LLVMBuilderRef builder, LLVMModuleRef module)
+    public override void VisitStatement(Context context, LLVMBuilderRef builder, LLVMModuleRef module)
     {
         var whileBody = module.Context.AppendBasicBlock(context.CurrentFunction, "while.body");
         var whileDone = module.Context.AppendBasicBlock(context.CurrentFunction, "while.done");
