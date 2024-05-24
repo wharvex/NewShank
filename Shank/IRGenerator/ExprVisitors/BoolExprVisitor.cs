@@ -14,8 +14,11 @@ public class BoolExprVisitor : Visitor
 {
     private Types _types(LLVMTypeRef typeRef, Context context)
     {
-        if (typeRef == LLVMTypeRef.Int64 || typeRef == LLVMTypeRef.Int1
-                                         || typeRef == LLVMTypeRef.Int8)
+        if (
+            typeRef == LLVMTypeRef.Int64
+            || typeRef == LLVMTypeRef.Int1
+            || typeRef == LLVMTypeRef.Int8
+        )
             return Types.INTEGER;
         else if (typeRef == LLVMTypeRef.Double)
             return Types.FLOAT;
@@ -134,7 +137,12 @@ public class BoolExprVisitor : Visitor
         throw new Exception("undefined bool");
     }
 
-    public override LLVMValueRef Accept(MathOpNode node, Context context, LLVMBuilderRef builder, LLVMModuleRef module)
+    public override LLVMValueRef Accept(
+        MathOpNode node,
+        Context context,
+        LLVMBuilderRef builder,
+        LLVMModuleRef module
+    )
     {
         LLVMValueRef L = node.Left.Visit(this, context, builder, module);
         LLVMValueRef R = node.Right.Visit(this, context, builder, module);
