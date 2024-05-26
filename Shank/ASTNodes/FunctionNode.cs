@@ -638,7 +638,7 @@ public class FunctionNode : CallableNode
                 ?? throw new CompilerException($"type of parameter {s.Name} is not found", s.Line)
         );
         Name = (Name.Equals("start") ? "main" : Name);
-        var function = module.AddFunction(
+        var function = module.addFunction(
             Name,
             LLVMTypeRef.CreateFunction(fnRetTy, args.ToArray())
         );
@@ -650,7 +650,7 @@ public class FunctionNode : CallableNode
         }
 
         context.addFunction(Name, function);
-        return function;
+        return function.Function;
     }
 
     public override LLVMValueRef Visit(
@@ -678,6 +678,6 @@ public class FunctionNode : CallableNode
         Statements.ForEach(s => s.VisitStatement(context, builder, module));
         builder.BuildRet(LLVMValueRef.CreateConstInt(module.Context.Int32Type, (ulong)1));
         context.ResetLocal();
-        return function;
+        return function.Function;
     }
 }
