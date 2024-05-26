@@ -26,8 +26,6 @@ public class StringNode : ASTNode
         LLVMModuleRef module
     )
     {
-        // TODO: maybe make a string type that keeps track of length
-        // meaning we do not rely do c style strings
-        return builder.BuildGlobalStringPtr(Value);
+        return visitor.Accept(this, context, builder, module);
     }
 }

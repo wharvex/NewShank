@@ -1,9 +1,13 @@
 define start()
 variables n : integer
+variables ss: string
     n := 10
     n := n + 1
+    ss := "ffff" + "gg"
       
 
-define foo(t: integer; h: boolean; s: string; f: array of character)
+define foo(bar: string; t: integer; h: boolean; s: string)
 variables n : integer
+variables ss: string
      n:= 40
+     ss := "f"
