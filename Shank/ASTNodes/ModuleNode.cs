@@ -78,6 +78,18 @@ public class ModuleNode : StatementNode
         return null;
     }
 
+    public CallableNode GetFromFunctionsByNameSafe(string name)
+    {
+        if (Functions.TryGetValue(name, out var foundFn))
+        {
+            return foundFn;
+        }
+
+        throw new InvalidOperationException(
+            "No function `" + name + "' found in module `" + Name + "'"
+        );
+    }
+
     public void AddToGlobalVariables(List<VariableNode> variables)
     {
         variables.ForEach(v =>

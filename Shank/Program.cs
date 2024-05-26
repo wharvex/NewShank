@@ -1,4 +1,6 @@
-﻿namespace Shank;
+﻿using Shank.IRGenerator;
+
+namespace Shank;
 
 public class Program
 {
@@ -31,6 +33,8 @@ public class Program
         BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
         // Check the program for semantic issues.
         SemanticAnalysis.CheckModules(program);
+        var irGen = new IrGenerator(program);
+        irGen.GenerateIr();
 
         // Interpret the program in normal or unit test mode.
         InterpretAndTest(cmdLineArgsHelper, program);
