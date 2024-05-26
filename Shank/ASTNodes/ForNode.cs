@@ -38,9 +38,9 @@ public class ForNode : StatementNode
     public void VisitStatement(Context context, LLVMBuilderRef builder, LLVMModuleRef module)
     {
         var forStart = context.CurrentFunction.AppendBasicBlock("for.start");
-        var afterFor = context.CurrentFunction.AppendBasicBlock( "for.after");
-        var forBody = context.CurrentFunction.AppendBasicBlock( "for.body");
-        var forIncremnet = context.CurrentFunction.AppendBasicBlock( "for.inc");
+        var afterFor = context.CurrentFunction.AppendBasicBlock("for.after");
+        var forBody = context.CurrentFunction.AppendBasicBlock("for.body");
+        var forIncremnet = context.CurrentFunction.AppendBasicBlock("for.inc");
         // TODO: assign loop variable initial from value
         builder.BuildBr(forStart);
         builder.PositionAtEnd(forStart);

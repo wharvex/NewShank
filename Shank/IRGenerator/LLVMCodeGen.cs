@@ -21,7 +21,7 @@ public class LLVMCodeGen
         FileStream fs;
 
         string directory = Path.GetDirectoryName(fileDir);
-        
+
         programNode.Visit(new Context(null, new CFuntions(module)), builder, module);
         //outputting directly to an object file
         //https://llvm.org/docs/tutorial/MyFirstLanguageFrontend/LangImpl08.html

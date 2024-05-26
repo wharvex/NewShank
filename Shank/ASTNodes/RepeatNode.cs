@@ -25,8 +25,8 @@ public class RepeatNode : StatementNode
         LLVMModuleRef module
     )
     {
-        var whileBody = context.CurrentFunction.AppendBasicBlock( "while.body");
-        var whileDone = context.CurrentFunction.AppendBasicBlock( "while.done");
+        var whileBody = context.CurrentFunction.AppendBasicBlock("while.body");
+        var whileDone = context.CurrentFunction.AppendBasicBlock("while.done");
         // first execute the body
         builder.BuildBr(whileBody);
         builder.PositionAtEnd(whileBody);

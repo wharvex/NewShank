@@ -16,7 +16,7 @@ public struct LLVMFunction
         Function = module.AddFunction(name, type);
         TypeOf = type;
     }
-    
+
     public LLVMLinkage Linkage
     {
         get => Function.Linkage;
@@ -36,6 +36,7 @@ public static class LLVMAddFunctionExtension
         return new LLVMFunction(module, name, type);
     }
 }
+
 /// <summary>
 /// container for Varaibles (we need a type and refrence)
 /// </summary>
@@ -58,39 +59,49 @@ public struct CFuntions
     public CFuntions(LLVMModuleRef llvmModule)
     {
         var sizeT = LLVMTypeRef.Int32;
-        printf = llvmModule.addFunction("printf", LLVMTypeRef.CreateFunction(sizeT, new LLVMTypeRef[]
-        {
-            LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8,0)
-        }, true));
+        printf = llvmModule.addFunction(
+            "printf",
+            LLVMTypeRef.CreateFunction(
+                sizeT,
+                new LLVMTypeRef[] { LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0) },
+                true
+            )
+        );
         printf = printf with { Linkage = LLVMLinkage.LLVMExternalLinkage };
         // llvm does not like void pointers, so we most places I've seen use i8* instead
         var voidStar = LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0);
-        memcpy = llvmModule.addFunction("memcpy",
-            LLVMTypeRef.CreateFunction(voidStar, [voidStar, voidStar, sizeT]));
+        memcpy = llvmModule.addFunction(
+            "memcpy",
+            LLVMTypeRef.CreateFunction(voidStar, [voidStar, voidStar, sizeT])
+        );
         memcpy = memcpy with { Linkage = LLVMLinkage.LLVMExternalLinkage };
-        malloc = llvmModule.addFunction("malloc",
-            LLVMTypeRef.CreateFunction(voidStar, [ sizeT]));
+        malloc = llvmModule.addFunction("malloc", LLVMTypeRef.CreateFunction(voidStar, [sizeT]));
         malloc = malloc with { Linkage = LLVMLinkage.LLVMExternalLinkage };
     }
 
     //  int printf(const char *restrict format, ...);
     // sometimes llvm can optimize this to a puts
     public LLVMFunction printf { get; }
+
     // void *memcpy(void dest[restrict .n], const void src[restrict .n], size_t n);
-    public LLVMFunction memcpy { get;  }
+    public LLVMFunction memcpy { get; }
+
     // void *malloc(size_t n);
-    public LLVMFunction malloc { get;  }
+    public LLVMFunction malloc { get; }
 }
+
 public class Context
 {
-    public LLVMTypeRef StringType = LLVMTypeRef.CreateStruct([LLVMTypeRef.Int32, LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0)], false);
+    public LLVMTypeRef StringType = LLVMTypeRef.CreateStruct(
+        [LLVMTypeRef.Int32, LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0)],
+        false
+    );
 
     public Context(ModuleNode moduleNode, CFuntions cFuntions)
     {
         this.moduleNode = moduleNode;
         CFuntions = cFuntions;
     }
-
 
     public ModuleNode moduleNode { get; set; }
     public CFuntions CFuntions { get; }
