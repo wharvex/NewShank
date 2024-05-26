@@ -4,7 +4,8 @@ namespace Shank.IRGenerator;
 
 public class IrGenerator
 {
-    private ProgramNode AstRoot { get; init; }
+    private List<string> ValidFuncs { get; } = ["validForLlvm"];
+    private ProgramNode AstRoot { get; }
 
     public IrGenerator(ProgramNode astRoot)
     {
@@ -14,16 +15,32 @@ public class IrGenerator
 
     public void GenerateIr()
     {
+        var shankStartModule = AstRoot.GetStartModuleSafe();
+        var shankStartFunc = shankStartModule.GetStartFunctionSafe();
+
         // Create `main' and `write' functions.
-        var mainFunc = CreateFunc(AstRoot.GetStartModuleSafe().GetStartFunctionSafe());
-        var printfFunc = CreateFunc(
-            AstRoot.GetStartModuleSafe().GetFromFunctionsByNameSafe("write")
-        );
+        var mainFunc = CreateFunc(shankStartFunc);
+        var printfFunc = CreateFunc(shankStartModule.GetFromFunctionsByNameSafe("write"));
+        var otherFuncs = AstRoot
+            .GetStartModuleSafe()
+            .Functions.Where(kvp => ValidFuncs.Contains(kvp.Key))
+            .Select(kvp => CreateFunc(kvp.Value))
+            .ToList();
 
         // Add statements to `main'.
         var entryBlock = mainFunc.AppendBasicBlock("entry");
         LlvmBuilder.PositionAtEnd(entryBlock);
-        HelloWorld(printfFunc);
+        if (otherFuncs.Count > 0)
+        {
+            var llvmStatementValueRefs = shankStartFunc
+                .Statements.Select(sn => IrGeneratorByNode.CreateValueRef(this, sn))
+                .ToList();
+            llvmStatementValueRefs.ForEach(lsvr => OutputHelper.DebugPrintTxt(lsvr.Name, 7));
+        }
+        else
+        {
+            HelloWorld(printfFunc, "hello invalid");
+        }
         LlvmBuilder.BuildRetVoid();
 
         // Verify all the functions.
@@ -36,10 +53,10 @@ public class IrGenerator
         LlvmModule.PrintToFile(Path.Combine(outPath.FullName, "output4.ll"));
     }
 
-    private void HelloWorld(LLVMValueRef printfFunc)
+    private void HelloWorld(LLVMValueRef printfFunc, string msg)
     {
-        var myStr = LlvmBuilder.BuildGlobalStringPtr("Hello, World!\n");
-        LlvmBuilder.BuildCall2(_printfFuncType, printfFunc, [myStr]);
+        var myStr = LlvmBuilder.BuildGlobalStringPtr(msg + "\n");
+        LlvmBuilder.BuildCall2(PrintfFuncType, printfFunc, [myStr]);
     }
 
     private LLVMValueRef CreateFunc(CallableNode callableNode)
@@ -56,10 +73,8 @@ public class IrGenerator
                 GetParamTypes(callableNode.ParameterVariables)
             );
 
-            var funcName = callableNode.Name.Equals("start") ? "main" : callableNode.Name;
-
             // What happens if you try to create a function that already exists?
-            func = LlvmModule.AddFunction(funcName, funcType);
+            func = LlvmModule.AddFunction(callableNode.GetNameForLlvm(), funcType);
         }
         else
         {
@@ -83,7 +98,7 @@ public class IrGenerator
     private (LLVMValueRef, bool) CreateBuiltin(CallableNode builtin) =>
         builtin.Name switch
         {
-            "write" => (LlvmModule.AddFunction("printf", _printfFuncType), true),
+            "write" => (LlvmModule.AddFunction("printf", PrintfFuncType), true),
             _
                 => throw new NotImplementedException(
                     "Creating an LLVM function for Shank-builtin `"
@@ -116,7 +131,7 @@ public class IrGenerator
         LlvmModule = LlvmContext.CreateModuleWithName("root");
         LlvmBuilder = LlvmContext.CreateBuilder();
 
-        _printfFuncType = LLVMTypeRef.CreateFunction(
+        PrintfFuncType = LLVMTypeRef.CreateFunction(
             LlvmContext.VoidType,
             new[] { LLVMTypeRef.CreatePointer(LlvmContext.Int8Type, 0) },
             true
@@ -155,14 +170,14 @@ public class IrGenerator
     ///
     /// When a global variable is destroyed, it should have no entries in the GlobalList.
     /// </summary>
-    private LLVMModuleRef LlvmModule { get; set; }
+    public LLVMModuleRef LlvmModule { get; set; }
 
     /// <summary>
     /// Provides uniform API for creating instructions and inserting them into a BasicBlock, either
     /// at the end of a BasicBlock, or at a specific iterator location in a block.
     /// </summary>
-    private LLVMBuilderRef LlvmBuilder { get; set; }
+    public LLVMBuilderRef LlvmBuilder { get; set; }
 
-    private LLVMTypeRef _printfFuncType;
+    public LLVMTypeRef PrintfFuncType { get; set; }
     private LLVMTypeRef _printfRetType;
 }

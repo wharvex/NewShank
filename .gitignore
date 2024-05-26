@@ -3,6 +3,7 @@
 ##
 ## Get latest from `dotnet new gitignore`
 
+Shank/IR/
 IR/
 IR/output.ll
 IR/generated_IR.ll

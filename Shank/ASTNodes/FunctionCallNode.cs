@@ -60,6 +60,14 @@ public class FunctionCallNode : StatementNode
         throw new NotImplementedException();
     }
 
+    public string GetNameForLlvm() =>
+        Name switch
+        {
+            "write" => "printf",
+            "start" => "main",
+            _ => Name
+        };
+
     public override string ToString()
     {
         var b = new StringBuilder();

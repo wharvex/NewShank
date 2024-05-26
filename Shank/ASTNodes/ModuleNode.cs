@@ -90,6 +90,11 @@ public class ModuleNode : StatementNode
         );
     }
 
+    public bool HasFuncWithName(string name)
+    {
+        return Functions.ContainsKey(name);
+    }
+
     public void AddToGlobalVariables(List<VariableNode> variables)
     {
         variables.ForEach(v =>
