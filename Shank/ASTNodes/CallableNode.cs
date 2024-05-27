@@ -2,12 +2,13 @@ using System.Text.Json.Serialization;
 using LLVMSharp.Interop;
 using Shank.ASTNodes;
 using Shank.ExprVisitors;
+using Shank.Interfaces;
 
 namespace Shank;
 
 [JsonDerivedType(typeof(FunctionNode))]
 [JsonDerivedType(typeof(BuiltInFunctionNode))]
-public abstract class CallableNode : ASTNode
+public abstract class CallableNode : ASTNode, ILlvmTranslatable
 {
     public string Name { get; set; }
 
@@ -52,14 +53,6 @@ public abstract class CallableNode : ASTNode
 
     public bool IsValidOverloadOf(CallableNode cn) =>
         ParameterVariables.Where((pv, i) => !cn.ParameterVariables[i].EqualsForOverload(pv)).Any();
-
-    public string GetNameForLlvm() =>
-        Name switch
-        {
-            "write" => "printf",
-            "start" => "main",
-            _ => Name
-        };
 
     public abstract override LLVMValueRef Visit(
         Visitor visitor,

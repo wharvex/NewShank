@@ -1,4 +1,5 @@
 using LLVMSharp.Interop;
+using Shank.Interfaces;
 
 namespace Shank.IRGenerator;
 
@@ -18,9 +19,11 @@ public class IrGenerator
         var shankStartModule = AstRoot.GetStartModuleSafe();
         var shankStartFunc = shankStartModule.GetStartFunctionSafe();
 
-        // Create `main' and `write' functions.
+        // Create `main' (start) and `printf' (write) functions.
         var mainFunc = CreateFunc(shankStartFunc);
         var printfFunc = CreateFunc(shankStartModule.GetFromFunctionsByNameSafe("write"));
+
+        // Create other functions only if their names appear in ValidFuncs.
         var otherFuncs = AstRoot
             .GetStartModuleSafe()
             .Functions.Where(kvp => ValidFuncs.Contains(kvp.Key))
@@ -47,10 +50,7 @@ public class IrGenerator
         mainFunc.VerifyFunction(LLVMVerifierFailureAction.LLVMPrintMessageAction);
 
         // Output.
-        var outPath = Directory.CreateDirectory(
-            Path.Combine(Directory.GetCurrentDirectory(), "IR")
-        );
-        LlvmModule.PrintToFile(Path.Combine(outPath.FullName, "output4.ll"));
+        LlvmModule.PrintToFile(Path.Combine(OutputHelper.DocPath, "IrOutput.ll"));
     }
 
     private void HelloWorld(LLVMValueRef printfFunc, string msg)
@@ -74,7 +74,10 @@ public class IrGenerator
             );
 
             // What happens if you try to create a function that already exists?
-            func = LlvmModule.AddFunction(callableNode.GetNameForLlvm(), funcType);
+            func = LlvmModule.AddFunction(
+                ((ILlvmTranslatable)callableNode).GetNameForLlvm(),
+                funcType
+            );
         }
         else
         {

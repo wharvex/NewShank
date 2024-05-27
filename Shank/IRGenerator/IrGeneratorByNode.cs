@@ -1,5 +1,6 @@
 ﻿using LLVMSharp.Interop;
 using Shank.ASTNodes;
+using Shank.Interfaces;
 
 namespace Shank.IRGenerator;
 
@@ -13,7 +14,9 @@ public static class IrGeneratorByNode
             {
                 return irGen.LlvmBuilder.BuildCall2(
                     irGen.PrintfFuncType,
-                    irGen.LlvmModule.GetNamedFunction(funcCallNode.GetNameForLlvm()),
+                    irGen.LlvmModule.GetNamedFunction(
+                        ((ILlvmTranslatable)funcCallNode).GetNameForLlvm()
+                    ),
                     funcCallNode.Parameters.Select(pn => CreateValueRef(irGen, pn)).ToArray()
                 );
             }
