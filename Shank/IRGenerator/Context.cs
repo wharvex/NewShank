@@ -10,7 +10,7 @@ public class LLVMFunction
     public LLVMValueRef Function { get; private set; }
     public LLVMTypeRef ReturnType => TypeOf.ReturnType;
     public LLVMTypeRef TypeOf { get; }
-    
+
     public LLVMFunction(LLVMModuleRef module, string name, LLVMTypeRef type)
     {
         Function = module.AddFunction(name, type);
@@ -34,10 +34,10 @@ public class LLVMShankFunction(
     LLVMModuleRef module,
     string name,
     LLVMTypeRef type,
-    IEnumerable<bool> arguementMutability)
-    : LLVMFunction(module, name, type)
+    IEnumerable<bool> arguementMutability
+) : LLVMFunction(module, name, type)
 {
-   public IEnumerable<bool> ArguementMutability { get; } = arguementMutability;
+    public IEnumerable<bool> ArguementMutability { get; } = arguementMutability;
 }
 
 // this class adds extension methods to llvm modules to add functions, but return them to us as our llvm function facade
@@ -47,13 +47,17 @@ public static class LLVMAddFunctionExtension
     {
         return new LLVMFunction(module, name, type);
     }
-    public static LLVMShankFunction addFunction(this LLVMModuleRef module, string name, LLVMTypeRef type,
-        IEnumerable<bool> arguementMutability)
+
+    public static LLVMShankFunction addFunction(
+        this LLVMModuleRef module,
+        string name,
+        LLVMTypeRef type,
+        IEnumerable<bool> arguementMutability
+    )
     {
         return new LLVMShankFunction(module, name, type, arguementMutability);
     }
 }
-
 
 /// <summary>
 /// container for Varaibles (we need a type and refrence)
@@ -124,9 +128,9 @@ public struct CFuntions
             "memcpy",
             LLVMTypeRef.CreateFunction(voidStar, [voidStar, voidStar, sizeT])
         );
-        memcpy. Linkage = LLVMLinkage.LLVMExternalLinkage ;
+        memcpy.Linkage = LLVMLinkage.LLVMExternalLinkage;
         malloc = llvmModule.addFunction("malloc", LLVMTypeRef.CreateFunction(voidStar, [sizeT]));
-        malloc. Linkage = LLVMLinkage.LLVMExternalLinkage ;
+        malloc.Linkage = LLVMLinkage.LLVMExternalLinkage;
     }
 
     //  int printf(const char *restrict format, ...);
@@ -212,7 +216,9 @@ public class Context
             _ => null
         };
 
-        return type == null ? null : (value, mutable) => type.Value.Item1(value, mutable, type.Value.Item2);
+        return type == null
+            ? null
+            : (value, mutable) => type.Value.Item1(value, mutable, type.Value.Item2);
     }
 
     /// <summary>
@@ -228,7 +234,9 @@ public class Context
     )
     {
         var llvmTypeFromShankType = GetLLVMTypeFromShankType(dataType, unknownType);
-        return isVar ? LLVMTypeRef.CreatePointer((LLVMTypeRef)llvmTypeFromShankType, 0) : llvmTypeFromShankType;
+        return isVar
+            ? LLVMTypeRef.CreatePointer((LLVMTypeRef)llvmTypeFromShankType, 0)
+            : llvmTypeFromShankType;
     }
 
     /// <summary>
@@ -322,7 +330,10 @@ public class Context
 
     public LLVMShankFunction? GetFunction(string name)
     {
-        return Functions.ContainsKey(name) ? Functions[name] :
-            BuiltinFunctions.TryGetValue(name, out var function) ? function : null;
+        return Functions.ContainsKey(name)
+            ? Functions[name]
+            : BuiltinFunctions.TryGetValue(name, out var function)
+                ? function
+                : null;
     }
 }
