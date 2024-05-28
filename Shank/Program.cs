@@ -1,4 +1,4 @@
-using Shank.IRGenerator;
+﻿using Shank.IRGenerator;
 
 namespace Shank;
 
@@ -38,7 +38,6 @@ public class Program
 
         // Interpret the program in normal or unit test mode.
         InterpretAndTest(cmdLineArgsHelper, program);
-        RunCompiler(args); 
     }
 
     /// <summary>
@@ -61,6 +60,7 @@ public class Program
         // Save the pre-SA AST to $env:APPDATA\ShankDebugOutput4.json
         OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForProgramNode(program), 4);
 
+        BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
         // Check the program for semantic issues.
         SemanticAnalysis.CheckModules(program);
         // Interpret the program in normal or unit test mode.
