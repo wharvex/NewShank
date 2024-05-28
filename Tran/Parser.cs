@@ -19,7 +19,7 @@ public class Parser
     private bool AcceptSeperators()
     {
         bool retVal = false;
-        while (handler.MatchAndRemove(TokenType.SEPERATOR)!=null)
+        while (handler.MatchAndRemove(TokenType.SEPERATOR) != null)
         {
             retVal = true;
         }
@@ -34,16 +34,15 @@ public class Parser
             if (ParseClass())
             {
                 AcceptSeperators();
-
             }
-            
+
             if (ParseFunction())
             {
                 AcceptSeperators();
                 continue;
             }
-            
-            throw new Exception("Not a function or action"); 
+
+            throw new Exception("Not a function or action");
         }
 
         return program;
@@ -73,9 +72,7 @@ public class Parser
         Token? function;
         if ((function = handler.MatchAndRemove(TokenType.FUNCTION)) != null)
         {
-            
-            functionNode =
-                new FunctionNode(function.GetValue(), "FunctionNode", true);
+            functionNode = new FunctionNode(function.GetValue(), "FunctionNode", true);
         }
 
         return false;

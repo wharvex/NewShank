@@ -4,7 +4,6 @@ using System.IO;
 
 public class Lexer
 {
-
     private StringHandler stringHandler;
     private int lineNumber = 1;
     private int characterPosition = 0;
@@ -20,7 +19,7 @@ public class Lexer
         TwoCharacterHashmap();
         OneCharacterHashmap();
     }
-    
+
     private void KeyWord()
     {
         keywordHash["if"] = TokenType.IF;
@@ -45,6 +44,7 @@ public class Lexer
         keywordHash["shared"] = TokenType.SHARED;
         keywordHash["\t"] = TokenType.SEPERATOR;
     }
+
     private void TwoCharacterHashmap()
     {
         twoCharacterHash[">="] = TokenType.GREATEREQUAL;
@@ -60,6 +60,7 @@ public class Lexer
         twoCharacterHash["+="] = TokenType.PLUSEQUALS;
         twoCharacterHash["-="] = TokenType.MINUSEQUALS;
     }
+
     private void OneCharacterHashmap()
     {
         oneCharacterHash["{"] = TokenType.OPENANGLEBRACKET;
@@ -109,7 +110,16 @@ public class Lexer
                 if (IsSingleCharacterWord(currentCharacter))
                 {
                     Token singleCharWordToken = ProcessSingleCharacterWord(currentCharacter);
-                    tokens.AddFirst((new Token(TokenType.CHARACTER, currentCharacter.ToString(), lineNumber, characterPosition)));
+                    tokens.AddFirst(
+                        (
+                            new Token(
+                                TokenType.CHARACTER,
+                                currentCharacter.ToString(),
+                                lineNumber,
+                                characterPosition
+                            )
+                        )
+                    );
                 }
                 else
                 {
@@ -147,7 +157,7 @@ public class Lexer
         tokens.AddFirst(new Token(TokenType.SEPERATOR, lineNumber, characterPosition));
         return tokens;
     }
-    
+
     private Token ProcessWord()
     {
         int startPosition = characterPosition;
@@ -166,12 +176,14 @@ public class Lexer
         }
         return new Token(TokenType.WORD, value, lineNumber, startPosition);
     }
-    
+
     private Token ProcessNumber()
     {
         int startPosition = characterPosition;
         bool decimalFound = false;
-        while (char.IsDigit(stringHandler.Peek(0)) || (!decimalFound && stringHandler.Peek(0) == '.'))
+        while (
+            char.IsDigit(stringHandler.Peek(0)) || (!decimalFound && stringHandler.Peek(0) == '.')
+        )
         {
             char currentCharacter = stringHandler.GetChar();
             characterPosition++;
@@ -184,7 +196,7 @@ public class Lexer
         string value = stringHandler.GetSubstring(startPosition, length);
         return new Token(TokenType.NUMBER, value, lineNumber, startPosition);
     }
-    
+
     private Token ProcessSymbols()
     {
         string twoCharacterSymbols = stringHandler.PeekString(2);
@@ -204,7 +216,7 @@ public class Lexer
         }
         return null;
     }
-    
+
     private bool IsSingleCharacterWord(char character)
     {
         return char.IsLetter(character);

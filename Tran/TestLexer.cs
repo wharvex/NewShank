@@ -1,5 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [TestClass]
 public class TestLexer
@@ -11,11 +11,9 @@ public class TestLexer
         Lexer lexer = new Lexer(file);
         LinkedList<Token> tokens = lexer.Lex();
         Assert.AreEqual("Haneen Qasem", tokens.ToString());
-
     }
 
-
-[TestMethod]
+    [TestMethod]
     public void Digits()
     {
         string file = "2.22 444 888";
@@ -30,7 +28,10 @@ public class TestLexer
         string file = "{ } ( ) = > < + ^ + - : * / % , ! \"";
         Lexer lexer = new Lexer(file);
         LinkedList<Token> tokens = lexer.Lex();
-        Assert.AreEqual("OPENANGLEBRACKET CLOSEDANGLEBRACKET OPENPARENTHESIS CLOSEDPARENTHESIS EQUALS GREATERTHAN LESSTHAN PLUS EXPONENT MINUS COLON MULTIPLY DIVIDE MODULUS COMMAPERIOD NOT QUOTE", tokens.ToString());
+        Assert.AreEqual(
+            "OPENANGLEBRACKET CLOSEDANGLEBRACKET OPENPARENTHESIS CLOSEDPARENTHESIS EQUALS GREATERTHAN LESSTHAN PLUS EXPONENT MINUS COLON MULTIPLY DIVIDE MODULUS COMMAPERIOD NOT QUOTE",
+            tokens.ToString()
+        );
     }
 
     [TestMethod]
@@ -39,19 +40,26 @@ public class TestLexer
         string file = ">= ++ -- <= == != ^= %= *= /= += -=";
         Lexer lexer = new Lexer(file);
         LinkedList<Token> tokens = lexer.Lex();
-        Assert.AreEqual("GREATEREQUAL DOUBLEPLUS DOUBLEMINUS LESSEQUAL EQUALS NOTEQUAL EXPONENTEQUAL PERCENTEQUALS MULTIPLYEQUALS DIVIDEEQUALS PLUSEQUALS MINUSEQUALS", tokens.ToString());
+        Assert.AreEqual(
+            "GREATEREQUAL DOUBLEPLUS DOUBLEMINUS LESSEQUAL EQUALS NOTEQUAL EXPONENTEQUAL PERCENTEQUALS MULTIPLYEQUALS DIVIDEEQUALS PLUSEQUALS MINUSEQUALS",
+            tokens.ToString()
+        );
     }
 
     [TestMethod]
     public void KeyWord()
     {
-        string file = "if print getline nextfile function interface class string implements accessor value" +
-                      "loop mutator console datetime construct boolean true false shared \t \n ";
+        string file =
+            "if print getline nextfile function interface class string implements accessor value"
+            + "loop mutator console datetime construct boolean true false shared \t \n ";
         Lexer lexer = new Lexer(file);
         LinkedList<Token> tokens = lexer.Lex();
-        Assert.AreEqual("IF PRINT GETLINE NEXTFILE FUNCTION INTERFACE CLASS STRING IMPLEMENTS ACCESSOR VALUE LOOP MUTATOR CONSOLE DATETIME CONSTRUCT BOOLEAN TRUE FALSE SHARED SEPERATOR SEPERATOR", tokens.ToString());
+        Assert.AreEqual(
+            "IF PRINT GETLINE NEXTFILE FUNCTION INTERFACE CLASS STRING IMPLEMENTS ACCESSOR VALUE LOOP MUTATOR CONSOLE DATETIME CONSTRUCT BOOLEAN TRUE FALSE SHARED SEPERATOR SEPERATOR",
+            tokens.ToString()
+        );
     }
-    
+
     //fix this
     [TestMethod]
     public void Wrong()
@@ -59,6 +67,6 @@ public class TestLexer
         string file = "#";
         Lexer lexer = new Lexer(file);
         LinkedList<Token> tokens = lexer.Lex();
-        Assert.AreEqual("#" , tokens.ToString());
+        Assert.AreEqual("#", tokens.ToString());
     }
 }

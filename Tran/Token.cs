@@ -1,14 +1,60 @@
 using System;
 
-
 public enum TokenType
 {
-    INTERFACE, NUMBER, CLASS, STRING, IMPLEMENTS, ACCESSOR, VALUE, LOOP, WORD, MUTATOR, CONSOLE, 
-    PRINT, DATETIME,CONSTRUCT, CHARACTER, BOOLEAN, TRUE, FALSE, IF, SHARED, GETLINE, NEXTFILE, FUNCTION, SEPERATOR,
-    GREATEREQUAL, DOUBLEPLUS, DOUBLEMINUS, LESSEQUAL, COLON, EQUALS, GREATERTHAN, LESSTHAN, NOT, PLUS, 
-    MINUS, EXPONENT, MULTIPLY, DIVIDE, MODULUS, NOTEQUAL, OPENPARENTHESIS, CLOSEDPARENTHESIS,
-    OPENANGLEBRACKET, CLOSEDANGLEBRACKET,PERIOD, QUOTE, COMMA, EXPONENTEQUAL, PERCENTEQUALS, MULTIPLYEQUALS,
-    DIVIDEEQUALS, PLUSEQUALS, MINUSEQUALS
+    INTERFACE,
+    NUMBER,
+    CLASS,
+    STRING,
+    IMPLEMENTS,
+    ACCESSOR,
+    VALUE,
+    LOOP,
+    WORD,
+    MUTATOR,
+    CONSOLE,
+    PRINT,
+    DATETIME,
+    CONSTRUCT,
+    CHARACTER,
+    BOOLEAN,
+    TRUE,
+    FALSE,
+    IF,
+    SHARED,
+    GETLINE,
+    NEXTFILE,
+    FUNCTION,
+    SEPERATOR,
+    GREATEREQUAL,
+    DOUBLEPLUS,
+    DOUBLEMINUS,
+    LESSEQUAL,
+    COLON,
+    EQUALS,
+    GREATERTHAN,
+    LESSTHAN,
+    NOT,
+    PLUS,
+    MINUS,
+    EXPONENT,
+    MULTIPLY,
+    DIVIDE,
+    MODULUS,
+    NOTEQUAL,
+    OPENPARENTHESIS,
+    CLOSEDPARENTHESIS,
+    OPENANGLEBRACKET,
+    CLOSEDANGLEBRACKET,
+    PERIOD,
+    QUOTE,
+    COMMA,
+    EXPONENTEQUAL,
+    PERCENTEQUALS,
+    MULTIPLYEQUALS,
+    DIVIDEEQUALS,
+    PLUSEQUALS,
+    MINUSEQUALS
 }
 
 public class Token
@@ -20,12 +66,11 @@ public class Token
 
     public Token(TokenType type, int lineNumber, int characterPosition)
     {
-
         this.type = type;
         this.lineNumber = lineNumber;
         this.characterPosition = characterPosition;
-
     }
+
     public Token(TokenType type, string value, int lineNumber, int characterPosition)
     {
         this.type = type;
@@ -33,14 +78,17 @@ public class Token
         this.lineNumber = lineNumber;
         this.characterPosition = characterPosition;
     }
+
     public string GetValue()
     {
         return value;
     }
+
     public TokenType GetTokenType()
     {
         return type;
     }
+
     public override string ToString()
     {
         if (value != null)
