@@ -38,7 +38,7 @@ public class Program
 
         // Interpret the program in normal or unit test mode.
         InterpretAndTest(cmdLineArgsHelper, program);
-        RunCompiler(args); 
+        RunCompiler(args);
     }
 
     /// <summary>

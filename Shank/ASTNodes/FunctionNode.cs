@@ -670,8 +670,11 @@ public class FunctionNode : CallableNode
         {
             var llvmParam = function.GetParam((uint)index);
             var name = param.GetNameSafe();
-            var parameter = context.newVariable(param.Type, param.UnknownType)(llvmParam, !param.IsConstant);
-                
+            var parameter = context.newVariable(param.Type, param.UnknownType)(
+                llvmParam,
+                !param.IsConstant
+            );
+
             context.AddVaraible(name, parameter, false);
         }
 

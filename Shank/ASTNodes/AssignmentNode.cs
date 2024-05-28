@@ -44,12 +44,7 @@ public class AssignmentNode : StatementNode
             throw new Exception($"tried to mutate non mutable variable {Target.Name}");
         }
         builder.BuildStore(
-            Expression.Visit(
-                context.GetExprFromType(llvmValue),
-                context,
-                builder,
-                module
-            ),
+            Expression.Visit(context.GetExprFromType(llvmValue), context, builder, module),
             llvmValue.ValueRef
         );
     }
