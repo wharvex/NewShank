@@ -58,10 +58,10 @@ public class ParameterNode : ASTNode
             ?? Parser
                 .GetDataTypeFromConstantNodeType(
                     Constant
-                    ?? throw new InvalidOperationException(
-                        "A ParameterNode should not have both Variable and Constant set to"
-                        + " null."
-                    )
+                        ?? throw new InvalidOperationException(
+                            "A ParameterNode should not have both Variable and Constant set to"
+                                + " null."
+                        )
                 )
                 .ToString()
                 .ToUpper()
@@ -81,7 +81,7 @@ public class ParameterNode : ASTNode
         {
             throw new InvalidOperationException(
                 "This ParameterNode is in an undefined state because Constant and Variable are"
-                + " both null, or both non-null."
+                    + " both null, or both non-null."
             );
         }
 
@@ -89,7 +89,7 @@ public class ParameterNode : ASTNode
         {
             throw new InvalidOperationException(
                 "This ParameterNode is in an undefined state because its value is stored in"
-                + " Constant, but it is also 'var'."
+                    + " Constant, but it is also 'var'."
             );
         }
     }
@@ -180,7 +180,6 @@ public class ParameterNode : ASTNode
         LLVMModuleRef module
     )
     {
-        
         throw new NotImplementedException();
         // if (IsVariable)
         //     return Variable.Visit(
@@ -189,7 +188,7 @@ public class ParameterNode : ASTNode
         //         context,
         //         builder,
         //         module);
-        // else 
+        // else
         //     return visitor
     }
 }
