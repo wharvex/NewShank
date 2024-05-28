@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.IO;
 using LLVMSharp.Interop;
 using Shank.ExprVisitors;
@@ -8,7 +9,7 @@ public class LLVMCodeGen
 {
     public LLVMModuleRef ModuleRef;
 
-    public void CodeGen(string fileDir, ProgramNode programNode)
+    public void CodeGen(CompileOptions compileOptions, ProgramNode programNode)
     {
         LLVM.InitializeAllTargetInfos();
         LLVM.InitializeAllTargets();
@@ -20,7 +21,7 @@ public class LLVMCodeGen
         LLVMBuilderRef builder = module.Context.CreateBuilder();
         FileStream fs;
 
-        string directory = Path.GetDirectoryName(fileDir);
+        // string? directory = Path.GetDirectoryName(compileOptions.OutFile);
 
         programNode.Visit(new Context(null, new CFuntions(module)), builder, module);
         //outputting directly to an object file
@@ -29,7 +30,7 @@ public class LLVMCodeGen
         var target = LLVMTargetRef.GetTargetFromTriple(targetTriple);
         var cpu = "generic";
         var features = "";
-        var opt = LLVMCodeGenOptLevel.LLVMCodeGenLevelNone;
+        var opt = compileOptions.OptLevel;
         var targetMachine = target.CreateTargetMachine(
             targetTriple,
             cpu,
@@ -38,25 +39,21 @@ public class LLVMCodeGen
             LLVMRelocMode.LLVMRelocPIC,
             LLVMCodeModel.LLVMCodeModelMedium
         );
+
+        //use the clang drivers to get something like {"-O3 emit-llvm "}
         var out_string = "";
-        targetMachine.TryEmitToFile(
-            module,
-            "a.out",
-            LLVMCodeGenFileType.LLVMObjectFile,
-            out out_string
-        );
-
-        if (!Directory.Exists(directory))
-        {
-            Directory.CreateDirectory(directory); //l
-        }
-
-        File.WriteAllText(fileDir, module.ToString());
+        if (compileOptions.CompileToObj)
+            targetMachine.TryEmitToFile(
+                module,
+                compileOptions.OutFile,
+                LLVMCodeGenFileType.LLVMObjectFile,
+                out out_string
+            );
+        else
+            File.WriteAllText(compileOptions.OutFile, module.ToString());
         Console.WriteLine("code successfully compiled");
-        Console.WriteLine($"IR code gen path {fileDir} ");
-        Console.WriteLine($"Object file path {fileDir} ");
+        Console.WriteLine($"Code gen path {compileOptions.OutFile} ");
         Console.WriteLine("IR result");
-        Console.WriteLine($"{module.ToString()}");
         module.Dump();
     }
 }

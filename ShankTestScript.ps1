@@ -39,8 +39,8 @@ function st
         $args_list = -split $args_str
         switch ($args_list.Length)
         {
-            { $_ -eq 1 } { dotnet run "$($ds)$($args_list[0])" --project $sp }
-            { $_ -eq 2 } { dotnet run "$($ds)$($args_list[0])" $args_list[1] --project $sp }
+            { $_ -eq 1 } { dotnet run "Interpret" "$($ds)$($args_list[0])" --project $sp }
+            { $_ -eq 2 } { dotnet run "Interpret" "$($ds)$($args_list[0])" $args_list[1] --project $sp }
             Default {
                 "Bad Args"
             }
