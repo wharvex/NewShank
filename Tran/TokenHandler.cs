@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 
+namespace Shank.Tran;
+
 // Helper to allow for easier handling of the token list passed by the lexer
 public class TokenHandler
 {

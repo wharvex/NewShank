@@ -5,6 +5,8 @@ using Shank;
 using Shank.ASTNodes;
 using Tran;
 
+namespace Shank.Tran;
+
 public class Parser
 {
     private TokenHandler handler;

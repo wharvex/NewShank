@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+namespace Shank.Tran;
+
 [TestClass]
 public class TestLexer
 {

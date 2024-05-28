@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
+namespace Shank.Tran;
+
 public class Lexer
 {
     private StringHandler stringHandler;

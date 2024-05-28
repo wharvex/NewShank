@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 
+namespace Shank.Tran;
+
 public class StringHandler
 {
     private int index = 0;

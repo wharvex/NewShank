@@ -1,5 +1,7 @@
 using System;
 
+namespace Shank.Tran;
+
 public enum TokenType
 {
     INTERFACE,
