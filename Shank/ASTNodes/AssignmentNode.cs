@@ -38,14 +38,19 @@ public class AssignmentNode : StatementNode
         LLVMModuleRef module
     )
     {
+        var llvmValue = context.GetVaraible(Target.Name);
+        if (!llvmValue.IsMutable)
+        {
+            throw new Exception($"tried to mutate non mutable variable {Target.Name}");
+        }
         builder.BuildStore(
             Expression.Visit(
-                context.GetExprFromType(context.GetVaraible(Target.Name).TypeRef),
+                context.GetExprFromType(llvmValue),
                 context,
                 builder,
                 module
             ),
-            context.GetVaraible(Target.Name).ValueRef
+            llvmValue.ValueRef
         );
     }
 

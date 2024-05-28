@@ -634,13 +634,15 @@ public class FunctionNode : CallableNode
         var fnRetTy = module.Context.Int32Type;
         var args = ParameterVariables.Select(
             s =>
-                context.GetLLVMTypeFromShankType(s.Type, s.UnknownType)
+                context.GetLLVMTypeFromShankType(s.Type, !s.IsConstant, s.UnknownType)
                 ?? throw new CompilerException($"type of parameter {s.Name} is not found", s.Line)
         );
+        var arguementMutability = ParameterVariables.Select(p => !p.IsConstant);
         Name = (Name.Equals("start") ? "main" : Name);
         var function = module.addFunction(
             Name,
-            LLVMTypeRef.CreateFunction(fnRetTy, args.ToArray())
+            LLVMTypeRef.CreateFunction(fnRetTy, args.ToArray()),
+            arguementMutability
         );
         foreach (var (param, index) in ParameterVariables.Select((param, index) => (param, index)))
         {
@@ -660,14 +662,17 @@ public class FunctionNode : CallableNode
         LLVMModuleRef module
     )
     {
-        var function = context.GetFunction(Name);
+        // should be already created, because the visit prototype method should have been called first
+        var function = (LLVMFunction)context.GetFunction(Name)!;
         context.CurrentFunction = function;
         context.ResetLocal();
         foreach (var (param, index) in ParameterVariables.Select((param, index) => (param, index)))
         {
             var llvmParam = function.GetParam((uint)index);
             var name = param.GetNameSafe();
-            context.AddVaraible(name, llvmParam, llvmParam.TypeOf, false);
+            var parameter = context.newVariable(param.Type, param.UnknownType)(llvmParam, !param.IsConstant);
+                
+            context.AddVaraible(name, parameter, false);
         }
 
         function.Linkage = LLVMLinkage.LLVMExternalLinkage;
@@ -676,7 +681,8 @@ public class FunctionNode : CallableNode
         builder.PositionAtEnd(block);
         LocalVariables.ForEach(variable => variable.Visit(visitor, context, builder, module));
         Statements.ForEach(s => s.VisitStatement(context, builder, module));
-        builder.BuildRet(LLVMValueRef.CreateConstInt(module.Context.Int32Type, (ulong)1));
+        // return 0 to singify ok
+        builder.BuildRet(LLVMValueRef.CreateConstInt(module.Context.Int32Type, (ulong)0));
         context.ResetLocal();
         return function.Function;
     }

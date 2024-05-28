@@ -44,7 +44,7 @@ public class VariableNode : ASTNode
     public DataType Type { get; set; }
 
     public LLVMTypeRef GetLLVMType(Context context, DataType type) =>
-        context.GetLLVMTypeFromShankType(type) ?? throw new Exception($"Type {Type} doesnt exist");
+        context.GetLLVMTypeFromShankType(type, false) ?? throw new Exception($"Type {Type} doesnt exist");
 
     // If Type is Array, then ArrayType is the type of its elements, or else it is null.
     public DataType? ArrayType { get; set; }
@@ -175,11 +175,15 @@ public class VariableNode : ASTNode
     )
     {
         string name = GetNameSafe();
+        // TODO: only alloca when !isConstant
+        var llvmTypeFromShankType = context.GetLLVMTypeFromShankType(Type, false) ?? throw new Exception("null type");
         LLVMValueRef v = builder.BuildAlloca(
-            context.GetLLVMTypeFromShankType(Type) ?? throw new Exception("null type"),
+            // isVar is false, because we are already creating it using alloca which makes it var
+            llvmTypeFromShankType,
             GetNameSafe()
         );
-        context.AddVaraible(GetNameSafe(), v, GetLLVMType(context, Type), false);
+        var variable = context.newVariable(Type, UnknownType);
+        context.AddVaraible(GetNameSafe(), variable(v, !IsConstant), false);
         return v;
     }
 }

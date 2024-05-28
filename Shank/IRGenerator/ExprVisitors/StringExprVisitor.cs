@@ -12,7 +12,7 @@ public class StringExprVisitor : Visitor
         LLVMModuleRef module
     )
     {
-        LlvmVaraible variable = context.GetVaraible(node.Name);
+        LLVMValue variable = context.GetVaraible(node.Name);
         return builder.BuildLoad2(variable.TypeRef, variable.ValueRef);
     }
 

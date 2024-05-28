@@ -1,4 +1,4 @@
-﻿using Shank.IRGenerator;
+using Shank.IRGenerator;
 
 namespace Shank;
 
@@ -38,6 +38,7 @@ public class Program
 
         // Interpret the program in normal or unit test mode.
         InterpretAndTest(cmdLineArgsHelper, program);
+        RunCompiler(args); 
     }
 
     /// <summary>

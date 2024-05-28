@@ -1,8 +1,12 @@
+
+{ define gan(n:T) generic T
+write n }
 define start()
 variables n : integer
 variables ss: string
     n := 10
     n := n + 1
+    varf var n
     ss := "ffff" + "gg"
       
 
@@ -11,3 +15,7 @@ variables n : integer
 variables ss: string
      n:= 40
      ss := "f"
+
+define varf(var foo: integer)
+    foo := 5
+    

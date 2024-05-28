@@ -62,14 +62,24 @@ public class FunctionCallNode : StatementNode, ILlvmTranslatable
         LLVMModuleRef module
     )
     {
-        builder.BuildCall2(
-            LLVMTypeRef.Int64,
-            context.Functions[Name].Function,
-            Parameters
-                .Select(n => n.Visit(new IntegerExprVisitor(), context, builder, module))
-                .ToArray()
-        );
+        var function = context.GetFunction(Name) ?? throw new Exception($"function {Name} not found");
+        // if any arguement is not mutable, but is required to be mutable
+        if (function.ArguementMutability.Zip(Parameters.Select(p => p.IsVariable)).Any(a => a is { First: true, Second: false } ))
+        {
+            throw new Exception($"call to {Name} has a mismatch of mutability");
+        }
+
+        var parameters = Parameters.Select(p => p.Visit(null, context, builder, module));
+        builder.BuildCall2(function.TypeOf, function.Function, parameters.ToArray());
     }
+
+    public string GetNameForLlvm() =>
+        Name switch
+        {
+            "write" => "printf",
+            "start" => "main",
+            _ => Name
+        };
 
     public override string ToString()
     {

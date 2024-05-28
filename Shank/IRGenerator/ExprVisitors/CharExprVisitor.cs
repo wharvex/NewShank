@@ -12,8 +12,8 @@ public class CharExprVisitor : Visitor
         LLVMModuleRef module
     )
     {
-        LlvmVaraible varaible = context.GetVaraible(node.Name);
-        return builder.BuildLoad2(varaible.TypeRef, varaible.ValueRef);
+        LLVMValue value = context.GetVaraible(node.Name);
+        return builder.BuildLoad2(value.TypeRef, value.ValueRef);
     }
 
     public override LLVMValueRef Accept(
