@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shank", "Shank\Shank.csproj
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShankUnitTests", "ShankUnitTests\ShankUnitTests.csproj", "{BB9C5832-C2A2-40F8-85FF-D24C5332BF98}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tran", "Tran\Tran.csproj", "{83F8DFBF-53D8-4837-B372-7D2EDAB47EB2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{BB9C5832-C2A2-40F8-85FF-D24C5332BF98}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BB9C5832-C2A2-40F8-85FF-D24C5332BF98}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BB9C5832-C2A2-40F8-85FF-D24C5332BF98}.Release|Any CPU.Build.0 = Release|Any CPU
+		{83F8DFBF-53D8-4837-B372-7D2EDAB47EB2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{83F8DFBF-53D8-4837-B372-7D2EDAB47EB2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{83F8DFBF-53D8-4837-B372-7D2EDAB47EB2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{83F8DFBF-53D8-4837-B372-7D2EDAB47EB2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

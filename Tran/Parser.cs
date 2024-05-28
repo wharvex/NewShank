@@ -3,7 +3,6 @@
 using LLVMSharp;
 using Shank;
 using Shank.ASTNodes;
-using Tran;
 
 namespace Shank.Tran;
 
