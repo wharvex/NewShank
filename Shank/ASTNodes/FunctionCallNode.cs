@@ -56,9 +56,19 @@ public class FunctionCallNode : StatementNode, ILlvmTranslatable
         return arr;
     }
 
-    public void VisitStatement(Context context, LLVMBuilderRef builder, LLVMModuleRef module)
+    public override void VisitStatement(
+        Context context,
+        LLVMBuilderRef builder,
+        LLVMModuleRef module
+    )
     {
-        throw new NotImplementedException();
+        builder.BuildCall2(
+            LLVMTypeRef.Int64,
+            context.Functions[Name].Function,
+            Parameters
+                .Select(n => n.Visit(new IntegerExprVisitor(), context, builder, module))
+                .ToArray()
+        );
     }
 
     public override string ToString()

@@ -35,7 +35,7 @@ public class ForNode : StatementNode
         return $" For: {Variable} From: {From} To: {To} {Environment.NewLine} {StatementListToString(Children)}";
     }
 
-    public void VisitStatement(Context context, LLVMBuilderRef builder, LLVMModuleRef module)
+    public override void VisitStatement(Context context, LLVMBuilderRef builder, LLVMModuleRef module)
     {
         var forStart = context.CurrentFunction.AppendBasicBlock("for.start");
         var afterFor = context.CurrentFunction.AppendBasicBlock("for.after");
