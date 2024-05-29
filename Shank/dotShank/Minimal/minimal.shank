@@ -2,4 +2,4 @@ define validForLlvm()
     write ""
 
 define start()
-    write "hi!"
+    write "hi!!!"

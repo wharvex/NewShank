@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using CommandLine;
 using LLVMSharp.Interop;
 using Shank;
+using Shank.IRGenerator;
 
 [Verb("Compile", isDefault: false)]
 public class CompileOptions
@@ -47,6 +48,19 @@ public class InterptOptions
     public bool unitTest { get; set; }
 }
 
+[Verb("CompilePractice", isDefault: false)]
+public class CompilePracticeOptions
+{
+    [Value(index: 0, MetaName = "inputFile", HelpText = "The Shank source file", Required = true)]
+    public string? File { get; set; }
+
+    [Option('u', "ut", HelpText = "Unit test options", Default = false)]
+    public bool UnitTest { get; set; }
+
+    public string GetFileSafe() =>
+        File ?? throw new InvalidOperationException("Expected File to not be null.");
+}
+
 public class CommandLineArgsParser
 {
     private string[] _args { get; }
@@ -57,9 +71,12 @@ public class CommandLineArgsParser
         // new Options().InputFiles = "a";
         ProgramNode program = new ProgramNode();
         CommandLine
-            .Parser.Default.ParseArguments<CompileOptions, InterptOptions>(args)
+            .Parser.Default.ParseArguments<CompileOptions, InterptOptions, CompilePracticeOptions>(
+                args
+            )
             .WithParsed<CompileOptions>(options => RunCompiler(options, program))
             .WithParsed<InterptOptions>(options => RunInterptrer(options, program))
+            .WithParsed<CompilePracticeOptions>(options => RunCompilePractice(options, program))
             .WithNotParsed(errors => Console.WriteLine("Error"));
     }
 
@@ -89,6 +106,24 @@ public class CommandLineArgsParser
         Interpreter.Modules = program.Modules;
         Interpreter.StartModule = program.GetStartModuleSafe();
         if (!options.unitTest)
+            It1(program);
+        else
+            It2();
+    }
+
+    public void RunCompilePractice(CompilePracticeOptions options, ProgramNode program)
+    {
+        GetFiles(options.GetFileSafe()).ForEach(ip => ScanAndParse(ip, program));
+        program.SetStartModule();
+        OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForProgramNode(program), 4);
+        BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
+        SemanticAnalysis.CheckModules(program);
+        var irGen = new IrGenerator(program);
+        irGen.GenerateIr();
+
+        Interpreter.Modules = program.Modules;
+        Interpreter.StartModule = program.GetStartModuleSafe();
+        if (!options.UnitTest)
             It1(program);
         else
             It2();

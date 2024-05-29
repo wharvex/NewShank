@@ -45,7 +45,7 @@ public class IrGenerator
 
         PrintfFuncType = LLVMTypeRef.CreateFunction(
             LlvmContext.VoidType,
-            new[] { LLVMTypeRef.CreatePointer(LlvmContext.Int8Type, 0) },
+            [LLVMTypeRef.CreatePointer(LlvmContext.Int8Type, 0)],
             true
         );
     }

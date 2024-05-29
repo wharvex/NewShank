@@ -20,7 +20,8 @@ function st
     "Enums", # 9
     "OldShankFiles/Pascals.shank", # 10
     "OldShankFiles/GCD.shank", # 11
-    "Negative" # 12
+    "Negative", # 12
+    "Minimal" # 13
     #"Expressions",
     #"Overloads/overloadsTest.shank",
     #"Generics/complex",
@@ -39,8 +40,9 @@ function st
         $args_list = -split $args_str
         switch ($args_list.Length)
         {
-            { $_ -eq 1 } { dotnet run "Interpret" "$($ds)$($args_list[0])" --project $sp }
-            { $_ -eq 2 } { dotnet run "Interpret" "$($ds)$($args_list[0])" $args_list[1] --project $sp }
+            { $_ -eq 1 -and $args_list[0] -ne "Minimal" } { dotnet run Interpret "$($ds)$($args_list[0])" --project $sp }
+            { $_ -eq 1 -and $args_list[0] -eq "Minimal" } { dotnet run CompilePractice "$($ds)$($args_list[0])" --project $sp }
+            { $_ -eq 2 } { dotnet run Interpret "$($ds)$($args_list[0])" $args_list[1] --project $sp }
             Default {
                 "Bad Args"
             }
