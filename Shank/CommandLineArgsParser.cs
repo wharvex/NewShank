@@ -36,6 +36,27 @@ public class CompileOptions
                 OptLevel = LLVMCodeGenOptLevel.LLVMCodeGenLevelNone;
         }
     }
+
+    [Option("emit-ir", HelpText = "writes IR to file")]
+    public bool emitIR { get; set; }
+
+    [Option(
+        'a',
+        "assembly",
+        HelpText = "option to generate a assembly file appears in /Shank-assembly/ directory"
+    )]
+    public bool Assembly { get; set; }
+
+    [Option("print-ir", HelpText = "prints IR code gen in console appears in /Shank-IR/ directory")]
+    public bool printIR { get; set; }
+
+    [Option(
+        'S',
+        "compile-off",
+        HelpText = "no exe or object file will be produced here but you may generate .s, .ll files",
+        Default = false
+    )]
+    public bool CompileOff { get; set; }
 }
 
 [Verb("Interpret", isDefault: false)]
@@ -77,7 +98,7 @@ public class CommandLineArgsParser
             .WithParsed<CompileOptions>(options => RunCompiler(options, program))
             .WithParsed<InterptOptions>(options => RunInterptrer(options, program))
             .WithParsed<CompilePracticeOptions>(options => RunCompilePractice(options, program))
-            .WithNotParsed(errors => Console.WriteLine("Error"));
+            .WithNotParsed(errors => throw new Exception($"option {args[0]} is invalid"));
     }
 
     public void RunCompiler(CompileOptions options, ProgramNode program)
@@ -90,7 +111,6 @@ public class CommandLineArgsParser
 
         Interpreter.Modules = program.Modules;
         Interpreter.StartModule = program.GetStartModuleSafe();
-        Console.WriteLine(options.OutFile);
         a.CodeGen(options, program);
     }
 
