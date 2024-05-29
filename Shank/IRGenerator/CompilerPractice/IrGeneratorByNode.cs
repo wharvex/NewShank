@@ -2,7 +2,7 @@
 using Shank.ASTNodes;
 using Shank.Interfaces;
 
-namespace Shank.IRGenerator;
+namespace Shank.IRGenerator.CompilerPractice;
 
 public static class IrGeneratorByNode
 {

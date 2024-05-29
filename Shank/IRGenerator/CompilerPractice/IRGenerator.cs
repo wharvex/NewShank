@@ -1,7 +1,7 @@
 using LLVMSharp.Interop;
 using Shank.Interfaces;
 
-namespace Shank.IRGenerator;
+namespace Shank.IRGenerator.CompilerPractice;
 
 public class IrGenerator
 {
@@ -156,11 +156,10 @@ public class IrGenerator
     ///
     /// TODO: This method should eventually be able to handle multiple return types.
     /// </summary>
-    /// <param name="varNodes"></param>
+    /// <param name="vns"></param>
     /// <returns></returns>
-    private LLVMTypeRef GetReturnType(List<VariableNode> varNodes) =>
-        varNodes
-            .Where(vn => !vn.IsConstant)
+    private LLVMTypeRef GetReturnType(IEnumerable<VariableNode> vns) =>
+        vns.Where(vn => !vn.IsConstant)
             .Select(vn => GetLlvmTypeFromShankType(vn.Type))
             .FirstOrDefault(LlvmContext.VoidType);
 
