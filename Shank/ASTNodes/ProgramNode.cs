@@ -78,10 +78,7 @@ public class ProgramNode : ASTNode
     {
         foreach (var keyValuePair in Modules)
         {
-            foreach (var modulesValue in Modules.Values)
-            {
-                modulesValue.VisitStatement(visitor, context, builder, module);
-            }
+            keyValuePair.Value.VisitStatement(visitor, context, builder, module);
         }
     }
 
