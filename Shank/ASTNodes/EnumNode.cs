@@ -20,7 +20,7 @@ public class EnumNode : ASTNode
     }
 
     public override LLVMValueRef Visit(
-        Visitor visitor,
+        LLVMVisitor visitor,
         Context context,
         LLVMBuilderRef builder,
         LLVMModuleRef module

@@ -11,7 +11,7 @@ public class BuiltInFunctionNode : CallableNode
     public bool IsVariadic = false;
 
     public override LLVMValueRef Visit(
-        Visitor visitor,
+        LLVMVisitor visitor,
         Context context,
         LLVMBuilderRef builder,
         LLVMModuleRef module

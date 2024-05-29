@@ -33,6 +33,7 @@ public class AssignmentNode : StatementNode
     }
 
     public override void VisitStatement(
+        LLVMVisitor visitor,
         Context context,
         LLVMBuilderRef builder,
         LLVMModuleRef module
@@ -44,7 +45,7 @@ public class AssignmentNode : StatementNode
             throw new Exception($"tried to mutate non mutable variable {Target.Name}");
         }
         builder.BuildStore(
-            Expression.Visit(context.GetExprFromType(llvmValue), context, builder, module),
+            Expression.Visit(visitor, context, builder, module),
             llvmValue.ValueRef
         );
     }

@@ -382,12 +382,12 @@ public class ModuleNode : StatementNode
         return Tests;
     }
 
-    public void VisitStatement(Context context, LLVMBuilderRef builder, LLVMModuleRef module)
+    public void VisitStatement(LLVMVisitor visitor, Context context, LLVMBuilderRef builder, LLVMModuleRef module)
     {
         // TODO: compile types
         // generate function prototypes
-        GetFunctionsAsList().ForEach(f => f.VisitPrototype(context, module));
+        GetFunctionsAsList().ForEach(f => f.VisitPrototype(context, module)); 
         GetFunctionsAsList()
-            .ForEach(f => f.Visit(new IntegerExprVisitor(), context, builder, module));
+            .ForEach(f => f.Visit(visitor, context, builder, module));
     }
 }

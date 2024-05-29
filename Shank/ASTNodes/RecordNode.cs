@@ -47,12 +47,7 @@ public class RecordNode : ASTNode
         return ParentModuleName ?? throw new Exception("Parent module name of RecordNode is null.");
     }
 
-    public override LLVMValueRef Visit(
-        Visitor visitor,
-        Context context,
-        LLVMBuilderRef builder,
-        LLVMModuleRef module
-    )
+    public override LLVMValueRef Visit(LLVMVisitor visitor, Context context, LLVMBuilderRef builder, LLVMModuleRef module)
     {
         throw new NotImplementedException();
     }

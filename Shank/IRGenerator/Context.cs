@@ -1,4 +1,5 @@
 using LLVMSharp.Interop;
+using Shank.ASTNodes;
 using Shank.ExprVisitors;
 
 namespace Shank;
@@ -15,6 +16,10 @@ public class LLVMFunction
     {
         Function = module.AddFunction(name, type);
         TypeOf = type;
+    }
+
+    protected LLVMFunction()
+    {
     }
 
     public LLVMLinkage Linkage
@@ -239,32 +244,6 @@ public class Context
             : llvmTypeFromShankType;
     }
 
-    /// <summary>
-    /// helper function. it retusns the visitor type
-    /// </summary>
-    /// <param name="dataType"></param>
-    /// <returns></returns>
-    /// <exception cref="Exception"></exception>
-    public Visitor GetExprFromType(LLVMValue value)
-    {
-        /*
-
-            return new IntegerExprVisitor();
-            return new CharExprVisitor();
-            return new BoolExprVisitor();
-            return new FloatExprVisitor();
-            return new StringExprVisitor();
-            throw new Exception("undefined type");*/
-        return value switch
-        {
-            LLVMBoolean llvmBoolean => new BoolExprVisitor(),
-            LLVMCharacter llvmCharacter => new CharExprVisitor(),
-            LLVMInteger llvmInteger => new IntegerExprVisitor(),
-            LLVMReal llvmReal => new FloatExprVisitor(),
-            LLVMString llvmString => new StringExprVisitor(),
-            _ => throw new ArgumentOutOfRangeException(nameof(value))
-        };
-    }
 
     /// <summary>
     /// gets the varaible

@@ -33,6 +33,7 @@ public class IfNode : StatementNode
     }
 
     public override void VisitStatement(
+        LLVMVisitor visitor,
         Context context,
         LLVMBuilderRef builder,
         LLVMModuleRef module
@@ -48,23 +49,23 @@ public class IfNode : StatementNode
         // and we visit(compile) the IfNode for when the condition is false if needed, followed by a goto to the after branch
         // note we could make this a bit better by checking if next is null and then make the conditional branch to after block in the false cas
         {
-            var condition = Expression.Visit(new BoolExprVisitor(), context, builder, module);
+            var condition = Expression.Visit(visitor, context, builder, module);
             var ifBlock = context.CurrentFunction.AppendBasicBlock("if block");
             var elseBlock = context.CurrentFunction.AppendBasicBlock("else block");
             var afterBlock = context.CurrentFunction.AppendBasicBlock("after if statement");
             builder.BuildCondBr(condition, ifBlock, elseBlock);
 
             builder.PositionAtEnd(ifBlock);
-            Children.ForEach(c => c.VisitStatement(context, builder, module));
+            Children.ForEach(c => c.VisitStatement(visitor, context, builder, module));
             builder.BuildBr(afterBlock);
             builder.PositionAtEnd(elseBlock);
-            NextIfNode?.VisitStatement(context, builder, module);
+            NextIfNode?.VisitStatement(visitor, context, builder, module);
             builder.BuildBr(afterBlock);
             builder.PositionAtEnd(afterBlock);
         }
         else
         {
-            Children.ForEach(c => c.VisitStatement(context, builder, module));
+            Children.ForEach(c => c.VisitStatement(visitor, context, builder, module));
         }
     }
 }

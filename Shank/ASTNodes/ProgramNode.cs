@@ -69,36 +69,23 @@ public class ProgramNode : ASTNode
         };
     }
 
-    public void Visit(Context context, LLVMBuilderRef builder, LLVMModuleRef module)
+    public new void VisitProgram(
+        
+        LLVMVisitor visitor,
+        Context context, LLVMBuilderRef builder, LLVMModuleRef module)
     {
         foreach (var keyValuePair in Modules)
         {
             foreach (var modulesValue in Modules.Values)
             {
-                modulesValue.VisitStatement(context, builder, module);
+                modulesValue.VisitStatement(visitor, context, builder, module);
             }
         }
     }
 
-    public override LLVMValueRef Visit(
-        Visitor visitor,
-        Context context,
-        LLVMBuilderRef builder,
-        LLVMModuleRef module
-    )
+
+    public override LLVMValueRef Visit(LLVMVisitor visitor, Context context, LLVMBuilderRef builder, LLVMModuleRef module)
     {
-        // context = new Context(StartModule.Functions, );
-        // Modules.
-        foreach (var keyValuePair in Modules)
-        {
-            foreach (var modulesValue in Modules.Values)
-            {
-                modulesValue.Visit(new IntegerExprVisitor(), context, builder, module);
-            }
-        }
-
-        throw new Exception();
-
-        // Context context = new Context(StartModule.Visit(visitor,));
+        throw new NotImplementedException();
     }
 }

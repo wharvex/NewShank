@@ -57,6 +57,7 @@ public class FunctionCallNode : StatementNode, ILlvmTranslatable
     }
 
     public override void VisitStatement(
+        LLVMVisitor visitor,
         Context context,
         LLVMBuilderRef builder,
         LLVMModuleRef module
@@ -74,7 +75,7 @@ public class FunctionCallNode : StatementNode, ILlvmTranslatable
             throw new Exception($"call to {Name} has a mismatch of mutability");
         }
 
-        var parameters = Parameters.Select(p => p.Visit(null, context, builder, module));
+        var parameters = Parameters.Select(p => p.Visit(visitor, context, builder, module));
         builder.BuildCall2(function.TypeOf, function.Function, parameters.ToArray());
     }
 

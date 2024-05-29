@@ -18,13 +18,13 @@ public class BooleanExpressionNode : ASTNode
     public ASTNode Right { get; init; }
 
     public override LLVMValueRef Visit(
-        Visitor visitor,
+        LLVMVisitor visitor,
         Context context,
         LLVMBuilderRef builder,
         LLVMModuleRef module
     )
     {
-        return visitor.Accept(this, context, builder, module);
+        return visitor.Visit(this);
     }
 
     public override string ToString()
