@@ -8,10 +8,46 @@ public class IrGenerator
     private List<string> ValidFuncs { get; } = ["validForLlvm"];
     private ProgramNode AstRoot { get; }
 
+    /// <summary>
+    /// "The Context is an opaque object that owns a lot of core LLVM data structures, such as the
+    /// type and constant value tables."
+    /// ~ https://llvm.org/docs/tutorial/MyFirstLanguageFrontend/LangImpl03.html
+    /// </summary>
+    private LLVMContextRef LlvmContext { get; }
+
+    /// <summary>
+    /// "The Module is an LLVM construct that contains functions and global variables. In many ways,
+    /// it is the top-level structure that the LLVM IR uses to contain code. It will own the memory
+    /// for all of the IR that we generate."
+    /// ~ https://llvm.org/docs/tutorial/MyFirstLanguageFrontend/LangImpl03.html
+    /// </summary>
+    public LLVMModuleRef LlvmModule { get; }
+
+    /// <summary>
+    /// "The Builder object is a helper object that makes it easy to generate LLVM instructions.
+    /// Instances of the LLVMBuilderRef class keep track of the current place to insert instructions
+    /// and has methods to create new instructions."
+    /// ~ https://llvm.org/docs/tutorial/MyFirstLanguageFrontend/LangImpl03.html
+    /// </summary>
+    public LLVMBuilderRef LlvmBuilder { get; }
+
+    /// <summary>
+    /// Needed to make Shank's `write' builtin work.
+    /// </summary>
+    public LLVMTypeRef PrintfFuncType { get; }
+
     public IrGenerator(ProgramNode astRoot)
     {
         AstRoot = astRoot;
-        ModuleInit();
+        LlvmContext = LLVMContextRef.Create();
+        LlvmModule = LlvmContext.CreateModuleWithName("root");
+        LlvmBuilder = LlvmContext.CreateBuilder();
+
+        PrintfFuncType = LLVMTypeRef.CreateFunction(
+            LlvmContext.VoidType,
+            new[] { LLVMTypeRef.CreatePointer(LlvmContext.Int8Type, 0) },
+            true
+        );
     }
 
     public void GenerateIr()
@@ -128,18 +164,7 @@ public class IrGenerator
             .Select(vn => GetLlvmTypeFromShankType(vn.Type))
             .FirstOrDefault(LlvmContext.VoidType);
 
-    private void ModuleInit()
-    {
-        LlvmContext = LLVMContextRef.Create();
-        LlvmModule = LlvmContext.CreateModuleWithName("root");
-        LlvmBuilder = LlvmContext.CreateBuilder();
-
-        PrintfFuncType = LLVMTypeRef.CreateFunction(
-            LlvmContext.VoidType,
-            new[] { LLVMTypeRef.CreatePointer(LlvmContext.Int8Type, 0) },
-            true
-        );
-    }
+    private void ModuleInit() { }
 
     private LLVMTypeRef GetLlvmTypeFromShankType(VariableNode.DataType dataType) =>
         dataType switch
@@ -151,36 +176,4 @@ public class IrGenerator
             VariableNode.DataType.Character => LlvmContext.Int8Type,
             _ => LlvmContext.Int32Type,
         };
-
-    /// <summary>
-    /// The LLVMContextRef owns and manages the core "global" data of LLVM's core infrastructure,
-    /// including the type and constant "uniquing" tables.
-    /// </summary>
-    private LLVMContextRef LlvmContext { get; set; }
-
-    /// <summary>
-    /// A Module instance is used to store all the information related to an LLVM module.
-    ///
-    /// Modules are the top level container of all other LLVM Intermediate Representation (IR)
-    /// objects.
-    ///
-    /// Each module directly contains a list of global variables, a list of functions, a list of
-    /// libraries (or other modules) it depends on, a symbol table, and various data about the
-    /// target's characteristics.
-    ///
-    /// A module maintains a GlobalList object that is used to hold all constant references to
-    /// global variables in the module.
-    ///
-    /// When a global variable is destroyed, it should have no entries in the GlobalList.
-    /// </summary>
-    public LLVMModuleRef LlvmModule { get; set; }
-
-    /// <summary>
-    /// Provides uniform API for creating instructions and inserting them into a BasicBlock, either
-    /// at the end of a BasicBlock, or at a specific iterator location in a block.
-    /// </summary>
-    public LLVMBuilderRef LlvmBuilder { get; set; }
-
-    public LLVMTypeRef PrintfFuncType { get; set; }
-    private LLVMTypeRef _printfRetType;
 }
