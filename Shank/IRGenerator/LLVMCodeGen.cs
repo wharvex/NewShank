@@ -44,32 +44,35 @@ public class LLVMCodeGen
         //use the clang drivers to get something like {"-O3 emit-llvm "}
         var out_string = "";
 
-        if (!compileOptions.CompileToObj)
+        if (!compileOptions.CompileOff)
         {
-            if (!Directory.Exists("bin"))
-                Directory.CreateDirectory("bin");
-            targetMachine.TryEmitToFile(
-                module,
-                "bin/a.o",
-                LLVMCodeGenFileType.LLVMObjectFile,
-                out out_string
-            );
-            Process link = new Process();
-            link.StartInfo.FileName = "ld";
-            link.StartInfo.Arguments = $" bin/a.o -o {compileOptions.OutFile} ";
-            link.Start();
-            link.WaitForExit();
-            File.Delete("bin/a.o");
-            Directory.Delete("bin");
-        }
-        else
-        {
-            targetMachine.TryEmitToFile(
-                module,
-                compileOptions.OutFile,
-                LLVMCodeGenFileType.LLVMObjectFile,
-                out out_string
-            );
+            if (!compileOptions.CompileToObj)
+            {
+                if (!Directory.Exists("bin"))
+                    Directory.CreateDirectory("bin");
+                targetMachine.TryEmitToFile(
+                    module,
+                    "bin/a.o",
+                    LLVMCodeGenFileType.LLVMObjectFile,
+                    out out_string
+                );
+                Process link = new Process();
+                link.StartInfo.FileName = "ld";
+                link.StartInfo.Arguments = $" bin/a.o -o {compileOptions.OutFile} ";
+                link.Start();
+                link.WaitForExit();
+                File.Delete("bin/a.o");
+                Directory.Delete("bin");
+            }
+            else
+            {
+                targetMachine.TryEmitToFile(
+                    module,
+                    compileOptions.OutFile,
+                    LLVMCodeGenFileType.LLVMObjectFile,
+                    out out_string
+                );
+            }
         }
 
         if (compileOptions.Assembly)
@@ -101,8 +104,11 @@ public class LLVMCodeGen
         }
 
         Console.WriteLine("");
-        Console.WriteLine("code successfully compiled");
-        Console.WriteLine($"executable path: {compileOptions.OutFile} ");
+        if (!compileOptions.CompileOff)
+            if (compileOptions.CompileToObj)
+                Console.WriteLine($"Object output path: {compileOptions.OutFile} ");
+            else
+                Console.WriteLine($"executable output path: {compileOptions.OutFile} ");
         if (compileOptions.emitIR)
             Console.WriteLine(
                 $"LLVM-IR file path: Shank-IR/{Path.ChangeExtension(compileOptions.OutFile, ".ll")}"
