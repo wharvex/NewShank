@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 using CommandLine;
 using LLVMSharp.Interop;
 using Shank;
-using Shank.IRGenerator;
+using Shank.IRGenerator.CompilerPractice;
 
 [Verb("Compile", isDefault: false)]
 public class CompileOptions

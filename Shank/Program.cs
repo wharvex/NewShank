@@ -1,6 +1,4 @@
-﻿using Shank.IRGenerator;
-
-namespace Shank;
+﻿namespace Shank;
 
 public class Program
 {
