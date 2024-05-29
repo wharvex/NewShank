@@ -18,9 +18,7 @@ public class LLVMFunction
         TypeOf = type;
     }
 
-    protected LLVMFunction()
-    {
-    }
+    protected LLVMFunction() { }
 
     public LLVMLinkage Linkage
     {
@@ -243,7 +241,6 @@ public class Context
             ? LLVMTypeRef.CreatePointer((LLVMTypeRef)llvmTypeFromShankType, 0)
             : llvmTypeFromShankType;
     }
-
 
     /// <summary>
     /// gets the varaible

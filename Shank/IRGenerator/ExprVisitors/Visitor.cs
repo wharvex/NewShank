@@ -14,36 +14,18 @@ public abstract class Visitor<T>
     /// <param name="module"></param>
     /// <returns>an LLVM value ref containing an i64 int</returns>
     /// <exception cref="Exception"></exception>
-    public abstract T Visit(
-        IntNode node
-    );
+    public abstract T Visit(IntNode node);
 
-    public abstract T Visit(
-        FloatNode node
-    );
+    public abstract T Visit(FloatNode node);
 
-    public abstract T Visit(
-        VariableReferenceNode node 
-    );
+    public abstract T Visit(VariableReferenceNode node);
 
-    public abstract T Visit(
-        CharNode node 
-    );
+    public abstract T Visit(CharNode node);
 
-    public abstract T Visit(
-        BoolNode node
-    );
+    public abstract T Visit(BoolNode node);
 
-    public abstract T Visit(
-        StringNode node
-    );
-    public abstract T Visit(
-        MathOpNode node
-    );
-    public abstract T Visit(
-        BooleanExpressionNode node
-    );
-    public abstract T Visit(
-        RecordNode node
-    );
+    public abstract T Visit(StringNode node);
+    public abstract T Visit(MathOpNode node);
+    public abstract T Visit(BooleanExpressionNode node);
+    public abstract T Visit(RecordNode node);
 }

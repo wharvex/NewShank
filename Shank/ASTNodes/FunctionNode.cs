@@ -631,27 +631,27 @@ public class FunctionNode : CallableNode
     // we separate function prototype compilation from function body
     public void VisitPrototype(Context context, LLVMModuleRef module)
     {
-            // we could also return errors from the return type as it is not being used any where
-            var fnRetTy = module.Context.Int32Type;
-            var args = ParameterVariables.Select(
-                s =>
-                    context.GetLLVMTypeFromShankType(s.Type, !s.IsConstant, s.UnknownType)
-                    ?? throw new CompilerException($"type of parameter {s.Name} is not found", s.Line)
-            );
-            var arguementMutability = ParameterVariables.Select(p => !p.IsConstant);
-            Name = (Name.Equals("start") ? "main" : Name);
-            var function = module.addFunction(
-                Name,
-                LLVMTypeRef.CreateFunction(fnRetTy, args.ToArray()),
-                arguementMutability
-            );
-            foreach (var (param, index) in ParameterVariables.Select((param, index) => (param, index)))
-            {
-                var llvmParam = function.GetParam((uint)index);
-                var name = param.GetNameSafe();
-                llvmParam.Name = name;
-            }
-            context.addFunction(Name, function);
+        // we could also return errors from the return type as it is not being used any where
+        var fnRetTy = module.Context.Int32Type;
+        var args = ParameterVariables.Select(
+            s =>
+                context.GetLLVMTypeFromShankType(s.Type, !s.IsConstant, s.UnknownType)
+                ?? throw new CompilerException($"type of parameter {s.Name} is not found", s.Line)
+        );
+        var arguementMutability = ParameterVariables.Select(p => !p.IsConstant);
+        Name = (Name.Equals("start") ? "main" : Name);
+        var function = module.addFunction(
+            Name,
+            LLVMTypeRef.CreateFunction(fnRetTy, args.ToArray()),
+            arguementMutability
+        );
+        foreach (var (param, index) in ParameterVariables.Select((param, index) => (param, index)))
+        {
+            var llvmParam = function.GetParam((uint)index);
+            var name = param.GetNameSafe();
+            llvmParam.Name = name;
+        }
+        context.addFunction(Name, function);
     }
 
     public override LLVMValueRef Visit(

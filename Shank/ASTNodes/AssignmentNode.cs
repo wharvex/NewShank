@@ -44,10 +44,7 @@ public class AssignmentNode : StatementNode
         {
             throw new Exception($"tried to mutate non mutable variable {Target.Name}");
         }
-        builder.BuildStore(
-            Expression.Visit(visitor, context, builder, module),
-            llvmValue.ValueRef
-        );
+        builder.BuildStore(Expression.Visit(visitor, context, builder, module), llvmValue.ValueRef);
     }
 
     public override string ToString()

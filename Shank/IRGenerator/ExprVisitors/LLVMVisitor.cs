@@ -34,8 +34,7 @@ public class LLVMVisitor : Visitor<LLVMValueRef>
             return Types.INTEGER;
         else if (typeRef == LLVMTypeRef.Double)
             return Types.FLOAT;
-        else if
-            (typeRef == _context.StringType)
+        else if (typeRef == _context.StringType)
             return Types.STRING;
         else
             throw new Exception("undefined type");
@@ -128,7 +127,6 @@ public class LLVMVisitor : Visitor<LLVMValueRef>
                 _ => throw new Exception("unsupported operation")
             };
         }
-
         else if (_types(L.TypeOf) == Types.STRING)
         {
             if (node.Op == ASTNode.MathOpType.plus)

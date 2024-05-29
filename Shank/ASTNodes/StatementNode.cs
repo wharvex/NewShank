@@ -48,5 +48,4 @@ public class StatementNode : ASTNode
         // statement nodes ues visit statement as they do not return something
         throw new NotImplementedException();
     }
-
 }
