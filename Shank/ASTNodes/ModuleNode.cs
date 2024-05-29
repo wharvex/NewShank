@@ -381,7 +381,8 @@ public class ModuleNode : StatementNode
     {
         return Tests;
     }
-public void VisitStatement(
+
+    public void VisitStatement(
         LLVMVisitor visitor,
         Context context,
         LLVMBuilderRef builder,
@@ -390,8 +391,8 @@ public void VisitStatement(
     {
         // this happens after visiting the prototypes
         // TODO: compile types
-            
-        
+
+
         // first we tell the context that were the current module
         context.SetCurrentModule(Name);
         // then we add to our scope all our imports
@@ -410,10 +411,7 @@ public void VisitStatement(
         GetFunctionsAsList().ForEach(f => f.Visit(visitor, context, builder, module));
     }
 
-    public void VisitPrototype(
-        Context context,
-        LLVMModuleRef module
-    )
+    public void VisitPrototype(Context context, LLVMModuleRef module)
     {
         // TODO: compile types
         // generate function prototypes

@@ -149,12 +149,13 @@ public struct CFuntions
 
 public class Module
 {
-    
     public Dictionary<string, LLVMShankFunction> Functions { get; } = new();
     public Dictionary<string, LLVMTypeRef> CustomTypes { get; } = new();
+
     // global variables, constants or variables defined at the top level
     public Dictionary<string, LLVMValue> GloabalVariables { get; } = new();
 }
+
 public class Context
 {
     public LLVMTypeRef StringType = LLVMTypeRef.CreateStruct(
@@ -174,12 +175,12 @@ public class Context
     public Dictionary<string, LLVMShankFunction> BuiltinFunctions { get; } = new();
     public Dictionary<string, LLVMValue> Variables { get; set; } = new();
 
-
     public void SetCurrentModule(string module) => CurrentModule = Modules[module];
+
     public Module CurrentModule { get; private set; }
 
     public Dictionary<string, Module> Modules = new();
-    
+
     /// <summary>
     /// converts shank type to LLVM type
     /// </summary>
