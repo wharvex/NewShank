@@ -36,6 +36,19 @@ public class CompileOptions
                 OptLevel = LLVMCodeGenOptLevel.LLVMCodeGenLevelNone;
         }
     }
+
+    [Option("emit-ir", HelpText = "writes IR to file")]
+    public bool emitIR { get; set; }
+
+    [Option(
+        'a',
+        "assembly",
+        HelpText = "option to generate a assembly file appears in /Shank-assembly/ directory"
+    )]
+    public bool Assembly { get; set; }
+
+    [Option("print-ir", HelpText = "prints IR code gen in console appears in /Shank-IR/ directory")]
+    public bool printIR { get; set; }
 }
 
 [Verb("Interpret", isDefault: false)]
