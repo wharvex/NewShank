@@ -76,6 +76,12 @@ public class ProgramNode : ASTNode
         LLVMModuleRef module
     )
     {
+    // add all modules to the context
+        context.setModules(Modules.Keys);
+        foreach (var keyValuePair in Modules)
+        {
+            keyValuePair.Value.VisitPrototype(context, module);
+        }
         foreach (var keyValuePair in Modules)
         {
             keyValuePair.Value.VisitStatement(visitor, context, builder, module);

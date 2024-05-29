@@ -147,6 +147,14 @@ public struct CFuntions
     public LLVMFunction malloc { get; }
 }
 
+public class Module
+{
+    
+    public Dictionary<string, LLVMShankFunction> Functions { get; } = new();
+    public Dictionary<string, LLVMTypeRef> CustomTypes { get; } = new();
+    // global variables, constants or variables defined at the top level
+    public Dictionary<string, LLVMValue> GloabalVariables { get; } = new();
+}
 public class Context
 {
     public LLVMTypeRef StringType = LLVMTypeRef.CreateStruct(
@@ -163,14 +171,15 @@ public class Context
     public ModuleNode moduleNode { get; set; }
     public CFuntions CFuntions { get; }
     public LLVMFunction CurrentFunction { get; set; }
-    public Dictionary<string, LLVMTypeRef> CustomTypes { get; } = new();
-    public Dictionary<string, LLVMShankFunction> Functions { get; } = new();
     public Dictionary<string, LLVMShankFunction> BuiltinFunctions { get; } = new();
     public Dictionary<string, LLVMValue> Variables { get; set; } = new();
 
-    // global variables, constants or variables defined at the top level
-    private Dictionary<string, LLVMValue> GloabalVariables { get; } = new();
 
+    public void SetCurrentModule(string module) => CurrentModule = Modules[module];
+    public Module CurrentModule { get; private set; }
+
+    public Dictionary<string, Module> Modules = new();
+    
     /// <summary>
     /// converts shank type to LLVM type
     /// </summary>
@@ -191,9 +200,9 @@ public class Context
             VariableNode.DataType.Character => LLVMTypeRef.Int8,
             // if it's a custom type we look it up in the context
             VariableNode.DataType.Reference when unknownType != null
-                => LLVMTypeRef.CreatePointer(CustomTypes[unknownType], 0),
+                => LLVMTypeRef.CreatePointer(CurrentModule.CustomTypes[unknownType], 0),
             VariableNode.DataType.Array => LLVMTypeRef.Void,
-            _ when unknownType != null => CustomTypes[unknownType],
+            _ when unknownType != null => CurrentModule.CustomTypes[unknownType],
             _ => null
         };
     }
@@ -250,7 +259,7 @@ public class Context
     /// <exception cref="Exception"></exception>
     public LLVMValue GetVaraible(string name)
     {
-        if (GloabalVariables.TryGetValue(name, out var GlobalVar))
+        if (CurrentModule.GloabalVariables.TryGetValue(name, out var GlobalVar))
         {
             return GlobalVar;
         }
@@ -275,12 +284,12 @@ public class Context
     /// <exception cref="Exception">if it already exists</exception>
     public void AddVaraible(string name, LLVMValue value, bool isGlobal)
     {
-        if (GloabalVariables.ContainsKey(name) || Variables.ContainsKey(name))
+        if (CurrentModule.GloabalVariables.ContainsKey(name) || Variables.ContainsKey(name))
             throw new Exception("error");
         else
         {
             if (isGlobal)
-                GloabalVariables.Add(name, value);
+                CurrentModule.GloabalVariables.Add(name, value);
             else
                 Variables.Add(name, value);
         }
@@ -296,7 +305,7 @@ public class Context
 
     public void addFunction(string name, LLVMShankFunction function)
     {
-        Functions[name] = function;
+        CurrentModule.Functions[name] = function;
     }
 
     public void addBuiltinFunction(string name, LLVMShankFunction function)
@@ -306,10 +315,15 @@ public class Context
 
     public LLVMShankFunction? GetFunction(string name)
     {
-        return Functions.ContainsKey(name)
-            ? Functions[name]
+        return CurrentModule.Functions.ContainsKey(name)
+            ? CurrentModule.Functions[name]
             : BuiltinFunctions.TryGetValue(name, out var function)
                 ? function
                 : null;
+    }
+
+    public void setModules(IEnumerable<String> modulesKeys)
+    {
+        Modules = modulesKeys.Select(moduleName => (moduleName, new Module())).ToDictionary();
     }
 }
