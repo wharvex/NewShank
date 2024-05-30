@@ -36,5 +36,5 @@ public abstract class Visitor<T>
     public abstract void Visit(WhileNode node);
 
     public abstract void Visit(AssignmentNode node);
-    public abstract void Visit(EnumNode node);
+    public abstract void Visit(EnumNode node); //
 }
