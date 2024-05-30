@@ -228,4 +228,19 @@ public class LLVMVisitor : Visitor<LLVMValueRef>
     {
         throw new NotImplementedException();
     }
+
+    public override void Visit(AssignmentNode node)
+    {
+        var llvmValue = _context.GetVaraible(node.Target.Name);
+        if (!llvmValue.IsMutable)
+        {
+            throw new Exception($"tried to mutate non mutable variable {node.Target.Name}");
+        }
+
+        _builder.BuildStore(
+            node.Expression.Visit(this, _context, _builder, _module),
+            llvmValue.ValueRef
+        );
+        //do something with type information we could either utilize an enum or something along the lines
+    }
 }

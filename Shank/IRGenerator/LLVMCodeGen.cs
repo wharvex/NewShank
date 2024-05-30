@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using LLVMSharp.Interop;
 using Shank.ExprVisitors;
 
@@ -62,13 +63,22 @@ public class LLVMCodeGen
                     LLVMCodeGenFileType.LLVMObjectFile,
                     out out_string
                 );
+                StringBuilder LinkerArgs = new StringBuilder();
+                compileOptions
+                    .LinkedFiles.ToList()
+                    .ForEach(n =>
+                    {
+                        LinkerArgs.Append($"-l{n} ");
+                    });
                 Process link = new Process();
-                link.StartInfo.FileName = "ld";
-                link.StartInfo.Arguments = $" bin/a.o -o {compileOptions.OutFile} ";
+                link.StartInfo.FileName = compileOptions.LinkerOption;
+                link.StartInfo.Arguments =
+                    $" bin/a.o -L {compileOptions.LinkedPath} {LinkerArgs.ToString()} -o {compileOptions.OutFile} ";
                 link.Start();
                 link.WaitForExit();
                 File.Delete("bin/a.o");
                 Directory.Delete("bin");
+                Console.WriteLine("test");
             }
             else
             {

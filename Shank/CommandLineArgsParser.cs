@@ -57,6 +57,19 @@ public class CompileOptions
         Default = false
     )]
     public bool CompileOff { get; set; }
+
+    [Option(
+        "linker",
+        HelpText = "add whatever linker you feel if non specified it defaults to the GNU linker (ld)",
+        Default = "ld"
+    )]
+    public string LinkerOption { get; set; }
+
+    [Option('l', HelpText = "for linked files")]
+    public IEnumerable<string> LinkedFiles { get; set; }
+
+    [Option('L', "LinkPath", Default = "/", HelpText = "for a link path")]
+    public string LinkedPath { get; set; }
 }
 
 [Verb("Interpret", isDefault: false)]
@@ -98,7 +111,7 @@ public class CommandLineArgsParser
             .WithParsed<CompileOptions>(options => RunCompiler(options, program))
             .WithParsed<InterptOptions>(options => RunInterptrer(options, program))
             .WithParsed<CompilePracticeOptions>(options => RunCompilePractice(options, program))
-            .WithNotParsed(errors => throw new Exception($"option {args[0]} is invalid"));
+            .WithNotParsed(errors => throw new Exception(errors.ToString()));
     }
 
     public void RunCompiler(CompileOptions options, ProgramNode program)

@@ -28,4 +28,5 @@ public abstract class Visitor<T>
     public abstract T Visit(MathOpNode node);
     public abstract T Visit(BooleanExpressionNode node);
     public abstract T Visit(RecordNode node);
+    public abstract void Visit(AssignmentNode node);
 }
