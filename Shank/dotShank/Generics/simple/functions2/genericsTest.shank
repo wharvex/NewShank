@@ -2,4 +2,4 @@
     write anything
 
 define start()
-	write "hello"
+	writeAnything "hello"

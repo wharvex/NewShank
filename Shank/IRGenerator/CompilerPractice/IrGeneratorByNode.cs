@@ -32,4 +32,29 @@ public static class IrGeneratorByNode
                 throw new NotImplementedException();
         }
     }
+
+    public static LLVMTypeRef CreateTypeRefFromShankNode(IrGenerator irGen, ASTNode node)
+    {
+        switch (node)
+        {
+            case VariableNode vn:
+                return CreateTypeRefFromShankType(irGen.LlvmContext, vn.Type);
+            default:
+                throw new NotImplementedException();
+        }
+    }
+
+    private static LLVMTypeRef CreateTypeRefFromShankType(
+        LLVMContextRef llvmContext,
+        VariableNode.DataType dataType
+    ) =>
+        dataType switch
+        {
+            VariableNode.DataType.Integer => llvmContext.Int64Type,
+            VariableNode.DataType.Real => llvmContext.DoubleType,
+            VariableNode.DataType.String => LLVMTypeRef.CreatePointer(llvmContext.Int8Type, 0),
+            VariableNode.DataType.Boolean => llvmContext.Int1Type,
+            VariableNode.DataType.Character => llvmContext.Int8Type,
+            _ => throw new NotImplementedException()
+        };
 }
