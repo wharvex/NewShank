@@ -1,0 +1,7 @@
+module typeMismatch
+
+define bar(f: string)
+    write f
+    
+define start()
+    bar 5

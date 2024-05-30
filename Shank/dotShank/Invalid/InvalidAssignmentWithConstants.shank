@@ -1,0 +1,7 @@
+module invalidAssignmentToConst
+
+define start(bar: integer)
+constants baz = "ff"
+    baz := "f"
+    
+  

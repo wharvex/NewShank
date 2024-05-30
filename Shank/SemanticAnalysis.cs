@@ -101,7 +101,11 @@ public class SemanticAnalysis
                         an.Target,
                         parentModule
                     );
-
+                    if (targetDeclaration.IsConstant)
+                    {
+                        throw new SemanticErrorException(
+                            $"Variable {an.Target.Name} is not mutable, you cannot assign to it.", an);
+                    }
                     //GetTargetTypeForAssignmentCheck can now maybe return null, we catch it here
                     if (targetTypeNull == null)
                         throw new Exception("Couldn't find target type");
@@ -141,7 +145,7 @@ public class SemanticAnalysis
                 {
                     foundFunction = true;
                     if (parentModule.getFunctions()[fn.Name] is not BuiltInFunctionNode)
-                        CheckParameterRanges(
+                       fn.InstiatedGenerics = CheckFunctionCall(
                             fn.Parameters,
                             variables,
                             (FunctionNode)parentModule.getFunctions()[fn.Name]
@@ -154,7 +158,7 @@ public class SemanticAnalysis
                         if (Modules[import.Key].getExportNames().Contains(fn.Name))
                         {
                             foundFunction = true;
-                            CheckParameterRanges(
+                       fn.InstiatedGenerics = CheckFunctionCall(
                                 fn.Parameters,
                                 variables,
                                 (FunctionNode)parentModule.Imported[fn.Name]
@@ -190,66 +194,108 @@ public class SemanticAnalysis
         }
     }
 
-    private static void CheckParameterRanges(
+    // This is why something like type usage/IType is useful, because when we just return the datatype
+    // for instiation we do lose type information, such as what type of record, or enum, what is the inner type of the array?
+    // and IType is the best because it only stores whats neccesary for a givern type
+    private static Dictionary<String, VariableNode.DataType> CheckFunctionCall(
         List<ParameterNode> param,
         Dictionary<string, VariableNode> variables,
         FunctionNode fn
     )
     {
-        var sourceParams = fn.ParameterVariables;
-        for (int i = 0; i < param.Count; i++)
+     // TODO: overloads and default parameters might have different arrity   
+    return fn.ParameterVariables.Zip(param).SelectMany(paramAndArg =>
+    {
+        var param = paramAndArg.First;
+        var arguement = paramAndArg.Second;
+        // assumption ranges are already checked to be only on types that allow them
+        CheckParameterRange(param, arguement, variables, fn);
+        CheckParameterMutability(param, arguement, variables, fn); 
+        return TypeCheckAndInstiateGenericParameter(param, arguement, variables, fn);
+    }).ToDictionary();
+        
+    }
+
+    
+    
+    public static IEnumerable<(String, VariableNode.DataType)> TypeCheckAndInstiateGenericParameter(
+        VariableNode param,
+        ParameterNode argument,
+        Dictionary<string, VariableNode> variables,
+        FunctionNode fn
+    )
+    {
+        // check that the arguement passed in has the right type for its parameter
+        // and also if the parameter has any generics try to instiate them
+        return [];
+    }
+
+    private static void CheckParameterMutability(
+        VariableNode param,
+        ParameterNode argument,
+        Dictionary<string, VariableNode> variables,
+        FunctionNode fn
+    )
+    {
+        // check that the arguement passed in has the right type of mutablility for its parameter
+    }
+    private static void CheckParameterRange(
+        VariableNode param,
+        ParameterNode argument,
+        Dictionary<string, VariableNode> variables,
+        FunctionNode fn
+        
+    )
+    {
+        if (argument.Variable is not null)
         {
-            if (param[i].Variable is not null)
+            var vrn = argument.Variable;
+            var from = variables[vrn.Name].From;
+            var to = variables[vrn.Name].To;
+            var targetFrom = param.From;
+            var targetTo = param.To;
+            if (from is null || targetFrom is null)
+                return;
+            if (from is IntNode)
             {
-                var vrn = param[i].Variable;
-                var from = variables[vrn.Name].From;
-                var to = variables[vrn.Name].To;
-                var targetFrom = sourceParams[i].From;
-                var targetTo = sourceParams[i].To;
-                if (from is null || targetFrom is null)
-                    continue;
-                if (from is IntNode)
-                {
-                    if (
-                        ((IntNode)from).Value < ((IntNode)targetFrom).Value
-                        || ((IntNode)to).Value > ((IntNode)targetTo).Value
-                    )
-                        throw new Exception($"Mismatched range in a call to {fn.Name}");
-                }
-                else
-                {
-                    if (
-                        ((FloatNode)from).Value < ((FloatNode)targetFrom).Value
-                        || ((FloatNode)to).Value < ((FloatNode)targetFrom).Value
-                    )
-                        throw new Exception($"Mismatched range in a call to {fn.Name}");
-                }
+                if (
+                    ((IntNode)from).Value < ((IntNode)targetFrom).Value
+                    || ((IntNode)to).Value > ((IntNode)targetTo).Value
+                )
+                    throw new Exception($"Mismatched range in a call to {fn.Name}");
             }
             else
             {
-                var actualFrom = GetMaxRange(param[i].Constant, variables);
-                var actualTo = GetMinRange(param[i].Constant, variables);
-                var targetFrom = sourceParams[i].From;
-                var targetTo = sourceParams[i].To;
-                if (targetFrom is null)
-                    continue;
-
-                if (targetFrom is IntNode)
-                {
-                    if (
-                        ((IntNode)targetFrom).Value > actualFrom
-                        || ((IntNode)targetTo).Value < actualTo
-                    )
-                        throw new Exception($"Mismatched range in a call to {fn.Name}");
-                }
-                else
-                {
-                    if (
-                        ((FloatNode)targetFrom).Value < actualFrom
-                        || ((FloatNode)targetTo).Value < actualTo
-                    )
-                        throw new Exception($"Mismatched range in a call to {fn.Name}");
-                }
+                if (
+                    ((FloatNode)from).Value < ((FloatNode)targetFrom).Value
+                    || ((FloatNode)to).Value < ((FloatNode)targetFrom).Value
+                )
+                    throw new Exception($"Mismatched range in a call to {fn.Name}");
+            }
+        }
+        else
+        {
+            var actualFrom = GetMaxRange(argument.Constant, variables);
+            var actualTo = GetMinRange(argument.Constant, variables);
+            var targetFrom = param.From;
+            var targetTo = param.To;
+            if (targetFrom is null)
+                return;
+            if (targetFrom is IntNode)
+            {
+                if (
+                    ((IntNode)targetFrom).Value > actualFrom
+                    || ((IntNode)targetTo).Value < actualTo
+                )
+                    throw new Exception($"Mismatched range in a call to {fn.Name}");
+            }
+            else
+            {
+                if (
+                    ((FloatNode)targetFrom).Value < actualFrom
+                    || ((FloatNode)targetTo).Value < actualTo
+                )
+                    throw new Exception($"Mismatched range in a call to {fn.Name}");
             }
         }
     }
