@@ -26,6 +26,8 @@ public class EnumNode : ASTNode
         LLVMModuleRef module
     )
     {
-        throw new NotImplementedException();
+        visitor.Visit(this);
+        throw new Exception("not implemented uet");
+        // return b
     }
 }

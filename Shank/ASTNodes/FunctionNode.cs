@@ -661,32 +661,6 @@ public class FunctionNode : CallableNode
         LLVMModuleRef module
     )
     {
-        // should be already created, because the visit prototype method should have been called first
-        var function = (LLVMFunction)context.GetFunction(Name)!;
-        context.CurrentFunction = function;
-        context.ResetLocal();
-        foreach (var (param, index) in ParameterVariables.Select((param, index) => (param, index)))
-        {
-            var llvmParam = function.GetParam((uint)index);
-            var name = param.GetNameSafe();
-            var parameter = context.newVariable(param.Type, param.UnknownType)(
-                llvmParam,
-                !param.IsConstant
-            );
-
-            context.AddVaraible(name, parameter, false);
-        }
-
-        function.Linkage = LLVMLinkage.LLVMExternalLinkage;
-
-        var block = function.AppendBasicBlock("entry");
-        builder.PositionAtEnd(block);
-
-        LocalVariables.ForEach(variable => variable.Visit(visitor, context, builder, module));
-        Statements.ForEach(s => s.VisitStatement(visitor, context, builder, module));
-        // return 0 to singify ok
-        builder.BuildRet(LLVMValueRef.CreateConstInt(module.Context.Int32Type, (ulong)0));
-        context.ResetLocal();
-        return function.Function;
+        return visitor.Visit(this);
     }
 }

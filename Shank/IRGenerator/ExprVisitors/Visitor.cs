@@ -29,11 +29,12 @@ public abstract class Visitor<T>
     public abstract T Visit(BooleanExpressionNode node);
     public abstract T Visit(RecordNode node);
     public abstract void Visit(IfNode node);
-    public abstract void Visit(FunctionNode node);
+    public abstract T Visit(FunctionNode node);
 
     public abstract void Visit(FunctionCallNode node);
 
     public abstract void Visit(WhileNode node);
 
     public abstract void Visit(AssignmentNode node);
+    public abstract void Visit(EnumNode node);
 }

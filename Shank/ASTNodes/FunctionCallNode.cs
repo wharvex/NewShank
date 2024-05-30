@@ -67,20 +67,21 @@ public class FunctionCallNode : StatementNode, ILlvmTranslatable
         LLVMModuleRef module
     )
     {
-        var function =
-            context.GetFunction(Name) ?? throw new Exception($"function {Name} not found");
-        // if any arguement is not mutable, but is required to be mutable
-        if (
-            function
-                .ArguementMutability.Zip(Parameters.Select(p => p.IsVariable))
-                .Any(a => a is { First: true, Second: false })
-        )
-        {
-            throw new Exception($"call to {Name} has a mismatch of mutability");
-        }
-
-        var parameters = Parameters.Select(p => p.Visit(visitor, context, builder, module));
-        builder.BuildCall2(function.TypeOf, function.Function, parameters.ToArray());
+        visitor.Visit(this);
+        // var function =
+        //     context.GetFunction(Name) ?? throw new Exception($"function {Name} not found");
+        // // if any arguement is not mutable, but is required to be mutable
+        // if (
+        //     function
+        //         .ArguementMutability.Zip(Parameters.Select(p => p.IsVariable))
+        //         .Any(a => a is { First: true, Second: false })
+        // )
+        // {
+        //     throw new Exception($"call to {Name} has a mismatch of mutability");
+        // }
+        //
+        // var parameters = Parameters.Select(p => p.Visit(visitor, context, builder, module));
+        // builder.BuildCall2(function.TypeOf, function.Function, parameters.ToArray());
     }
 
     public string GetNameForLlvm() =>

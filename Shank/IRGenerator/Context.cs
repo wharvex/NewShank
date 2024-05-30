@@ -199,6 +199,7 @@ public class Context
             VariableNode.DataType.String => StringType,
             VariableNode.DataType.Boolean => LLVMTypeRef.Int1,
             VariableNode.DataType.Character => LLVMTypeRef.Int8,
+            VariableNode.DataType.Enum => LLVMTypeRef.Int32,
             // if it's a custom type we look it up in the context
             VariableNode.DataType.Reference when unknownType != null
                 => LLVMTypeRef.CreatePointer(CurrentModule.CustomTypes[unknownType], 0),
