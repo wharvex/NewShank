@@ -1,0 +1,10 @@
+module test2
+export add, sub
+
+define add(a, b : integer)
+variables p : integer
+	p := 0
+
+define sub(a, b : integer)
+variables p : integer
+    p := 0

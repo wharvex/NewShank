@@ -63,7 +63,7 @@ public class Program
         program.SetStartModule();
 
         // Save the pre-SA AST to $env:APPDATA\ShankDebugOutput4.json
-        OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForProgramNode(program), 4);
+        OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForProgramNode(program), "ast");
 
         // Check the program for semantic issues.
         SemanticAnalysis.CheckModules(program);
@@ -81,8 +81,8 @@ public class Program
         var lines = File.ReadAllLines(inPath);
         tokens.AddRange(lexer.Lex(lines));
 
-        // Save the tokens to $env:APPDATA\ShankDebugOutput1.json
-        OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForTokenList(tokens), 1);
+        // Save the tokens to $env:APPDATA\ShankDebugOutput_tokens.json
+        OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForTokenList(tokens), "tokens");
 
         var parser = new Parser(tokens);
 
