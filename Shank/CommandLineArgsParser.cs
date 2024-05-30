@@ -106,8 +106,8 @@ public class CommandLineArgsParser
         LLVMCodeGen a = new LLVMCodeGen();
         GetFiles(options.InputFile).ForEach(ip => ScanAndParse(ip, program));
         program.SetStartModule();
-        OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForProgramNode(program), 4);
         SemanticAnalysis.CheckModules(program);
+        OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForProgramNode(program), "ast");
 
         Interpreter.Modules = program.Modules;
         Interpreter.StartModule = program.GetStartModuleSafe();
@@ -119,7 +119,7 @@ public class CommandLineArgsParser
         // scan and parse :p
         GetFiles(options.file).ForEach(ip => ScanAndParse(ip, program));
         program.SetStartModule();
-        OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForProgramNode(program), 4);
+        OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForProgramNode(program), "ast");
         BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
         SemanticAnalysis.CheckModules(program);
 
@@ -135,7 +135,7 @@ public class CommandLineArgsParser
     {
         GetFiles(options.GetFileSafe()).ForEach(ip => ScanAndParse(ip, program));
         program.SetStartModule();
-        OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForProgramNode(program), 4);
+        OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForProgramNode(program), "ast");
         BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
         SemanticAnalysis.CheckModules(program);
         var irGen = new IrGenerator(program);
@@ -167,8 +167,8 @@ public class CommandLineArgsParser
         var lines = File.ReadAllLines(inPath);
         tokens.AddRange(lexer.Lex(lines));
 
-        // Save the tokens to $env:APPDATA\ShankDebugOutput1.json
-        OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForTokenList(tokens), 1);
+        // Save the tokens to $env:APPDATA\ShankDebugOutput_tokens.json
+        OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForTokenList(tokens), "tokens");
 
         var parser = new Shank.Parser(tokens);
 

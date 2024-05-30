@@ -91,11 +91,6 @@ public class SemanticAnalysis
             {
                 if (variables.TryGetValue(an.Target.Name, out var targetDeclaration))
                 {
-                    OutputHelper.DebugPrintTxt(
-                        string.Join(", ", an.Target.GetNestedNamesAsList()),
-                        3
-                    );
-
                     var targetTypeNull = GetTargetTypeForAssignmentCheck(
                         targetDeclaration,
                         an.Target,

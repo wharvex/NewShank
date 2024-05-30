@@ -5,6 +5,7 @@ namespace Shank.IRGenerator.CompilerPractice;
 
 public class IrGenerator
 {
+    private bool Arb { get; set; } = false;
     private List<string> ValidFuncs { get; } = ["validForLlvm"];
     private ProgramNode AstRoot { get; }
 
@@ -74,13 +75,24 @@ public class IrGenerator
             var llvmStatementValueRefs = shankStartFunc
                 .Statements.Select(sn => IrGeneratorByNode.CreateValueRef(this, sn))
                 .ToList();
-            llvmStatementValueRefs.ForEach(lsvr => OutputHelper.DebugPrintTxt(lsvr.Name, 7));
         }
         else
         {
             HelloWorld(printfFunc, "hello invalid");
         }
         LlvmBuilder.BuildRetVoid();
+
+        OutputHelper.DebugPrintTxt(
+            "aaa: " + LlvmContext.GetConstString("hi", true).Kind,
+            "llvm_stuff"
+        );
+        OutputHelper.DebugPrintTxt(
+            "bbb: " + LlvmBuilder.BuildGlobalStringPtr("hi2" + "\n").Kind,
+            "llvm_stuff",
+            true
+        );
+        var x = LlvmModule.GetNamedFunction("blah");
+        OutputHelper.DebugPrintTxt("ccc: " + x.Name.Length, "llvm_stuff", true);
 
         // Verify all the functions.
         mainFunc.VerifyFunction(LLVMVerifierFailureAction.LLVMPrintMessageAction);
@@ -97,6 +109,8 @@ public class IrGenerator
 
     private LLVMValueRef CreateFunc(CallableNode callableNode)
     {
+        //LlvmFuncWrapper = callableNode is FunctionNode ? new LlvmFuncWrapper(LLVMTypeRef.CreateFunction( LlvmContext.Int1Type, GetParamTypes(callableNode.ParameterVariables) ), LlvmModule.AddFunction( ((ILlvmTranslatable)callableNode).GetNameForLlvm(), funcType ); )
+
         LLVMValueRef func;
 
         // Builtin functions are only CallableNodes.
@@ -126,18 +140,16 @@ public class IrGenerator
         return func;
     }
 
-    /// <summary>
-    /// Creates the given Shank-Builtin function and adds it to the module. Returns the function and
-    /// a boolean indicating whether the function is "native" to LLVM. For example, "printf" is
-    /// native to LLVM because when added to the module, it automatically has the ability to print
-    /// to stdout. This means you don't need to give it a basic block with statements.
-    /// </summary>
-    /// <param name="builtin"></param>
-    /// <returns></returns>
     private (LLVMValueRef, bool) CreateBuiltin(CallableNode builtin) =>
         builtin.Name switch
         {
-            "write" => (LlvmModule.AddFunction("printf", PrintfFuncType), true),
+            "write"
+                //=> new LlvmFuncWrapper(
+                //    PrintfFuncType,
+                //    LlvmModule.AddFunction("printf", PrintfFuncType),
+                //    true
+                //),
+                => (LlvmModule.AddFunction("printf", PrintfFuncType), true),
             _
                 => throw new NotImplementedException(
                     "Creating an LLVM function for Shank-builtin `"
@@ -162,8 +174,6 @@ public class IrGenerator
         vns.Where(vn => !vn.IsConstant)
             .Select(vn => GetLlvmTypeFromShankType(vn.Type))
             .FirstOrDefault(LlvmContext.VoidType);
-
-    private void ModuleInit() { }
 
     private LLVMTypeRef GetLlvmTypeFromShankType(VariableNode.DataType dataType) =>
         dataType switch
