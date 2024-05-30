@@ -14,7 +14,7 @@ public class IrGenerator
     /// type and constant value tables."
     /// ~ https://llvm.org/docs/tutorial/MyFirstLanguageFrontend/LangImpl03.html
     /// </summary>
-    private LLVMContextRef LlvmContext { get; }
+    public LLVMContextRef LlvmContext { get; }
 
     /// <summary>
     /// "The Module is an LLVM construct that contains functions and global variables. In many ways,
@@ -92,7 +92,8 @@ public class IrGenerator
             true
         );
         var x = LlvmModule.GetNamedFunction("blah");
-        OutputHelper.DebugPrintTxt("ccc: " + x.Name.Length, "llvm_stuff", true);
+        OutputHelper.DebugPrintTxt("blah name length: " + x.Name.Length, "llvm_stuff", true);
+        OutputHelper.DebugPrintTxt("blah is poison: " + x.IsPoison, "llvm_stuff", true);
 
         // Verify all the functions.
         mainFunc.VerifyFunction(LLVMVerifierFailureAction.LLVMPrintMessageAction);
@@ -183,6 +184,6 @@ public class IrGenerator
             VariableNode.DataType.String => LLVMTypeRef.CreatePointer(LlvmContext.Int8Type, 0),
             VariableNode.DataType.Boolean => LlvmContext.Int1Type,
             VariableNode.DataType.Character => LlvmContext.Int8Type,
-            _ => LlvmContext.Int32Type,
+            _ => throw new NotImplementedException()
         };
 }
