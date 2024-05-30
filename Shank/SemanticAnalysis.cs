@@ -146,7 +146,8 @@ public class SemanticAnalysis
                         fn.InstiatedGenerics = CheckFunctionCall(
                             fn.Parameters,
                             variables,
-                            (FunctionNode)parentModule.getFunctions()[fn.Name]
+                            (FunctionNode)parentModule.getFunctions()[fn.Name],
+                            fn
                         );
                 }
                 else
@@ -159,7 +160,8 @@ public class SemanticAnalysis
                             fn.InstiatedGenerics = CheckFunctionCall(
                                 fn.Parameters,
                                 variables,
-                                (FunctionNode)parentModule.Imported[fn.Name]
+                                (FunctionNode)parentModule.Imported[fn.Name],
+                                fn
                             );
                         }
                     }
@@ -196,11 +198,9 @@ public class SemanticAnalysis
     // This is why something like type usage/IType is useful, because when we just return the datatype
     // for instiation we do lose type information, such as what type of record, or enum, what is the inner type of the array?
     // and IType is the best because it only stores whats neccesary for a givern type
-    private static Dictionary<String, VariableNode.DataType> CheckFunctionCall(
-        List<ParameterNode> param,
+    private static Dictionary<string, VariableNode.DataType> CheckFunctionCall(List<ParameterNode> param,
         Dictionary<string, VariableNode> variables,
-        FunctionNode fn
-    )
+        FunctionNode fn, FunctionCallNode functionCallNode)
     {
         // TODO: overloads and default parameters might have different arrity
         return fn.ParameterVariables.Zip(param)
@@ -208,9 +208,12 @@ public class SemanticAnalysis
             {
                 var param = paramAndArg.First;
                 var arguement = paramAndArg.Second;
+                
+                var actualArguement =
+                    arguement.Variable == null ? arguement.Constant : variables[arguement.Variable.Name];
                 // assumption ranges are already checked to be only on types that allow them
                 CheckParameterRange(param, arguement, variables, fn);
-                CheckParameterMutability(param, arguement, variables, fn);
+                CheckParameterMutability(param, arguement, variables, functionCallNode);
                 return TypeCheckAndInstiateGenericParameter(param, arguement, variables, fn);
             })
             .ToDictionary();
@@ -228,14 +231,35 @@ public class SemanticAnalysis
         return [];
     }
 
+    // assumptions if the arguement is a variable it assumed to be there already from previous check in check function call 
     private static void CheckParameterMutability(
         VariableNode param,
         ParameterNode argument,
         Dictionary<string, VariableNode> variables,
-        FunctionNode fn
+        FunctionCallNode fn
     )
     {
         // check that the arguement passed in has the right type of mutablility for its parameter
+        if (argument.IsVariable)
+        {
+            VariableNode? lookedUpArguement =
+                variables.GetValueOrDefault((argument.Variable ?? throw new SemanticErrorException($"Cannot pass a non variable as being var to a function call", fn)).Name);
+            if (lookedUpArguement.IsConstant)
+            {
+                throw new SemanticErrorException(
+                    $"cannot pass non var argument when you annotate an argument var", fn);
+            }
+
+            if (param.IsConstant)
+            {
+               // TODO: warning of unused var annotation 
+            }
+        }
+        else if (!param.IsConstant)
+        {
+                throw new SemanticErrorException(
+                    $"cannot pass non var argument when function is expecting it to be var", fn);
+        }
     }
 
     private static void CheckParameterRange(
