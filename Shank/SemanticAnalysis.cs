@@ -428,16 +428,21 @@ public class SemanticAnalysis
             return i.Value;
         if (node is FloatNode f)
             return f.Value;
+        if (node is StringNode s)
+            return s.Value.Length;
         if (node is VariableReferenceNode vrn)
         {
             if (variables[vrn.Name].To is null || variables[vrn.Name].From is null)
                 throw new Exception(
                     "Ranged variables can only be assigned variables with a range."
                 );
-            if (variables[vrn.Name].Type is VariableNode.DataType.Integer)
+            var dataType = variables[vrn.Name].Type;
+            if (dataType is VariableNode.DataType.Integer)
                 return ((IntNode)variables[vrn.Name].To).Value;
-            else
+            else if (dataType is VariableNode.DataType.Real)
                 return ((FloatNode)variables[vrn.Name].To).Value;
+            else if (dataType is VariableNode.DataType.String)
+                return ((StringNode)variables[vrn.Name].To).Value.Length;
         }
 
         throw new Exception("Unrecognized node type in math expression while checking range");
@@ -466,16 +471,21 @@ public class SemanticAnalysis
             return i.Value;
         if (node is FloatNode f)
             return f.Value;
+        if (node is StringNode s)
+            return s.Value.Length;
         if (node is VariableReferenceNode vrn)
         {
             if (variables[vrn.Name].To is null || variables[vrn.Name].From is null)
                 throw new Exception(
                     "Ranged variables can only be assigned variables with a range."
                 );
-            if (variables[vrn.Name].Type is VariableNode.DataType.Integer)
-                return ((IntNode)variables[vrn.Name].From).Value;
-            else
-                return ((FloatNode)variables[vrn.Name].From).Value;
+            var dataType = variables[vrn.Name].Type;
+            if (dataType is VariableNode.DataType.Integer)
+                return ((IntNode)variables[vrn.Name].To).Value;
+            else if (dataType is VariableNode.DataType.Real)
+                return ((FloatNode)variables[vrn.Name].To).Value;
+            else if (dataType is VariableNode.DataType.String)
+                return ((StringNode)variables[vrn.Name].To).Value.Length;
         }
 
         throw new Exception("Unrecognized node type in math expression while checking range");
