@@ -229,6 +229,63 @@ public class LLVMVisitor : Visitor<LLVMValueRef>
         throw new NotImplementedException();
     }
 
+    public override void Visit(IfNode node)
+    {
+        if (node.Expression != null)
+        // if the condition is null then it's an else statement, which can only happen after an if statement
+        // so is it's an if statement, and since we compile if statements recursively, like how we parse them
+        // we know that we already created the block for the else statement, when compiling the if part
+        // so we just compile the statements in the else block
+        // if the condition is not null we compile the condition, create two blocks one for if it's true, and for when the condition is false
+        // we then just compile the statements for when the condition is true under the true block, followed by a goto to an after block
+        // and we visit(compile) the IfNode for when the condition is false if needed, followed by a goto to the after branch
+        // note we could make this a bit better by checking if next is null and then make the conditional branch to after block in the false cas
+        {
+            var condition = node.Expression.Visit(this, _context, _builder, _module);
+            var ifBlock = _context.CurrentFunction.AppendBasicBlock("if block");
+            var elseBlock = _context.CurrentFunction.AppendBasicBlock("else block");
+            var afterBlock = _context.CurrentFunction.AppendBasicBlock("after if statement");
+            _builder.BuildCondBr(condition, ifBlock, elseBlock);
+
+            _builder.PositionAtEnd(ifBlock);
+            node.Children.ForEach(c => c.VisitStatement(this, _context, _builder, _module));
+            _builder.BuildBr(afterBlock);
+            _builder.PositionAtEnd(elseBlock);
+            node.NextIfNode?.VisitStatement(this, _context, _builder, _module);
+            _builder.BuildBr(afterBlock);
+            _builder.PositionAtEnd(afterBlock);
+        }
+        else
+        {
+            node.Children.ForEach(c => c.VisitStatement(this, _context, _builder, _module));
+        }
+    }
+
+    public override void Visit(FunctionNode node)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void Visit(FunctionCallNode node)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void Visit(WhileNode node)
+    {
+        var whileCond = _context.CurrentFunction.AppendBasicBlock("while.cond");
+        var whileBody = _context.CurrentFunction.AppendBasicBlock("while.body");
+        var whileDone = _context.CurrentFunction.AppendBasicBlock("while.done");
+        _builder.BuildBr(whileCond);
+        _builder.PositionAtEnd(whileCond);
+        var condition = node.Expression.Visit(this, _context, _builder, _module);
+        _builder.BuildCondBr(condition, whileBody, whileDone);
+        _builder.PositionAtEnd(whileBody);
+        node.Children.ForEach(c => c.VisitStatement(this, _context, _builder, _module));
+        _builder.BuildBr(whileCond);
+        _builder.PositionAtEnd(whileDone);
+    }
+
     public override void Visit(AssignmentNode node)
     {
         var llvmValue = _context.GetVaraible(node.Target.Name);

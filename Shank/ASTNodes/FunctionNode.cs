@@ -681,6 +681,7 @@ public class FunctionNode : CallableNode
 
         var block = function.AppendBasicBlock("entry");
         builder.PositionAtEnd(block);
+
         LocalVariables.ForEach(variable => variable.Visit(visitor, context, builder, module));
         Statements.ForEach(s => s.VisitStatement(visitor, context, builder, module));
         // return 0 to singify ok

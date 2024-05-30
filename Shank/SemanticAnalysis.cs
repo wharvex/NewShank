@@ -103,6 +103,7 @@ public class SemanticAnalysis
                             an
                         );
                     }
+
                     //GetTargetTypeForAssignmentCheck can now maybe return null, we catch it here
                     if (targetTypeNull == null)
                         throw new Exception("Couldn't find target type");
@@ -163,6 +164,7 @@ public class SemanticAnalysis
                         }
                     }
                 }
+
                 if (
                     GetStartModuleSafe().getFunctions().ContainsKey((string)fn.Name)
                     && GetStartModuleSafe().getFunctions()[(string)fn.Name] is BuiltInFunctionNode
@@ -335,6 +337,7 @@ public class SemanticAnalysis
                         return;
                     float upper = GetMaxRange(an.Expression, variablesLookup);
                     float lower = GetMinRange(an.Expression, variablesLookup);
+
                     if (lower < from.Value || upper > to.Value)
                         throw new Exception(
                             $"The variable {an.Target.Name} can only be assigned expressions that won't overstep its range."
@@ -348,6 +351,7 @@ public class SemanticAnalysis
                         return;
                     int upper = (int)GetMaxRange(an.Expression, variablesLookup);
                     int lower = (int)GetMinRange(an.Expression, variablesLookup);
+
                     if (lower < from.Value || upper > to.Value)
                         throw new Exception(
                             $"The variable {an.Target.Name} can only be assigned expressions that wont overstep its range."
@@ -379,6 +383,7 @@ public class SemanticAnalysis
                     return GetMaxRange(mon.Right, variables) - 1;
             }
         }
+
         if (node is IntNode i)
             return i.Value;
         if (node is FloatNode f)
@@ -394,6 +399,7 @@ public class SemanticAnalysis
             else
                 return ((FloatNode)variables[vrn.Name].To).Value;
         }
+
         throw new Exception("Unrecognized node type in math expression while checking range");
     }
 
@@ -415,6 +421,7 @@ public class SemanticAnalysis
                     return 0;
             }
         }
+
         if (node is IntNode i)
             return i.Value;
         if (node is FloatNode f)
@@ -430,6 +437,7 @@ public class SemanticAnalysis
             else
                 return ((FloatNode)variables[vrn.Name].From).Value;
         }
+
         throw new Exception("Unrecognized node type in math expression while checking range");
     }
 
@@ -515,10 +523,12 @@ public class SemanticAnalysis
                                 );
                             break;
                         }
+
                         throw new Exception(
                             "Enums can only be compared to enums or enum variables of the same type."
                         );
                     }
+
                     break;
             }
         }
@@ -738,12 +748,14 @@ public class SemanticAnalysis
                                 break;
                             }
                         }
+
                         if (e.Value.EnumElements.Contains(vrn.Name))
                         {
                             enumDefinition = e.Value;
                             break;
                         }
                     }
+
                     foreach (var e in parentModule.Imported)
                     {
                         if (e.Value is not EnumNode)
@@ -783,6 +795,7 @@ public class SemanticAnalysis
                                 + targetType
                         );
                 }
+
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(anExpression));
@@ -807,6 +820,7 @@ public class SemanticAnalysis
                 if (module.Value.getExportNames().Any())
                     throw new Exception("Cannot export from an unnamed module.");
             }
+
             //checking exports
             foreach (string exportName in module.Value.getExportNames())
             {
@@ -819,6 +833,7 @@ public class SemanticAnalysis
                         $"Cannot export {exportName} from the module {module.Key} as it wasn't defined in that file."
                     );
             }
+
             //checking imports
             foreach (
                 KeyValuePair<string, LinkedList<string>> import in module.Value.getImportNames()
@@ -849,6 +864,7 @@ public class SemanticAnalysis
                     }
                 }
             }
+
             CheckFunctions(module.Value.getFunctions(), module.Value);
         }
     }
@@ -870,6 +886,7 @@ public class SemanticAnalysis
                 if (module.Value.getExportNames().Any())
                     throw new Exception("Cannot export from an unnamed module.");
             }
+
             //checking exports
             foreach (string exportName in module.Value.getExportNames())
             {
@@ -882,6 +899,7 @@ public class SemanticAnalysis
                         $"Cannot export {exportName} from the module {module.Key} as it wasn't defined in that file."
                     );
             }
+
             //checking imports
             foreach (
                 KeyValuePair<string, LinkedList<string>> import in module.Value.getImportNames()
@@ -912,6 +930,7 @@ public class SemanticAnalysis
                     }
                 }
             }
+
             CheckFunctions(module.Value.getFunctions(), module.Value);
         }
     }
@@ -930,6 +949,7 @@ public class SemanticAnalysis
                 return StartModule;
             }
         }
+
         return null;
     }
 
@@ -1044,6 +1064,7 @@ public class SemanticAnalysis
                 {
                     continue;
                 }
+
                 FunctionNode currentFunction = (FunctionNode)function.Value;
                 foreach (VariableNode variable in currentFunction.LocalVariables)
                 {
@@ -1086,12 +1107,14 @@ public class SemanticAnalysis
                             );
                     }
                 }
+
                 foreach (var statement in currentFunction.Statements)
                 {
                     if (statement is not AssignmentNode)
                     {
                         continue;
                     }
+
                     var assignment = (AssignmentNode)statement;
                     foreach (var variable in currentFunction.LocalVariables)
                     {

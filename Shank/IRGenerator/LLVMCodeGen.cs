@@ -47,16 +47,13 @@ public class LLVMCodeGen
             LLVMRelocMode.LLVMRelocPIC,
             LLVMCodeModel.LLVMCodeModelMedium
         );
-
-        //use the clang drivers to get something like {"-O3 emit-llvm "}
         var out_string = "";
-
         if (!compileOptions.CompileOff)
         {
             if (!compileOptions.CompileToObj)
             {
-                if (!Directory.Exists("bin"))
-                    Directory.CreateDirectory("bin");
+                if (!Directory.Exists("Shank-bin"))
+                    Directory.CreateDirectory("Shank-bin");
                 targetMachine.TryEmitToFile(
                     module,
                     "bin/a.o",
@@ -73,12 +70,11 @@ public class LLVMCodeGen
                 Process link = new Process();
                 link.StartInfo.FileName = compileOptions.LinkerOption;
                 link.StartInfo.Arguments =
-                    $" bin/a.o -L {compileOptions.LinkedPath} {LinkerArgs.ToString()} -o {compileOptions.OutFile} ";
+                    $" Shank-bin/a.o -L {compileOptions.LinkedPath} {LinkerArgs.ToString()} -o {compileOptions.OutFile} ";
                 link.Start();
                 link.WaitForExit();
-                File.Delete("bin/a.o");
-                Directory.Delete("bin");
-                Console.WriteLine("test");
+                File.Delete("Shank-bin/a.o");
+                Directory.Delete("Shank-bin");
             }
             else
             {

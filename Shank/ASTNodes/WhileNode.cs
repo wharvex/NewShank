@@ -37,16 +37,17 @@ public class WhileNode : StatementNode
         // when the condition happens after the body, we can jump immediatly back to the body, but in a while loop
         // where we need to check the condition first, we can't just jump back to the start (the condition checking),
         // so we need an extra block to jump to
-        var whileCond = context.CurrentFunction.AppendBasicBlock("while.cond");
-        var whileBody = context.CurrentFunction.AppendBasicBlock("while.body");
-        var whileDone = context.CurrentFunction.AppendBasicBlock("while.done");
-        builder.BuildBr(whileCond);
-        builder.PositionAtEnd(whileCond);
-        var condition = Expression.Visit(visitor, context, builder, module);
-        builder.BuildCondBr(condition, whileBody, whileDone);
-        builder.PositionAtEnd(whileBody);
-        Children.ForEach(c => c.VisitStatement(visitor, context, builder, module));
-        builder.BuildBr(whileCond);
-        builder.PositionAtEnd(whileDone);
+        visitor.Visit(this);
+        // var whileCond = context.CurrentFunction.AppendBasicBlock("while.cond");
+        // var whileBody = context.CurrentFunction.AppendBasicBlock("while.body");
+        // var whileDone = context.CurrentFunction.AppendBasicBlock("while.done");
+        // builder.BuildBr(whileCond);
+        // builder.PositionAtEnd(whileCond);
+        // var condition = Expression.Visit(visitor, context, builder, module);
+        // builder.BuildCondBr(condition, whileBody, whileDone);
+        // builder.PositionAtEnd(whileBody);
+        // Children.ForEach(c => c.VisitStatement(visitor, context, builder, module));
+        // builder.BuildBr(whileCond);
+        // builder.PositionAtEnd(whileDone);
     }
 }
