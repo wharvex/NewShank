@@ -99,7 +99,9 @@ public class SemanticAnalysis
                     if (targetDeclaration.IsConstant)
                     {
                         throw new SemanticErrorException(
-                            $"Variable {an.Target.Name} is not mutable, you cannot assign to it.", an);
+                            $"Variable {an.Target.Name} is not mutable, you cannot assign to it.",
+                            an
+                        );
                     }
                     //GetTargetTypeForAssignmentCheck can now maybe return null, we catch it here
                     if (targetTypeNull == null)
@@ -140,7 +142,7 @@ public class SemanticAnalysis
                 {
                     foundFunction = true;
                     if (parentModule.getFunctions()[fn.Name] is not BuiltInFunctionNode)
-                       fn.InstiatedGenerics = CheckFunctionCall(
+                        fn.InstiatedGenerics = CheckFunctionCall(
                             fn.Parameters,
                             variables,
                             (FunctionNode)parentModule.getFunctions()[fn.Name]
@@ -153,7 +155,7 @@ public class SemanticAnalysis
                         if (Modules[import.Key].getExportNames().Contains(fn.Name))
                         {
                             foundFunction = true;
-                       fn.InstiatedGenerics = CheckFunctionCall(
+                            fn.InstiatedGenerics = CheckFunctionCall(
                                 fn.Parameters,
                                 variables,
                                 (FunctionNode)parentModule.Imported[fn.Name]
@@ -198,21 +200,20 @@ public class SemanticAnalysis
         FunctionNode fn
     )
     {
-     // TODO: overloads and default parameters might have different arrity   
-    return fn.ParameterVariables.Zip(param).SelectMany(paramAndArg =>
-    {
-        var param = paramAndArg.First;
-        var arguement = paramAndArg.Second;
-        // assumption ranges are already checked to be only on types that allow them
-        CheckParameterRange(param, arguement, variables, fn);
-        CheckParameterMutability(param, arguement, variables, fn); 
-        return TypeCheckAndInstiateGenericParameter(param, arguement, variables, fn);
-    }).ToDictionary();
-        
+        // TODO: overloads and default parameters might have different arrity
+        return fn.ParameterVariables.Zip(param)
+            .SelectMany(paramAndArg =>
+            {
+                var param = paramAndArg.First;
+                var arguement = paramAndArg.Second;
+                // assumption ranges are already checked to be only on types that allow them
+                CheckParameterRange(param, arguement, variables, fn);
+                CheckParameterMutability(param, arguement, variables, fn);
+                return TypeCheckAndInstiateGenericParameter(param, arguement, variables, fn);
+            })
+            .ToDictionary();
     }
 
-    
-    
     public static IEnumerable<(String, VariableNode.DataType)> TypeCheckAndInstiateGenericParameter(
         VariableNode param,
         ParameterNode argument,
@@ -234,12 +235,12 @@ public class SemanticAnalysis
     {
         // check that the arguement passed in has the right type of mutablility for its parameter
     }
+
     private static void CheckParameterRange(
         VariableNode param,
         ParameterNode argument,
         Dictionary<string, VariableNode> variables,
         FunctionNode fn
-        
     )
     {
         if (argument.Variable is not null)
