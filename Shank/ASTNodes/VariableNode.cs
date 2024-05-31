@@ -41,16 +41,17 @@ public class VariableNode : ASTNode
         ConstantsLine
     };
 
-    public DataType Type { get; set; }
+    // public DataType Type { get; set; }
+    public IType NewType { get; set; }
 
     public LLVMTypeRef GetLLVMType(Context context, DataType type) =>
         context.GetLLVMTypeFromShankType(type, false)
         ?? throw new Exception($"Type {Type} doesnt exist");
 
     // If Type is Array, then ArrayType is the type of its elements, or else it is null.
-    public DataType? ArrayType { get; set; }
+    // public DataType? ArrayType { get; set; }
 
-    public TypeUsage? ArrayTypeEnhanced { get; set; }
+    // public TypeUsage? ArrayTypeEnhanced { get; set; }
 
     /// <summary>
     /// If this variable was declared with an Identifier as its type_unit, then UnknownType is the
@@ -58,9 +59,9 @@ public class VariableNode : ASTNode
     /// If this variable was not declared with an Identifier as its type_unit, then UnknownType
     /// should be null.
     /// </summary>
-    public string? UnknownType { get; set; }
+    // public string? UnknownType { get; set; }
 
-    public List<TypeUsage>? GenericTypeArgs { get; set; }
+    // public List<TypeUsage>? GenericTypeArgs { get; set; }
 
     public bool IsConstant { get; set; }
     public ASTNode? InitialValue { get; set; }

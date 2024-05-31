@@ -776,10 +776,9 @@ public class Parser
                     new VariableNode()
                     {
                         IsConstant = isConstant,
-                        Type = VariableNode.DataType.Reference,
+                        NewType = new ReferenceType(new UnknownType(t.Value, new List<IType>())),
                         Name = n,
                         ModuleName = parentModuleName,
-                        UnknownType = t.Value,
                     }
             )
             .ToList();
@@ -790,8 +789,7 @@ public class Parser
         List<string> names,
         bool isConstant,
         string parentModuleName,
-        VariableNode.DataType type,
-        string? unknownType = null
+        IType type
     )
     {
         var ret = names
@@ -800,10 +798,9 @@ public class Parser
                     new VariableNode()
                     {
                         IsConstant = isConstant,
-                        Type = type,
+                        NewType = type,
                         Name = n,
                         ModuleName = parentModuleName,
-                        UnknownType = unknownType,
                     }
             )
             .ToList();
@@ -838,22 +835,22 @@ public class Parser
         {
             ret.ForEach(d => d.ArrayType = GetDataTypeFromTokenType(arrayType.Type));
         }
-        ret.ForEach(d => d.ArrayTypeEnhanced = GetTypeUsageFromToken(arrayType));
+        ret.ForEach(d => d.ArrayTypeEnhanced = GetTypeFromToken(arrayType));
 
         // Return the VariableNodes.
         return ret;
     }
 
-    private TypeUsage GetTypeUsageFromToken(Token t) =>
+    private IType GetTypeFromToken(Token t) =>
         t.Type switch
         {
-            Token.TokenType.Integer => new TypeUsage(VariableNode.DataType.Integer),
-            Token.TokenType.Real => new TypeUsage(VariableNode.DataType.Real),
-            Token.TokenType.Boolean => new TypeUsage(VariableNode.DataType.Boolean),
-            Token.TokenType.Character => new TypeUsage(VariableNode.DataType.Character),
-            Token.TokenType.String => new TypeUsage(VariableNode.DataType.String),
+            Token.TokenType.Integer => new IntegerType(),
+            Token.TokenType.Real => new RealType(),
+            Token.TokenType.Boolean => new BooleanType(),
+            Token.TokenType.Character => new CharacterType(),
+            Token.TokenType.String => new StringType(),
             Token.TokenType.Identifier
-                => new TypeUsage(VariableNode.DataType.Unknown, t.GetValueSafe()),
+                => new UnknownType(t.GetValueSafe()),
             _
                 => throw new NotImplementedException(
                     "Bad TokenType for generating a TypeUsage: " + t.Type
@@ -872,8 +869,7 @@ public class Parser
             names,
             isConstant,
             parentModuleName,
-            VariableNode.DataType.Unknown,
-            unknownType
+            new UnknownType(unknownType)
         );
 
         // Get the generic type arguments if they exist.
@@ -886,8 +882,12 @@ public class Parser
         // Set the GenericTypeArgs on the VariableNodes to return.
         ret.ForEach(
             vn =>
-                vn.GenericTypeArgs =
-                    typeArgs.Count > 0 ? typeArgs.Select(GetTypeUsageFromToken).ToList() : null
+            {
+                if (vn.NewType is UnknownType ty)
+                {
+                    ty.TypeParameters = typeArgs.Count > 0 ? typeArgs.Select(GetTypeFromToken).ToList() : new List<IType>();
+                }
+            }
         );
 
         // Return the VariableNodes.
@@ -1063,7 +1063,7 @@ public class Parser
                             ? new VariableNode()
                             {
                                 InitialValue = node,
-                                Type = VariableNode.DataType.Real,
+                                NewType = new RealType(),
                                 IsConstant = true,
                                 Name = name.Value ?? "",
                                 ModuleName = parentModuleName
@@ -1071,7 +1071,7 @@ public class Parser
                             : new VariableNode()
                             {
                                 InitialValue = node,
-                                Type = VariableNode.DataType.Integer,
+                                NewType = new IntegerType(),
                                 IsConstant = true,
                                 Name = name.Value ?? "",
                                 ModuleName = parentModuleName
@@ -1087,7 +1087,7 @@ public class Parser
                             new VariableNode()
                             {
                                 InitialValue = new CharNode((chr?.Value ?? " ")[0]),
-                                Type = VariableNode.DataType.Character,
+                                NewType = new CharacterType(),
                                 IsConstant = true,
                                 Name = name.Value ?? "",
                                 ModuleName = parentModuleName
@@ -1103,7 +1103,7 @@ public class Parser
                                 new VariableNode()
                                 {
                                     InitialValue = new StringNode(str?.Value ?? ""),
-                                    Type = VariableNode.DataType.String,
+                                    NewType = new StringType(),
                                     IsConstant = true,
                                     Name = name.Value ?? "",
                                     ModuleName = parentModuleName
@@ -1122,11 +1122,10 @@ public class Parser
                                         new VariableNode()
                                         {
                                             InitialValue = new StringNode(enm.Value),
-                                            Type = VariableNode.DataType.Enum,
+                                            NewType = new UnknownType(enm.Value),
                                             IsConstant = true,
                                             Name = name.Value ?? "",
                                             ModuleName = parentModuleName,
-                                            UnknownType = enm.Value
                                         }
                                     );
                                 }

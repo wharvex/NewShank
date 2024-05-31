@@ -18,4 +18,10 @@ public record struct RecordType(Dictionary<String, IType> Fields, List<string> G
 
 public record struct ArrayType(IType Inner) : IType;
 
-public record struct UnknownType(String TypeName, List<IType> TypeParameters) : IType;
+public record struct UnknownType(String TypeName, List<IType> TypeParameters) : IType
+{
+    public UnknownType(String TypeName) : this(TypeName, new List<IType>())
+    {
+    }
+}
+public record struct ReferenceType(IType inner) : IType;
