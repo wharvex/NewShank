@@ -45,10 +45,17 @@ public class IrGenerator
         LlvmBuilder = LlvmContext.CreateBuilder();
 
         PrintfFuncType = LLVMTypeRef.CreateFunction(
-            LlvmContext.VoidType,
+            LlvmContext.Int32Type,
             [LLVMTypeRef.CreatePointer(LlvmContext.Int8Type, 0)],
             true
         );
+    }
+
+    public IrGenerator(string moduleName)
+    {
+        LlvmContext = LLVMContextRef.Create();
+        LlvmModule = LlvmContext.CreateModuleWithName(moduleName);
+        LlvmBuilder = LlvmContext.CreateBuilder();
     }
 
     public void GenerateIr()
@@ -105,7 +112,33 @@ public class IrGenerator
         LlvmModule.PrintToFile(Path.Combine(OutputHelper.DocPath, "IrOutput.ll"));
     }
 
-    public void GenerateIrFlat() { }
+    public void GenerateIrFlat()
+    {
+        var writeFuncType = LLVMTypeRef.CreateFunction(
+            LlvmContext.Int32Type,
+            [LLVMTypeRef.CreatePointer(LlvmContext.Int8Type, 0)],
+            true
+        );
+        var startFuncType = LLVMTypeRef.CreateFunction(LlvmContext.Int32Type, []);
+        var writeFunc = LlvmModule.AddFunction("printf", writeFuncType);
+        var startFunc = LlvmModule.AddFunction("main", startFuncType);
+
+        var entryBlock = startFunc.AppendBasicBlock("entry");
+        LlvmBuilder.PositionAtEnd(entryBlock);
+        LlvmBuilder.BuildCall2(
+            writeFuncType,
+            writeFunc,
+            [LlvmBuilder.BuildGlobalStringPtr("hey\n")]
+        );
+        LlvmBuilder.BuildRet(LLVMValueRef.CreateConstInt(LlvmContext.Int32Type, 0));
+
+        // Verify all the functions.
+        startFunc.VerifyFunction(LLVMVerifierFailureAction.LLVMPrintMessageAction);
+        writeFunc.VerifyFunction(LLVMVerifierFailureAction.LLVMPrintMessageAction);
+
+        // Output.
+        LlvmModule.PrintToFile(Path.Combine(OutputHelper.DocPath, "IrOutput.ll"));
+    }
 
     private void HelloWorld(LLVMValueRef printfFunc, string msg)
     {

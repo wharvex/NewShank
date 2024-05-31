@@ -91,6 +91,9 @@ public class CompilePracticeOptions
     [Option('u', "ut", HelpText = "Unit test options", Default = false)]
     public bool UnitTest { get; set; }
 
+    [Option('f', "flat", HelpText = "Use flattened IR generation", Default = false)]
+    public bool Flat { get; set; }
+
     public string GetFileSafe() =>
         File ?? throw new InvalidOperationException("Expected File to not be null.");
 }
@@ -151,8 +154,16 @@ public class CommandLineArgsParser
         OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForProgramNode(program), "ast");
         BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
         SemanticAnalysis.CheckModules(program);
-        var irGen = new IrGenerator(program);
-        irGen.GenerateIr();
+        if (options.Flat)
+        {
+            var irGen = new IrGenerator("root");
+            irGen.GenerateIrFlat();
+        }
+        else
+        {
+            var irGen = new IrGenerator(program);
+            irGen.GenerateIr();
+        }
 
         Interpreter.Modules = program.Modules;
         Interpreter.StartModule = program.GetStartModuleSafe();
