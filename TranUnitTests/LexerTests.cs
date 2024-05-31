@@ -1,12 +1,13 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Shank.Tran;
 using Tran;
 
 namespace TranUnitTests
 {
     [TestClass]
-    public class UnitTest1
+    public class LexerTests
     {
         [TestMethod]
         public void Words()
