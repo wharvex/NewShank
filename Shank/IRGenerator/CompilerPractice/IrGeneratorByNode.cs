@@ -28,6 +28,8 @@ public static class IrGeneratorByNode
                 return CreateValueRef(irGen, paramNode.GetConstantSafe());
             case StringNode stringNode:
                 return irGen.LlvmBuilder.BuildGlobalStringPtr(stringNode.Value + "\n");
+            case IntNode intNode:
+                return irGen.LlvmBuilder.BuildGlobalStringPtr(intNode.Value + "\n");
             default:
                 throw new NotImplementedException();
         }

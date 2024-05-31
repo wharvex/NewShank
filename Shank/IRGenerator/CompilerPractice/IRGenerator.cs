@@ -60,6 +60,9 @@ public class IrGenerator
         var mainFunc = CreateFunc(shankStartFunc);
         var printfFunc = CreateFunc(shankStartModule.GetFromFunctionsByNameSafe("write"));
 
+        // Experiment
+        LlvmModule.AddFunction("printf", PrintfFuncType);
+
         // Create other functions only if their names appear in ValidFuncs.
         var otherFuncs = AstRoot
             .GetStartModuleSafe()
@@ -102,6 +105,8 @@ public class IrGenerator
         LlvmModule.PrintToFile(Path.Combine(OutputHelper.DocPath, "IrOutput.ll"));
     }
 
+    public void GenerateIrFlat() { }
+
     private void HelloWorld(LLVMValueRef printfFunc, string msg)
     {
         var myStr = LlvmBuilder.BuildGlobalStringPtr(msg + "\n");
@@ -124,7 +129,6 @@ public class IrGenerator
                 GetParamTypes(callableNode.ParameterVariables)
             );
 
-            // What happens if you try to create a function that already exists?
             func = LlvmModule.AddFunction(
                 ((ILlvmTranslatable)callableNode).GetNameForLlvm(),
                 funcType

@@ -21,7 +21,8 @@ function st
     "OldShankFiles/Pascals.shank", # 10
     "OldShankFiles/GCD.shank", # 11
     "Negative", # 12
-    "Minimal" # 13
+    "String", # 13
+    "Minimal" # 14
     #"Expressions",
     #"Overloads/overloadsTest.shank",
     #"Generics/complex",
