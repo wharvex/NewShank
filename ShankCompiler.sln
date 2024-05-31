@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShankUnitTests", "ShankUnit
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tran", "Tran\Tran.csproj", "{83F8DFBF-53D8-4837-B372-7D2EDAB47EB2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TranUnitTests", "TestProject1\TranUnitTests.csproj", "{EDCB8EBE-80B1-4D54-A34F-CDE7AEC42785}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{83F8DFBF-53D8-4837-B372-7D2EDAB47EB2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{83F8DFBF-53D8-4837-B372-7D2EDAB47EB2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{83F8DFBF-53D8-4837-B372-7D2EDAB47EB2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EDCB8EBE-80B1-4D54-A34F-CDE7AEC42785}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EDCB8EBE-80B1-4D54-A34F-CDE7AEC42785}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EDCB8EBE-80B1-4D54-A34F-CDE7AEC42785}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EDCB8EBE-80B1-4D54-A34F-CDE7AEC42785}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

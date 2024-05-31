@@ -1,9 +1,5 @@
 //MAKE A VARIABLE CALLED LINE SOMEWHERE HERE FOR ASTNODE and this: GetDataTypeFromConstantNodeType, and Module()
 
-using LLVMSharp;
-using Shank;
-using Shank.ASTNodes;
-
 namespace Shank.Tran;
 
 public class Parser
@@ -78,4 +74,6 @@ public class Parser
 
         return false;
     }
+
+
 }
