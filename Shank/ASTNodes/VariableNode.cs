@@ -169,23 +169,22 @@ public class VariableNode : ASTNode
     }
 
     public override LLVMValueRef Visit(
-        Visitor visitor,
+        LLVMVisitor visitor,
         Context context,
         LLVMBuilderRef builder,
         LLVMModuleRef module
     )
     {
-        string name = GetNameSafe();
+        var name = GetNameSafe();
         // TODO: only alloca when !isConstant
-        var llvmTypeFromShankType =
-            context.GetLLVMTypeFromShankType(Type, false) ?? throw new Exception("null type");
+
         LLVMValueRef v = builder.BuildAlloca(
             // isVar is false, because we are already creating it using alloca which makes it var
-            llvmTypeFromShankType,
-            GetNameSafe()
+            context.GetLLVMTypeFromShankType(Type, UnknownType) ?? throw new Exception("null type"),
+            name
         );
         var variable = context.newVariable(Type, UnknownType);
-        context.AddVaraible(GetNameSafe(), variable(v, !IsConstant), false);
+        context.AddVaraible(name, variable(v, !IsConstant), false);
         return v;
     }
 }

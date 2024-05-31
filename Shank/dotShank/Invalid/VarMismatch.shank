@@ -1,0 +1,5 @@
+define start(foo : integer)
+    bar foo
+   
+define bar(var f: integer)
+    f := 5

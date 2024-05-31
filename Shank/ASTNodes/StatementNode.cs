@@ -29,6 +29,7 @@ public class StatementNode : ASTNode
     }
 
     public virtual void VisitStatement(
+        LLVMVisitor visitor,
         Context context,
         LLVMBuilderRef builder,
         LLVMModuleRef module
@@ -38,7 +39,7 @@ public class StatementNode : ASTNode
     }
 
     public override LLVMValueRef Visit(
-        Visitor visitor,
+        LLVMVisitor visitor,
         Context context,
         LLVMBuilderRef builder,
         LLVMModuleRef module
@@ -47,6 +48,4 @@ public class StatementNode : ASTNode
         // statement nodes ues visit statement as they do not return something
         throw new NotImplementedException();
     }
-
-    public void Visit(Context context, LLVMBuilderRef builder, LLVMModuleRef module) { }
 }

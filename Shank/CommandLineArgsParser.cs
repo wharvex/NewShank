@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using CommandLine;
 using LLVMSharp.Interop;
 using Shank;
+using Shank.IRGenerator.CompilerPractice;
 
 [Verb("Compile", isDefault: false)]
 public class CompileOptions
@@ -35,6 +36,40 @@ public class CompileOptions
                 OptLevel = LLVMCodeGenOptLevel.LLVMCodeGenLevelNone;
         }
     }
+
+    [Option("emit-ir", HelpText = "writes IR to file")]
+    public bool emitIR { get; set; }
+
+    [Option(
+        'a',
+        "assembly",
+        HelpText = "option to generate a assembly file appears in /Shank-assembly/ directory"
+    )]
+    public bool Assembly { get; set; }
+
+    [Option("print-ir", HelpText = "prints IR code gen in console appears in /Shank-IR/ directory")]
+    public bool printIR { get; set; }
+
+    [Option(
+        'S',
+        "compile-off",
+        HelpText = "no exe or object file will be produced here but you may generate .s, .ll files",
+        Default = false
+    )]
+    public bool CompileOff { get; set; }
+
+    [Option(
+        "linker",
+        HelpText = "add whatever linker you feel if non specified it defaults to the GNU linker (ld)",
+        Default = "ld"
+    )]
+    public string LinkerOption { get; set; }
+
+    [Option('l', HelpText = "for linked files")]
+    public IEnumerable<string> LinkedFiles { get; set; }
+
+    [Option('L', "LinkPath", Default = "/", HelpText = "for a link path")]
+    public string LinkedPath { get; set; }
 }
 
 [Verb("Interpret", isDefault: false)]
@@ -47,6 +82,19 @@ public class InterptOptions
     public bool unitTest { get; set; }
 }
 
+[Verb("CompilePractice", isDefault: false)]
+public class CompilePracticeOptions
+{
+    [Value(index: 0, MetaName = "inputFile", HelpText = "The Shank source file", Required = true)]
+    public string? File { get; set; }
+
+    [Option('u', "ut", HelpText = "Unit test options", Default = false)]
+    public bool UnitTest { get; set; }
+
+    public string GetFileSafe() =>
+        File ?? throw new InvalidOperationException("Expected File to not be null.");
+}
+
 public class CommandLineArgsParser
 {
     private string[] _args { get; }
@@ -57,10 +105,13 @@ public class CommandLineArgsParser
         // new Options().InputFiles = "a";
         ProgramNode program = new ProgramNode();
         CommandLine
-            .Parser.Default.ParseArguments<CompileOptions, InterptOptions>(args)
+            .Parser.Default.ParseArguments<CompileOptions, InterptOptions, CompilePracticeOptions>(
+                args
+            )
             .WithParsed<CompileOptions>(options => RunCompiler(options, program))
             .WithParsed<InterptOptions>(options => RunInterptrer(options, program))
-            .WithNotParsed(errors => Console.WriteLine("Error"));
+            .WithParsed<CompilePracticeOptions>(options => RunCompilePractice(options, program))
+            .WithNotParsed(errors => throw new Exception(errors.ToString()));
     }
 
     public void RunCompiler(CompileOptions options, ProgramNode program)
@@ -68,12 +119,11 @@ public class CommandLineArgsParser
         LLVMCodeGen a = new LLVMCodeGen();
         GetFiles(options.InputFile).ForEach(ip => ScanAndParse(ip, program));
         program.SetStartModule();
-        OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForProgramNode(program), 4);
         SemanticAnalysis.CheckModules(program);
+        OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForProgramNode(program), "ast");
 
         Interpreter.Modules = program.Modules;
         Interpreter.StartModule = program.GetStartModuleSafe();
-        Console.WriteLine(options.OutFile);
         a.CodeGen(options, program);
     }
 
@@ -82,13 +132,31 @@ public class CommandLineArgsParser
         // scan and parse :p
         GetFiles(options.file).ForEach(ip => ScanAndParse(ip, program));
         program.SetStartModule();
-        OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForProgramNode(program), 4);
+        OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForProgramNode(program), "ast");
         BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
         SemanticAnalysis.CheckModules(program);
 
         Interpreter.Modules = program.Modules;
         Interpreter.StartModule = program.GetStartModuleSafe();
         if (!options.unitTest)
+            It1(program);
+        else
+            It2();
+    }
+
+    public void RunCompilePractice(CompilePracticeOptions options, ProgramNode program)
+    {
+        GetFiles(options.GetFileSafe()).ForEach(ip => ScanAndParse(ip, program));
+        program.SetStartModule();
+        OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForProgramNode(program), "ast");
+        BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
+        SemanticAnalysis.CheckModules(program);
+        var irGen = new IrGenerator(program);
+        irGen.GenerateIr();
+
+        Interpreter.Modules = program.Modules;
+        Interpreter.StartModule = program.GetStartModuleSafe();
+        if (!options.UnitTest)
             It1(program);
         else
             It2();
@@ -112,8 +180,8 @@ public class CommandLineArgsParser
         var lines = File.ReadAllLines(inPath);
         tokens.AddRange(lexer.Lex(lines));
 
-        // Save the tokens to $env:APPDATA\ShankDebugOutput1.json
-        OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForTokenList(tokens), 1);
+        // Save the tokens to $env:APPDATA\ShankDebugOutput_tokens.json
+        OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForTokenList(tokens), "tokens");
 
         var parser = new Shank.Parser(tokens);
 

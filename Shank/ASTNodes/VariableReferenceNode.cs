@@ -106,12 +106,12 @@ public class VariableReferenceNode : ASTNode
     }
 
     public override LLVMValueRef Visit(
-        Visitor visitor,
+        LLVMVisitor visitor,
         Context context,
         LLVMBuilderRef builder,
         LLVMModuleRef module
     )
     {
-        return visitor.Accept(this, context, builder, module);
+        return visitor.Visit(this);
     }
 }

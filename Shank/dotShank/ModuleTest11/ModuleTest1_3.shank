@@ -1,0 +1,5 @@
+module Test4
+
+define max(a, b : integer)
+variables p : integer
+    p := 0
