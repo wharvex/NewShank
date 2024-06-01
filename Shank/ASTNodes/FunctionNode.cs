@@ -1,5 +1,6 @@
 using System.Text;
 using LLVMSharp.Interop;
+using Shank.ASTNodes;
 using Shank.ExprVisitors;
 
 namespace Shank;
@@ -628,7 +629,7 @@ public class FunctionNode : CallableNode
     }
 
     // we separate function prototype compilation from function body
-    public LLVMValueRef VisitPrototype(Context context, LLVMModuleRef module)
+    public void VisitPrototype(Context context, LLVMModuleRef module)
     {
         // we could also return errors from the return type as it is not being used any where
         var fnRetTy = module.Context.Int32Type;
@@ -650,43 +651,16 @@ public class FunctionNode : CallableNode
             var name = param.GetNameSafe();
             llvmParam.Name = name;
         }
-
         context.addFunction(Name, function);
-        return function.Function;
     }
 
     public override LLVMValueRef Visit(
-        Visitor visitor,
+        LLVMVisitor visitor,
         Context context,
         LLVMBuilderRef builder,
         LLVMModuleRef module
     )
     {
-        // should be already created, because the visit prototype method should have been called first
-        var function = (LLVMFunction)context.GetFunction(Name)!;
-        context.CurrentFunction = function;
-        context.ResetLocal();
-        foreach (var (param, index) in ParameterVariables.Select((param, index) => (param, index)))
-        {
-            var llvmParam = function.GetParam((uint)index);
-            var name = param.GetNameSafe();
-            var parameter = context.newVariable(param.Type, param.UnknownType)(
-                llvmParam,
-                !param.IsConstant
-            );
-
-            context.AddVaraible(name, parameter, false);
-        }
-
-        function.Linkage = LLVMLinkage.LLVMExternalLinkage;
-
-        var block = function.AppendBasicBlock("entry");
-        builder.PositionAtEnd(block);
-        LocalVariables.ForEach(variable => variable.Visit(visitor, context, builder, module));
-        Statements.ForEach(s => s.VisitStatement(context, builder, module));
-        // return 0 to singify ok
-        builder.BuildRet(LLVMValueRef.CreateConstInt(module.Context.Int32Type, (ulong)0));
-        context.ResetLocal();
-        return function.Function;
+        return visitor.Visit(this);
     }
 }

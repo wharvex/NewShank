@@ -33,20 +33,19 @@ public class AssignmentNode : StatementNode
     }
 
     public override void VisitStatement(
+        LLVMVisitor visitor,
         Context context,
         LLVMBuilderRef builder,
         LLVMModuleRef module
     )
     {
-        var llvmValue = context.GetVaraible(Target.Name);
-        if (!llvmValue.IsMutable)
-        {
-            throw new Exception($"tried to mutate non mutable variable {Target.Name}");
-        }
-        builder.BuildStore(
-            Expression.Visit(context.GetExprFromType(llvmValue), context, builder, module),
-            llvmValue.ValueRef
-        );
+        visitor.Visit(this);
+        // var llvmValue = context.GetVaraible(Target.Name);
+        // if (!llvmValue.IsMutable)
+        // {
+        //     throw new Exception($"tried to mutate non mutable variable {Target.Name}");
+        // }
+        // builder.BuildStore(Expression.Visit(visitor, context, builder, module), llvmValue.ValueRef);
     }
 
     public override string ToString()

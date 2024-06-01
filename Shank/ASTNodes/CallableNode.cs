@@ -55,7 +55,7 @@ public abstract class CallableNode : ASTNode, ILlvmTranslatable
         ParameterVariables.Where((pv, i) => !cn.ParameterVariables[i].EqualsForOverload(pv)).Any();
 
     public abstract override LLVMValueRef Visit(
-        Visitor visitor,
+        LLVMVisitor visitor,
         Context context,
         LLVMBuilderRef builder,
         LLVMModuleRef module
