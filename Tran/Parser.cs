@@ -114,8 +114,11 @@ public class Parser
             {
                 throw new Exception("Term expected after.");
             }
-            return new BooleanExpressionNode(lt, BooleanExpressionNode.BooleanExpressionOpType.le, rt);
-            
+            return new BooleanExpressionNode(
+                lt,
+                BooleanExpressionNode.BooleanExpressionOpType.le,
+                rt
+            );
         }
         else if (handler.MatchAndRemove(TokenType.LESSTHAN) != null)
         {
@@ -124,8 +127,11 @@ public class Parser
             {
                 throw new Exception("Term expected after.");
             }
-            return new BooleanExpressionNode(lt, BooleanExpressionNode.BooleanExpressionOpType.lt, rt);
-            
+            return new BooleanExpressionNode(
+                lt,
+                BooleanExpressionNode.BooleanExpressionOpType.lt,
+                rt
+            );
         }
         else if (handler.MatchAndRemove(TokenType.GREATEREQUAL) != null)
         {
@@ -134,8 +140,11 @@ public class Parser
             {
                 throw new Exception("Term expected after.");
             }
-            return new BooleanExpressionNode(lt, BooleanExpressionNode.BooleanExpressionOpType.ge, rt);
-            
+            return new BooleanExpressionNode(
+                lt,
+                BooleanExpressionNode.BooleanExpressionOpType.ge,
+                rt
+            );
         }
         else if (handler.MatchAndRemove(TokenType.GREATERTHAN) != null)
         {
@@ -144,8 +153,11 @@ public class Parser
             {
                 throw new Exception("Term expected after.");
             }
-            return new BooleanExpressionNode(lt, BooleanExpressionNode.BooleanExpressionOpType.gt, rt);
-            
+            return new BooleanExpressionNode(
+                lt,
+                BooleanExpressionNode.BooleanExpressionOpType.gt,
+                rt
+            );
         }
         else if (handler.MatchAndRemove(TokenType.EQUALS) != null)
         {
@@ -154,8 +166,11 @@ public class Parser
             {
                 throw new Exception("Term expected after.");
             }
-            return new BooleanExpressionNode(lt, BooleanExpressionNode.BooleanExpressionOpType.eq, rt);
-            
+            return new BooleanExpressionNode(
+                lt,
+                BooleanExpressionNode.BooleanExpressionOpType.eq,
+                rt
+            );
         }
         else if (handler.MatchAndRemove(TokenType.NOTEQUAL) != null)
         {
@@ -164,8 +179,11 @@ public class Parser
             {
                 throw new Exception("Term expected after.");
             }
-            return new BooleanExpressionNode(lt, BooleanExpressionNode.BooleanExpressionOpType.ne, rt);
-            
+            return new BooleanExpressionNode(
+                lt,
+                BooleanExpressionNode.BooleanExpressionOpType.ne,
+                rt
+            );
         }
         else
         {
@@ -220,6 +238,7 @@ public class Parser
             return lt;
         }
     }
+
     private ASTNode? Factor()
     {
         if (handler.MatchAndRemove(TokenType.OPENPARENTHESIS) != null)
