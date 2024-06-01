@@ -16,9 +16,7 @@ public class TokenHandler
     // Peeks at the next token if it is within the bounds of the list
     public Token? Peek(int j)
     {
-        if (j < tokens.Count)
-            return tokens.ElementAt(j);
-        return null;
+        return j < tokens.Count ? tokens.ElementAt(j) : null;
     }
 
     // Returns true if there are more tokens in the list

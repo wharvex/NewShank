@@ -18,4 +18,8 @@
     <PackageReference Include="Xunit.Microsoft.VisualStudio.TestTools.UnitTesting" Version="1.0.0-beta-1011" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Shank\Shank.csproj" />
+  </ItemGroup>
+
 </Project>
