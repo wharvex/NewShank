@@ -91,8 +91,8 @@ public class CompilePracticeOptions
     [Option('u', "ut", HelpText = "Unit test options", Default = false)]
     public bool UnitTest { get; set; }
 
-    [Option('f', "flat", HelpText = "Use flattened IR generation", Default = 0)]
-    public int Flat { get; set; }
+    [Option('f', "flat", HelpText = "Use flattened IR generation", Default = "")]
+    public string Flat { get; set; } = "";
 }
 
 public class CommandLineArgsParser
@@ -153,11 +153,11 @@ public class CommandLineArgsParser
         SemanticAnalysis.CheckModules(program);
         switch (options.Flat)
         {
-            case 0:
+            case "":
                 var irGen = new IrGenerator(program);
                 irGen.GenerateIr();
                 break;
-            case 1:
+            case "PrintStr":
                 irGen = new IrGenerator();
                 irGen.GenerateIrFlat("root");
                 break;
