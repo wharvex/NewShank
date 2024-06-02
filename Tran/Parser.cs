@@ -98,7 +98,9 @@ public class Parser
                             }
                         }
 
-                        throw new Exception("Could not find class of name: " + otherName.GetValue());
+                        throw new Exception(
+                            "Could not find class of name: " + otherName.GetValue()
+                        );
                     }
 
                     throw new Exception("No name provided for implemented class");
