@@ -85,17 +85,14 @@ public class InterptOptions
 [Verb("CompilePractice", isDefault: false)]
 public class CompilePracticeOptions
 {
-    [Value(index: 0, MetaName = "inputFile", HelpText = "The Shank source file", Required = true)]
-    public string? File { get; set; }
+    [Value(index: 0, MetaName = "inputFile", HelpText = "The Shank source file")]
+    public string File { get; set; } = "";
 
     [Option('u', "ut", HelpText = "Unit test options", Default = false)]
     public bool UnitTest { get; set; }
 
-    [Option('f', "flat", HelpText = "Use flattened IR generation", Default = false)]
-    public bool Flat { get; set; }
-
-    public string GetFileSafe() =>
-        File ?? throw new InvalidOperationException("Expected File to not be null.");
+    [Option('f', "flat", HelpText = "Use flattened IR generation", Default = 0)]
+    public int Flat { get; set; }
 }
 
 public class CommandLineArgsParser
@@ -149,20 +146,23 @@ public class CommandLineArgsParser
 
     public void RunCompilePractice(CompilePracticeOptions options, ProgramNode program)
     {
-        GetFiles(options.GetFileSafe()).ForEach(ip => ScanAndParse(ip, program));
+        GetFiles(options.File).ForEach(ip => ScanAndParse(ip, program));
         program.SetStartModule();
         OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForProgramNode(program), "ast");
         BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
         SemanticAnalysis.CheckModules(program);
-        if (options.Flat)
+        switch (options.Flat)
         {
-            var irGen = new IrGenerator("root");
-            irGen.GenerateIrFlat();
-        }
-        else
-        {
-            var irGen = new IrGenerator(program);
-            irGen.GenerateIr();
+            case 0:
+                var irGen = new IrGenerator(program);
+                irGen.GenerateIr();
+                break;
+            case 1:
+                irGen = new IrGenerator();
+                irGen.GenerateIrFlat("root");
+                break;
+            default:
+                throw new UnreachableException();
         }
 
         Interpreter.Modules = program.Modules;

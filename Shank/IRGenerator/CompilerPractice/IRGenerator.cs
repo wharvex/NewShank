@@ -51,12 +51,7 @@ public class IrGenerator
         );
     }
 
-    public IrGenerator(string moduleName)
-    {
-        LlvmContext = LLVMContextRef.Create();
-        LlvmModule = LlvmContext.CreateModuleWithName(moduleName);
-        LlvmBuilder = LlvmContext.CreateBuilder();
-    }
+    public IrGenerator() { }
 
     public void GenerateIr()
     {
@@ -112,32 +107,42 @@ public class IrGenerator
         LlvmModule.PrintToFile(Path.Combine(OutputHelper.DocPath, "IrOutput.ll"));
     }
 
-    public void GenerateIrFlat()
+    public void GenerateIrFlat(string moduleName)
     {
+        // What is encoded in the AST that each of these lines could be a response to?
+        var llvmContext = LLVMContextRef.Create();
+        var llvmModule = llvmContext.CreateModuleWithName(moduleName);
+        var llvmBuilder = llvmContext.CreateBuilder();
+
         var writeFuncType = LLVMTypeRef.CreateFunction(
-            LlvmContext.Int32Type,
-            [LLVMTypeRef.CreatePointer(LlvmContext.Int8Type, 0)],
+            llvmContext.Int32Type,
+            [LLVMTypeRef.CreatePointer(llvmContext.Int8Type, 0)],
             true
         );
-        var startFuncType = LLVMTypeRef.CreateFunction(LlvmContext.Int32Type, []);
-        var writeFunc = LlvmModule.AddFunction("printf", writeFuncType);
-        var startFunc = LlvmModule.AddFunction("main", startFuncType);
+        var startFuncType = LLVMTypeRef.CreateFunction(llvmContext.Int32Type, []);
+
+        var writeFunc = llvmModule.AddFunction("printf", writeFuncType);
+        var startFunc = llvmModule.AddFunction("main", startFuncType);
+
+        // External seems to be the default because nothing in the IR changes if these lines are
+        // commented out.
+        // Also see: https://stackoverflow.com/a/1358622/16458003
+        writeFunc.Linkage = LLVMLinkage.LLVMExternalLinkage;
+        startFunc.Linkage = LLVMLinkage.LLVMExternalLinkage;
 
         var entryBlock = startFunc.AppendBasicBlock("entry");
-        LlvmBuilder.PositionAtEnd(entryBlock);
-        LlvmBuilder.BuildCall2(
+        llvmBuilder.PositionAtEnd(entryBlock);
+        llvmBuilder.BuildCall2(
             writeFuncType,
             writeFunc,
-            [LlvmBuilder.BuildGlobalStringPtr("hey\n")]
+            [llvmBuilder.BuildGlobalStringPtr("hey\n")]
         );
-        LlvmBuilder.BuildRet(LLVMValueRef.CreateConstInt(LlvmContext.Int32Type, 0));
+        llvmBuilder.BuildRet(LLVMValueRef.CreateConstInt(llvmContext.Int32Type, 0));
 
-        // Verify all the functions.
         startFunc.VerifyFunction(LLVMVerifierFailureAction.LLVMPrintMessageAction);
         writeFunc.VerifyFunction(LLVMVerifierFailureAction.LLVMPrintMessageAction);
 
-        // Output.
-        LlvmModule.PrintToFile(Path.Combine(OutputHelper.DocPath, "IrOutput.ll"));
+        llvmModule.PrintToFile(Path.Combine(OutputHelper.DocPath, "IrOutput.ll"));
     }
 
     private void HelloWorld(LLVMValueRef printfFunc, string msg)

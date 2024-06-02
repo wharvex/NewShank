@@ -9,21 +9,21 @@ function st
     $ds = './Shank/dotShank/'
 
     $path_list = "NotAPath", # 0
-    "ModuleTest2", # 1
-    "Records/simple", # 2
-    "Generics/simple/functions2", # 3
-    "Arrays/sum", # 4
-    "Records/nested", # 5
-    "Globals", # 6
-    "UnitTestTests1 -ut", # 7
-    "Builtins/Write", # 8
-    "Enums", # 9
-    "OldShankFiles/Pascals.shank", # 10
-    "OldShankFiles/GCD.shank", # 11
-    "Negative", # 12
-    "String", # 13
-    "Minimal", # 14
-    "Minimal2 -flat" # 15
+    "Interpret ModuleTest2", # 1
+    "Interpret Records/simple", # 2
+    "Interpret Generics/simple/functions2", # 3
+    "Interpret Arrays/sum", # 4
+    "Interpret Records/nested", # 5
+    "Interpret Globals", # 6
+    "Interpret UnitTestTests1 -ut", # 7
+    "Interpret Builtins/Write", # 8
+    "Interpret Enums", # 9
+    "Interpret OldShankFiles/Pascals.shank", # 10
+    "Interpret OldShankFiles/GCD.shank", # 11
+    "Interpret Negative", # 12
+    "Interpret String", # 13
+    "CompilePractice Minimal", # 14
+    "CompilePractice Minimal2 --flat=1" # 15
     #"Expressions",
     #"Overloads/overloadsTest.shank",
     #"Generics/complex",
@@ -39,17 +39,12 @@ function st
     $generic_runner = {
         param($args_str)
         "`n** Running $($args_str) **`n"
+
+        # Split then splat.
+        # https://stackoverflow.com/a/19252498/16458003
         $args_list = -split $args_str
-        switch ($args_list.Length)
-        {
-            { $_ -eq 1 -and $args_list[0] -ne "Minimal" } { dotnet run Interpret "$($ds)$($args_list[0])" --project $sp }
-            { $_ -eq 1 -and $args_list[0] -eq "Minimal" } { dotnet run CompilePractice "$($ds)$($args_list[0])" --project $sp }
-            { $_ -eq 2 -and $args_list[0] -ne "Minimal2" } { dotnet run Interpret "$($ds)$($args_list[0])" $args_list[1] --project $sp }
-            { $_ -eq 2 -and $args_list[0] -eq "Minimal2" } { dotnet run CompilePractice "$($ds)$($args_list[0])" $args_list[1] --project $sp }
-            Default {
-                "Bad Args"
-            }
-        }
+        $args_list[1] = "$($ds)$($args_list[1])"
+        dotnet run @args_list --project $sp
     }
 
     # invoke a script block based on param
