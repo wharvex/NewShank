@@ -22,8 +22,8 @@ function st
     "Interpret OldShankFiles/GCD.shank", # 11
     "Interpret Negative", # 12
     "Interpret String", # 13
-    "CompilePractice Minimal", # 14
-    "CompilePractice Minimal2 --flat=1" # 15
+    "CompilePractice Minimal/Old", # 14
+    "CompilePractice Minimal/PrintStr/Shank --flat PrintStr" # 15
     #"Expressions",
     #"Overloads/overloadsTest.shank",
     #"Generics/complex",
@@ -38,12 +38,13 @@ function st
 
     $generic_runner = {
         param($args_str)
-        "`n** Running $($args_str) **`n"
 
         # Split then splat.
         # https://stackoverflow.com/a/19252498/16458003
         $args_list = -split $args_str
         $args_list[1] = "$($ds)$($args_list[1])"
+        "`n**** Running The Following Command ****`n"
+        "dotnet run $($args_list -join ' ') --project $sp`n"
         dotnet run @args_list --project $sp
     }
 

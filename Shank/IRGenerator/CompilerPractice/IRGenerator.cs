@@ -135,7 +135,7 @@ public class IrGenerator
         llvmBuilder.BuildCall2(
             writeFuncType,
             writeFunc,
-            [llvmBuilder.BuildGlobalStringPtr("hey\n")]
+            [llvmBuilder.BuildGlobalStringPtr("Hello, World!\n")]
         );
         llvmBuilder.BuildRet(LLVMValueRef.CreateConstInt(llvmContext.Int32Type, 0));
 
