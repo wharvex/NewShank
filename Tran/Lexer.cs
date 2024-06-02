@@ -28,7 +28,10 @@ public class Lexer
         keywordHash["print"] = TokenType.PRINT;
         keywordHash["getline"] = TokenType.GETLINE;
         keywordHash["nextfile"] = TokenType.NEXTFILE;
+
+        //TODO: !!! no such keyword, remove this and add lexing for function based on parentheses
         keywordHash["function"] = TokenType.FUNCTION;
+
         keywordHash["interface"] = TokenType.INTERFACE;
         keywordHash["class"] = TokenType.CLASS;
         keywordHash["string"] = TokenType.STRING;

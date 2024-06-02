@@ -6,6 +6,7 @@ public class Parser
 {
     private TokenHandler handler;
     private ProgramNode program;
+    private ModuleNode thisClass;
 
     public Parser(LinkedList<Token> tokens)
     {
@@ -27,33 +28,82 @@ public class Parser
     {
         while (handler.MoreTokens())
         {
-            AcceptSeperators();
-            if (ParseClass())
+            if (!ParseClass() && !ParseInterface())
             {
-                AcceptSeperators();
+                throw new Exception("No class declaration found in file");
             }
+            AcceptSeperators();
 
-            if (ParseFunction())
+            if (ParseFields() || ParseFunction())
             {
                 AcceptSeperators();
                 continue;
             }
 
-            throw new Exception("Not a function or action");
+            throw new Exception("Statement is not a function or field");
         }
 
         return program;
     }
 
+    //TODO: implement this such that fields (e.g. variables belonging to the class, not a function) are parsed appropriately
+    private bool ParseFields()
+    {
+        throw new NotImplementedException();
+    }
+
+    private bool ParseInterface()
+    {
+        if (handler.MatchAndRemove(TokenType.INTERFACE) != null)
+        {
+            Token? name;
+            if ((name = handler.MatchAndRemove(TokenType.WORD)) != null)
+            {
+                thisClass = new ModuleNode(name.GetValue());
+                return true;
+            }
+
+            throw new Exception("No name provided for interface");
+        }
+
+        return false;
+    }
+
     private bool ParseClass()
     {
-        ModuleNode module;
         if (handler.MatchAndRemove(TokenType.CLASS) != null)
         {
             Token? name;
             if ((name = handler.MatchAndRemove(TokenType.WORD)) != null)
             {
-                program.AddToModules(new ModuleNode(name.GetValue()));
+                thisClass = new ModuleNode(name.GetValue());
+                if (handler.MatchAndRemove(TokenType.IMPLEMENTS) != null)
+                {
+                    Token? otherName;
+                    if ((otherName = handler.MatchAndRemove(TokenType.WORD)) != null)
+                    {
+                        ModuleNode? otherClass = program.GetFromModules(otherName.GetValue());
+                        if (otherClass != null)
+                        {
+                            foreach (var function in otherClass.Functions)
+                            {
+                                thisClass.addFunction(function.Value);
+                            }
+                            //TODO: Figure out if this is correct/how to get variables from an implemented class
+                            foreach (var variable in otherClass.GlobalVariables)
+                            {
+                                var temp = new List<VariableNode>();
+                                temp.Add(variable.Value);
+                                thisClass.AddToGlobalVariables(temp);
+                            }
+                        }
+
+                        throw new Exception("Could not find class of name: " + otherName.GetValue());
+                    }
+
+                    throw new Exception("No name provided for implemented class");
+                }
+
                 return true;
             }
 
@@ -63,6 +113,7 @@ public class Parser
         return false;
     }
 
+    //TODO: finish implementing ParseFunction()
     private bool ParseFunction()
     {
         FunctionNode functionNode;
