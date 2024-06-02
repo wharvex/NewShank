@@ -163,7 +163,6 @@ public class Parser
             if (handler.MatchAndRemove(TokenType.STRING) != null)
             {
                 variable.Type = VariableNode.DataType.String;
-
             }
             else if (handler.MatchAndRemove(TokenType.NUMBER) != null)
             {
@@ -179,8 +178,7 @@ public class Parser
             }
 
             throw new Exception("No name provided for variable in parameters");
-        }
-        while (handler.MatchAndRemove(TokenType.COMMA) != null);
+        } while (handler.MatchAndRemove(TokenType.COMMA) != null);
         return parameters;
     }
 
