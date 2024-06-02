@@ -14,7 +14,7 @@ public class Parser
         program = new ProgramNode();
     }
 
-    private bool AcceptSeperators()
+    private bool AcceptSeparators()
     {
         bool retVal = false;
         while (handler.MatchAndRemove(TokenType.SEPERATOR) != null)
@@ -32,11 +32,11 @@ public class Parser
             {
                 throw new Exception("No class declaration found in file");
             }
-            AcceptSeperators();
+            AcceptSeparators();
 
             if (ParseFields() || ParseFunction())
             {
-                AcceptSeperators();
+                AcceptSeparators();
                 continue;
             }
 
@@ -113,17 +113,79 @@ public class Parser
         return false;
     }
 
-    //TODO: finish implementing ParseFunction()
+    //TODO: double-check the work here
     private bool ParseFunction()
     {
         FunctionNode functionNode;
         Token? function;
+        //TODO: make sure private token is correct/added to lexer
+        bool isPublic = handler.MatchAndRemove(TokenType.PRIVATE) == null;
+        if (isPublic && handler.MatchAndRemove(TokenType.SHARED) != null)
+        {
+            //TODO:Yeah I have no idea where to start with this since Shank has no static types or functions (that I could find)
+        }
         if ((function = handler.MatchAndRemove(TokenType.FUNCTION)) != null)
         {
-            functionNode = new FunctionNode(function.GetValue(), "FunctionNode", true);
+            functionNode = new FunctionNode(function.GetValue(), thisClass.Name, isPublic);
+            thisClass.addFunction(functionNode);
+            if (handler.MatchAndRemove(TokenType.OPENPARENTHESIS) != null)
+            {
+                functionNode.LocalVariables = ParseParameters();
+                if (handler.MatchAndRemove(TokenType.CLOSEDPARENTHESIS) == null)
+                    throw new Exception("Function declaration missing end parenthesis");
+            }
+            else
+            {
+                throw new Exception("Function declaration missing open parenthesis");
+            }
+            if (handler.MatchAndRemove(TokenType.COLON) != null)
+            {
+                functionNode.LocalVariables.AddRange(ParseParameters());
+            }
+            functionNode.Statements = ParseBlock();
+            return true;
         }
 
         return false;
+    }
+
+    private List<VariableNode> ParseParameters()
+    {
+        var parameters = new List<VariableNode>();
+        var variable = new VariableNode();
+        Token? name;
+
+        do
+        {
+            AcceptSeparators();
+            if (handler.MatchAndRemove(TokenType.STRING) != null)
+            {
+                variable.Type = VariableNode.DataType.String;
+
+            }
+            else if (handler.MatchAndRemove(TokenType.NUMBER) != null)
+            {
+                //TODO: no float type in Shank?
+                variable.Type = VariableNode.DataType.Integer;
+            }
+
+            if ((name = handler.MatchAndRemove(TokenType.WORD)) != null)
+            {
+                variable.Name = name.GetValue();
+                parameters.Add(variable);
+                continue;
+            }
+
+            throw new Exception("No name provided for variable in parameters");
+        }
+        while (handler.MatchAndRemove(TokenType.COMMA) != null);
+        return parameters;
+    }
+
+    //TODO: finish implementing ParseBlock()
+    private List<StatementNode> ParseBlock()
+    {
+        throw new NotImplementedException();
     }
 
     private ASTNode? Expression()

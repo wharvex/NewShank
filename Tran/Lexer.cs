@@ -29,7 +29,7 @@ public class Lexer
         keywordHash["getline"] = TokenType.GETLINE;
         keywordHash["nextfile"] = TokenType.NEXTFILE;
 
-        //TODO: !!! no such keyword, remove this and add lexing for function based on parentheses
+        //TODO: !!! no such keyword - add specific functionality to lex the name of the function and put into this type
         keywordHash["function"] = TokenType.FUNCTION;
 
         keywordHash["interface"] = TokenType.INTERFACE;
