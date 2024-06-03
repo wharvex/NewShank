@@ -121,7 +121,7 @@ public class Parser
         FunctionNode functionNode;
         Token? function;
         //TODO: make sure private token is correct/added to lexer
-        bool isPublic = handler.MatchAndRemove(TokenType.PRIVATE) == null;
+        bool isPublic = handler.MatchAndRemove(TokenType.SHARED) == null;
         if (isPublic && handler.MatchAndRemove(TokenType.SHARED) != null)
         {
             //TODO:Yeah I have no idea where to start with this since Shank has no static types or functions (that I could find)
@@ -375,4 +375,7 @@ public class Parser
         }
         return new IntNode(int.Parse(token.GetValue()));
     }
+    
+    
+    
 }

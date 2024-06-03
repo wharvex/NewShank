@@ -103,7 +103,7 @@ public class Lexer
                 stringHandler.GetChar();
                 lineNumber++;
                 characterPosition++;
-                tokens.AddFirst((new Token(TokenType.SEPERATOR, lineNumber, characterPosition)));
+                tokens.AddLast((new Token(TokenType.SEPERATOR, lineNumber, characterPosition)));
             }
             else if (currentCharacter == '\r')
             {
@@ -112,31 +112,16 @@ public class Lexer
             }
             else if (char.IsLetter(currentCharacter))
             {
-                if (IsSingleCharacterWord(currentCharacter))
-                {
-                    Token singleCharWordToken = ProcessSingleCharacterWord(currentCharacter);
-                    tokens.AddFirst(
-                        (
-                            new Token(
-                                TokenType.CHARACTER,
-                                currentCharacter.ToString(),
-                                lineNumber,
-                                characterPosition
-                            )
-                        )
-                    );
-                }
-                else
-                {
+                
                     Token wordProcessor = ProcessWord();
-                    tokens.AddFirst(wordProcessor);
-                }
+                    tokens.AddLast((wordProcessor));
+                
             }
             //Research this one, done for now but can be fixed.
             else if (char.IsDigit(currentCharacter))
             {
                 Token numberProcessor = ProcessNumber();
-                tokens.AddFirst(numberProcessor);
+                tokens.AddLast(numberProcessor);
             }
             else if (currentCharacter == '{')
             {
@@ -151,7 +136,7 @@ public class Lexer
                 Token OneTwoSymbols = ProcessSymbols();
                 if (OneTwoSymbols != null)
                 {
-                    tokens.AddFirst(OneTwoSymbols);
+                    tokens.AddLast(OneTwoSymbols);
                 }
                 else
                 {
@@ -159,7 +144,7 @@ public class Lexer
                 }
             }
         }
-        tokens.AddFirst(new Token(TokenType.SEPERATOR, lineNumber, characterPosition));
+        tokens.AddLast(new Token(TokenType.SEPERATOR, lineNumber, characterPosition));
         return tokens;
     }
 
@@ -177,7 +162,7 @@ public class Lexer
         if (keywordHash.ContainsKey(value))
         {
             tokenType = keywordHash[value];
-            return new Token(tokenType, lineNumber, startPosition);
+            return new Token(keywordHash[value], lineNumber, startPosition);
         }
         return new Token(TokenType.WORD, value, lineNumber, startPosition);
     }

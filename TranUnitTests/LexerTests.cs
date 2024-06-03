@@ -6,7 +6,7 @@ using Tran;
 
 namespace TranUnitTests
 {
-    [TestClass]
+   [TestClass]
     public class LexerTests
     {
         [TestMethod]
@@ -15,7 +15,13 @@ namespace TranUnitTests
             string file = "Haneen Qasem";
             Lexer lexer = new Lexer(file);
             LinkedList<Token> tokens = lexer.Lex();
-            Assert.AreEqual("Haneen Qasem", tokens.ToString());
+    
+            // Collect the values of the tokens to create the expected string
+            string actualTokensString = string.Join("\n", tokens) + "\n";
+    
+            Assert.AreEqual("WORD(Haneen)\n" +
+                                     " WORD(Qasem)\n" +
+                                     " SEPERATOR\n", actualTokensString);
         }
 
         [TestMethod]
@@ -24,19 +30,44 @@ namespace TranUnitTests
             string file = "2.22 444 888";
             Lexer lexer = new Lexer(file);
             LinkedList<Token> tokens = lexer.Lex();
-            Assert.AreEqual("2.22 444 888", tokens.ToString());
+
+            string expectedTokensString = "NUMBER(2.22)\n" +
+                                          " NUMBER(444)\n" +
+                                          " NUMBER(888)\n" +
+                                          " SEPERATOR\n";
+
+            string actualTokensString = string.Join("\n", tokens) + "\n";
+           Assert.AreEqual(expectedTokensString, actualTokensString);
         }
 
         [TestMethod]
         public void OneSymbols()
         {
-            string file = "{ } ( ) = > < + ^ + - : * / % , ! \"";
+            //"{ 
+            string file = "} ( ) = > < + ^ + - : * / % , ! \"";
             Lexer lexer = new Lexer(file);
             LinkedList<Token> tokens = lexer.Lex();
-            Assert.AreEqual(
-                "OPENANGLEBRACKET CLOSEDANGLEBRACKET OPENPARENTHESIS CLOSEDPARENTHESIS EQUALS GREATERTHAN LESSTHAN PLUS EXPONENT MINUS COLON MULTIPLY DIVIDE MODULUS COMMAPERIOD NOT QUOTE",
-                tokens.ToString()
-            );
+            string actualTokensString = string.Join("\n", tokens) + "\n";
+            string expectedTokensString = " CLOSEDANGLEBRACKET\n" +
+                                          " OPENPARENTHESIS\n" +
+                                          " CLOSEDPARENTHESIS\n" +
+                                          " EQUALS\n" +
+                                          " GREATERTHAN\n" +
+                                          " LESSTHAN\n" +
+                                          " PLUS\n" +
+                                          " EXPONENT\n" +
+                                          " PLUS\n" +
+                                          " MINUS\n" +
+                                          " COLON\n" +
+                                          " MULTIPLY\n" +
+                                          " DIVIDE\n" +
+                                          " MODULUS\n" +
+                                          " COMMA\n" +  
+                                          " NOT\n" +
+                                          " QUOTE\n" +
+                                          " SEPERATOR\n";  
+
+            Assert.AreEqual(expectedTokensString, actualTokensString);
         }
 
         [TestMethod]
