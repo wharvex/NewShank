@@ -118,6 +118,7 @@ public class LLVMStatement : StatementVisitor
                 }
             }
         }
+
         node //modnode
         .GetFunctionsAsList() //list
             .ForEach(f => f.Visit(this));
@@ -171,7 +172,16 @@ public class LLVMStatement : StatementVisitor
 
     public override void Accept(RecordNode node)
     {
-        throw new NotImplementedException();
+        Console.WriteLine("hello world");
+        throw new Exception("error");
+
+        // _builder.BuildAlloca(_context.CurrentModule.CustomTypes[node.Name]);
+        // _builder.BuildStructGEP2(
+        // _context.CurrentModule.CustomTypes[node.Name],
+        // _builder.BuildAlloca(_context.CurrentModule.CustomTypes[node.Name]),
+        // 1
+        // );
+        // _context.CurrentModule.CustomTypes
     }
 
     public override void Accept(VariableNode node)

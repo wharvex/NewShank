@@ -4,7 +4,7 @@ using Shank.ExprVisitors;
 
 namespace Shank;
 
-public class RecordNode : ASTNode
+public class RecordNode : StatementNode
 {
     public string Name { get; init; }
 
@@ -57,8 +57,13 @@ public class RecordNode : ASTNode
         throw new NotImplementedException();
     }
 
-    public override T Visit<T>(ExpressionVisitor<T> visit)
+    public void VisitProto(VisitPrototype v)
     {
-        throw new NotImplementedException();
+        v.Accept(this);
+    }
+
+    public override void Visit(StatementVisitor visit)
+    {
+        visit.Accept(this);
     }
 }

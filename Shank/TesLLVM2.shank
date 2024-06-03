@@ -1,6 +1,11 @@
+record student
+    name : string
+    gpa : real
+
 define start()
-variables n : integer
-    n := 1
+variables n : student
+    n.gpa := 3.1
+
     
 define add(a, b : integer; var c : integer)
 	c:= a + b

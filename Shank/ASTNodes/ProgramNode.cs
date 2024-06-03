@@ -91,7 +91,7 @@ public class ProgramNode : StatementNode
 
     public void VisitProto(VisitPrototype visitPrototype)
     {
-        visitPrototype.Accept(this);
+        // visitPrototype.Accept(this);
     }
 
     public override LLVMValueRef Visit(

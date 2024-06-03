@@ -45,11 +45,18 @@ public class LLVMVisitPrototype : VisitPrototype
     public override void Accept(ModuleNode node)
     {
         _context.SetCurrentModule(node.Name);
+        node.Records.Values.ToList().ForEach(f => f.VisitProto(this));
         node.GetFunctionsAsList().ForEach(f => f.VisitProto(this));
     }
 
-    public override void Accept(ProgramNode node)
+    public override void Accept(RecordNode node)
     {
-        throw new NotImplementedException();
+        var args = node.Members2.Select(
+            s =>
+                _context.GetLLVMTypeFromShankType(s.Type, !s.IsConstant, s.UnknownType)
+                ?? throw new CompilerException($"type of parameter {s.Name} is not found", s.Line)
+        );
+        var a = LLVMTypeRef.CreateStruct(args.ToArray(), false);
+        _context.CurrentModule.CustomTypes.Add(node.Name, a);
     }
 }
