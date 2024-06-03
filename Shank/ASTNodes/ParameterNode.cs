@@ -186,4 +186,9 @@ public class ParameterNode : ASTNode
             ? context.GetVaraible(Variable.Name).ValueRef
             : Constant.Visit(visitor, context, builder, module);
     }
+
+    public override T Visit<T>(ExpressionVisitor<T> visit)
+    {
+        return visit.Accept(this);
+    }
 }

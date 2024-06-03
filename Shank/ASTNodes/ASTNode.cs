@@ -61,4 +61,6 @@ public abstract class ASTNode
         LLVMBuilderRef builder,
         LLVMModuleRef module
     );
+
+    public abstract T Visit<T>(ExpressionVisitor<T> visit);
 }

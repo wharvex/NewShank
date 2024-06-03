@@ -30,4 +30,9 @@ public class EnumNode : ASTNode
         throw new Exception("not implemented uet");
         // return b
     }
+
+    public override T Visit<T>(ExpressionVisitor<T> visit)
+    {
+        throw new NotImplementedException();
+    }
 }

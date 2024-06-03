@@ -69,4 +69,9 @@ public class IfNode : StatementNode
         //     Children.ForEach(c => c.VisitStatement(visitor, context, builder, module));
         // }
     }
+
+    public override void Visit(StatementVisitor visit)
+    {
+        visit.Accept(this);
+    }
 }

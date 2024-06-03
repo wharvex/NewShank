@@ -651,6 +651,7 @@ public class FunctionNode : CallableNode
             var name = param.GetNameSafe();
             llvmParam.Name = name;
         }
+
         context.addFunction(Name, function);
     }
 
@@ -662,5 +663,24 @@ public class FunctionNode : CallableNode
     )
     {
         return visitor.Visit(this);
+    }
+
+    public override T Visit<T>(ExpressionVisitor<T> visit)
+    {
+        return base.Visit(visit);
+    }
+
+    public override void Visit(StatementVisitor visit)
+    {
+        visit.Accept(this);
+    }
+
+    /// <summary>
+    /// visitor anti pattern :')
+    /// </summary>
+    /// <param name="visitPrototype"></param>
+    public void VisitProto(VisitPrototype visitPrototype)
+    {
+        visitPrototype.Accept(this);
     }
 }

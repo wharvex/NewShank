@@ -28,4 +28,9 @@ public class IntNode : ASTNode
         // value requires a ulong cast, because that is what CreateConstInt requires
         return visitor.Visit(this);
     }
+
+    public override T Visit<T>(ExpressionVisitor<T> visit)
+    {
+        return visit.Accept(this);
+    }
 }

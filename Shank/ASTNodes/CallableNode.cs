@@ -60,4 +60,11 @@ public abstract class CallableNode : ASTNode, ILlvmTranslatable
         LLVMBuilderRef builder,
         LLVMModuleRef module
     );
+
+    public override T Visit<T>(ExpressionVisitor<T> visit)
+    {
+        throw new NotImplementedException();
+    }
+
+    public virtual void Visit(StatementVisitor visit) { }
 }

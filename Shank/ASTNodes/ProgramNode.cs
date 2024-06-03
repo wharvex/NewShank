@@ -4,7 +4,7 @@ using Shank.ExprVisitors;
 
 namespace Shank;
 
-public class ProgramNode : ASTNode
+public class ProgramNode : StatementNode
 {
     public Dictionary<string, ModuleNode> Modules { get; } = [];
     public ModuleNode? StartModule { get; set; }
@@ -69,7 +69,7 @@ public class ProgramNode : ASTNode
         };
     }
 
-    public new void VisitProgram(
+    public void VisitProgram(
         LLVMVisitor visitor,
         Context context,
         LLVMBuilderRef builder,
@@ -82,10 +82,16 @@ public class ProgramNode : ASTNode
         {
             keyValuePair.Value.VisitPrototype(context, module);
         }
+
         foreach (var keyValuePair in Modules)
         {
             keyValuePair.Value.VisitStatement(visitor, context, builder, module);
         }
+    }
+
+    public void VisitProto(VisitPrototype visitPrototype)
+    {
+        visitPrototype.Accept(this);
     }
 
     public override LLVMValueRef Visit(
@@ -96,5 +102,10 @@ public class ProgramNode : ASTNode
     )
     {
         throw new NotImplementedException();
+    }
+
+    public override void Visit(StatementVisitor visit)
+    {
+        visit.Accept(this);
     }
 }

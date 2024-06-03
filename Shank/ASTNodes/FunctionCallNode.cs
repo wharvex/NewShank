@@ -104,4 +104,9 @@ public class FunctionCallNode : StatementNode, ILlvmTranslatable
 
         return b.ToString();
     }
+
+    public override void Visit(StatementVisitor visit)
+    {
+        visit.Accept(this);
+    }
 }
