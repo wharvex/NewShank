@@ -107,7 +107,7 @@ public class IrGenerator
         LlvmModule.PrintToFile(Path.Combine(OutputHelper.DocPath, "IrOutput.ll"));
     }
 
-    public void GenerateIrFlat(string moduleName)
+    public void GenerateIrFlatPrintStr(string moduleName)
     {
         // What is encoded in the AST that each of these lines could be a response to?
         var llvmContext = LLVMContextRef.Create();
@@ -139,6 +139,56 @@ public class IrGenerator
         );
         llvmBuilder.BuildRet(LLVMValueRef.CreateConstInt(llvmContext.Int32Type, 0));
 
+        startFunc.VerifyFunction(LLVMVerifierFailureAction.LLVMPrintMessageAction);
+        writeFunc.VerifyFunction(LLVMVerifierFailureAction.LLVMPrintMessageAction);
+
+        llvmModule.PrintToFile(Path.Combine(OutputHelper.DocPath, "IrOutput.ll"));
+    }
+
+    public void GenerateIrFlatPrintInt(string moduleName)
+    {
+        // Initialize IR environment.
+        var llvmContext = LLVMContextRef.Create();
+        var llvmModule = llvmContext.CreateModuleWithName(moduleName);
+        var llvmBuilder = llvmContext.CreateBuilder();
+
+        // Create function types.
+        var writeFuncType = LLVMTypeRef.CreateFunction(
+            llvmContext.Int32Type,
+            [LLVMTypeRef.CreatePointer(llvmContext.Int8Type, 0)],
+            true
+        );
+        var startFuncType = LLVMTypeRef.CreateFunction(llvmContext.Int32Type, []);
+
+        // Create functions.
+        var writeFunc = llvmModule.AddFunction("printf", writeFuncType);
+        var startFunc = llvmModule.AddFunction("main", startFuncType);
+
+        // Set function linkages.
+        // External seems to be the default because nothing in the IR changes if these lines are
+        // commented out.
+        // Also see: https://stackoverflow.com/a/1358622/16458003
+        writeFunc.Linkage = LLVMLinkage.LLVMExternalLinkage;
+        startFunc.Linkage = LLVMLinkage.LLVMExternalLinkage;
+
+        // Create entry block for `start' and position the builder at its end.
+        var entryBlock = startFunc.AppendBasicBlock("entry");
+        llvmBuilder.PositionAtEnd(entryBlock);
+
+        // Create format string(s) for `write' call in `start'.
+        var intFormatString = llvmBuilder.BuildGlobalStringPtr("%d");
+
+        // Build `write' call in `start'.
+        llvmBuilder.BuildCall2(
+            writeFuncType,
+            writeFunc,
+            [intFormatString, LLVMValueRef.CreateConstInt(llvmContext.Int32Type, 1234)]
+        );
+
+        // Build return statement to terminate `start'.
+        llvmBuilder.BuildRet(LLVMValueRef.CreateConstInt(llvmContext.Int32Type, 0));
+
+        // Verify functions.
         startFunc.VerifyFunction(LLVMVerifierFailureAction.LLVMPrintMessageAction);
         writeFunc.VerifyFunction(LLVMVerifierFailureAction.LLVMPrintMessageAction);
 

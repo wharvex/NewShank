@@ -1,2 +1,2 @@
 define start()
-    write 1
+    write 1234

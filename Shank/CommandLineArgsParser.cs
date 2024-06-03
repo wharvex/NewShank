@@ -159,7 +159,11 @@ public class CommandLineArgsParser
                 break;
             case "PrintStr":
                 irGen = new IrGenerator();
-                irGen.GenerateIrFlat("root");
+                irGen.GenerateIrFlatPrintStr("root");
+                break;
+            case "PrintInt":
+                irGen = new IrGenerator();
+                irGen.GenerateIrFlatPrintInt("root");
                 break;
             default:
                 throw new UnreachableException();

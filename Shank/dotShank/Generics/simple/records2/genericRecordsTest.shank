@@ -1,3 +1,4 @@
+{abstract/parameterized type}
 record anythingHolder generic T, U
     data : T
     data2 : refersTo U
@@ -6,6 +7,11 @@ record student
     name : string
     gpa : real
 
+{ concrete type -- has all the information you need to compile }
+{
+alias simplify is anythingHolder integer, student
+}
+
 define start()
-variables anythingHolderInstance : anythingHolder integer, student
+variables anythingHolderInstance : anythingHolder (anythingHolder integer, student), student
     anythingHolderInstance.data := 1

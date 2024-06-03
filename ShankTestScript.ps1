@@ -23,7 +23,8 @@ function st
     "Interpret Negative", # 12
     "Interpret String", # 13
     "CompilePractice Minimal/Old", # 14
-    "CompilePractice Minimal/PrintStr/Shank --flat PrintStr" # 15
+    "CompilePractice Minimal/PrintStr/Shank --flat PrintStr", # 15
+    "CompilePractice Minimal/PrintInt/Shank --flat PrintInt" # 16
     #"Expressions",
     #"Overloads/overloadsTest.shank",
     #"Generics/complex",
