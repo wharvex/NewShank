@@ -303,6 +303,7 @@ public class Parser
             return lt;
         }
     }
+
     private ASTNode? Term()
     {
         var lt = Factor();
@@ -387,6 +388,7 @@ public class Parser
                     "Bad constant node type for converting to data type."
                 )
         };
+
     private static VariableNode.DataType GetDataTypeFromTokenType(TokenType tt) =>
         tt switch
         {
@@ -396,7 +398,7 @@ public class Parser
             TokenType.STRING => VariableNode.DataType.String,
             _ => throw new InvalidOperationException("Bad TokenType for conversion into DataType"),
         };
-    
+
     private TypeUsage GetTypeUsageFromToken(Token t) =>
         t.GetTokenType() switch
         {
@@ -409,24 +411,26 @@ public class Parser
                     "Bad TokenType for generating a TypeUsage: " + t.GetTokenType()
                 )
         };
+
     private VariableNode? ParseVariableTypes()
-    { 
+    {
         var variableName = new VariableNode();
-            Token? tokenType = handler.MatchAndRemove(TokenType.NUMBER) ??
-                               handler.MatchAndRemove(TokenType.STRING) ??
-                               handler.MatchAndRemove(TokenType.CHARACTER) ??
-                               handler.MatchAndRemove(TokenType.BOOLEAN);
-            if (tokenType == null)
-            {
-                return null;
-            }
-            var variableType = GetTypeUsageFromToken(tokenType);
-            Token? nameToken = handler.MatchAndRemove(TokenType.WORD);
-            if (nameToken == null)
-            {
-                throw new Exception("Nothing followed after variable declaration"); 
-            }
-            variableName.Name = nameToken.GetValue();
-            return variableName;
+        Token? tokenType =
+            handler.MatchAndRemove(TokenType.NUMBER)
+            ?? handler.MatchAndRemove(TokenType.STRING)
+            ?? handler.MatchAndRemove(TokenType.CHARACTER)
+            ?? handler.MatchAndRemove(TokenType.BOOLEAN);
+        if (tokenType == null)
+        {
+            return null;
+        }
+        var variableType = GetTypeUsageFromToken(tokenType);
+        Token? nameToken = handler.MatchAndRemove(TokenType.WORD);
+        if (nameToken == null)
+        {
+            throw new Exception("Nothing followed after variable declaration");
+        }
+        variableName.Name = nameToken.GetValue();
+        return variableName;
     }
 }
