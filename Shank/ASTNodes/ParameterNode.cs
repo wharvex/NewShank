@@ -58,10 +58,10 @@ public class ParameterNode : ASTNode
             ?? Parser
                 .GetDataTypeFromConstantNodeType(
                     Constant
-                        ?? throw new InvalidOperationException(
-                            "A ParameterNode should not have both Variable and Constant set to"
-                                + " null."
-                        )
+                    ?? throw new InvalidOperationException(
+                        "A ParameterNode should not have both Variable and Constant set to"
+                        + " null."
+                    )
                 )
                 .ToString()
                 .ToUpper()
@@ -81,7 +81,7 @@ public class ParameterNode : ASTNode
         {
             throw new InvalidOperationException(
                 "This ParameterNode is in an undefined state because Constant and Variable are"
-                    + " both null, or both non-null."
+                + " both null, or both non-null."
             );
         }
 
@@ -89,7 +89,7 @@ public class ParameterNode : ASTNode
         {
             throw new InvalidOperationException(
                 "This ParameterNode is in an undefined state because its value is stored in"
-                    + " Constant, but it is also 'var'."
+                + " Constant, but it is also 'var'."
             );
         }
     }
@@ -117,10 +117,10 @@ public class ParameterNode : ASTNode
 
     public bool ConstantTypeEquals(VariableNode givenVariable)
     {
-        return givenVariable.Type == GetConstantType();
+        return givenVariable.NewType == GetConstantType();
     }
 
-    public VariableNode.DataType GetConstantType()
+    public IType GetConstantType()
     {
         return Parser.GetDataTypeFromConstantNodeType(GetConstantSafe());
     }
@@ -131,13 +131,13 @@ public class ParameterNode : ASTNode
     )
     {
         // Check if the types are unequal.
-        if (givenVariable.Type != GetVariableType(variablesInScope))
+        if (givenVariable.NewType != GetVariableType(variablesInScope))
         {
             return false;
         }
 
         // The types are equal. If they're not Unknown, no further action needed.
-        if (givenVariable.Type != VariableNode.DataType.Unknown)
+        if (givenVariable.NewType is not UnknownType)
         {
             return true;
         }
@@ -160,9 +160,9 @@ public class ParameterNode : ASTNode
         throw new InvalidOperationException("Could not find given variable in scope");
     }
 
-    public VariableNode.DataType GetVariableType(Dictionary<string, VariableNode> variablesInScope)
+    public IType GetVariableType(Dictionary<string, VariableNode> variablesInScope)
     {
-        return GetVariableDeclarationSafe(variablesInScope).Type;
+        return GetVariableDeclarationSafe(variablesInScope).NewType;
     }
 
     public override string ToString()

@@ -255,7 +255,7 @@ public class RecordDataType : InterpreterDataType
 {
     public Dictionary<string, object> Value { get; init; } = [];
 
-    public Dictionary<string, VariableNode.DataType> MemberTypes { get; init; } = [];
+    public Dictionary<string, IType> MemberTypes { get; init; } = [];
 
     public RecordDataType(List<StatementNode> members)
     {
@@ -263,7 +263,7 @@ public class RecordDataType : InterpreterDataType
         {
             if (s is RecordMemberNode rmn)
             {
-                MemberTypes[rmn.Name] = rmn.Type;
+                MemberTypes[rmn.Name] = rmn.NewType;
             }
             else
             {
@@ -276,7 +276,7 @@ public class RecordDataType : InterpreterDataType
 
     public RecordDataType(List<VariableNode> members)
     {
-        members.ForEach(vn => MemberTypes[vn.GetNameSafe()] = vn.Type);
+        members.ForEach(vn => MemberTypes[vn.GetNameSafe()] = vn.NewType);
     }
 
     public RecordDataType(RecordDataType rdt)

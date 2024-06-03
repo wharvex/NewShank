@@ -80,6 +80,7 @@ public class IrGenerator
         {
             HelloWorld(printfFunc, "hello invalid");
         }
+
         LlvmBuilder.BuildRetVoid();
 
         OutputHelper.DebugPrintTxt(
@@ -153,13 +154,13 @@ public class IrGenerator
             _
                 => throw new NotImplementedException(
                     "Creating an LLVM function for Shank-builtin `"
-                        + builtin.Name
-                        + "' not supported yet."
+                    + builtin.Name
+                    + "' not supported yet."
                 )
         };
 
     private LLVMTypeRef[] GetParamTypes(IEnumerable<VariableNode> varNodes) =>
-        varNodes.Select(vn => GetLlvmTypeFromShankType(vn.Type)).ToArray();
+        varNodes.Select(vn => GetLlvmTypeFromShankType(vn.NewType)).ToArray();
 
     /// <summary>
     /// Find the first non-constant VariableNode in the given list and return its corresponding LLVM
@@ -172,17 +173,17 @@ public class IrGenerator
     /// <returns></returns>
     private LLVMTypeRef GetReturnType(IEnumerable<VariableNode> vns) =>
         vns.Where(vn => !vn.IsConstant)
-            .Select(vn => GetLlvmTypeFromShankType(vn.Type))
+            .Select(vn => GetLlvmTypeFromShankType(vn.NewType))
             .FirstOrDefault(LlvmContext.VoidType);
 
-    private LLVMTypeRef GetLlvmTypeFromShankType(VariableNode.DataType dataType) =>
-        dataType switch
+    private LLVMTypeRef GetLlvmTypeFromShankType(IType type) =>
+        type switch
         {
-            VariableNode.DataType.Integer => LlvmContext.Int64Type,
-            VariableNode.DataType.Real => LlvmContext.DoubleType,
-            VariableNode.DataType.String => LLVMTypeRef.CreatePointer(LlvmContext.Int8Type, 0),
-            VariableNode.DataType.Boolean => LlvmContext.Int1Type,
-            VariableNode.DataType.Character => LlvmContext.Int8Type,
+            IntegerType => LlvmContext.Int64Type,
+            RealType => LlvmContext.DoubleType,
+            StringType => LLVMTypeRef.CreatePointer(LlvmContext.Int8Type, 0),
+            BooleanType => LlvmContext.Int1Type,
+            CharacterType => LlvmContext.Int8Type,
             _ => LlvmContext.Int32Type,
         };
 }

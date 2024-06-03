@@ -81,7 +81,8 @@ public class VariableReferenceNode : ASTNode
         return ret;
     }
 
-    public VariableNode.DataType GetSpecificType(
+    // asumptions already analized
+    public IType GetSpecificType(
         Dictionary<string, RecordNode> records,
         Dictionary<string, ASTNode> imports,
         Dictionary<string, VariableNode> variables,
@@ -89,14 +90,11 @@ public class VariableReferenceNode : ASTNode
     )
     {
         var recordsAndImports = SemanticAnalysis.GetRecordsAndImports(records, imports);
-        return variables[name].Type switch
+        return variables[name].NewType switch
         {
-            VariableNode.DataType.Record
-                => ((RecordNode)recordsAndImports[name])
-                    .GetFromMembersByNameSafe(GetRecordMemberReferenceSafe().Name)
-                    .Type,
-            VariableNode.DataType.Array => variables[name].GetArrayTypeSafe(),
-            _ => variables[name].Type
+            RecordType r => r,
+            ArrayType a => a.Inner,
+            _ => variables[name].NewType
         };
     }
 

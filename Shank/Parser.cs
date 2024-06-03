@@ -4,28 +4,6 @@ namespace Shank;
 
 public class Parser
 {
-    // Only TokenTypes used to declare variables of that type appear in this list. The TokenTypes
-    // for 'record' and 'enum' are not in this list because user-defined identifiers are used to
-    // declare their types.
-    private readonly Token.TokenType[] _shankTokenTypes =
-    [
-        Token.TokenType.Integer,
-        Token.TokenType.Real,
-        Token.TokenType.Boolean,
-        Token.TokenType.Character,
-        Token.TokenType.String,
-        Token.TokenType.Array
-    ];
-
-    private readonly Token.TokenType[] _shankTokenTypesMinusArray =
-    [
-        Token.TokenType.Integer,
-        Token.TokenType.Real,
-        Token.TokenType.Boolean,
-        Token.TokenType.Character,
-        Token.TokenType.String
-    ];
-
     private readonly Token.TokenType[] _shankTokenTypesPlusIdentifier =
     [
         Token.TokenType.Integer,
@@ -37,6 +15,7 @@ public class Parser
         Token.TokenType.RefersTo,
         Token.TokenType.Identifier
     ];
+
     private readonly Token.TokenType[] _indentZeroTokenTypes =
     [
         Token.TokenType.Define,
@@ -99,6 +78,7 @@ public class Parser
     }
 
     private Token? MatchAndRemoveMultiple(params Token.TokenType[] ts)
+
     {
         Token? ret = null;
         var i = 0;
@@ -135,7 +115,9 @@ public class Parser
 
     private void ConsumeBlankLines()
     {
-        while (MatchAndRemove(Token.TokenType.EndOfLine) is not null) { }
+        while (MatchAndRemove(Token.TokenType.EndOfLine) is not null)
+        {
+        }
     }
 
     private void RequiresEndOfLine()
@@ -181,6 +163,7 @@ public class Parser
                     ASTNode.VrnExtType.ArrayIndex
                 );
             }
+
             if (MatchAndRemove(Token.TokenType.Dot) is not null)
             {
                 VariableReferenceNode? varRef = GetVariableReferenceNode();
@@ -195,8 +178,10 @@ public class Parser
                     ASTNode.VrnExtType.RecordMember
                 );
             }
+
             return new VariableReferenceNode(id.GetValueSafe());
         }
+
         return null;
     }
 
@@ -206,7 +191,7 @@ public class Parser
         var moduleName = MatchAndRemove(Token.TokenType.Module) is null
             ? "default"
             : MatchAndRemove(Token.TokenType.Identifier)?.GetValueSafe()
-                ?? throw new SyntaxErrorException("Expected a module name", Peek(0));
+              ?? throw new SyntaxErrorException("Expected a module name", Peek(0));
 
         // Require EOL if a module declaration was found.
         if (!moduleName.Equals("default"))
@@ -256,6 +241,7 @@ public class Parser
                     {
                         ret.addImportName(importModuleName);
                     }
+
                     break;
                 case Token.TokenType.Define:
                     ret.addFunction(Function(moduleName));
@@ -275,10 +261,11 @@ public class Parser
                 default:
                     throw new NotImplementedException(
                         "Support for parsing indent zero token "
-                            + indentZeroToken
-                            + " has not been implemented."
+                        + indentZeroToken
+                        + " has not been implemented."
                     );
             }
+
             ConsumeBlankLines();
 
             // Check for another construct.
@@ -434,11 +421,11 @@ public class Parser
         // could be a record member declaration or a function call from the Parser's point of view,
         // so we need to know the context.
         return Assignment()
-            ?? While()
-            ?? Repeat()
-            ?? For()
-            ?? If()
-            ?? (isRecord ? RecordMember() : FunctionCall());
+               ?? While()
+               ?? Repeat()
+               ?? For()
+               ?? If()
+               ?? (isRecord ? RecordMember() : FunctionCall());
     }
 
     private StatementNode? Statement2()
@@ -456,61 +443,108 @@ public class Parser
         }
 
         RequiresToken(Token.TokenType.Colon);
-
-        var typeToken =
-            MatchAndRemoveMultiple(_shankTokenTypesPlusIdentifier)
-            ?? throw new SyntaxErrorException("Expected a name", Peek(0));
-        Token? referenceName = null;
-        if (typeToken.Type is Token.TokenType.RefersTo)
-            referenceName =
-                MatchAndRemove(Token.TokenType.Identifier)
-                ?? throw new SyntaxErrorException(
-                    "Expected a record name after refersTo token.",
-                    Peek(0)
-                );
+        var type = Type(false);
 
         RequiresEndOfLine();
-
-        if (_shankTokenTypes.Contains(typeToken.Type))
-            return new RecordMemberNode(
-                nameToken.GetValueSafe(),
-                GetDataTypeFromTokenType(typeToken.Type)
-            );
-        else if (referenceName is not null)
-            return new RecordMemberNode(
-                nameToken.GetValueSafe(),
-                "refersTo",
-                referenceName.GetValueSafe()
-            );
-        else
-            return new RecordMemberNode(nameToken.GetValueSafe(), typeToken.GetValueSafe());
+        return new RecordMemberNode(nameToken.GetValueSafe(), type);
     }
 
-    public static VariableNode.DataType GetDataTypeFromConstantNodeType(ASTNode constantNode) =>
+    public static IType GetDataTypeFromConstantNodeType(ASTNode constantNode) =>
         constantNode switch
         {
-            IntNode => VariableNode.DataType.Integer,
-            FloatNode => VariableNode.DataType.Real,
-            StringNode => VariableNode.DataType.String,
-            CharNode => VariableNode.DataType.Character,
-            BooleanExpressionNode or BoolNode => VariableNode.DataType.Boolean,
+            IntNode => new IntegerType(),
+            // TODO: math op node?
+            FloatNode => new RealType(),
+            StringNode => new  StringType(),
+            CharNode => new CharacterType(),
+            BooleanExpressionNode or BoolNode => new BooleanType(),
             _
                 => throw new InvalidOperationException(
                     "Bad constant node type for converting to data type."
                 )
         };
 
-    private static VariableNode.DataType GetDataTypeFromTokenType(Token.TokenType tt) =>
-        tt switch
+    // assumptions you want to parse a type
+    private IType Type(bool inVariables)
+    {
+        var typeToken = MatchAndRemoveMultiple(_shankTokenTypesPlusIdentifier) ??
+                        throw new SyntaxErrorException("expected start of a type", Peek(0));
+
+        return typeToken.Type switch
         {
-            Token.TokenType.Integer => VariableNode.DataType.Integer,
-            Token.TokenType.Real => VariableNode.DataType.Real,
-            Token.TokenType.Boolean => VariableNode.DataType.Boolean,
-            Token.TokenType.Character => VariableNode.DataType.Character,
-            Token.TokenType.String => VariableNode.DataType.String,
-            Token.TokenType.Array => VariableNode.DataType.Array,
-            _ => throw new InvalidOperationException("Bad TokenType for conversion into DataType"),
+            Token.TokenType.Real => new RealType(checkRange(true)),
+            Token.TokenType.Identifier => CustomType(inVariables, typeToken),
+            Token.TokenType.Integer => new IntegerType(checkRange(true)),
+            Token.TokenType.Boolean => new BooleanType(),
+            Token.TokenType.Character => new CharacterType(),
+            Token.TokenType.String => new StringType(checkRange(true)),
+            Token.TokenType.Array => ArrayType(inVariables, typeToken),
+            Token.TokenType.RefersTo => new ReferenceType(Type(inVariables)),
+            _ => throw new SyntaxErrorException("Unknown type", typeToken)
         };
+    }
+
+    static IEnumerable<T> Repeat<T>(Func<T> generator)
+    {
+        yield return generator();
+    }
+
+    private IType CustomType(bool inVariables, Token typeToken)
+    {
+        // see if there are type parameters
+        var token = Peek(0);
+        // and that they are token types the correspond with types
+        // if so parse the type
+        var first = token is null || _shankTokenTypesPlusIdentifier.Contains(token.Type) ? null : Type(inVariables);
+        // then parse each comma followed by another type parameter until we do find any more commas
+        var typeParams = (first == null
+            ? []
+            : Enumerable.Concat([first],
+                Repeat(() => MatchAndRemove(Token.TokenType.Comma) is null ? null : Type(inVariables))
+                    .TakeWhile(r => r is not null)).ToList())!;
+        return new UnknownType(typeToken.GetValueSafe(), typeParams!);
+    }
+
+    private ArrayType ArrayType(bool inVariables, Token? arrayToken)
+    {
+        var range = checkRange(false);
+        if (range is null && inVariables)
+        {
+            throw new SyntaxErrorException("Array in variables declared without a size", arrayToken);
+        }
+
+        var _ = MatchAndRemove(Token.TokenType.Of) ??
+                throw new SyntaxErrorException("Array declared without type missing of", arrayToken);
+
+        return new ArrayType(Type(true));
+    }
+
+    private Range? checkRange(bool isFloat)
+    {
+        if (MatchAndRemove(Token.TokenType.From) is null)
+        {
+            return null;
+        }
+
+        var fromNode = ProcessNumericConstant(
+            MatchAndRemove(Token.TokenType.Number)
+            ?? throw new SyntaxErrorException("Expected a number", Peek(0))
+        );
+
+        RequiresToken(Token.TokenType.To);
+
+        var toNode = ProcessNumericConstant(
+            MatchAndRemove(Token.TokenType.Number)
+            ?? throw new SyntaxErrorException("Expected a number", Peek(0))
+        );
+        if (!isFloat && fromNode is FloatNode || toNode is FloatNode)
+        {
+            throw new SyntaxErrorException("Expected integer type limits found float ones", null);
+        }
+
+        return new Range(fromNode is FloatNode from ? from.Value : ((IntNode)fromNode).Value,
+            toNode is FloatNode to ? to.Value : ((IntNode)toNode).Value);
+    }
 
     private FunctionCallNode? FunctionCall()
     {
@@ -524,7 +558,8 @@ public class Parser
             var isVariable = MatchAndRemove(Token.TokenType.Var) != null;
             var variable = GetVariableReferenceNode();
             if (variable == null)
-            { // might be a constant
+            {
+                // might be a constant
                 var f = Factor();
                 if (f == null)
                     throw new SyntaxErrorException(
@@ -584,6 +619,7 @@ public class Parser
             StatementsBody(body);
             return new ElseNode(body);
         }
+
         return null;
     }
 
@@ -659,8 +695,8 @@ public class Parser
         if (
             Peek(1)?.Type
             is Token.TokenType.Assignment
-                or Token.TokenType.LeftBracket
-                or Token.TokenType.Dot
+            or Token.TokenType.LeftBracket
+            or Token.TokenType.Dot
         )
         {
             var target = GetVariableReferenceNode();
@@ -706,6 +742,7 @@ public class Parser
 
             MatchAndRemove(Token.TokenType.EndOfLine);
         }
+
         return retVal;
     }
 
@@ -725,6 +762,7 @@ public class Parser
 
             MatchAndRemove(Token.TokenType.EndOfLine);
         } while (MatchAndRemove(Token.TokenType.Variables) != null);
+
         return retVal;
     }
 
@@ -734,55 +772,15 @@ public class Parser
         string parentModuleName
     )
     {
-        var typeToken =
-            MatchAndRemoveMultiple(_shankTokenTypesPlusIdentifier)
-            ?? throw new SyntaxErrorException("Expected type", Peek(0));
+        var type = Type(true);
 
-        return typeToken.Type switch
-        {
-            Token.TokenType.Array => CreateVariablesArray(names, isConstant, parentModuleName),
-            Token.TokenType.Identifier
-                => CreateVariablesUnknown(
-                    names,
-                    isConstant,
-                    parentModuleName,
-                    typeToken.GetValueSafe()
-                ),
-            _ when _shankTokenTypesMinusArray.Contains(typeToken.Type)
-                => CreateVariablesBasic(
-                    names,
-                    isConstant,
-                    parentModuleName,
-                    GetDataTypeFromTokenType(typeToken.Type)
-                ),
-            Token.TokenType.RefersTo
-                => CreateRefersToVariables(names, isConstant, parentModuleName),
-            _ => throw new SyntaxErrorException("Expected a valid type", Peek(0))
-        };
-    }
 
-    private List<VariableNode> CreateRefersToVariables(
-        List<string> names,
-        bool isConstant,
-        string parentModuleName
-    )
-    {
-        Token? t = MatchAndRemove(Token.TokenType.Identifier);
-        if (t is null)
-            throw new SyntaxErrorException("Could not get reference record type", Peek(0));
-        var ret = names
-            .Select(
-                n =>
-                    new VariableNode()
-                    {
-                        IsConstant = isConstant,
-                        NewType = new ReferenceType(new UnknownType(t.Value, new List<IType>())),
-                        Name = n,
-                        ModuleName = parentModuleName,
-                    }
-            )
-            .ToList();
-        return ret;
+        return CreateVariablesBasic(
+            names,
+            isConstant,
+            parentModuleName,
+            type
+        );
     }
 
     private List<VariableNode> CreateVariablesBasic(
@@ -792,54 +790,17 @@ public class Parser
         IType type
     )
     {
-        var ret = names
-            .Select(
-                n =>
-                    new VariableNode()
-                    {
-                        IsConstant = isConstant,
-                        NewType = type,
-                        Name = n,
-                        ModuleName = parentModuleName,
-                    }
-            )
-            .ToList();
-        CheckForRange(ret);
-        return ret;
-    }
+        // ranges parsed in the type
+        return names.Select(n => new VariableNode()
 
-    private List<VariableNode> CreateVariablesArray(
-        List<string> names,
-        bool isConstant,
-        string parentModuleName
-    )
-    {
-        // Parse the first part of the declaration.
-        var ret = CreateVariablesBasic(
-            names,
-            isConstant,
-            parentModuleName,
-            VariableNode.DataType.Array
-        );
-
-        // Require 'of'.
-        RequiresToken(Token.TokenType.Of);
-
-        // Get the array type.
-        var arrayType =
-            MatchAndRemoveMultiple(_shankTokenTypesPlusIdentifier)
-            ?? throw new SyntaxErrorException("Expected a type", Peek(0));
-
-        // Set the array type on all the VariableNodes.
-        if (arrayType.Type != Token.TokenType.Identifier)
         {
-            ret.ForEach(d => d.ArrayType = GetDataTypeFromTokenType(arrayType.Type));
-        }
-        ret.ForEach(d => d.ArrayTypeEnhanced = GetTypeFromToken(arrayType));
-
-        // Return the VariableNodes.
-        return ret;
+            IsConstant = isConstant,
+            NewType = type,
+            Name = n,
+            ModuleName = parentModuleName,
+        }).ToList();
     }
+
 
     private IType GetTypeFromToken(Token t) =>
         t.Type switch
@@ -857,42 +818,6 @@ public class Parser
                 )
         };
 
-    private List<VariableNode> CreateVariablesUnknown(
-        List<string> names,
-        bool isConstant,
-        string parentModuleName,
-        string unknownType
-    )
-    {
-        // Parse the first part of the declaration.
-        var ret = CreateVariablesBasic(
-            names,
-            isConstant,
-            parentModuleName,
-            new UnknownType(unknownType)
-        );
-
-        // Get the generic type arguments if they exist.
-        List<Token> typeArgs = [];
-        if (MatchAndRemoveMultiple(_shankTokenTypesPlusIdentifier) is { } firstArg)
-        {
-            ParseCommaSeparatedTokens(firstArg, typeArgs, _shankTokenTypesPlusIdentifier);
-        }
-
-        // Set the GenericTypeArgs on the VariableNodes to return.
-        ret.ForEach(
-            vn =>
-            {
-                if (vn.NewType is UnknownType ty)
-                {
-                    ty.TypeParameters = typeArgs.Count > 0 ? typeArgs.Select(GetTypeFromToken).ToList() : new List<IType>();
-                }
-            }
-        );
-
-        // Return the VariableNodes.
-        return ret;
-    }
 
     private static bool GetMutability(
         VariableNode.DeclarationContext declarationContext,
@@ -930,8 +855,8 @@ public class Parser
             _
                 => throw new NotImplementedException(
                     "Invalid variable declaration context `"
-                        + declarationContext
-                        + "' for determining variable mutability."
+                    + declarationContext
+                    + "' for determining variable mutability."
                 )
         };
 
@@ -1005,10 +930,10 @@ public class Parser
         {
             tokens.Add(
                 MatchAndRemoveMultiple(matchAgainst)
-                    ?? throw new SyntaxErrorException(
-                        "Expected one of: " + string.Join(", ", matchAgainst),
-                        Peek(0)
-                    )
+                ?? throw new SyntaxErrorException(
+                    "Expected one of: " + string.Join(", ", matchAgainst),
+                    Peek(0)
+                )
             );
         }
     }
@@ -1020,26 +945,25 @@ public class Parser
         tokens.ForEach(t => idValues.Add(t.GetValueSafe()));
     }
 
-    private void CheckForRange(List<VariableNode> retVal)
+    private (ASTNode, ASTNode)? CheckForRange()
     {
         if (MatchAndRemove(Token.TokenType.From) is null)
         {
-            return;
+            return null;
         }
 
         var fromNode = ProcessNumericConstant(
             MatchAndRemove(Token.TokenType.Number)
-                ?? throw new SyntaxErrorException("Expected a number", Peek(0))
+            ?? throw new SyntaxErrorException("Expected a number", Peek(0))
         );
-        retVal.ForEach(v => v.From = fromNode);
 
         RequiresToken(Token.TokenType.To);
 
         var toNode = ProcessNumericConstant(
             MatchAndRemove(Token.TokenType.Number)
-                ?? throw new SyntaxErrorException("Expected a number", Peek(0))
+            ?? throw new SyntaxErrorException("Expected a number", Peek(0))
         );
-        retVal.ForEach(v => v.To = toNode);
+        return (fromNode, toNode);
     }
 
     private List<VariableNode> ProcessConstants(string? parentModuleName)
@@ -1321,12 +1245,14 @@ public class Parser
         {
             return new StringNode(sc.Value ?? string.Empty);
         }
+
         if (MatchAndRemove(Token.TokenType.CharContents) is { } cc)
         {
             if (cc.Value is null || cc.Value.Length != 1)
                 throw new SyntaxErrorException($"Invalid character constant {cc.Value}", Peek(0));
             return new CharNode(cc.Value[0]);
         }
+
         if (MatchAndRemove(Token.TokenType.True) is { })
             return new BoolNode(true);
         if (MatchAndRemove(Token.TokenType.False) is { })
@@ -1361,6 +1287,7 @@ public class Parser
                 );
             exports.AddLast(token.Value);
         }
+
         //TODO: add handling for {} and [] from shank language definition
         return exports;
     }
@@ -1390,6 +1317,7 @@ public class Parser
                     Peek(0)
                 );
             }
+
             functionsToImport.AddLast(token.Value);
             if (Peek(1).Type == Token.TokenType.Identifier)
             {
@@ -1402,6 +1330,7 @@ public class Parser
                 }
             }
         }
+
         return functionsToImport;
     }
 
@@ -1423,6 +1352,7 @@ public class Parser
         {
             throw new SyntaxErrorException("Expected an for token after test name, not: ", Peek(0));
         }
+
         if ((token = MatchAndRemove(Token.TokenType.Identifier)) == null)
         {
             throw new SyntaxErrorException(
@@ -1430,6 +1360,7 @@ public class Parser
                 Peek(0)
             );
         }
+
         test = new TestNode(testName, token.Value);
         if (parentModuleName != null)
             test.parentModuleName = parentModuleName;
@@ -1451,6 +1382,7 @@ public class Parser
                 MatchAndRemove(Token.TokenType.Semicolon);
             }
         }
+
         if (MatchAndRemove(Token.TokenType.RightParen) == null)
             throw new SyntaxErrorException("Expected a right paren", Peek(0));
         test.LineNum = Peek(0).LineNumber;
@@ -1477,10 +1409,12 @@ public class Parser
                 Peek(0)
             );
         }
+
         if (MatchAndRemove(Token.TokenType.Equal) == null)
         {
             throw new SyntaxErrorException("Expecting equal in enum declaration, ", Peek(0));
         }
+
         if (MatchAndRemove(Token.TokenType.LeftBracket) == null)
         {
             throw new SyntaxErrorException(
@@ -1488,6 +1422,7 @@ public class Parser
                 Peek(0)
             );
         }
+
         EnumNode enumNode = new EnumNode(token.Value, parentModuleName, GetEnumElements());
         return enumNode;
     }
@@ -1503,6 +1438,7 @@ public class Parser
                 Peek(0)
             );
         }
+
         enums.AddLast(token.Value);
         while (MatchAndRemove(Token.TokenType.Comma) != null)
         {
@@ -1514,8 +1450,10 @@ public class Parser
                     Peek(0)
                 );
             }
+
             enums.AddLast(token.Value);
         }
+
         if (MatchAndRemove(Token.TokenType.RightBracket) == null)
         {
             throw new SyntaxErrorException(
@@ -1523,6 +1461,7 @@ public class Parser
                 Peek(0)
             );
         }
+
         return enums;
     }
 }

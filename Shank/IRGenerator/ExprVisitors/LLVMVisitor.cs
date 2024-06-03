@@ -34,7 +34,7 @@ public class LLVMVisitor : Visitor<LLVMValueRef>
             return Types.INTEGER;
         else if (typeRef == LLVMTypeRef.Double)
             return Types.FLOAT;
-        else if (typeRef == _context.StringType)
+        else if (typeRef == _context.LLVMStringType)
             return Types.STRING;
         else
             throw new Exception("undefined type");
