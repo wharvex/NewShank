@@ -107,7 +107,7 @@ public class SemanticAnalysis
                     //GetTargetTypeForAssignmentCheck can now maybe return null, we catch it here
                     if (targetTypeNull == null)
                         throw new Exception("Couldn't find target type");
-                    VariableNode.DataType targetType = (VariableNode.DataType)targetTypeNull;
+                    var targetType = (IType)targetTypeNull;
 
                     CheckNode(
                         targetType,
@@ -198,7 +198,7 @@ public class SemanticAnalysis
     // This is why something like type usage/IType is useful, because when we just return the datatype
     // for instiation we do lose type information, such as what type of record, or enum, what is the inner type of the array?
     // and IType is the best because it only stores whats neccesary for a givern type
-    private static Dictionary<string, VariableNode.DataType> CheckFunctionCall(
+    private static Dictionary<string, IType> CheckFunctionCall(
         List<ParameterNode> param,
         Dictionary<string, VariableNode> variables,
         FunctionNode fn,
@@ -224,7 +224,7 @@ public class SemanticAnalysis
             .ToDictionary();
     }
 
-    public static IEnumerable<(String, VariableNode.DataType)> TypeCheckAndInstiateGenericParameter(
+    public static IEnumerable<(String, IType)> TypeCheckAndInstiateGenericParameter(
         VariableNode param,
         ParameterNode argument,
         Dictionary<string, VariableNode> variables,
@@ -369,30 +369,34 @@ public class SemanticAnalysis
         {
             try
             {
-                if (variablesLookup[an.Target.Name].Type is VariableNode.DataType.Real)
+                if (variablesLookup[an.Target.Name].NewType is RealType f )
                 {
-                    var from = (FloatNode)variablesLookup[an.Target.Name].From;
-                    var to = (FloatNode)variablesLookup[an.Target.Name].To;
-                    if (from is null || to is null)
+                    if (f.Range is null)
+                    {
                         return;
+                    }
+                    var from = f.Range.Value.From;
+                    var to = f.Range.Value.To;
                     float upper = GetMaxRange(an.Expression, variablesLookup);
                     float lower = GetMinRange(an.Expression, variablesLookup);
 
-                    if (lower < from.Value || upper > to.Value)
+                    if (lower < from|| upper > to)
                         throw new Exception(
                             $"The variable {an.Target.Name} can only be assigned expressions that won't overstep its range."
                         );
                 }
-                else
+                else if (variablesLookup[an.Target.Name].NewType is IRangeType i ) // all other i range type are bounded by integers
                 {
-                    var from = (IntNode)variablesLookup[an.Target.Name].From;
-                    var to = (IntNode)variablesLookup[an.Target.Name].To;
-                    if (from is null || to is null)
-                        return;
+                    if (i.Range is null)
+                                        {
+                                            return;
+                                        }
+                                        var from = i.Range.Value.From;
+                                        var to = i.Range.Value.To;
                     int upper = (int)GetMaxRange(an.Expression, variablesLookup);
                     int lower = (int)GetMinRange(an.Expression, variablesLookup);
 
-                    if (lower < from.Value || upper > to.Value)
+                    if (lower < from|| upper > to)
                         throw new Exception(
                             $"The variable {an.Target.Name} can only be assigned expressions that wont overstep its range."
                         );
@@ -436,12 +440,13 @@ public class SemanticAnalysis
                 throw new Exception(
                     "Ranged variables can only be assigned variables with a range."
                 );
-            var dataType = variables[vrn.Name].Type;
-            if (dataType is VariableNode.DataType.Integer)
+            var dataType = variables[vrn.Name].NewType;
+            if (dataType is IntegerType)
                 return ((IntNode)variables[vrn.Name].To).Value;
-            else if (dataType is VariableNode.DataType.Real)
+            else if (dataType is RealType)
                 return ((FloatNode)variables[vrn.Name].To).Value;
-            else if (dataType is VariableNode.DataType.String)
+            // todo: why the to at the end should it be look up variable find its current value and use that if possible
+            else if (dataType is StringType)
                 return ((StringNode)variables[vrn.Name].To).Value.Length;
         }
 
@@ -479,14 +484,16 @@ public class SemanticAnalysis
                 throw new Exception(
                     "Ranged variables can only be assigned variables with a range."
                 );
-            var dataType = variables[vrn.Name].Type;
-            if (dataType is VariableNode.DataType.Integer)
-                return ((IntNode)variables[vrn.Name].To).Value;
-            else if (dataType is VariableNode.DataType.Real)
-                return ((FloatNode)variables[vrn.Name].To).Value;
-            else if (dataType is VariableNode.DataType.String)
-                return ((StringNode)variables[vrn.Name].To).Value.Length;
-        }
+            var dataType = variables[vrn.Name].NewType;
+                        if (dataType is IntegerType)
+                            return ((IntNode)variables[vrn.Name].To).Value;
+                        else if (dataType is RealType)
+                            return ((FloatNode)variables[vrn.Name].To).Value;
+                        // todo: why the to at the end should it be look up variable find its current value and use that if possible
+                        else if (dataType is StringType)
+                            return ((StringNode)variables[vrn.Name].To).Value.Length;
+                    }
+
 
         throw new Exception("Unrecognized node type in math expression while checking range");
     }
@@ -520,33 +527,33 @@ public class SemanticAnalysis
             else
                 // TODO: This will produce an InvalidCastException if ben.Right is not a VRN.
                 variable = variables[((VariableReferenceNode)ben.Right).Name];
-            switch (variable.Type)
+            switch (variable.NewType)
             {
-                case VariableNode.DataType.Integer:
+                case  IntegerType:
                     if (
                         ben.Right is not IntNode
                         || (
                             ben.Right is VariableReferenceNode vrn2
-                            && variables[vrn2.Name].Type != VariableNode.DataType.Integer
+                            && variables[vrn2.Name].NewType is not IntegerType
                         )
                     )
                         throw new Exception(
                             "Integers can only be compared to integers or integer variables."
                         );
                     break;
-                case VariableNode.DataType.Real:
+                case RealType:
                     if (
                         ben.Right is not FloatNode
                         || (
                             ben.Right is VariableReferenceNode vrn3
-                            && variables[vrn3.Name].Type != VariableNode.DataType.Real
+                            && variables[vrn3.Name].NewType is not RealType
                         )
                     )
                         throw new Exception(
                             "Floats can only be compared to floats or float variables."
                         );
                     break;
-                case VariableNode.DataType.Enum:
+                case EnumType e:
                     Dictionary<string, EnumNode> enums;
                     if (parentModule.getEnums().ContainsKey(variable.UnknownType))
                         enums = parentModule.getEnums();
@@ -585,20 +592,20 @@ public class SemanticAnalysis
     }
 
     //may return null as GetRecordTypeRecursive can sometimes return null, although it should never reach here
-    private static VariableNode.DataType? GetTargetTypeForAssignmentCheck(
+    private static IType GetTargetTypeForAssignmentCheck(
         VariableNode targetDefinition,
         VariableReferenceNode targetUsage,
         ModuleNode parentModule
     ) =>
-        targetDefinition.Type switch
+        targetDefinition.NewType switch
         {
-            VariableNode.DataType.Array
+            ArrayType a
                 => targetUsage.ExtensionType == ASTNode.VrnExtType.None
                     ? throw new NotImplementedException(
                         "It is not implemented yet to assign to the base of an array variable."
                     )
-                    : targetDefinition.GetArrayTypeSafe(),
-            VariableNode.DataType.Record
+                    : a.Inner,
+            RecordType r
                 => GetRecordTypeRecursive(
                     parentModule,
                     (RecordNode)
@@ -607,7 +614,7 @@ public class SemanticAnalysis
                         ],
                     targetUsage
                 ),
-            VariableNode.DataType.Reference
+            ReferenceType r
                 => GetRecordTypeRecursive(
                     parentModule,
                     (RecordNode)
@@ -617,11 +624,11 @@ public class SemanticAnalysis
                     targetUsage
                 ),
 
-            VariableNode.DataType.Unknown => throw new InvalidOperationException("hi"),
-            _ => targetDefinition.Type
+            UnknownType u => throw new InvalidOperationException($"type should have fully resolved by this point {u}"),
+            _ => targetDefinition.NewType
         };
 
-    private static VariableNode.DataType GetSpecificRecordType(
+    private static IType GetSpecificRecordType(
         ModuleNode parentModule,
         VariableNode targetDefinition,
         VariableReferenceNode targetUsage
@@ -633,7 +640,7 @@ public class SemanticAnalysis
                 ]
         )
             .GetFromMembersByNameSafe(targetUsage.GetRecordMemberReferenceSafe().Name)
-            .Type;
+            .NewType;
 
     //can return null as we may need to step backwards once recursive loop
     //this is if there is a nested record or reference, in which case the type that we want to return to be checked
@@ -641,7 +648,7 @@ public class SemanticAnalysis
     //if we checked for an extension when the target should be one of these types, an error is thrown, so if there is no extension
     //on the variable reference node, we return null to the previous recursive pass, which returns either VariableNode.DataType.Record
     //or Reference depending on what the previous loop found
-    private static VariableNode.DataType? GetRecordTypeRecursive(
+    private static IType? GetRecordTypeRecursive(
         ModuleNode parentModule,
         RecordNode targetDefinition,
         VariableReferenceNode targetUsage
@@ -649,13 +656,11 @@ public class SemanticAnalysis
     {
         if (targetUsage.Extension is null)
             return null;
-        VariableNode.DataType vndt = targetDefinition
+        var vndt = targetDefinition
             .GetFromMembersByNameSafe(targetUsage.GetRecordMemberReferenceSafe().Name)
-            .Type;
+            .NewType;
         if (
-            vndt != VariableNode.DataType.Record
-            && vndt != VariableNode.DataType.Reference
-            && vndt != VariableNode.DataType.Unknown
+            vndt is not RecordType or ReferenceType or UnknownType
         )
             return vndt;
         else
@@ -724,7 +729,7 @@ public class SemanticAnalysis
     }
 
     private static void CheckNode(
-        VariableNode.DataType targetType,
+        IType targetType,
         ASTNode anExpression,
         IReadOnlyDictionary<string, VariableNode> variables,
         ModuleNode parentModule,
@@ -734,13 +739,13 @@ public class SemanticAnalysis
         switch (anExpression)
         {
             case BooleanExpressionNode booleanExpressionNode:
-                if (targetType != VariableNode.DataType.Boolean)
+                if (targetType is not BooleanType)
                     throw new Exception(
                         "Boolean expressions have to be assigned to boolean variables"
                     );
                 break;
             case BoolNode boolNode:
-                if (targetType != VariableNode.DataType.Boolean)
+                if (targetType is not BooleanType)
                     throw new Exception(
                         "true and false must be assigned to boolean variables; found "
                             + boolNode.Value
@@ -750,17 +755,16 @@ public class SemanticAnalysis
                 break;
             case CharNode charNode:
                 if (
-                    targetType != VariableNode.DataType.Character
-                    && targetType != VariableNode.DataType.String
+                    targetType is not StringType or CharacterType
                 )
                     throw new Exception("Characters have to be assigned to character variables");
                 break;
             case FloatNode floatNode:
-                if (targetType != VariableNode.DataType.Real)
+                if (targetType is not RealType)
                     throw new Exception("Real numbers have to be assigned to real variables");
                 break;
             case IntNode intNode:
-                if (targetType != VariableNode.DataType.Integer)
+                if (targetType is not IntegerType)
                     throw new Exception(
                         "Integer numbers have to be assigned to integer variables. Found "
                             + targetType
@@ -774,8 +778,7 @@ public class SemanticAnalysis
                 break;
             case StringNode stringNode:
                 if (
-                    targetType != VariableNode.DataType.Character
-                    && targetType != VariableNode.DataType.String
+                    targetType is not StringType or CharacterType
                 )
                     throw new Exception("strings have to be assigned to string variables");
                 break;
@@ -823,14 +826,14 @@ public class SemanticAnalysis
                             $"Could not find the definition for an enum containing the element {vrn.Name}."
                         );
                     if (
-                        enumDefinition.Type != target.UnknownType
+                        enumDefinition.NewType != target.UnknownType
                         && (
-                            target.Type != VariableNode.DataType.Record
-                            && target.Type != VariableNode.DataType.Reference
+                            target.NewType != VariableNode.DataType.Record
+                            && target.NewType != VariableNode.DataType.Reference
                         )
                     )
                         throw new Exception(
-                            $"Cannot assign an enum of type {enumDefinition.Type} to the enum element {target.UnknownType}."
+                            $"Cannot assign an enum of type {enumDefinition.NewType} to the enum element {target.UnknownType}."
                         );
                 }
                 else
@@ -840,7 +843,7 @@ public class SemanticAnalysis
                         throw new Exception(
                             vrn.Name
                                 + " is a "
-                                + variables[vrn.Name].Type
+                                + variables[vrn.Name].NewType
                                 + " and can't be assigned to a "
                                 + targetType
                         );
@@ -1126,7 +1129,7 @@ public class SemanticAnalysis
                         currentModule.Value.Records,
                         currentModule.Value.Imported
                     );
-                    if (variable.Type == VariableNode.DataType.Unknown)
+                    if (variable.NewType == VariableNode.DataType.Unknown)
                     {
                         if (
                             variable.UnknownType != null
@@ -1134,7 +1137,7 @@ public class SemanticAnalysis
                             && enumsAndImports[variable.UnknownType] is EnumNode
                         )
                         {
-                            variable.Type = VariableNode.DataType.Enum;
+                            variable.NewType = VariableNode.DataType.Enum;
                         }
                         else if (
                             variable.UnknownType != null
@@ -1142,7 +1145,7 @@ public class SemanticAnalysis
                             && recordsAndImports[variable.UnknownType] is RecordNode
                         )
                         {
-                            variable.Type = VariableNode.DataType.Record;
+                            variable.NewType = VariableNode.DataType.Record;
                             var allRecords = GetRecordsAndImports(
                                 currentModule.Value.Records,
                                 currentModule.Value.Imported
@@ -1168,7 +1171,7 @@ public class SemanticAnalysis
                     var assignment = (AssignmentNode)statement;
                     foreach (var variable in currentFunction.LocalVariables)
                     {
-                        if (variable.Type == VariableNode.DataType.Enum)
+                        if (variable.NewType == VariableNode.DataType.Enum)
                         {
                             if (assignment.Target.Name == variable.Name)
                             {
@@ -1200,11 +1203,11 @@ public class SemanticAnalysis
                 )
             )
             {
-                rmn.Type = VariableNode.DataType.Record;
+                rmn.NewType = VariableNode.DataType.Record;
             }
             else
             {
-                rmn.Type = VariableNode.DataType.Enum;
+                rmn.NewType = VariableNode.DataType.Enum;
             }
         }
     }

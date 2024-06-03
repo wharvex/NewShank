@@ -13,7 +13,7 @@ public struct Range
     public float From { get; set; }
     public float To { get; set; }
 }
-public interface IRangeType: IType
+public interface IRangeType : IType
 {
     public Range? Range { get; set; }
 }
@@ -21,7 +21,7 @@ public struct BooleanType : IType;
 
 public struct StringType : IRangeType
 {
-    public StringType(Range? range= null)
+    public StringType(Range? range = null)
     {
         Range = range;
     }
@@ -66,6 +66,25 @@ public record struct UnknownType(String TypeName, List<IType> TypeParameters) : 
 {
     public UnknownType(String TypeName) : this(TypeName, new List<IType>())
     {
+    }
+    public VariableNode.UnknownTypeResolver ResolveUnknownType(ModuleNode parentModule)
+    {
+        if (
+                parentModule.getEnums().ContainsKey(TypeName)
+                && parentModule.Records.ContainsKey(TypeName)
+            )
+            {
+                return VariableNode.UnknownTypeResolver.Multiple;
+            }
+
+            if (parentModule.getEnums().ContainsKey(TypeName))
+            {
+                return VariableNode.UnknownTypeResolver.Enum;
+            }
+
+            return parentModule.Records.ContainsKey(TypeName)
+                ? VariableNode.UnknownTypeResolver.Record
+                : VariableNode.UnknownTypeResolver.None;
     }
 }
 public record struct ReferenceType(IType inner) : IType;

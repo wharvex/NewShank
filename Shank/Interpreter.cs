@@ -293,14 +293,14 @@ public class Interpreter
             var t = rdt.MemberTypes[vrn.Name];
             rdt.Value[vrn.Name] = t switch
             {
-                VariableNode.DataType.Boolean => ResolveBool(an.Expression, variables),
-                VariableNode.DataType.String => ResolveString(an.Expression, variables),
-                VariableNode.DataType.Real => ResolveFloat(an.Expression, variables),
-                VariableNode.DataType.Integer => ResolveInt(an.Expression, variables),
-                VariableNode.DataType.Character => ResolveChar(an.Expression, variables),
-                VariableNode.DataType.Record => ResolveRecord(an.Expression, variables),
-                VariableNode.DataType.Reference => ResolveReference(an.Expression, variables),
-                VariableNode.DataType.Enum => ResolveEnum(an.Expression, variables),
+                BooleanType => ResolveBool(an.Expression, variables),
+                StringType => ResolveString(an.Expression, variables),
+                RealType => ResolveFloat(an.Expression, variables),
+                IntegerType => ResolveInt(an.Expression, variables),
+                CharacterType => ResolveChar(an.Expression, variables),
+                RecordType => ResolveRecord(an.Expression, variables),
+                ReferenceType => ResolveReference(an.Expression, variables),
+                EnumType => ResolveEnum(an.Expression, variables),
 
                 _
                     => throw new NotImplementedException(
@@ -329,11 +329,11 @@ public class Interpreter
             adt.AddElement(
                 adt.ArrayContentsType switch
                 {
-                    VariableNode.DataType.Integer => ResolveInt(an.Expression, variables),
-                    VariableNode.DataType.Real => ResolveFloat(an.Expression, variables),
-                    VariableNode.DataType.String => ResolveString(an.Expression, variables),
-                    VariableNode.DataType.Character => ResolveChar(an.Expression, variables),
-                    VariableNode.DataType.Boolean => ResolveBool(an.Expression, variables),
+                    IntegerType => ResolveInt(an.Expression, variables),
+                    RealType => ResolveFloat(an.Expression, variables),
+                    StringType => ResolveString(an.Expression, variables),
+                    CharacterType => ResolveChar(an.Expression, variables),
+                    BooleanType => ResolveBool(an.Expression, variables),
                     _
                         => throw new NotImplementedException(
                             "Assigning a value of type "
@@ -623,19 +623,19 @@ public class Interpreter
             var index = ResolveInt(i, variables);
             switch (adt.ArrayContentsType)
             {
-                case VariableNode.DataType.Integer:
+                case IntegerType:
                     paramsList.Add(new IntDataType(adt.GetElementInteger(index)));
                     break;
-                case VariableNode.DataType.Real:
+                case RealType:
                     paramsList.Add(new FloatDataType(adt.GetElementReal(index)));
                     break;
-                case VariableNode.DataType.String:
+                case StringType:
                     paramsList.Add(new StringDataType(adt.GetElementString(index)));
                     break;
-                case VariableNode.DataType.Character:
+                case CharacterType:
                     paramsList.Add(new CharDataType(adt.GetElementCharacter(index)));
                     break;
-                case VariableNode.DataType.Boolean:
+                case BooleanType:
                     paramsList.Add(new BooleanDataType(adt.GetElementBoolean(index)));
                     break;
                 default:
@@ -662,24 +662,24 @@ public class Interpreter
             paramsList.Add(
                 rdt.MemberTypes[rmVrn.Name] switch
                 {
-                    VariableNode.DataType.Character
+                    CharacterType
                         => new CharDataType(rdt.GetValueCharacter(rmVrn.Name)),
-                    VariableNode.DataType.Boolean
+                    BooleanType
                         => new BooleanDataType(rdt.GetValueBoolean(rmVrn.Name)),
-                    VariableNode.DataType.String
+                    StringType
                         => new StringDataType(rdt.GetValueString(rmVrn.Name)),
-                    VariableNode.DataType.Integer
+                    IntegerType
                         => new IntDataType(rdt.GetValueInteger(rmVrn.Name)),
-                    VariableNode.DataType.Real => new FloatDataType(rdt.GetValueReal(rmVrn.Name)),
-                    VariableNode.DataType.Reference
+                    RealType => new FloatDataType(rdt.GetValueReal(rmVrn.Name)),
+                    ReferenceType
                         => new ReferenceDataType(rdt.GetValueReference(rmVrn.Name)),
-                    VariableNode.DataType.Record
+                    RecordType
                         => GetNestedParam(
                             rdt,
                             pn.Variable
                                 ?? throw new Exception("Could not find extension for nested record")
                         ),
-                    VariableNode.DataType.Enum => rdt.GetValueEnum(rmVrn.Name),
+                    EnumType => rdt.GetValueEnum(rmVrn.Name),
                     _
                         => throw new NotImplementedException(
                             "It has not been implemented yet to pass a complex Record member"
@@ -733,119 +733,38 @@ public class Interpreter
         throw new Exception("Could not get nested param");
     }
 
+    // assumptions: already type checked/resolved all custom types
     private static InterpreterDataType VariableNodeToActivationRecord(VariableNode vn)
     {
         var parentModule = Modules[vn.GetModuleNameSafe()];
-        switch (vn.Type)
+        switch (vn.NewType)
         {
-            case VariableNode.DataType.Real:
+            case RealType:
                 return new FloatDataType(((vn.InitialValue as FloatNode)?.Value) ?? 0.0F);
-            case VariableNode.DataType.Integer:
+            case IntegerType:
                 return new IntDataType(((vn.InitialValue as IntNode)?.Value) ?? 0);
-            case VariableNode.DataType.String:
+            case StringType:
                 return new StringDataType(((vn.InitialValue as StringNode)?.Value) ?? "");
-            case VariableNode.DataType.Character:
+            case CharacterType:
                 return new CharDataType(((vn.InitialValue as CharNode)?.Value) ?? ' ');
-            case VariableNode.DataType.Boolean:
+            case BooleanType:
                 return new BooleanDataType(((vn.InitialValue as BoolNode)?.Value) ?? true);
-            case VariableNode.DataType.Array:
+            case ArrayType a:
             {
-                return new ArrayDataType(vn.GetArrayTypeSafe());
+                return new ArrayDataType(a.Inner);
             }
-            case VariableNode.DataType.Record:
+            case RecordType r:
             {
-                if (parentModule.Records.ContainsKey(vn.GetUnknownTypeSafe()))
-                    return new RecordDataType(
-                        parentModule.Records[vn.GetUnknownTypeSafe()].Members2
-                    );
-                if (
-                    parentModule.Imported.ContainsKey(vn.GetUnknownTypeSafe())
-                    && !parentModule
-                        .ImportTargetNames[
-                            (
-                                (RecordNode)parentModule.GetImportedSafe()[vn.GetUnknownTypeSafe()]
-                            ).GetParentModuleSafe()
-                        ]
-                        .Contains(vn.GetUnknownTypeSafe())
-                )
-                    throw new Exception(
-                        $"Could not find definition for the record {vn.GetUnknownTypeSafe()}."
-                    );
-                return new RecordDataType(
-                    ((RecordNode)parentModule.Imported[vn.GetUnknownTypeSafe()]).Members
-                );
+               return new RecordDataType(r.Fields);
             }
-            case VariableNode.DataType.Enum:
-                if (parentModule.getEnums().ContainsKey(vn.GetUnknownTypeSafe()))
-                    return new EnumDataType(parentModule.getEnums()[vn.GetUnknownTypeSafe()]);
-                else if (
-                    vn.IsConstant && !parentModule.Imported.ContainsKey(vn.GetUnknownTypeSafe())
-                )
-                {
-                    EnumNode? enmNode = null;
-                    string? s = null;
-                    foreach (var enm in parentModule.getEnums())
-                    {
-                        if (enm.Value.EnumElements.Contains(vn.GetUnknownTypeSafe()))
-                        {
-                            s = vn.GetUnknownTypeSafe();
-                            enmNode = enm.Value;
-                            break;
-                        }
-                    }
-                    return new EnumDataType(
-                        enmNode
-                            ?? throw new Exception(
-                                "Could not find a constant enums base declaration."
-                            ),
-                        s ?? throw new Exception("Could not find constant enum assignment.")
-                    );
-                }
-                else if (!((EnumNode)parentModule.Imported[vn.GetUnknownTypeSafe()]).IsPublic)
-                    throw new Exception(
-                        $"Cannot create an enum of type {vn.GetUnknownTypeSafe()} as it was never exported"
-                    );
-                return new EnumDataType((EnumNode)parentModule.Imported[vn.GetUnknownTypeSafe()]);
-
-            case VariableNode.DataType.Reference:
-                if (parentModule.Records.ContainsKey(vn.GetUnknownTypeSafe()))
-                    return new ReferenceDataType(parentModule.Records[vn.GetUnknownTypeSafe()]);
-                else
-                {
-                    if (!parentModule.Imported.ContainsKey(vn.GetUnknownTypeSafe()))
-                        throw new Exception(
-                            $"Could not find definition for the record {vn.GetUnknownTypeSafe()}."
-                        );
-                    return new ReferenceDataType(
-                        ((RecordNode)parentModule.Imported[vn.GetUnknownTypeSafe()])
-                    );
-                }
-
-            case VariableNode.DataType.Unknown:
+            case EnumType e:
             {
-                return vn.ResolveUnknownType(parentModule) switch
-                {
-                    VariableNode.UnknownTypeResolver.Record
-                        => new RecordDataType(
-                            parentModule.Records[vn.GetUnknownTypeSafe()].Members2
-                        ),
-                    VariableNode.UnknownTypeResolver.None
-                        => throw new InvalidOperationException(
-                            "The VariableNode's type was set to Unknown, but neither a"
-                                + " RecordNode nor an EnumNode could be found in its parent module "
-                                + "for it."
-                        ),
-                    VariableNode.UnknownTypeResolver.Multiple
-                        => throw new InvalidOperationException(
-                            "An EnumNode and a RecordNode were found with this "
-                                + "VariableNode's type name, so we don't know which one to use."
-                        ),
-                    VariableNode.UnknownTypeResolver.Enum
-                        => throw new NotImplementedException(
-                            "Bret, you can put an enum arm in this switch expression if you"
-                                + " want the interpreter to be able to process Unknowns as enums."
-                        )
-                };
+                return new EnumDataType(e.Variants);
+            }
+
+            case ReferenceType(RecordType r):
+            {
+                return new ReferenceDataType(r);
             }
             default:
                 throw new Exception($"Unknown local variable type");

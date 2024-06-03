@@ -14,7 +14,7 @@ public class FunctionCallNode : StatementNode, ILlvmTranslatable
 
     // generics of the called function that this call site instiated to specific types
     // useful/needed for monomorphization
-    public Dictionary<string, VariableNode.DataType> InstiatedGenerics { get; set; }
+    public Dictionary<string, IType> InstiatedGenerics { get; set; }
 
     public FunctionCallNode(string name)
     {
