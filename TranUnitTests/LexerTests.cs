@@ -6,7 +6,7 @@ using Tran;
 
 namespace TranUnitTests
 {
-   [TestClass]
+    [TestClass]
     public class LexerTests
     {
         [TestMethod]
@@ -15,13 +15,14 @@ namespace TranUnitTests
             string file = "Haneen Qasem";
             Lexer lexer = new Lexer(file);
             LinkedList<Token> tokens = lexer.Lex();
-    
+
             // Collect the values of the tokens to create the expected string
             string actualTokensString = string.Join("\n", tokens) + "\n";
-    
-            Assert.AreEqual("WORD(Haneen)\n" +
-                                     " WORD(Qasem)\n" +
-                                     " SEPERATOR\n", actualTokensString);
+
+            Assert.AreEqual(
+                "WORD(Haneen)\n" + " WORD(Qasem)\n" + " SEPERATOR\n",
+                actualTokensString
+            );
         }
 
         [TestMethod]
@@ -31,41 +32,40 @@ namespace TranUnitTests
             Lexer lexer = new Lexer(file);
             LinkedList<Token> tokens = lexer.Lex();
 
-            string expectedTokensString = "NUMBER(2.22)\n" +
-                                          " NUMBER(444)\n" +
-                                          " NUMBER(888)\n" +
-                                          " SEPERATOR\n";
+            string expectedTokensString =
+                "NUMBER(2.22)\n" + " NUMBER(444)\n" + " NUMBER(888)\n" + " SEPERATOR\n";
 
             string actualTokensString = string.Join("\n", tokens) + "\n";
-           Assert.AreEqual(expectedTokensString, actualTokensString);
+            Assert.AreEqual(expectedTokensString, actualTokensString);
         }
 
         [TestMethod]
         public void OneSymbols()
         {
-            //"{ 
+            //"{
             string file = "} ( ) = > < + ^ + - : * / % , ! \"";
             Lexer lexer = new Lexer(file);
             LinkedList<Token> tokens = lexer.Lex();
             string actualTokensString = string.Join("\n", tokens) + "\n";
-            string expectedTokensString = " CLOSEDANGLEBRACKET\n" +
-                                          " OPENPARENTHESIS\n" +
-                                          " CLOSEDPARENTHESIS\n" +
-                                          " EQUALS\n" +
-                                          " GREATERTHAN\n" +
-                                          " LESSTHAN\n" +
-                                          " PLUS\n" +
-                                          " EXPONENT\n" +
-                                          " PLUS\n" +
-                                          " MINUS\n" +
-                                          " COLON\n" +
-                                          " MULTIPLY\n" +
-                                          " DIVIDE\n" +
-                                          " MODULUS\n" +
-                                          " COMMA\n" +  
-                                          " NOT\n" +
-                                          " QUOTE\n" +
-                                          " SEPERATOR\n";  
+            string expectedTokensString =
+                " CLOSEDANGLEBRACKET\n"
+                + " OPENPARENTHESIS\n"
+                + " CLOSEDPARENTHESIS\n"
+                + " EQUALS\n"
+                + " GREATERTHAN\n"
+                + " LESSTHAN\n"
+                + " PLUS\n"
+                + " EXPONENT\n"
+                + " PLUS\n"
+                + " MINUS\n"
+                + " COLON\n"
+                + " MULTIPLY\n"
+                + " DIVIDE\n"
+                + " MODULUS\n"
+                + " COMMA\n"
+                + " NOT\n"
+                + " QUOTE\n"
+                + " SEPERATOR\n";
 
             Assert.AreEqual(expectedTokensString, actualTokensString);
         }

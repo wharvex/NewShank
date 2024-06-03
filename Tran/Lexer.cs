@@ -113,10 +113,8 @@ public class Lexer
             }
             else if (char.IsLetter(currentCharacter))
             {
-                
-                    Token wordProcessor = ProcessWord();
-                    tokens.AddLast((wordProcessor));
-                
+                Token wordProcessor = ProcessWord();
+                tokens.AddLast((wordProcessor));
             }
             //Research this one, done for now but can be fixed.
             else if (char.IsDigit(currentCharacter))
