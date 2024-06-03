@@ -47,6 +47,7 @@ public class Lexer
         keywordHash["true"] = TokenType.TRUE;
         keywordHash["false"] = TokenType.FALSE;
         keywordHash["shared"] = TokenType.SHARED;
+        keywordHash["private"] = TokenType.PRIVATE;
         keywordHash["\t"] = TokenType.SEPERATOR;
     }
 

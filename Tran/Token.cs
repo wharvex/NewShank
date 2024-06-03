@@ -57,7 +57,8 @@ public enum TokenType
     MULTIPLYEQUALS,
     DIVIDEEQUALS,
     PLUSEQUALS,
-    MINUSEQUALS
+    MINUSEQUALS,
+    PRIVATE
 }
 
 public class Token

@@ -303,7 +303,6 @@ public class Parser
             return lt;
         }
     }
-
     private ASTNode? Term()
     {
         var lt = Factor();
@@ -374,5 +373,60 @@ public class Parser
             return new FloatNode(float.Parse(token.GetValue()));
         }
         return new IntNode(int.Parse(token.GetValue()));
+    }
+
+    public static VariableNode.DataType GetDataTypeFromConstantNodeType(ASTNode constantNode) =>
+        constantNode switch
+        {
+            IntNode => VariableNode.DataType.Integer,
+            StringNode => VariableNode.DataType.String,
+            CharNode => VariableNode.DataType.Character,
+            BooleanExpressionNode or BoolNode => VariableNode.DataType.Boolean,
+            _
+                => throw new InvalidOperationException(
+                    "Bad constant node type for converting to data type."
+                )
+        };
+    private static VariableNode.DataType GetDataTypeFromTokenType(TokenType tt) =>
+        tt switch
+        {
+            TokenType.NUMBER => VariableNode.DataType.Integer,
+            TokenType.BOOLEAN => VariableNode.DataType.Boolean,
+            TokenType.CHARACTER => VariableNode.DataType.Character,
+            TokenType.STRING => VariableNode.DataType.String,
+            _ => throw new InvalidOperationException("Bad TokenType for conversion into DataType"),
+        };
+    
+    private TypeUsage GetTypeUsageFromToken(Token t) =>
+        t.GetTokenType() switch
+        {
+            TokenType.NUMBER => new TypeUsage(VariableNode.DataType.Integer),
+            TokenType.BOOLEAN => new TypeUsage(VariableNode.DataType.Boolean),
+            TokenType.CHARACTER => new TypeUsage(VariableNode.DataType.Character),
+            TokenType.STRING => new TypeUsage(VariableNode.DataType.String),
+            _
+                => throw new NotImplementedException(
+                    "Bad TokenType for generating a TypeUsage: " + t.GetTokenType()
+                )
+        };
+    private VariableNode? ParseVariableTypes()
+    { 
+        var variableName = new VariableNode();
+            Token? tokenType = handler.MatchAndRemove(TokenType.NUMBER) ??
+                               handler.MatchAndRemove(TokenType.STRING) ??
+                               handler.MatchAndRemove(TokenType.CHARACTER) ??
+                               handler.MatchAndRemove(TokenType.BOOLEAN);
+            if (tokenType == null)
+            {
+                return null;
+            }
+            var variableType = GetTypeUsageFromToken(tokenType);
+            Token? nameToken = handler.MatchAndRemove(TokenType.WORD);
+            if (nameToken == null)
+            {
+                throw new Exception("Nothing followed after variable declaration"); 
+            }
+            variableName.Name = nameToken.GetValue();
+            return variableName;
     }
 }
