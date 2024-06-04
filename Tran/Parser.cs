@@ -7,11 +7,13 @@ public class Parser
     private TokenHandler handler;
     private ProgramNode program;
     private ModuleNode thisClass;
+    private LinkedList<string> sharedNames;
 
     public Parser(LinkedList<Token> tokens)
     {
         handler = new TokenHandler(tokens);
         program = new ProgramNode();
+        sharedNames = new LinkedList<string>();
     }
 
     private bool AcceptSeparators()
@@ -39,6 +41,9 @@ public class Parser
                 AcceptSeparators();
                 continue;
             }
+
+            thisClass.ExportTargetNames = sharedNames;
+            thisClass.UpdateExports();
 
             throw new Exception("Statement is not a function or field");
         }
@@ -120,16 +125,16 @@ public class Parser
     {
         FunctionNode functionNode;
         Token? function;
-        //TODO: make sure private token is correct/added to lexer
-        bool isPublic = handler.MatchAndRemove(TokenType.PRIVATE) == null;
-        if (isPublic && handler.MatchAndRemove(TokenType.SHARED) != null)
-        {
-            //TODO:Yeah I have no idea where to start with this since Shank has no static types or functions (that I could find)
-        }
+        var isPublic = handler.MatchAndRemove(TokenType.PRIVATE) == null;
+        var isShared = (isPublic && handler.MatchAndRemove(TokenType.SHARED) != null);
         if ((function = handler.MatchAndRemove(TokenType.FUNCTION)) != null)
         {
             functionNode = new FunctionNode(function.GetValue(), thisClass.Name, isPublic);
             thisClass.addFunction(functionNode);
+            if (isShared)
+            {
+                sharedNames.AddLast(function.GetValue());
+            }
             if (handler.MatchAndRemove(TokenType.OPENPARENTHESIS) != null)
             {
                 functionNode.LocalVariables = ParseParameters();
@@ -156,7 +161,6 @@ public class Parser
         var parameters = new List<VariableNode>();
         var variable = new VariableNode();
         Token? name;
-
         do
         {
             AcceptSeparators();
@@ -182,37 +186,23 @@ public class Parser
     //TODO: check for other statement types
     private ASTNode? ParseStatement()
     {
-        var statement = ParseIf();
-        if (statement != null)
-        {
-            return statement;
-        }
-
-        statement = ParseLoop();
-        if (statement != null)
-        {
-            return statement;
-        }
-        statement = ParseReturn();
-        if (statement != null)
-        {
-            return statement;
-        }
-
-        statement = ParseExpression();
+        var statement = ParseIf() ?? ParseLoop() ?? ParseReturn() ?? ParseExpression();
         return statement;
     }
 
+    //TODO: finish implementing ParseReturn()
     private ASTNode? ParseReturn()
     {
         throw new NotImplementedException();
     }
 
+    //TODO: finish implementing ParseLoop()
     private ASTNode? ParseLoop()
     {
         throw new NotImplementedException();
     }
 
+    //TODO: finish implementing ParseIf()
     private ASTNode? ParseIf()
     {
         throw new NotImplementedException();
@@ -221,6 +211,10 @@ public class Parser
     //TODO: finish implementing ParseBlock()
     private List<StatementNode> ParseBlock()
     {
+        while (true)
+        {
+            ParseStatement();
+        }
         throw new NotImplementedException();
     }
 
