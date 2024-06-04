@@ -48,7 +48,7 @@ public class Lexer
         keywordHash["false"] = TokenType.FALSE;
         keywordHash["shared"] = TokenType.SHARED;
         keywordHash["private"] = TokenType.PRIVATE;
-        keywordHash["\t"] = TokenType.SEPARATOR; 
+        keywordHash["\t"] = TokenType.SEPARATOR;
     }
 
     private void TwoCharacterHashmap()
@@ -128,7 +128,7 @@ public class Lexer
                 {
                     stringHandler.GetChar();
                     characterPosition++;
-                    currentCharacter = stringHandler.Peek(0); 
+                    currentCharacter = stringHandler.Peek(0);
                 }
                 if (stringHandler.IsDone())
                 {
@@ -139,7 +139,6 @@ public class Lexer
                     stringHandler.GetChar();
                     characterPosition++;
                 }
-             
             }
             else
             {

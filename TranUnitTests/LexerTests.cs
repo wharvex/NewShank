@@ -18,7 +18,10 @@ namespace TranUnitTests
 
             // Collect the values of the tokens to create the expected string
             string actualTokensString = string.Join("\n", tokens) + "\n";
-            Assert.AreEqual("WORD(Haneen)\n" + " WORD(Qasem)\n" + " SEPARATOR\n", actualTokensString);
+            Assert.AreEqual(
+                "WORD(Haneen)\n" + " WORD(Qasem)\n" + " SEPARATOR\n",
+                actualTokensString
+            );
         }
 
         [TestMethod]
@@ -28,9 +31,10 @@ namespace TranUnitTests
             Lexer lexer = new Lexer(file);
             LinkedList<Token> tokens = lexer.Lex();
 
-            string expectedTokensString = "NUMBER(2.22)\n" + " NUMBER(444)\n" + " NUMBER(888)\n" + " SEPARATOR\n";
+            string expectedTokensString =
+                "NUMBER(2.22)\n" + " NUMBER(444)\n" + " NUMBER(888)\n" + " SEPARATOR\n";
             string actualTokensString = string.Join("\n", tokens) + "\n";
-            
+
             Assert.AreEqual(expectedTokensString, actualTokensString);
         }
 
@@ -41,7 +45,7 @@ namespace TranUnitTests
             Lexer lexer = new Lexer(file);
             LinkedList<Token> tokens = lexer.Lex();
             string actualTokensString = string.Join("\n", tokens) + "\n";
-           Assert.AreEqual(" SEPARATOR\n", actualTokensString);
+            Assert.AreEqual(" SEPARATOR\n", actualTokensString);
         }
 
         [TestMethod]
@@ -109,39 +113,42 @@ namespace TranUnitTests
             string actualTokensString = string.Join("\n", tokens) + "\n";
 
             string expectedTokensString =
-                " IF\n" +
-                " PRINT\n" +
-                " GETLINE\n" +
-                " NEXTFILE\n" +
-                " FUNCTION\n" +
-                " INTERFACE\n" +
-                " CLASS\n" +
-                " STRING\n" +
-                " IMPLEMENTS\n" +
-                " ACCESSOR\n" +
-                " VALUE\n" +
-                " LOOP\n" +
-                " MUTATOR\n" +
-                " CONSOLE\n" +
-                " DATETIME\n" +
-                " CONSTRUCT\n" +
-                " BOOLEAN\n" +
-                " TRUE\n" +
-                " FALSE\n" +
-                " SHARED\n" +
-                " SEPARATOR\n" +
-                " SEPARATOR\n" +
-                " SEPARATOR\n";
+                " IF\n"
+                + " PRINT\n"
+                + " GETLINE\n"
+                + " NEXTFILE\n"
+                + " FUNCTION\n"
+                + " INTERFACE\n"
+                + " CLASS\n"
+                + " STRING\n"
+                + " IMPLEMENTS\n"
+                + " ACCESSOR\n"
+                + " VALUE\n"
+                + " LOOP\n"
+                + " MUTATOR\n"
+                + " CONSOLE\n"
+                + " DATETIME\n"
+                + " CONSTRUCT\n"
+                + " BOOLEAN\n"
+                + " TRUE\n"
+                + " FALSE\n"
+                + " SHARED\n"
+                + " SEPARATOR\n"
+                + " SEPARATOR\n"
+                + " SEPARATOR\n";
             Assert.AreEqual(expectedTokensString, actualTokensString);
         }
-        
+
         [TestMethod]
         public void Wrong()
         {
             string file = "#";
             Lexer lexer = new Lexer(file);
-           
-            Assert.ThrowsException<ArgumentException>(() => lexer.Lex(), "UNRECOGNIZED CHARACTER: #");
+
+            Assert.ThrowsException<ArgumentException>(
+                () => lexer.Lex(),
+                "UNRECOGNIZED CHARACTER: #"
+            );
         }
     }
 }
