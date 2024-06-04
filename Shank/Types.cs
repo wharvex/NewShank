@@ -13,6 +13,20 @@ public struct
     {
         return new Range(float.MinValue, float.MaxValue);
     }
+    public static Range DefaultInteger()
+    {
+        return new Range(long.MinValue, float.MaxValue);
+    }
+    public static Range DefaultSmallInteger()
+    {
+        // since this is just for arrays and strings should it be unsigned
+        return new Range(int.MinValue, float.MaxValue);
+    }
+    public static Range DefaultCharacter()
+    {
+        // since this is just for characters should it be unsigned
+        return new Range(byte.MinValue, float.MaxValue);
+    }
 }
 public interface IRangeType : IType // this is a bit more specific than a plain IType in that besides for being a type it must also be able to use type limits (the range from before)
 {
@@ -22,7 +36,7 @@ public struct BooleanType : IType;
 
 public struct StringType(Range range) : IRangeType
 {
-    public StringType() : this(Range.DefaultFloat()) {}
+    public StringType() : this(Range.DefaultSmallInteger()) {}
     
 
     public Range Range { get; set; } = range;
@@ -30,41 +44,51 @@ public struct StringType(Range range) : IRangeType
 
 
 
-public struct RealType : IRangeType
+public struct RealType(Range range) : IRangeType
 {
-    public RealType(Range? range = null)
+    public RealType(): this(Range.DefaultFloat())
     {
-        Range = range;
+        
     }
-
-    public Range? Range { get; set; }
+    public Range Range { get; set; } = range;
 }
 
-public struct IntegerType : IRangeType
+public struct IntegerType(Range range) : IRangeType
 {
-    public IntegerType(Range? range = null)
+    public IntegerType() : this(Range.DefaultInteger())
     {
-        Range = range;
+        
     }
-
-    public Range? Range { get; set; }
+    public Range Range { get; set; } = range;
 }
 
-public struct CharacterType : IType;
-
-public record struct EnumType(string Name, List<String> Variants) : IType; // enums are just a list of variants
-
-public record struct RecordType(string Name, Dictionary<String, IType> Fields, List<string> Generics) : IType; // records need to keep the types of their members along with any generics they declare
-
-public record struct ArrayType(IType Inner, Range? Range = null) : IRangeType // arrays have only one inner type
+public struct CharacterType(Range range) : IRangeType
 {
-    public Range? Range { get; set; } = Range;
+
+    public CharacterType() : this(Range.DefaultCharacter())
+    {
+        
+    }
+    public Range Range { get; set; } = range;
 }
 
-public record struct UnknownType(String TypeName, List<IType> TypeParameters) : IType // unknown types are those types that we have not found their proper definition during semantic analysis yet
+public record struct EnumType(string Name, List<string> Variants) : IType; // enums are just a list of variants
+
+public record struct RecordType(string Name, Dictionary<string, IType> Fields, List<string> Generics) : IType; // records need to keep the types of their members along with any generics they declare
+
+public record struct ArrayType(IType Inner, Range Range ) : IRangeType // arrays have only one inner type
+{
+    public ArrayType(IType inner): this(inner, Range.DefaultSmallInteger())
+    {
+        
+    }
+    public Range Range { get; set; } = Range;
+}
+
+public record struct UnknownType(string TypeName, List<IType> TypeParameters) : IType // unknown types are those types that we have not found their proper definition during semantic analysis yet
 // they also need to keep and generics they instiate like Int, String in HashMap Int, String
 {
-    public UnknownType(String TypeName) : this(TypeName, new List<IType>())
+    public UnknownType(string TypeName) : this(TypeName, [])
     {
     }
     public VariableNode.UnknownTypeResolver ResolveUnknownType(ModuleNode parentModule)
@@ -87,4 +111,4 @@ public record struct UnknownType(String TypeName, List<IType> TypeParameters) : 
                 : VariableNode.UnknownTypeResolver.None;
     }
 }
-public record struct ReferenceType(IType inner) : IType;
+public record struct ReferenceType(IType Inner) : IType;

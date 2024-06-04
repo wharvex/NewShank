@@ -1129,15 +1129,17 @@ public class SemanticAnalysis
                         currentModule.Value.Records,
                         currentModule.Value.Imported
                     );
-                    if (variable.NewType == VariableNode.DataType.Unknown)
+                    if (variable.NewType is UnknownType unknownType)
                     {
-                        if (
-                            variable.UnknownType != null
-                            && enumsAndImports.ContainsKey(variable.UnknownType)
-                            && enumsAndImports[variable.UnknownType] is EnumNode
+                        if (enumsAndImports.TryGetValue(unknownType.TypeName, out var enumType)
+                            &&  enumType is EnumNode e
                         )
                         {
-                            variable.NewType = VariableNode.DataType.Enum;
+                            variable.NewType = e.NewType;
+                            if (unknownType.TypeParameters.Count != 0)
+                            {
+                                throw new SemanticErrorException("type parameter are not allowed for enums", variable);
+                            }
                         }
                         else if (
                             variable.UnknownType != null
@@ -1156,7 +1158,7 @@ public class SemanticAnalysis
                         else
                             throw new Exception(
                                 "Could not find a definition for the unknown type "
-                                    + variable.UnknownType
+                                    + unknownType.TypeName
                             );
                     }
                 }
@@ -1171,7 +1173,7 @@ public class SemanticAnalysis
                     var assignment = (AssignmentNode)statement;
                     foreach (var variable in currentFunction.LocalVariables)
                     {
-                        if (variable.NewType == VariableNode.DataType.Enum)
+                        if (variable.NewType is EnumType)
                         {
                             if (assignment.Target.Name == variable.Name)
                             {

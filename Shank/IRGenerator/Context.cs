@@ -204,7 +204,7 @@ public class Context
             EnumType enumType => throw new NotImplementedException(),
             // if it's a custom type we look it up in the context
             ReferenceType r
-                => LLVMTypeRef.CreatePointer((LLVMTypeRef)GetLLVMTypeFromShankType(r.inner), 0),
+                => LLVMTypeRef.CreatePointer((LLVMTypeRef)GetLLVMTypeFromShankType(r.Inner), 0),
             ArrayType a => LLVMTypeRef.CreatePointer(
                 LLVMTypeRef.CreateStruct([(LLVMTypeRef)GetLLVMTypeFromShankType(a.Inner), LLVMTypeRef.Int32], false),
                 0),
