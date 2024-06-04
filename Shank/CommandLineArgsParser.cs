@@ -148,9 +148,9 @@ public class CommandLineArgsParser
     {
         GetFiles(options.File).ForEach(ip => ScanAndParse(ip, program));
         program.SetStartModule();
-        OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForProgramNode(program), "ast");
         BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
         SemanticAnalysis.CheckModules(program);
+        OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForProgramNode(program), "ast");
         switch (options.Flat)
         {
             case "":

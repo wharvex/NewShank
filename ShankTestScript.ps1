@@ -18,33 +18,37 @@ function st
     "Interpret UnitTestTests1 -ut", # 7
     "Interpret Builtins/Write", # 8
     "Interpret Enums", # 9
-    "Interpret OldShankFiles/Pascals.shank", # 10
-    "Interpret OldShankFiles/GCD.shank", # 11
-    "Interpret Negative", # 12
-    "Interpret String", # 13
-    "CompilePractice Minimal/Old", # 14
-    "CompilePractice Minimal/PrintStr/Shank --flat PrintStr", # 15
-    "CompilePractice Minimal/PrintInt/Shank --flat PrintInt" # 16
-    #"Expressions",
-    #"Overloads/overloadsTest.shank",
-    #"Generics/complex",
-    #"Generics/simple/records",
+    "CompilePractice Minimal/PrintInt/Shank --flat PrintInt" # 10
+    #"Interpret OldShankFiles/Pascals.shank"
+    #"Interpret OldShankFiles/GCD.shank"
+    #"Interpret Negative"
+    #"Interpret String"
+    #"CompilePractice Minimal/Old"
+    #"CompilePractice Minimal/PrintStr/Shank --flat PrintStr"
+    #"Expressions"
+    #"Overloads/overloadsTest.shank"
+    #"Generics/complex"
+    #"Generics/simple/records"
 
     $all_runner = {
-        foreach($p in $path_list[1..$($path_list.Length - 1)])
+        $new_path_list = $path_list[1..$($path_list.Length - 1)]
+        foreach($p in $new_path_list)
         {
-            & $generic_runner $p
+            & $generic_runner -args_str $p -i ($new_path_list.IndexOf($p) + 1)
         }
     }
 
     $generic_runner = {
-        param($args_str)
+        param($args_str, $i)
 
-        # Split then splat.
-        # https://stackoverflow.com/a/19252498/16458003
         $args_list = -split $args_str
         $args_list[1] = "$($ds)$($args_list[1])"
-        "`n**** Running The Following Command ****`n"
+
+        $progress = if ($i -ne $null) `
+        {"$i of $($path_list.Length - 1)"} `
+        Else {''}
+
+        "`n**** Running The Following Command ($($progress))****`n"
         "dotnet run $($args_list -join ' ') --project $sp`n"
         dotnet run @args_list --project $sp
     }
@@ -55,7 +59,7 @@ function st
         { $_ -eq 0 } { & $all_runner }
         { $_ -lt 0 -or $_ -ge $path_list.Length } { "Bad Argument" }
         Default {
-            & $generic_runner $path_list[$_]
+            & $generic_runner $path_list[$_] 
         }
     }
 }
