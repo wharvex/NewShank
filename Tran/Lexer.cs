@@ -65,6 +65,8 @@ public class Lexer
         twoCharacterHash["/="] = TokenType.DIVIDEEQUALS;
         twoCharacterHash["+="] = TokenType.PLUSEQUALS;
         twoCharacterHash["-="] = TokenType.MINUSEQUALS;
+        twoCharacterHash["&&"] = TokenType.AND;
+        twoCharacterHash["||"] = TokenType.OR;
     }
 
     private void OneCharacterHashmap()

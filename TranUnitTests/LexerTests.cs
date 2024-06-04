@@ -81,7 +81,7 @@ namespace TranUnitTests
         [TestMethod]
         public void TwoCharacterHashmap()
         {
-            string file = ">= ++ -- <= == != ^= %= *= /= += -=";
+            string file = ">= ++ -- <= == != ^= %= *= /= += -= && || ";
             Lexer lexer = new Lexer(file);
             LinkedList<Token> tokens = lexer.Lex();
             string actualTokensString = string.Join("\n", tokens) + "\n";
@@ -98,6 +98,8 @@ namespace TranUnitTests
                 + " DIVIDEEQUALS\n"
                 + " PLUSEQUALS\n"
                 + " MINUSEQUALS\n"
+                + " AND\n"
+                + " OR\n"
                 + " SEPARATOR\n";
             Assert.AreEqual(expectedTokensString, actualTokensString);
         }
