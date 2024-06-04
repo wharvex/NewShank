@@ -176,6 +176,10 @@ public class Lexer
             tokenType = keywordHash[value];
             return new Token(keywordHash[value], lineNumber, startPosition);
         }
+        if (stringHandler.Peek(0).Equals('('))
+        {
+            return new Token(TokenType.FUNCTION, value, lineNumber, startPosition);
+        }
         return new Token(TokenType.WORD, value, lineNumber, startPosition);
     }
 

@@ -49,6 +49,17 @@ namespace TranUnitTests
         }
 
         [TestMethod]
+        public void Functions()
+        {
+            string file = "tyler(";
+            Lexer lexer = new Lexer(file);
+            LinkedList<Token> tokens = lexer.Lex();
+            string expectedTokensString = "FUNCTION(tyler)\n" + " OPENPARENTHESIS\n" + " SEPARATOR\n";
+            string actualTokensString = string.Join("\n", tokens) + "\n";
+            Assert.AreEqual(expectedTokensString, actualTokensString);
+        }
+
+        [TestMethod]
         public void OneSymbols()
         {
             string file = "} ( ) = > < + ^ + - : * / % , ! \"";
