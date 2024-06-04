@@ -381,7 +381,7 @@ public class Parser
         {
             IntNode => VariableNode.DataType.Integer,
             StringNode => VariableNode.DataType.String,
-            CharNode => VariableNode.DataType.Character,
+            FloatNode => VariableNode.DataType.Real,
             BooleanExpressionNode or BoolNode => VariableNode.DataType.Boolean,
             _
                 => throw new InvalidOperationException(
@@ -392,9 +392,8 @@ public class Parser
     private static VariableNode.DataType GetDataTypeFromTokenType(TokenType tt) =>
         tt switch
         {
-            TokenType.NUMBER => VariableNode.DataType.Integer,
+            TokenType.NUMBER => VariableNode.DataType.Real,
             TokenType.BOOLEAN => VariableNode.DataType.Boolean,
-            TokenType.CHARACTER => VariableNode.DataType.Character,
             TokenType.STRING => VariableNode.DataType.String,
             _ => throw new InvalidOperationException("Bad TokenType for conversion into DataType"),
         };
@@ -402,9 +401,8 @@ public class Parser
     private TypeUsage GetTypeUsageFromToken(Token t) =>
         t.GetTokenType() switch
         {
-            TokenType.NUMBER => new TypeUsage(VariableNode.DataType.Integer),
+            TokenType.NUMBER => new TypeUsage(VariableNode.DataType.Real),
             TokenType.BOOLEAN => new TypeUsage(VariableNode.DataType.Boolean),
-            TokenType.CHARACTER => new TypeUsage(VariableNode.DataType.Character),
             TokenType.STRING => new TypeUsage(VariableNode.DataType.String),
             _
                 => throw new NotImplementedException(
@@ -418,7 +416,6 @@ public class Parser
         Token? tokenType =
             handler.MatchAndRemove(TokenType.NUMBER)
             ?? handler.MatchAndRemove(TokenType.STRING)
-            ?? handler.MatchAndRemove(TokenType.CHARACTER)
             ?? handler.MatchAndRemove(TokenType.BOOLEAN);
         if (tokenType == null)
         {
