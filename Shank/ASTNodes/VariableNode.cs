@@ -188,11 +188,6 @@ public class VariableNode : StatementNode
         return v;
     }
 
-    // public override T Visit<T>(ExpressionVisitor<T> visit)
-    // {
-    //     throw new NotImplementedException();
-    // }
-
     public override void Visit(StatementVisitor visit)
     {
         visit.Accept(this);

@@ -213,4 +213,38 @@ public class LLVMStatement : StatementVisitor
             keyValuePair.Value.Visit(this);
         }
     }
+
+    public override void Accept(ForNode node)
+    {
+        var forStart = _context.CurrentFunction.AppendBasicBlock("for.start");
+        var afterFor = _context.CurrentFunction.AppendBasicBlock("for.after");
+        var forBody = _context.CurrentFunction.AppendBasicBlock("for.body");
+        var forIncremnet = _context.CurrentFunction.AppendBasicBlock("for.inc");
+        // TODO: assign loop variable initial from value
+        _builder.BuildBr(forStart);
+        _builder.PositionAtEnd(forStart);
+        // we have to compile the to and from in the loop so that the get run each time, we go through the loop
+        // in case we modify them in the loop
+
+
+        var fromValue = node.From.Visit(new LLVMExpr(_context, _builder, _module));
+        var toValue = node.To.Visit(new LLVMExpr(_context, _builder, _module));
+        var currentIterable = node.Variable.Visit(new LLVMExpr(_context, _builder, _module));
+
+        // right now we assume, from, to, and the variable are all integers
+        // in the future we should check and give some error at runtime/compile time if not
+        // TODO: signed or unsigned comparison
+        var condition = _builder.BuildAnd(
+            _builder.BuildICmp(LLVMIntPredicate.LLVMIntSGE, currentIterable, fromValue),
+            _builder.BuildICmp(LLVMIntPredicate.LLVMIntSLE, currentIterable, toValue)
+        );
+        _builder.BuildCondBr(condition, forBody, afterFor);
+        _builder.PositionAtEnd(forBody);
+        node.Children.ForEach(c => c.Visit(this));
+        _builder.BuildBr(forIncremnet);
+        _builder.PositionAtEnd(forIncremnet);
+        // TODO: increment
+        _builder.BuildBr(forStart);
+        _builder.PositionAtEnd(afterFor);
+    }
 }

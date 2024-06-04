@@ -665,11 +665,6 @@ public class FunctionNode : CallableNode
         return visitor.Visit(this);
     }
 
-    public override T Visit<T>(ExpressionVisitor<T> visit)
-    {
-        return base.Visit(visit);
-    }
-
     public override void Visit(StatementVisitor visit)
     {
         visit.Accept(this);

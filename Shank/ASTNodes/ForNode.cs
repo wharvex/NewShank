@@ -77,6 +77,6 @@ public class ForNode : StatementNode
 
     public override void Visit(StatementVisitor visit)
     {
-        // visit.Accept(this);
+        visit.Accept(this);
     }
 }
