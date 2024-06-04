@@ -166,20 +166,56 @@ public class Parser
             }
             else if (handler.MatchAndRemove(TokenType.NUMBER) != null)
             {
-                //TODO: no float type in Shank?
-                variable.Type = VariableNode.DataType.Integer;
+                variable.Type = VariableNode.DataType.Real;
             }
-
             if ((name = handler.MatchAndRemove(TokenType.WORD)) != null)
             {
                 variable.Name = name.GetValue();
                 parameters.Add(variable);
                 continue;
             }
-
             throw new Exception("No name provided for variable in parameters");
         } while (handler.MatchAndRemove(TokenType.COMMA) != null);
         return parameters;
+    }
+
+    //TODO: check for other statement types
+    private ASTNode? ParseStatement()
+    {
+        var statement = ParseIf();
+        if (statement != null)
+        {
+            return statement;
+        }
+
+        statement = ParseLoop();
+        if (statement != null)
+        {
+            return statement;
+        }
+        statement = ParseReturn();
+        if (statement != null)
+        {
+            return statement;
+        }
+
+        statement = ParseExpression();
+        return statement;
+    }
+
+    private ASTNode? ParseReturn()
+    {
+        throw new NotImplementedException();
+    }
+
+    private ASTNode? ParseLoop()
+    {
+        throw new NotImplementedException();
+    }
+
+    private ASTNode? ParseIf()
+    {
+        throw new NotImplementedException();
     }
 
     //TODO: finish implementing ParseBlock()
@@ -188,41 +224,41 @@ public class Parser
         throw new NotImplementedException();
     }
 
-    private ASTNode? Expression()
+    private ASTNode? ParseExpression()
     {
-        var lt = Term();
+        var lt = ParseTerm();
         if (lt == null)
             return null;
-        return ExpressionRHS(lt);
+        return ParseExpressionRhs(lt);
     }
 
-    private ASTNode? ExpressionRHS(ASTNode lt)
+    private ASTNode? ParseExpressionRhs(ASTNode lt)
     {
         if (handler.MatchAndRemove(TokenType.PLUS) != null)
         {
-            var rt = Term();
+            var rt = ParseTerm();
             if (rt == null)
             {
                 throw new Exception("Term expected after.");
             }
 
             lt = new MathOpNode(lt, MathOpNode.MathOpType.plus, rt);
-            return ExpressionRHS(lt);
+            return ParseExpressionRhs(lt);
         }
         else if (handler.MatchAndRemove(TokenType.MINUS) != null)
         {
-            var rt = Term();
+            var rt = ParseTerm();
             if (rt == null)
             {
                 throw new Exception("Term expected after.");
             }
 
             lt = new MathOpNode(lt, MathOpNode.MathOpType.minus, rt);
-            return ExpressionRHS(lt);
+            return ParseExpressionRhs(lt);
         }
         else if (handler.MatchAndRemove(TokenType.LESSEQUAL) != null)
         {
-            var rt = Term();
+            var rt = ParseTerm();
             if (rt == null)
             {
                 throw new Exception("Term expected after.");
@@ -235,7 +271,7 @@ public class Parser
         }
         else if (handler.MatchAndRemove(TokenType.LESSTHAN) != null)
         {
-            var rt = Term();
+            var rt = ParseTerm();
             if (rt == null)
             {
                 throw new Exception("Term expected after.");
@@ -248,7 +284,7 @@ public class Parser
         }
         else if (handler.MatchAndRemove(TokenType.GREATEREQUAL) != null)
         {
-            var rt = Term();
+            var rt = ParseTerm();
             if (rt == null)
             {
                 throw new Exception("Term expected after.");
@@ -261,7 +297,7 @@ public class Parser
         }
         else if (handler.MatchAndRemove(TokenType.GREATERTHAN) != null)
         {
-            var rt = Term();
+            var rt = ParseTerm();
             if (rt == null)
             {
                 throw new Exception("Term expected after.");
@@ -274,7 +310,7 @@ public class Parser
         }
         else if (handler.MatchAndRemove(TokenType.EQUALS) != null)
         {
-            var rt = Term();
+            var rt = ParseTerm();
             if (rt == null)
             {
                 throw new Exception("Term expected after.");
@@ -287,7 +323,7 @@ public class Parser
         }
         else if (handler.MatchAndRemove(TokenType.NOTEQUAL) != null)
         {
-            var rt = Term();
+            var rt = ParseTerm();
             if (rt == null)
             {
                 throw new Exception("Term expected after.");
@@ -304,47 +340,47 @@ public class Parser
         }
     }
 
-    private ASTNode? Term()
+    private ASTNode? ParseTerm()
     {
-        var lt = Factor();
+        var lt = ParseFactor();
         if (lt == null)
             return null;
-        return TermRHS(lt);
+        return ParseTermRhs(lt);
     }
 
-    private ASTNode? TermRHS(ASTNode lt)
+    private ASTNode? ParseTermRhs(ASTNode lt)
     {
         if (handler.MatchAndRemove(TokenType.MULTIPLY) != null)
         {
-            var rt = Factor();
+            var rt = ParseFactor();
             if (rt == null)
             {
                 throw new Exception("Factor expected after.");
             }
 
             lt = new MathOpNode(lt, MathOpNode.MathOpType.times, rt);
-            return TermRHS(lt);
+            return ParseTermRhs(lt);
         }
         else if (handler.MatchAndRemove(TokenType.DIVIDE) != null)
         {
-            var rt = Factor();
+            var rt = ParseFactor();
             if (rt == null)
             {
                 throw new Exception("Factor expected after.");
             }
 
             lt = new MathOpNode(lt, MathOpNode.MathOpType.divide, rt);
-            return TermRHS(lt);
+            return ParseTermRhs(lt);
         }
         else if (handler.MatchAndRemove(TokenType.MODULUS) != null)
         {
-            var rt = Factor();
+            var rt = ParseFactor();
             if (rt == null)
             {
                 throw new Exception("Factor expected after.");
             }
             lt = new MathOpNode(lt, MathOpNode.MathOpType.modulo, rt);
-            return TermRHS(lt);
+            return ParseTermRhs(lt);
         }
         else
         {
@@ -352,11 +388,11 @@ public class Parser
         }
     }
 
-    private ASTNode? Factor()
+    private ASTNode? ParseFactor()
     {
         if (handler.MatchAndRemove(TokenType.OPENPARENTHESIS) != null)
         {
-            var exp = Expression();
+            var exp = ParseExpression();
             if (handler.MatchAndRemove(TokenType.CLOSEDPARENTHESIS) == null)
                 throw new Exception("Closing parenthesis expected after.");
             return exp;
