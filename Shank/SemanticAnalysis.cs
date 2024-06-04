@@ -371,12 +371,9 @@ public class SemanticAnalysis
             {
                 if (variablesLookup[an.Target.Name].NewType is RealType f )
                 {
-                    if (f.Range is null)
-                    {
-                        return;
-                    }
-                    var from = f.Range.Value.From;
-                    var to = f.Range.Value.To;
+
+                    var from = f.Range.From;
+                    var to = f.Range.To;
                     float upper = GetMaxRange(an.Expression, variablesLookup);
                     float lower = GetMinRange(an.Expression, variablesLookup);
 
@@ -387,12 +384,9 @@ public class SemanticAnalysis
                 }
                 else if (variablesLookup[an.Target.Name].NewType is IRangeType i ) // all other i range type are bounded by integers
                 {
-                    if (i.Range is null)
-                                        {
-                                            return;
-                                        }
-                                        var from = i.Range.Value.From;
-                                        var to = i.Range.Value.To;
+                   
+                                        var from = i.Range.From;
+                                        var to = i.Range.To;
                     int upper = (int)GetMaxRange(an.Expression, variablesLookup);
                     int lower = (int)GetMinRange(an.Expression, variablesLookup);
 
@@ -783,58 +777,64 @@ public class SemanticAnalysis
                     throw new Exception("strings have to be assigned to string variables");
                 break;
             case VariableReferenceNode vrn:
-                if (targetType == VariableNode.DataType.Enum)
+                if (targetType is EnumType t && vrn.ExtensionType == ASTNode.VrnExtType.Enum)
                 {
-                    EnumNode? enumDefinition = null;
-                    foreach (var e in parentModule.getEnums())
+                    // two cases enum constant foo.bar, or just plain variable
+                    // TODO: make ast nodes for record access, enum access, and array index
+                    if (t.Name != vrn.Name || !t.Variants.Contains(((VariableReferenceNode) vrn.Extension).Name))
                     {
-                        foreach (var v in variables)
-                        {
-                            if (v.Value.InitialValue is null)
-                                continue;
-                            if (
-                                v.Value.IsConstant
-                                && e.Value.EnumElements.Contains(v.Value.InitialValue.ToString())
-                            )
-                            {
-                                enumDefinition = e.Value;
-                                break;
-                            }
-                        }
-
-                        if (e.Value.EnumElements.Contains(vrn.Name))
-                        {
-                            enumDefinition = e.Value;
-                            break;
-                        }
+                        throw new SemanticErrorException("Could not assign assign to a variant of a different enum", vrn);
                     }
-
-                    foreach (var e in parentModule.Imported)
-                    {
-                        if (e.Value is not EnumNode)
-                            continue;
-                        var Enum = (EnumNode)e.Value;
-                        if (Enum.EnumElements.Contains(vrn.Name))
-                        {
-                            enumDefinition = Enum;
-                            break;
-                        }
-                    }
-
-                    if (enumDefinition == null)
-                        throw new Exception(
-                            $"Could not find the definition for an enum containing the element {vrn.Name}."
-                        );
-                    if (
-                        enumDefinition.NewType != target.UnknownType
-                        && (
-                            target.NewType != VariableNode.DataType.Record
-                            && target.NewType != VariableNode.DataType.Reference
-                        )
-                    )
-                        throw new Exception(
-                            $"Cannot assign an enum of type {enumDefinition.NewType} to the enum element {target.UnknownType}."
-                        );
+                    //     EnumNode? enumDefinition = null;
+                    //     foreach (var e in parentModule.getEnums())
+                    //     {
+                    //         foreach (var v in variables)
+                    //         {
+                    //             if (v.Value.InitialValue is null)
+                    //                 continue;
+                    //             if (
+                    //                 v.Value.IsConstant
+                    //                 && e.Value.EnumElements.Contains(v.Value.InitialValue.ToString())
+                    //             )
+                    //             {
+                    //                 enumDefinition = e.Value;
+                    //                 break;
+                    //             }
+                    //         }
+                    //
+                    //         if (e.Value.EnumElements.Contains(vrn.Name))
+                    //         {
+                    //             enumDefinition = e.Value;
+                    //             break;
+                    //         }
+                    //     }
+                    //
+                    //     foreach (var e in parentModule.Imported)
+                    //     {
+                    //         if (e.Value is not EnumNode)
+                    //             continue;
+                    //         var Enum = (EnumNode)e.Value;
+                    //         if (Enum.EnumElements.Contains(vrn.Name))
+                    //         {
+                    //             enumDefinition = Enum;
+                    //             break;
+                    //         }
+                    //     }
+                    //
+                    //     if (enumDefinition == null)
+                    //         throw new Exception(
+                    //             $"Could not find the definition for an enum containing the element {vrn.Name}."
+                    //         );
+                    //     if (
+                    //         enumDefinition.NewType != target.UnknownType
+                    //         && (
+                    //             target.NewType != VariableNode.DataType.Record
+                    //             && target.NewType != VariableNode.DataType.Reference
+                    //         )
+                    //     )
+                    //         throw new Exception(
+                    //             $"Cannot assign an enum of type {enumDefinition.NewType} to the enum element {target.UnknownType}."
+                    //         );
                 }
                 else
                 {

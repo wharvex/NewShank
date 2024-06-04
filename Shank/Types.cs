@@ -1,32 +1,31 @@
 namespace Shank;
 
-public interface IType;
+public interface IType; // our marker interface anything that implements is known to represent a shank type
 
-public struct Range
+public struct
+    Range // the type that represents a type range in shank (from .. to ..), as ranges on types are part of the types
+    (float from, float to)
 {
-    public Range(float from, float to)
+    public float From { get; set; } = from;
+    public float To { get; set; } = to;
+
+    public static Range DefaultFloat()
     {
-        From = from;
-        To = to;
+        return new Range(float.MinValue, float.MaxValue);
     }
-
-    public float From { get; set; }
-    public float To { get; set; }
 }
-public interface IRangeType : IType
+public interface IRangeType : IType // this is a bit more specific than a plain IType in that besides for being a type it must also be able to use type limits (the range from before)
 {
-    public Range? Range { get; set; }
+    public Range Range { get; set; }
 }
 public struct BooleanType : IType;
 
-public struct StringType : IRangeType
+public struct StringType(Range range) : IRangeType
 {
-    public StringType(Range? range = null)
-    {
-        Range = range;
-    }
+    public StringType() : this(Range.DefaultFloat()) {}
+    
 
-    public Range? Range { get; set; }
+    public Range Range { get; set; } = range;
 }
 
 
@@ -53,16 +52,17 @@ public struct IntegerType : IRangeType
 
 public struct CharacterType : IType;
 
-public record struct EnumType(List<String> Variants) : IType;
+public record struct EnumType(string Name, List<String> Variants) : IType; // enums are just a list of variants
 
-public record struct RecordType(Dictionary<String, IType> Fields, List<string> Generics) : IType;
+public record struct RecordType(string Name, Dictionary<String, IType> Fields, List<string> Generics) : IType; // records need to keep the types of their members along with any generics they declare
 
-public record struct ArrayType(IType Inner, Range? Range = null) : IRangeType
+public record struct ArrayType(IType Inner, Range? Range = null) : IRangeType // arrays have only one inner type
 {
     public Range? Range { get; set; } = Range;
 }
 
-public record struct UnknownType(String TypeName, List<IType> TypeParameters) : IType
+public record struct UnknownType(String TypeName, List<IType> TypeParameters) : IType // unknown types are those types that we have not found their proper definition during semantic analysis yet
+// they also need to keep and generics they instiate like Int, String in HashMap Int, String
 {
     public UnknownType(String TypeName) : this(TypeName, new List<IType>())
     {

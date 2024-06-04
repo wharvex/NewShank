@@ -7,6 +7,7 @@ namespace Shank;
 public class EnumNode : ASTNode
 {
     public string Type { get; set; }
+    public IType NewType => new EnumType(Type, EnumElements.ToList());
     public string ParentModuleName { get; set; }
     public LinkedList<String> EnumElements;
     public bool IsPublic { get; set; }
