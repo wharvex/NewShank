@@ -17,7 +17,7 @@ public class Parser
     private bool AcceptSeparators()
     {
         bool retVal = false;
-        while (handler.MatchAndRemove(TokenType.SEPERATOR) != null)
+        while (handler.MatchAndRemove(TokenType.SEPARATOR) != null)
         {
             retVal = true;
         }

@@ -48,7 +48,7 @@ public class Lexer
         keywordHash["false"] = TokenType.FALSE;
         keywordHash["shared"] = TokenType.SHARED;
         keywordHash["private"] = TokenType.PRIVATE;
-        keywordHash["\t"] = TokenType.SEPERATOR;
+        keywordHash["\t"] = TokenType.SEPARATOR; 
     }
 
     private void TwoCharacterHashmap()
@@ -104,7 +104,7 @@ public class Lexer
                 stringHandler.GetChar();
                 lineNumber++;
                 characterPosition++;
-                tokens.AddLast((new Token(TokenType.SEPERATOR, lineNumber, characterPosition)));
+                tokens.AddLast((new Token(TokenType.SEPARATOR, lineNumber, characterPosition)));
             }
             else if (currentCharacter == '\r')
             {
@@ -124,11 +124,22 @@ public class Lexer
             }
             else if (currentCharacter == '{')
             {
-                while (stringHandler.Peek(0) != '\n')
+                while (currentCharacter != '}' && !stringHandler.IsDone())
+                {
+                    stringHandler.GetChar();
+                    characterPosition++;
+                    currentCharacter = stringHandler.Peek(0); 
+                }
+                if (stringHandler.IsDone())
+                {
+                    throw new ArgumentException("Missing closing brace '}'");
+                }
+                else
                 {
                     stringHandler.GetChar();
                     characterPosition++;
                 }
+             
             }
             else
             {
@@ -143,7 +154,7 @@ public class Lexer
                 }
             }
         }
-        tokens.AddLast(new Token(TokenType.SEPERATOR, lineNumber, characterPosition));
+        tokens.AddLast(new Token(TokenType.SEPARATOR, lineNumber, characterPosition));
         return tokens;
     }
 

@@ -28,7 +28,7 @@ public enum TokenType
     GETLINE,
     NEXTFILE,
     FUNCTION,
-    SEPERATOR,
+    SEPARATOR,
     GREATEREQUAL,
     DOUBLEPLUS,
     DOUBLEMINUS,
