@@ -476,7 +476,7 @@ public class Parser
             Token.TokenType.Identifier => CustomType(inVariables, typeToken),
             Token.TokenType.Integer => new IntegerType(checkRange(true)),
             Token.TokenType.Boolean => new BooleanType(),
-            Token.TokenType.Character => new CharacterType(),
+            Token.TokenType.Character => new CharacterType(checkRange(true)),
             Token.TokenType.String => new StringType(checkRange(true)),
             Token.TokenType.Array => ArrayType(inVariables, typeToken),
             Token.TokenType.RefersTo => new ReferenceType(Type(inVariables)),

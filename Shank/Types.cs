@@ -36,7 +36,7 @@ public struct BooleanType : IType;
 
 public struct StringType(Range range) : IRangeType
 {
-    public StringType() : this(Range.DefaultSmallInteger()) {}
+    public StringType(Range? range = null) : this(range ?? Range.DefaultSmallInteger()) {}
     
 
     public Range Range { get; set; } = range;
@@ -46,26 +46,20 @@ public struct StringType(Range range) : IRangeType
 
 public struct RealType(Range range) : IRangeType
 {
-    public RealType(): this(Range.DefaultFloat())
-    {
-        
-    }
+    public RealType(Range? range = null) : this(range ?? Range.DefaultSmallInteger()) {}
     public Range Range { get; set; } = range;
 }
 
 public struct IntegerType(Range range) : IRangeType
 {
-    public IntegerType() : this(Range.DefaultInteger())
-    {
-        
-    }
+    public IntegerType(Range? range = null) : this(range ?? Range.DefaultSmallInteger()) {}
     public Range Range { get; set; } = range;
 }
 
 public struct CharacterType(Range range) : IRangeType
 {
 
-    public CharacterType() : this(Range.DefaultCharacter())
+    public CharacterType(Range? range = null) : this(range ?? Range.DefaultCharacter())
     {
         
     }
@@ -78,7 +72,7 @@ public record struct RecordType(string Name, Dictionary<string, IType> Fields, L
 
 public record struct ArrayType(IType Inner, Range Range ) : IRangeType // arrays have only one inner type
 {
-    public ArrayType(IType inner): this(inner, Range.DefaultSmallInteger())
+    public ArrayType(IType inner, Range? range = null): this(inner, range?? Range.DefaultSmallInteger())
     {
         
     }

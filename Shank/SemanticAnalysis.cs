@@ -781,7 +781,7 @@ public class SemanticAnalysis
                 {
                     // two cases enum constant foo.bar, or just plain variable
                     // TODO: make ast nodes for record access, enum access, and array index
-                    if (t.Name != vrn.Name || !t.Variants.Contains(((VariableReferenceNode) vrn.Extension).Name))
+                    if (!t.Variants.Contains(vrn.Name))
                     {
                         throw new SemanticErrorException("Could not assign assign to a variant of a different enum", vrn);
                     }
