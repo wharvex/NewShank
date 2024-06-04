@@ -2,7 +2,6 @@ using System;
 
 namespace Shank.Tran;
 
-//TODO: add AND, OR, PRIVATE and add to lexer
 public enum TokenType
 {
     INTERFACE,
@@ -60,7 +59,8 @@ public enum TokenType
     MINUSEQUALS,
     PRIVATE,
     AND,
-    OR
+    OR,
+    RETURN
 }
 
 public class Token

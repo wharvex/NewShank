@@ -49,6 +49,7 @@ public class Lexer
         keywordHash["shared"] = TokenType.SHARED;
         keywordHash["private"] = TokenType.PRIVATE;
         keywordHash["\t"] = TokenType.SEPARATOR;
+        keywordHash["return"] = TokenType.RETURN;
     }
 
     private void TwoCharacterHashmap()

@@ -81,7 +81,7 @@ namespace TranUnitTests
         [TestMethod]
         public void TwoCharacterHashmap()
         {
-            string file = ">= ++ -- <= == != ^= %= *= /= += -= && || ";
+            string file = ">= ++ -- <= == != ^= %= *= /= += -= && ||";
             Lexer lexer = new Lexer(file);
             LinkedList<Token> tokens = lexer.Lex();
             string actualTokensString = string.Join("\n", tokens) + "\n";
@@ -109,7 +109,7 @@ namespace TranUnitTests
         {
             string file =
                 "if print getline nextfile function interface class string implements accessor value "
-                + "loop mutator console datetime construct boolean true false shared \t \n ";
+                + "loop mutator console datetime construct boolean true false shared \t \n return";
             Lexer lexer = new Lexer(file);
             LinkedList<Token> tokens = lexer.Lex();
             string actualTokensString = string.Join("\n", tokens) + "\n";
@@ -137,6 +137,7 @@ namespace TranUnitTests
                 + " SHARED\n"
                 + " SEPARATOR\n"
                 + " SEPARATOR\n"
+                + " RETURN\n"
                 + " SEPARATOR\n";
             Assert.AreEqual(expectedTokensString, actualTokensString);
         }
