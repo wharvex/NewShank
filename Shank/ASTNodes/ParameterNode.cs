@@ -168,9 +168,9 @@ public class ParameterNode : ASTNode
     public override string ToString()
     {
         if (Variable != null)
-            return $"   {(IsVariable ? "var " : "")} {Variable.Name}";
+            return $"{(IsVariable ? "var " : "")} {Variable.Name}";
         else
-            return $"   {Constant}";
+            return $"{Constant}";
     }
 
     public override LLVMValueRef Visit(

@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 using LLVMSharp.Interop;
 using Shank.ExprVisitors;
@@ -63,4 +64,7 @@ public abstract class ASTNode
     );
 
     public abstract T Visit<T>(ExpressionVisitor<T> visit);
+
+    public List<ASTNode> GetContents<T>(Func<T, List<ASTNode>> contentsCollector)
+        where T : ASTNode => contentsCollector((T)this);
 }

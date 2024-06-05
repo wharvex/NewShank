@@ -67,4 +67,9 @@ public abstract class CallableNode : ASTNode, ILlvmTranslatable
     }
 
     public virtual void Visit(StatementVisitor visit) { }
+
+    public override string ToString()
+    {
+        return Name;
+    }
 }
