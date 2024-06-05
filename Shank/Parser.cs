@@ -444,7 +444,7 @@ public class Parser
         // {
         //     MatchAndRemove(Token.TokenType.EndOfLine);
         // }
-            
+
         return Assignment()
             ?? While()
             ?? Repeat()
@@ -999,8 +999,6 @@ public class Parser
         {
             throw new SyntaxErrorException("Expected " + tokenType, Peek(0));
         }
-
-        
     }
 
     private Token RequiresAndReturnsToken(Token.TokenType tokenType) =>

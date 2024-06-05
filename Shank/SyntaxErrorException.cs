@@ -24,6 +24,6 @@ public class SyntaxErrorException : Exception
             + (_cause?.Value ?? string.Empty)
             + "\nStack Trace: \n"
             + RESET
-            + base.ToString();  
+            + base.ToString();
     }
 }
