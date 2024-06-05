@@ -443,7 +443,7 @@ public class Parser
         }
 
         RequiresToken(Token.TokenType.Colon);
-        var type = Type(false);
+        var type = Type(VariableNode.DeclarationContext.RecordDeclaration);
 
         RequiresEndOfLine();
         return new RecordMemberNode(nameToken.GetValueSafe(), type);
@@ -465,21 +465,21 @@ public class Parser
         };
 
     // assumptions you want to parse a type
-    private IType Type(bool inVariables)
+    private IType Type(VariableNode.DeclarationContext declarationContext)
     {
         var typeToken = MatchAndRemoveMultiple(_shankTokenTypesPlusIdentifier) ??
                         throw new SyntaxErrorException("expected start of a type", Peek(0));
 
         return typeToken.Type switch
         {
-            Token.TokenType.Real => new RealType(checkRange(true)),
-            Token.TokenType.Identifier => CustomType(inVariables, typeToken),
-            Token.TokenType.Integer => new IntegerType(checkRange(true)),
+            Token.TokenType.Real => new RealType(CheckRange(true, Range.DefaultFloat())),
+            Token.TokenType.Identifier => CustomType(declarationContext, typeToken),
+            Token.TokenType.Integer => new IntegerType(CheckRange(true, Range.DefaultInteger())),
             Token.TokenType.Boolean => new BooleanType(),
-            Token.TokenType.Character => new CharacterType(checkRange(true)),
-            Token.TokenType.String => new StringType(checkRange(true)),
-            Token.TokenType.Array => ArrayType(inVariables, typeToken),
-            Token.TokenType.RefersTo => new ReferenceType(Type(inVariables)),
+            Token.TokenType.Character => new CharacterType(CheckRange(true, Range.DefaultCharacter())),
+            Token.TokenType.String => new StringType(CheckRange(true, Range.DefaultSmallInteger())),
+            Token.TokenType.Array => ArrayType(declarationContext, typeToken),
+            Token.TokenType.RefersTo => new ReferenceType(Type(declarationContext)),
             _ => throw new SyntaxErrorException("Unknown type", typeToken)
         };
     }
@@ -489,26 +489,26 @@ public class Parser
         yield return generator();
     }
 
-    private IType CustomType(bool inVariables, Token typeToken)
+    private IType CustomType(VariableNode.DeclarationContext declarationContext, Token typeToken)
     {
         // see if there are type parameters
         var token = Peek(0);
         // and that they are token types the correspond with types
         // if so parse the type
-        var first = token is null || !_shankTokenTypesPlusIdentifier.Contains(token.Type) ? null : Type(inVariables);
+        var first = token is null || !_shankTokenTypesPlusIdentifier.Contains(token.Type) ? null : Type(declarationContext);
         // then parse each comma followed by another type parameter until we do find any more commas
         var typeParams = (first == null
             ? []
             : Enumerable.Concat([first],
-                Repeat(() => MatchAndRemove(Token.TokenType.Comma) is null ? null : Type(inVariables))
+                Repeat(() => MatchAndRemove(Token.TokenType.Comma) is null ? null : Type(declarationContext))
                     .TakeWhile(r => r is not null)).ToList())!;
         return new UnknownType(typeToken.GetValueSafe(), typeParams!);
     }
 
-    private ArrayType ArrayType(bool inVariables, Token? arrayToken)
+    private ArrayType ArrayType(VariableNode.DeclarationContext declarationContext, Token? arrayToken)
     {
-        var range = checkRange(false);
-        if (range is null && inVariables)
+        var range = CheckRangeInner(false, Range.DefaultSmallInteger());
+        if (range is null && declarationContext == VariableNode.DeclarationContext.VariablesLine)
         {
             throw new SyntaxErrorException("Array in variables declared without a size", arrayToken);
         }
@@ -516,25 +516,33 @@ public class Parser
         var _ = MatchAndRemove(Token.TokenType.Of) ??
                 throw new SyntaxErrorException("Array declared without type missing of", arrayToken);
 
-        return new ArrayType(Type(true));
+        return new ArrayType(Type(declarationContext));
     }
 
-    private Range? checkRange(bool isFloat)
+    private Range CheckRange(bool isFloat, Range defaultRange)
+    {
+       return CheckRangeInner(isFloat, defaultRange) ?? defaultRange;
+    }
+
+
+    private Range? CheckRangeInner(bool isFloat, Range defaultRange)
     {
         if (MatchAndRemove(Token.TokenType.From) is null)
         {
-            return null;
+            return defaultRange;
         }
 
+        var fromToken = MatchAndRemove(Token.TokenType.Number);
         var fromNode = ProcessNumericConstant(
-            MatchAndRemove(Token.TokenType.Number)
+            fromToken
             ?? throw new SyntaxErrorException("Expected a number", Peek(0))
         );
 
         RequiresToken(Token.TokenType.To);
 
+        var toToken = MatchAndRemove(Token.TokenType.Number);
         var toNode = ProcessNumericConstant(
-            MatchAndRemove(Token.TokenType.Number)
+            toToken
             ?? throw new SyntaxErrorException("Expected a number", Peek(0))
         );
         if (!isFloat && fromNode is FloatNode || toNode is FloatNode)
@@ -542,8 +550,19 @@ public class Parser
             throw new SyntaxErrorException("Expected integer type limits found float ones", null);
         }
 
-        return new Range(fromNode is FloatNode from ? from.Value : ((IntNode)fromNode).Value,
-            toNode is FloatNode to ? to.Value : ((IntNode)toNode).Value);
+        var fromValue = fromNode is FloatNode from ? from.Value : ((IntNode)fromNode).Value;
+        var toValue = toNode is FloatNode to ? to.Value : ((IntNode)toNode).Value;
+        // TODO: check range is not inverted?
+        if (fromValue < defaultRange.From || fromValue > defaultRange.To)
+        {
+            throw new SyntaxErrorException($"range starting at {fromValue} is  not valid for this type", fromToken);
+        }
+        if (toValue < defaultRange.From || toValue > defaultRange.To)
+        {
+            throw new SyntaxErrorException($"range ending at {toValue} is  not valid for this type", toToken);
+        }
+        return new Range(fromValue,
+            toValue);
     }
 
     private FunctionCallNode? FunctionCall()
@@ -766,13 +785,11 @@ public class Parser
         return retVal;
     }
 
-    private List<VariableNode> CreateVariables(
-        List<string> names,
+    private List<VariableNode> CreateVariables(List<string> names,
         bool isConstant,
-        string parentModuleName
-    )
+        string parentModuleName, VariableNode.DeclarationContext declarationContext)
     {
-        var type = Type(true);
+        var type = Type(declarationContext);
 
 
         return CreateVariablesBasic(
@@ -883,7 +900,7 @@ public class Parser
         // Require a colon.
         RequiresToken(Token.TokenType.Colon);
 
-        return CreateVariables(names, isConstant, parentModuleName);
+        return CreateVariables(names, isConstant, parentModuleName, declarationContext);
     }
 
     private void GetVariablesRecord(List<ASTNode> vars, string parentModuleName)

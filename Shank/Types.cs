@@ -15,17 +15,17 @@ public record struct
     }
     public static Range DefaultInteger()
     {
-        return new Range(long.MinValue, float.MaxValue);
+        return new Range(long.MinValue, long.MaxValue);
     }
     public static Range DefaultSmallInteger()
     {
         // since this is just for arrays and strings should it be unsigned
-        return new Range(int.MinValue, float.MaxValue);
+        return new Range(uint.MinValue, uint.MaxValue);
     }
     public static Range DefaultCharacter()
     {
         // since this is just for characters should it be unsigned
-        return new Range(byte.MinValue, float.MaxValue);
+        return new Range(byte.MinValue, byte.MaxValue);
     }
 }
 public interface IRangeType : IType // this is a bit more specific than a plain IType in that besides for being a type it must also be able to use type limits (the range from before)
@@ -56,13 +56,13 @@ public struct  StringType(Range range) : IRangeType
 
 public struct RealType(Range range) : IRangeType
 {
-    public RealType(Range? range = null) : this(range ?? Range.DefaultSmallInteger()) {}
+    public RealType(Range? range = null) : this(range ?? Range.DefaultFloat()) {}
     public Range Range { get; set; } = range;
 }
 
 public struct IntegerType(Range range) : IRangeType
 {
-    public IntegerType(Range? range = null) : this(range ?? Range.DefaultSmallInteger()) {}
+    public IntegerType(Range? range = null) : this(range ?? Range.DefaultInteger()) {}
     public Range Range { get; set; } = range;
 }
 

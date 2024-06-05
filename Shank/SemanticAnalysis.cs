@@ -332,8 +332,6 @@ public class SemanticAnalysis
                 var type = (StringType)variablesLookup[an.Target.Name].NewType;
                 var from = type.Range.From;
                 var to = type.Range.To;
-                if (from != 0)
-                    throw new Exception("Strings must have a range starting at 0.");
                 if (s.Value.Length < from || s.Value.Length > to)
                     throw new Exception(
                         $"The variable {an.Target.Name} can only be a length from {from.ToString()} to {to.ToString()}."
