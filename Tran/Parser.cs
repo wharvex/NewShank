@@ -210,20 +210,29 @@ public class Parser
             var condition = ParseFactor() as BooleanExpressionNode;
             var block = ParseBlock();
             AcceptSeparators();
-            
+
             if (handler.MatchAndRemove(TokenType.ELSE) != null)
             {
                 var nextIf = ParseIf() as IfNode;
                 if (nextIf != null)
                 {
                     // Return the 'IF' node with 'ELSE IF' or 'ELSE'
-                    return new IfNode(condition ?? throw new InvalidOperationException("In ParseIf, condition is null"), block, nextIf);
+                    return new IfNode(
+                        condition
+                            ?? throw new InvalidOperationException("In ParseIf, condition is null"),
+                        block,
+                        nextIf
+                    );
                 }
                 // Return the 'IF' node with 'ELSE'
                 return new IfNode(condition, block, ParseBlock());
             }
             // Return just the 'IF' branch without an 'ELSE'
-            return new IfNode(condition ?? throw new InvalidOperationException("In ParseIf, condition is null"), block, new List<StatementNode>());
+            return new IfNode(
+                condition ?? throw new InvalidOperationException("In ParseIf, condition is null"),
+                block,
+                new List<StatementNode>()
+            );
         }
         return null;
     }

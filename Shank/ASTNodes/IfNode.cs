@@ -35,11 +35,11 @@ public class IfNode : StatementNode
         ElseBlock = elseBlock;
     }
 
-
     public BooleanExpressionNode? Expression { get; init; }
     public List<StatementNode> Children { get; init; }
     public IfNode? NextIfNode { get; init; }
     public List<StatementNode>? ElseBlock { get; init; }
+
     public override string ToString()
     {
         return $"If: {Expression} {StatementListToString(Children)} {((NextIfNode == null) ? string.Empty : Environment.NewLine + NextIfNode)}";
