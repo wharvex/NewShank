@@ -2,12 +2,12 @@ namespace Shank;
 
 public interface IType; // our marker interface anything that implements is known to represent a shank type
 
-public struct
+public record struct 
     Range // the type that represents a type range in shank (from .. to ..), as ranges on types are part of the types
-    (float from, float to)
+    (float From, float To)
 {
-    public float From { get; set; } = from;
-    public float To { get; set; } = to;
+    public float From { get; set; } = From;
+    public float To { get; set; } = To;
 
     public static Range DefaultFloat()
     {
@@ -34,10 +34,20 @@ public interface IRangeType : IType // this is a bit more specific than a plain 
 }
 public struct BooleanType : IType;
 
-public struct StringType(Range range) : IRangeType
+public struct  StringType(Range range) : IRangeType
 {
     public StringType(Range? range = null) : this(range ?? Range.DefaultSmallInteger()) {}
-    
+
+
+    public static bool operator ==(StringType a, StringType b)
+    {
+        return a.Range == b.Range;
+    }
+
+    public static bool operator !=(StringType a, StringType b)
+    {
+        return !(a == b);
+    }
 
     public Range Range { get; set; } = range;
 }

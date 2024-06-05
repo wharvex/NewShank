@@ -278,6 +278,7 @@ public class SemanticAnalysis
         }
     }
 
+    // TODO: combine with check range we don't need 2 seperate methods for range checking
     private static void CheckParameterRange(
         VariableNode param,
         ParameterNode argument,
@@ -285,57 +286,36 @@ public class SemanticAnalysis
         FunctionNode fn
     )
     {
-        if (argument.Variable is not null)
-        {
-            var vrn = argument.Variable;
-            var from = variables[vrn.Name].From;
-            var to = variables[vrn.Name].To;
-            var targetFrom = param.From;
-            var targetTo = param.To;
-            if (from is null || targetFrom is null)
-                return;
-            if (from is IntNode)
+            if (param.NewType is IRangeType t)
             {
-                if (
-                    ((IntNode)from).Value < ((IntNode)targetFrom).Value
-                    || ((IntNode)to).Value > ((IntNode)targetTo).Value
-                )
-                    throw new Exception($"Mismatched range in a call to {fn.Name}");
+                if (argument.Variable is not null)
+                {
+                    // assumed that type checking already done
+                    var variableType = variables[argument.Variable.Name].NewType as IRangeType;
+                    
+                    var actualFrom = variableType.Range.From;
+                    var actualTo = variableType.Range.To;
+                    var targetFrom = t.Range.From;
+                    var targetTo = t.Range.To;
+                        if (
+                                                targetFrom > actualFrom
+                                                || targetTo < actualTo) {
+                                                throw new Exception($"Mismatched range in a call to {fn.Name}");
+                        }
+                }
+                else
+                {
+                    var actualFrom = GetMaxRange(argument.Constant, variables);
+                    var actualTo = GetMinRange(argument.Constant, variables);
+                    var targetFrom = t.Range.From;
+                    var targetTo = t.Range.To;
+                    if (
+                            targetFrom > actualFrom
+                            || targetTo < actualTo) {
+                            throw new Exception($"Mismatched range in a call to {fn.Name}");
+                    }
+                }
             }
-            else
-            {
-                if (
-                    ((FloatNode)from).Value < ((FloatNode)targetFrom).Value
-                    || ((FloatNode)to).Value < ((FloatNode)targetFrom).Value
-                )
-                    throw new Exception($"Mismatched range in a call to {fn.Name}");
-            }
-        }
-        else
-        {
-            var actualFrom = GetMaxRange(argument.Constant, variables);
-            var actualTo = GetMinRange(argument.Constant, variables);
-            var targetFrom = param.From;
-            var targetTo = param.To;
-            if (targetFrom is null)
-                return;
-            if (targetFrom is IntNode)
-            {
-                if (
-                    ((IntNode)targetFrom).Value > actualFrom
-                    || ((IntNode)targetTo).Value < actualTo
-                )
-                    throw new Exception($"Mismatched range in a call to {fn.Name}");
-            }
-            else
-            {
-                if (
-                    ((FloatNode)targetFrom).Value < actualFrom
-                    || ((FloatNode)targetTo).Value < actualTo
-                )
-                    throw new Exception($"Mismatched range in a call to {fn.Name}");
-            }
-        }
     }
 
     private static void CheckRange(
@@ -349,13 +329,12 @@ public class SemanticAnalysis
         {
             try
             {
-                var from = (IntNode)variablesLookup[an.Target.Name].From;
-                var to = (IntNode)variablesLookup[an.Target.Name].To;
-                if (from is null || to is null)
-                    return;
-                if (from.Value != 0)
+                var type = (StringType)variablesLookup[an.Target.Name].NewType;
+                var from = type.Range.From;
+                var to = type.Range.To;
+                if (from != 0)
                     throw new Exception("Strings must have a range starting at 0.");
-                if (s.Value.Length < from.Value || s.Value.Length > to.Value)
+                if (s.Value.Length < from || s.Value.Length > to)
                     throw new Exception(
                         $"The variable {an.Target.Name} can only be a length from {from.ToString()} to {to.ToString()}."
                     );
@@ -430,18 +409,12 @@ public class SemanticAnalysis
             return s.Value.Length;
         if (node is VariableReferenceNode vrn)
         {
-            if (variables[vrn.Name].To is null || variables[vrn.Name].From is null)
-                throw new Exception(
-                    "Ranged variables can only be assigned variables with a range."
-                );
             var dataType = variables[vrn.Name].NewType;
-            if (dataType is IntegerType)
-                return ((IntNode)variables[vrn.Name].To).Value;
-            else if (dataType is RealType)
-                return ((FloatNode)variables[vrn.Name].To).Value;
-            // todo: why the to at the end should it be look up variable find its current value and use that if possible
-            else if (dataType is StringType)
-                return ((StringNode)variables[vrn.Name].To).Value.Length;
+            if (dataType is IRangeType t)
+               return t.Range.To;
+            throw new Exception(
+                "Ranged variables can only be assigned variables with a range."
+            );
         }
 
         throw new Exception("Unrecognized node type in math expression while checking range");
@@ -474,18 +447,12 @@ public class SemanticAnalysis
             return s.Value.Length;
         if (node is VariableReferenceNode vrn)
         {
-            if (variables[vrn.Name].To is null || variables[vrn.Name].From is null)
-                throw new Exception(
-                    "Ranged variables can only be assigned variables with a range."
-                );
-            var dataType = variables[vrn.Name].NewType;
-            if (dataType is IntegerType)
-                return ((IntNode)variables[vrn.Name].To).Value;
-            else if (dataType is RealType)
-                return ((FloatNode)variables[vrn.Name].To).Value;
-            // todo: why the to at the end should it be look up variable find its current value and use that if possible
-            else if (dataType is StringType)
-                return ((StringNode)variables[vrn.Name].To).Value.Length;
+              var dataType = variables[vrn.Name].NewType;
+            if (dataType is IRangeType t)
+               return t.Range.From;
+            throw new Exception(
+                "Ranged variables can only be assigned variables with a range."
+            );
         }
 
 
@@ -550,7 +517,7 @@ public class SemanticAnalysis
                 case EnumType e:
                     var right = ben.Right as VariableReferenceNode;
                     if (!e.Variants.Contains(right!.Name) || !variables.TryGetValue(right.Name, out var variableNode) ||
-                        variableNode.NewType != variable.NewType)
+                        variableNode.NewType.Equals(variable.NewType))
                     {
                         throw new Exception(
                             "Enums can only be compared to enums or enum variables of the same type."
@@ -790,7 +757,7 @@ public class SemanticAnalysis
                     throw new Exception("strings have to be assigned to string variables");
                 break;
             case VariableReferenceNode vrn:
-                if (targetType is EnumType t && vrn.ExtensionType == ASTNode.VrnExtType.Enum)
+                if (targetType is EnumType t)
                 {
                     // two cases enum constant foo.bar, or just plain variable
                     // TODO: make ast nodes for record access, enum access, and array index
@@ -853,7 +820,7 @@ public class SemanticAnalysis
                 else
                 {
                     var vn = variables[vrn.Name];
-                    if (vn.GetSpecificType(parentModule, vrn) != targetType)
+                    if (!vn.GetSpecificType(parentModule, vrn).Equals(( targetType)))
                         throw new Exception(
                             vrn.Name
                             + " is a "

@@ -65,8 +65,8 @@ public class VariableNode : ASTNode
 
     public bool IsConstant { get; set; }
     public ASTNode? InitialValue { get; set; }
-    public ASTNode? From { get; set; }
-    public ASTNode? To { get; set; }
+    // public ASTNode? From { get; set; }
+    // public ASTNode? To { get; set; }
 
     public string GetNameSafe() =>
         Name ?? throw new InvalidOperationException("Expected Name to not be null");
@@ -132,7 +132,7 @@ public class VariableNode : ASTNode
 
     public bool EqualsForOverload(VariableNode vn)
     {
-        return vn.NewType == NewType && vn.IsConstant == IsConstant;
+        return vn.NewType.Equals(NewType) && vn.IsConstant == IsConstant;
     }
 
     public override string ToString()
@@ -143,11 +143,11 @@ public class VariableNode : ASTNode
             + " "
             + (IsConstant ? "const" : string.Empty)
             + " "
-            + (InitialValue == null ? string.Empty : InitialValue)
-            + " "
-            + (From == null ? string.Empty : " From: " + From)
-            + " "
-            + (To == null ? string.Empty : " To: " + To);
+            + (InitialValue == null ? string.Empty : InitialValue);
+        // + " "
+        // + (From == null ? string.Empty : " From: " + From)
+        // + " "
+        // + (To == null ? string.Empty : " To: " + To);
     }
 
     public override LLVMValueRef Visit(

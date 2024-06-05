@@ -117,7 +117,7 @@ public class ParameterNode : ASTNode
 
     public bool ConstantTypeEquals(VariableNode givenVariable)
     {
-        return givenVariable.NewType == GetConstantType();
+        return givenVariable.NewType.Equals( GetConstantType());
     }
 
     public IType GetConstantType()
@@ -131,7 +131,7 @@ public class ParameterNode : ASTNode
     )
     {
         // Check if the types are unequal.
-        return (givenVariable.NewType == GetVariableType(variablesInScope));
+        return (givenVariable.NewType.Equals(GetVariableType(variablesInScope)));
 
     }
 
