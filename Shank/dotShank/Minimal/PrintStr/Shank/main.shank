@@ -1,0 +1,2 @@
+define start()
+    write "Hello, World!"

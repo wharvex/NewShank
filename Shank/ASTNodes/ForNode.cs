@@ -74,4 +74,9 @@ public class ForNode : StatementNode
         builder.BuildBr(forStart);
         builder.PositionAtEnd(afterFor);
     }
+
+    public override void Visit(StatementVisitor visit)
+    {
+        visit.Accept(this);
+    }
 }

@@ -201,7 +201,7 @@ public class Context
             StringType => LLVMStringType,
             BooleanType => LLVMTypeRef.Int1,
             CharacterType => LLVMTypeRef.Int8,
-            EnumType enumType => throw new NotImplementedException(),
+            EnumType e=> LLVMTypeRef.Int32,
             // if it's a custom type we look it up in the context
             ReferenceType r
                 => LLVMTypeRef.CreatePointer((LLVMTypeRef)GetLLVMTypeFromShankType(r.Inner), 0),

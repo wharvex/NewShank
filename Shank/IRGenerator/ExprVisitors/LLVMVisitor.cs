@@ -261,14 +261,55 @@ public class LLVMVisitor : Visitor<LLVMValueRef>
         }
     }
 
-    public override void Visit(FunctionNode node)
+    public override LLVMValueRef Visit(FunctionNode node)
     {
-        throw new NotImplementedException();
+        // should be already created, because the visit prototype method should have been called first
+        var function = (LLVMFunction)_context.GetFunction(node.Name);
+        _context.CurrentFunction = function;
+        _context.ResetLocal();
+        foreach (
+            var (param, index) in node.ParameterVariables.Select((param, index) => (param, index))
+        )
+        {
+            var llvmParam = function.GetParam((uint)index);
+            var name = param.GetNameSafe();
+            var parameter = _context.newVariable(param.Type, param.UnknownType)(
+                llvmParam,
+                !param.IsConstant
+            );
+
+            _context.AddVaraible(name, parameter, false);
+        }
+
+        function.Linkage = LLVMLinkage.LLVMExternalLinkage;
+
+        var block = function.AppendBasicBlock("entry");
+        _builder.PositionAtEnd(block);
+        node.LocalVariables.ForEach(variable => variable.Visit(this, _context, _builder, _module));
+        node.Statements.ForEach(s => s.VisitStatement(this, _context, _builder, _module));
+        // return 0 to singify ok
+        _builder.BuildRet(LLVMValueRef.CreateConstInt(_module.Context.Int32Type, (ulong)0));
+        _context.ResetLocal();
+        return function.Function;
     }
 
     public override void Visit(FunctionCallNode node)
     {
-        throw new NotImplementedException();
+        var function =
+            _context.GetFunction(node.Name)
+            ?? throw new Exception($"function {node.Name} not found");
+        // if any arguement is not mutable, but is required to be mutable
+        if (
+            function
+                .ArguementMutability.Zip(node.Parameters.Select(p => p.IsVariable))
+                .Any(a => a is { First: true, Second: false })
+        )
+        {
+            throw new Exception($"call to {node.Name} has a mismatch of mutability");
+        }
+
+        var parameters = node.Parameters.Select(p => p.Visit(this, _context, _builder, _module));
+        _builder.BuildCall2(function.TypeOf, function.Function, parameters.ToArray());
     }
 
     public override void Visit(WhileNode node)
@@ -299,5 +340,10 @@ public class LLVMVisitor : Visitor<LLVMValueRef>
             llvmValue.ValueRef
         );
         //do something with type information we could either utilize an enum or something along the lines
+    }
+
+    public override void Visit(EnumNode enumNode)
+    {
+        // _context.Ty
     }
 }

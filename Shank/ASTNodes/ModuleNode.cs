@@ -418,4 +418,14 @@ public class ModuleNode : StatementNode
         context.SetCurrentModule(Name);
         GetFunctionsAsList().ForEach(f => f.VisitPrototype(context, module));
     }
+
+    public void VisitProto(VisitPrototype visitPrototype)
+    {
+        visitPrototype.Accept(this);
+    }
+
+    public override void Visit(StatementVisitor visit)
+    {
+        visit.Accept(this);
+    }
 }

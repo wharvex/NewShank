@@ -27,7 +27,7 @@ public enum TokenType
     GETLINE,
     NEXTFILE,
     FUNCTION,
-    SEPERATOR,
+    SEPARATOR,
     GREATEREQUAL,
     DOUBLEPLUS,
     DOUBLEMINUS,
@@ -56,7 +56,12 @@ public enum TokenType
     MULTIPLYEQUALS,
     DIVIDEEQUALS,
     PLUSEQUALS,
-    MINUSEQUALS
+    MINUSEQUALS,
+    PRIVATE,
+    AND,
+    OR,
+    RETURN,
+    ELSE
 }
 
 public class Token

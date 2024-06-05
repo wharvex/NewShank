@@ -416,8 +416,11 @@ public class SemanticAnalysis
                 "Ranged variables can only be assigned variables with a range."
             );
         }
-
-        throw new Exception("Unrecognized node type in math expression while checking range");
+        throw new Exception(
+            "Unrecognized node type on line "
+                + node.Line
+                + " in math expression while checking range"
+        );
     }
 
     private static float GetMinRange(ASTNode node, Dictionary<string, VariableNode> variables)

@@ -27,6 +27,11 @@ public class BooleanExpressionNode : ASTNode
         return visitor.Visit(this);
     }
 
+    public override T Visit<T>(ExpressionVisitor<T> visit)
+    {
+        return visit.Accept(this);
+    }
+
     public override string ToString()
     {
         return $"({Left.ToString()} {Op} {Right.ToString()})";

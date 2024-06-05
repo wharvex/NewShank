@@ -28,4 +28,9 @@ public class StringNode : ASTNode
     {
         return visitor.Visit(this);
     }
+
+    public override T Visit<T>(ExpressionVisitor<T> visit)
+    {
+        return visit.Accept(this);
+    }
 }

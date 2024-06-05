@@ -85,14 +85,14 @@ public class InterptOptions
 [Verb("CompilePractice", isDefault: false)]
 public class CompilePracticeOptions
 {
-    [Value(index: 0, MetaName = "inputFile", HelpText = "The Shank source file", Required = true)]
-    public string? File { get; set; }
+    [Value(index: 0, MetaName = "inputFile", HelpText = "The Shank source file")]
+    public string File { get; set; } = "";
 
     [Option('u', "ut", HelpText = "Unit test options", Default = false)]
     public bool UnitTest { get; set; }
 
-    public string GetFileSafe() =>
-        File ?? throw new InvalidOperationException("Expected File to not be null.");
+    [Option('f', "flat", HelpText = "Use flattened IR generation", Default = "")]
+    public string Flat { get; set; } = "";
 }
 
 public class CommandLineArgsParser
@@ -146,13 +146,28 @@ public class CommandLineArgsParser
 
     public void RunCompilePractice(CompilePracticeOptions options, ProgramNode program)
     {
-        GetFiles(options.GetFileSafe()).ForEach(ip => ScanAndParse(ip, program));
+        GetFiles(options.File).ForEach(ip => ScanAndParse(ip, program));
         program.SetStartModule();
-        OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForProgramNode(program), "ast");
         BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
         SemanticAnalysis.CheckModules(program);
-        var irGen = new IrGenerator(program);
-        irGen.GenerateIr();
+        OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForProgramNode(program), "ast");
+        switch (options.Flat)
+        {
+            case "":
+                var irGen = new IrGenerator(program);
+                irGen.GenerateIr();
+                break;
+            case "PrintStr":
+                irGen = new IrGenerator();
+                irGen.GenerateIrFlatPrintStr("root");
+                break;
+            case "PrintInt":
+                irGen = new IrGenerator();
+                irGen.GenerateIrFlatPrintInt("root");
+                break;
+            default:
+                throw new UnreachableException();
+        }
 
         Interpreter.Modules = program.Modules;
         Interpreter.StartModule = program.GetStartModuleSafe();

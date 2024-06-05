@@ -1,4 +1,5 @@
 using LLVMSharp.Interop;
+using Shank.ASTNodes;
 using Shank.ExprVisitors;
 
 namespace Shank;
@@ -23,9 +24,21 @@ public class IfNode : StatementNode
         NextIfNode = nextIfNode;
     }
 
+    public IfNode(
+        BooleanExpressionNode? expression,
+        List<StatementNode> children,
+        List<StatementNode> elseBlock
+    )
+    {
+        Expression = expression;
+        Children = children;
+        ElseBlock = elseBlock;
+    }
+
     public BooleanExpressionNode? Expression { get; init; }
     public List<StatementNode> Children { get; init; }
     public IfNode? NextIfNode { get; init; }
+    public List<StatementNode>? ElseBlock { get; init; }
 
     public override string ToString()
     {
@@ -68,5 +81,10 @@ public class IfNode : StatementNode
         // {
         //     Children.ForEach(c => c.VisitStatement(visitor, context, builder, module));
         // }
+    }
+
+    public override void Visit(StatementVisitor visit)
+    {
+        visit.Accept(this);
     }
 }

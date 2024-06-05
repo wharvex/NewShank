@@ -5,7 +5,7 @@ using Exception = System.Exception;
 
 namespace Shank;
 
-public class VariableNode : ASTNode
+public class VariableNode : StatementNode
 {
     public string? Name { get; set; }
     public string? ModuleName { get; set; }
@@ -168,5 +168,10 @@ public class VariableNode : ASTNode
         var variable = context.newVariable(NewType);
         context.AddVaraible(name, variable(v, !IsConstant), false);
         return v;
+    }
+
+    public override void Visit(StatementVisitor visit)
+    {
+        visit.Accept(this);
     }
 }

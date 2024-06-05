@@ -50,4 +50,9 @@ public class WhileNode : StatementNode
         // builder.BuildBr(whileCond);
         // builder.PositionAtEnd(whileDone);
     }
+
+    public override void Visit(StatementVisitor visit)
+    {
+        visit.Accept(this);
+    }
 }

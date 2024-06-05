@@ -28,7 +28,10 @@ public class Lexer
         keywordHash["print"] = TokenType.PRINT;
         keywordHash["getline"] = TokenType.GETLINE;
         keywordHash["nextfile"] = TokenType.NEXTFILE;
+
+        //TODO: !!! no such keyword - add specific functionality to lex the name of the function and put into this type
         keywordHash["function"] = TokenType.FUNCTION;
+
         keywordHash["interface"] = TokenType.INTERFACE;
         keywordHash["class"] = TokenType.CLASS;
         keywordHash["string"] = TokenType.STRING;
@@ -44,7 +47,10 @@ public class Lexer
         keywordHash["true"] = TokenType.TRUE;
         keywordHash["false"] = TokenType.FALSE;
         keywordHash["shared"] = TokenType.SHARED;
-        keywordHash["\t"] = TokenType.SEPERATOR;
+        keywordHash["private"] = TokenType.PRIVATE;
+        keywordHash["\t"] = TokenType.SEPARATOR;
+        keywordHash["return"] = TokenType.RETURN;
+        keywordHash["else"] = TokenType.ELSE;
     }
 
     private void TwoCharacterHashmap()
@@ -61,6 +67,8 @@ public class Lexer
         twoCharacterHash["/="] = TokenType.DIVIDEEQUALS;
         twoCharacterHash["+="] = TokenType.PLUSEQUALS;
         twoCharacterHash["-="] = TokenType.MINUSEQUALS;
+        twoCharacterHash["&&"] = TokenType.AND;
+        twoCharacterHash["||"] = TokenType.OR;
     }
 
     private void OneCharacterHashmap()
@@ -100,7 +108,7 @@ public class Lexer
                 stringHandler.GetChar();
                 lineNumber++;
                 characterPosition++;
-                tokens.AddFirst((new Token(TokenType.SEPERATOR, lineNumber, characterPosition)));
+                tokens.AddLast((new Token(TokenType.SEPARATOR, lineNumber, characterPosition)));
             }
             else if (currentCharacter == '\r')
             {
@@ -109,35 +117,28 @@ public class Lexer
             }
             else if (char.IsLetter(currentCharacter))
             {
-                if (IsSingleCharacterWord(currentCharacter))
-                {
-                    Token singleCharWordToken = ProcessSingleCharacterWord(currentCharacter);
-                    tokens.AddFirst(
-                        (
-                            new Token(
-                                TokenType.CHARACTER,
-                                currentCharacter.ToString(),
-                                lineNumber,
-                                characterPosition
-                            )
-                        )
-                    );
-                }
-                else
-                {
-                    Token wordProcessor = ProcessWord();
-                    tokens.AddFirst(wordProcessor);
-                }
+                Token wordProcessor = ProcessWord();
+                tokens.AddLast((wordProcessor));
             }
             //Research this one, done for now but can be fixed.
             else if (char.IsDigit(currentCharacter))
             {
                 Token numberProcessor = ProcessNumber();
-                tokens.AddFirst(numberProcessor);
+                tokens.AddLast(numberProcessor);
             }
             else if (currentCharacter == '{')
             {
-                while (stringHandler.Peek(0) != '\n')
+                while (currentCharacter != '}' && !stringHandler.IsDone())
+                {
+                    stringHandler.GetChar();
+                    characterPosition++;
+                    currentCharacter = stringHandler.Peek(0);
+                }
+                if (stringHandler.IsDone())
+                {
+                    throw new ArgumentException("Missing closing brace '}'");
+                }
+                else
                 {
                     stringHandler.GetChar();
                     characterPosition++;
@@ -148,7 +149,7 @@ public class Lexer
                 Token OneTwoSymbols = ProcessSymbols();
                 if (OneTwoSymbols != null)
                 {
-                    tokens.AddFirst(OneTwoSymbols);
+                    tokens.AddLast(OneTwoSymbols);
                 }
                 else
                 {
@@ -156,7 +157,7 @@ public class Lexer
                 }
             }
         }
-        tokens.AddFirst(new Token(TokenType.SEPERATOR, lineNumber, characterPosition));
+        tokens.AddLast(new Token(TokenType.SEPARATOR, lineNumber, characterPosition));
         return tokens;
     }
 
@@ -174,7 +175,11 @@ public class Lexer
         if (keywordHash.ContainsKey(value))
         {
             tokenType = keywordHash[value];
-            return new Token(tokenType, lineNumber, startPosition);
+            return new Token(keywordHash[value], lineNumber, startPosition);
+        }
+        if (stringHandler.Peek(0).Equals('('))
+        {
+            return new Token(TokenType.FUNCTION, value, lineNumber, startPosition);
         }
         return new Token(TokenType.WORD, value, lineNumber, startPosition);
     }

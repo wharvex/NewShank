@@ -48,4 +48,11 @@ public class StatementNode : ASTNode
         // statement nodes ues visit statement as they do not return something
         throw new NotImplementedException();
     }
+
+    public override T Visit<T>(ExpressionVisitor<T> visit)
+    {
+        throw new NotImplementedException();
+    }
+
+    public virtual void Visit(StatementVisitor visit) { }
 }

@@ -651,6 +651,7 @@ public class FunctionNode : CallableNode
             var name = param.GetNameSafe();
             llvmParam.Name = name;
         }
+
         context.addFunction(Name, function);
     }
 
@@ -661,32 +662,20 @@ public class FunctionNode : CallableNode
         LLVMModuleRef module
     )
     {
-        // should be already created, because the visit prototype method should have been called first
-        var function = (LLVMFunction)context.GetFunction(Name)!;
-        context.CurrentFunction = function;
-        context.ResetLocal();
-        foreach (var (param, index) in ParameterVariables.Select((param, index) => (param, index)))
-        {
-            var llvmParam = function.GetParam((uint)index);
-            var name = param.GetNameSafe();
-            var parameter = context.newVariable(param.NewType)(
-                llvmParam,
-                !param.IsConstant
-            );
+        return visitor.Visit(this);
+    }
 
-            context.AddVaraible(name, parameter, false);
-        }
+    public override void Visit(StatementVisitor visit)
+    {
+        visit.Accept(this);
+    }
 
-        function.Linkage = LLVMLinkage.LLVMExternalLinkage;
-
-        var block = function.AppendBasicBlock("entry");
-        builder.PositionAtEnd(block);
-
-        LocalVariables.ForEach(variable => variable.Visit(visitor, context, builder, module));
-        Statements.ForEach(s => s.VisitStatement(visitor, context, builder, module));
-        // return 0 to singify ok
-        builder.BuildRet(LLVMValueRef.CreateConstInt(module.Context.Int32Type, (ulong)0));
-        context.ResetLocal();
-        return function.Function;
+    /// <summary>
+    /// visitor anti pattern :')
+    /// </summary>
+    /// <param name="visitPrototype"></param>
+    public void VisitProto(VisitPrototype visitPrototype)
+    {
+        visitPrototype.Accept(this);
     }
 }

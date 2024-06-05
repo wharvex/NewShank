@@ -51,12 +51,27 @@ public class RecordMemberNode : StatementNode
     //        ? Type
     //        : (SemanticAnalysis.GetNamespaceOfRecordsAndEnumsAndImports(module)[GetUnknownTypeSafe()] as RecordNode)?.;
     //}
-    public override void VisitStatement(
+    // public override void VisitStatement(
+    //     LLVMVisitor visitor,
+    //     Context context,
+    //     LLVMBuilderRef builder,
+    //     LLVMModuleRef module
+    // )
+    // {
+    //     throw new NotImplementedException();
+    // }
+
+    public override LLVMValueRef Visit(
         LLVMVisitor visitor,
         Context context,
         LLVMBuilderRef builder,
         LLVMModuleRef module
     )
+    {
+        throw new NotImplementedException();
+    }
+
+    public override T Visit<T>(ExpressionVisitor<T> visit)
     {
         throw new NotImplementedException();
     }
