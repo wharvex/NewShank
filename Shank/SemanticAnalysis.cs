@@ -499,8 +499,8 @@ public class SemanticAnalysis
                             && variables[vrn2.Name].NewType is not IntegerType
                         )
                     )
-                        throw new Exception(
-                            "Integers can only be compared to integers or integer variables."
+                        throw new SemanticErrorException(
+                            "Integers can only be compared to integers or integer variables.", ben
                         );
                     break;
                 case RealType:
@@ -517,11 +517,11 @@ public class SemanticAnalysis
                     break;
                 case EnumType e:
                     var right = ben.Right as VariableReferenceNode;
-                    if (!e.Variants.Contains(right!.Name) || !variables.TryGetValue(right.Name, out var variableNode) ||
-                        variableNode.NewType.Equals(variable.NewType))
+                    if (!e.Variants.Contains(right!.Name) && (!variables.TryGetValue(right.Name, out var variableNode) ||
+                        variableNode.NewType.Equals(variable.NewType)))
                     {
-                        throw new Exception(
-                            "Enums can only be compared to enums or enum variables of the same type."
+                        throw new SemanticErrorException(
+                            "Enums can only be compared to enums or enum variables of the same type.", ben
                         );
                     }
                     /*Dictionary<string, EnumNode> enums;

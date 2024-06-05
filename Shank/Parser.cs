@@ -495,14 +495,30 @@ public class Parser
         var token = Peek(0);
         // and that they are token types the correspond with types
         // if so parse the type
-        var first = token is null || !_shankTokenTypesPlusIdentifier.Contains(token.Type) ? null : Type(declarationContext);
+        var first = token is not null && (_shankTokenTypesPlusIdentifier.Contains(token.Type) || token.Type == Token.TokenType.LeftParen) ? TypeParser() : null;
         // then parse each comma followed by another type parameter until we do find any more commas
         var typeParams = (first == null
             ? []
             : Enumerable.Concat([first],
-                Repeat(() => MatchAndRemove(Token.TokenType.Comma) is null ? null : Type(declarationContext))
+                Repeat(() => MatchAndRemove(Token.TokenType.Comma) is null ? null : TypeParser())
                     .TakeWhile(r => r is not null)).ToList())!;
         return new UnknownType(typeToken.GetValueSafe(), typeParams!);
+        // parses a type optionally surrounded by parenthesis
+        IType TypeParser() => InBetweenOpt(Token.TokenType.LeftParen, () => Type(declarationContext), Token.TokenType.RightParen, "record");
+    }
+
+    private T InBetweenOpt<T>(Token.TokenType first, Func<T> parser, Token.TokenType last, string type)
+    {
+        if (MatchAndRemove(first) is { } t)
+        {
+            Console.WriteLine(t);
+            var result = parser();
+            _ = MatchAndRemove(last) ??
+                throw new SyntaxErrorException("Could not find closing parenthesis after " + type, t);
+            return result;
+        }
+
+        return parser();
     }
 
     private ArrayType ArrayType(VariableNode.DeclarationContext declarationContext, Token? arrayToken)
