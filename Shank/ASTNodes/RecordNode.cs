@@ -10,6 +10,8 @@ public class RecordNode : ASTNode
 
     public List<string>? GenericTypeParameterNames { get; init; }
 
+    public IType NewType => new RecordType(Name, Members2.Select((node => (node.Name, node.NewType))).ToDictionary(), GenericTypeParameterNames);
+
     public string ParentModuleName { get; init; }
 
     public List<StatementNode> Members { get; init; }

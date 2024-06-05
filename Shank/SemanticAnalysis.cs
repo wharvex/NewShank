@@ -176,7 +176,7 @@ public class SemanticAnalysis
                 {
                     throw new Exception(
                         $"Could not find a definition for the function {fn.Name}."
-                            + $" Make sure it was defined and properly exported if it was imported."
+                        + $" Make sure it was defined and properly exported if it was imported."
                     );
                 }
             }
@@ -369,28 +369,28 @@ public class SemanticAnalysis
         {
             try
             {
-                if (variablesLookup[an.Target.Name].NewType is RealType f )
+                if (variablesLookup[an.Target.Name].NewType is RealType f)
                 {
-
                     var from = f.Range.From;
                     var to = f.Range.To;
                     float upper = GetMaxRange(an.Expression, variablesLookup);
                     float lower = GetMinRange(an.Expression, variablesLookup);
 
-                    if (lower < from|| upper > to)
+                    if (lower < from || upper > to)
                         throw new Exception(
                             $"The variable {an.Target.Name} can only be assigned expressions that won't overstep its range."
                         );
                 }
-                else if (variablesLookup[an.Target.Name].NewType is IRangeType i ) // all other i range type are bounded by integers
+                else if
+                    (variablesLookup[an.Target.Name]
+                         .NewType is IRangeType i) // all other i range type are bounded by integers
                 {
-                   
-                                        var from = i.Range.From;
-                                        var to = i.Range.To;
+                    var from = i.Range.From;
+                    var to = i.Range.To;
                     int upper = (int)GetMaxRange(an.Expression, variablesLookup);
                     int lower = (int)GetMinRange(an.Expression, variablesLookup);
 
-                    if (lower < from|| upper > to)
+                    if (lower < from || upper > to)
                         throw new Exception(
                             $"The variable {an.Target.Name} can only be assigned expressions that wont overstep its range."
                         );
@@ -479,14 +479,14 @@ public class SemanticAnalysis
                     "Ranged variables can only be assigned variables with a range."
                 );
             var dataType = variables[vrn.Name].NewType;
-                        if (dataType is IntegerType)
-                            return ((IntNode)variables[vrn.Name].To).Value;
-                        else if (dataType is RealType)
-                            return ((FloatNode)variables[vrn.Name].To).Value;
-                        // todo: why the to at the end should it be look up variable find its current value and use that if possible
-                        else if (dataType is StringType)
-                            return ((StringNode)variables[vrn.Name].To).Value.Length;
-                    }
+            if (dataType is IntegerType)
+                return ((IntNode)variables[vrn.Name].To).Value;
+            else if (dataType is RealType)
+                return ((FloatNode)variables[vrn.Name].To).Value;
+            // todo: why the to at the end should it be look up variable find its current value and use that if possible
+            else if (dataType is StringType)
+                return ((StringNode)variables[vrn.Name].To).Value.Length;
+        }
 
 
         throw new Exception("Unrecognized node type in math expression while checking range");
@@ -523,7 +523,7 @@ public class SemanticAnalysis
                 variable = variables[((VariableReferenceNode)ben.Right).Name];
             switch (variable.NewType)
             {
-                case  IntegerType:
+                case IntegerType:
                     if (
                         ben.Right is not IntNode
                         || (
@@ -548,7 +548,15 @@ public class SemanticAnalysis
                         );
                     break;
                 case EnumType e:
-                    Dictionary<string, EnumNode> enums;
+                    var right = ben.Right as VariableReferenceNode;
+                    if (!e.Variants.Contains(right!.Name) || !variables.TryGetValue(right.Name, out var variableNode) ||
+                        variableNode.NewType != variable.NewType)
+                    {
+                        throw new Exception(
+                            "Enums can only be compared to enums or enum variables of the same type."
+                        );
+                    }
+                    /*Dictionary<string, EnumNode> enums;
                     if (parentModule.getEnums().ContainsKey(variable.UnknownType))
                         enums = parentModule.getEnums();
                     else
@@ -579,6 +587,7 @@ public class SemanticAnalysis
                             "Enums can only be compared to enums or enum variables of the same type."
                         );
                     }
+                    */
 
                     break;
             }
@@ -599,6 +608,7 @@ public class SemanticAnalysis
                         "It is not implemented yet to assign to the base of an array variable."
                     )
                     : a.Inner,
+            /*
             RecordType r
                 => GetRecordTypeRecursive(
                     parentModule,
@@ -608,6 +618,8 @@ public class SemanticAnalysis
                         ],
                     targetUsage
                 ),
+            */
+            /*
             ReferenceType r
                 => GetRecordTypeRecursive(
                     parentModule,
@@ -617,12 +629,13 @@ public class SemanticAnalysis
                         ],
                     targetUsage
                 ),
+                */
 
             UnknownType u => throw new InvalidOperationException($"type should have fully resolved by this point {u}"),
             _ => targetDefinition.NewType
         };
 
-    private static IType GetSpecificRecordType(
+    /*private static IType GetSpecificRecordType(
         ModuleNode parentModule,
         VariableNode targetDefinition,
         VariableReferenceNode targetUsage
@@ -634,7 +647,7 @@ public class SemanticAnalysis
                 ]
         )
             .GetFromMembersByNameSafe(targetUsage.GetRecordMemberReferenceSafe().Name)
-            .NewType;
+            .NewType;*/
 
     //can return null as we may need to step backwards once recursive loop
     //this is if there is a nested record or reference, in which case the type that we want to return to be checked
@@ -642,7 +655,7 @@ public class SemanticAnalysis
     //if we checked for an extension when the target should be one of these types, an error is thrown, so if there is no extension
     //on the variable reference node, we return null to the previous recursive pass, which returns either VariableNode.DataType.Record
     //or Reference depending on what the previous loop found
-    private static IType? GetRecordTypeRecursive(
+    /*private static IType? GetRecordTypeRecursive(
         ModuleNode parentModule,
         RecordNode targetDefinition,
         VariableReferenceNode targetUsage
@@ -670,7 +683,7 @@ public class SemanticAnalysis
                         ],
                     (VariableReferenceNode)targetUsage.GetExtensionSafe()
                 ) ?? vndt;
-    }
+    }*/
 
     public static Dictionary<string, ASTNode> GetRecordsAndImports(
         Dictionary<string, RecordNode> records,
@@ -742,9 +755,9 @@ public class SemanticAnalysis
                 if (targetType is not BooleanType)
                     throw new Exception(
                         "true and false must be assigned to boolean variables; found "
-                            + boolNode.Value
-                            + " assigned to "
-                            + targetType
+                        + boolNode.Value
+                        + " assigned to "
+                        + targetType
                     );
                 break;
             case CharNode charNode:
@@ -761,9 +774,9 @@ public class SemanticAnalysis
                 if (targetType is not IntegerType)
                     throw new Exception(
                         "Integer numbers have to be assigned to integer variables. Found "
-                            + targetType
-                            + " "
-                            + intNode.Value
+                        + targetType
+                        + " "
+                        + intNode.Value
                     );
                 break;
             case MathOpNode mathOpNode:
@@ -783,7 +796,8 @@ public class SemanticAnalysis
                     // TODO: make ast nodes for record access, enum access, and array index
                     if (!t.Variants.Contains(vrn.Name))
                     {
-                        throw new SemanticErrorException("Could not assign assign to a variant of a different enum", vrn);
+                        throw new SemanticErrorException("Could not assign assign to a variant of a different enum",
+                            vrn);
                     }
                     //     EnumNode? enumDefinition = null;
                     //     foreach (var e in parentModule.getEnums())
@@ -842,10 +856,10 @@ public class SemanticAnalysis
                     if (vn.GetSpecificType(parentModule, vrn) != targetType)
                         throw new Exception(
                             vrn.Name
-                                + " is a "
-                                + variables[vrn.Name].NewType
-                                + " and can't be assigned to a "
-                                + targetType
+                            + " is a "
+                            + variables[vrn.Name].NewType
+                            + " and can't be assigned to a "
+                            + targetType
                         );
                 }
 
@@ -1094,7 +1108,7 @@ public class SemanticAnalysis
                 {
                     (
                         (FunctionNode)
-                            currentModule.Value.getFunctions()[test.Value.targetFunctionName]
+                        currentModule.Value.getFunctions()[test.Value.targetFunctionName]
                     ).Tests.Add(test.Key, test.Value);
                 }
                 else
@@ -1132,8 +1146,8 @@ public class SemanticAnalysis
                     if (variable.NewType is UnknownType unknownType)
                     {
                         if (enumsAndImports.TryGetValue(unknownType.TypeName, out var enumType)
-                            &&  enumType is EnumNode e
-                        )
+                            && enumType is EnumNode e
+                           )
                         {
                             variable.NewType = e.NewType;
                             if (unknownType.TypeParameters.Count != 0)
@@ -1142,48 +1156,46 @@ public class SemanticAnalysis
                             }
                         }
                         else if (
-                            variable.UnknownType != null
-                            && recordsAndImports.ContainsKey(variable.UnknownType)
-                            && recordsAndImports[variable.UnknownType] is RecordNode
+                            variable.NewType is UnknownType u
+                            && recordsAndImports.TryGetValue(u.TypeName, out var type)
+                            && type is RecordNode r
                         )
                         {
-                            variable.NewType = VariableNode.DataType.Record;
+                            variable.NewType = r.NewType;
                             var allRecords = GetRecordsAndImports(
                                 currentModule.Value.Records,
                                 currentModule.Value.Imported
                             );
-                            var targetRecord = (RecordNode)allRecords[variable.UnknownType];
-                            AssignNestedRecordTypes(targetRecord.Members, currentModule.Value);
+
+                            AssignNestedRecordTypes(r.Members, currentModule.Value);
                         }
                         else
                             throw new Exception(
                                 "Could not find a definition for the unknown type "
-                                    + unknownType.TypeName
+                                + unknownType.TypeName
                             );
                     }
                 }
 
                 foreach (var statement in currentFunction.Statements)
                 {
-                    if (statement is not AssignmentNode)
+                    if (statement is AssignmentNode assignment)
                     {
-                        continue;
-                    }
 
-                    var assignment = (AssignmentNode)statement;
-                    foreach (var variable in currentFunction.LocalVariables)
-                    {
-                        if (variable.NewType is EnumType)
+                        if (currentFunction.LocalVariables.Find(node =>
+                                node.NewType is EnumType && assignment.Target.Name == node.Name) is not null)
                         {
-                            if (assignment.Target.Name == variable.Name)
-                            {
-                                assignment.Target.ExtensionType = ASTNode.VrnExtType.Enum;
-                            }
+                            assignment.Target.ExtensionType = ASTNode.VrnExtType.Enum;
                         }
                     }
                 }
             }
         }
+    }
+
+    private static bool Lookup<K, U, V>(Dictionary<K, V> dictionary, K key, ref U result) where U : class?
+    {
+        return dictionary.TryGetValue(key, out var value) && (value is U v && (result = v) == v);
     }
 
     public static void AssignNestedRecordTypes(
@@ -1194,22 +1206,22 @@ public class SemanticAnalysis
         foreach (var statement in statements)
         {
             var rmn = (RecordMemberNode)statement;
-            if (rmn.UnknownType == null)
-                continue;
-
-            if (
-                parentModule.Records.ContainsKey(rmn.UnknownType)
-                || (
-                    parentModule.Imported.ContainsKey(rmn.UnknownType)
-                    && parentModule.Imported[rmn.UnknownType] is RecordNode
+            if (rmn.NewType is UnknownType u)
+            {
+                if (
+                    parentModule.Records.TryGetValue(u.TypeName, out var record) ||
+                    Lookup(parentModule.Imported, u.TypeName, ref record)
                 )
-            )
-            {
-                rmn.NewType = VariableNode.DataType.Record;
-            }
-            else
-            {
-                rmn.NewType = VariableNode.DataType.Enum;
+                {
+                    rmn.NewType = record!.NewType;
+                }
+                else if (
+                    parentModule.Enums.TryGetValue(u.TypeName, out var enumType) ||
+                    Lookup(parentModule.Imported, u.TypeName, ref enumType)
+                )
+                {
+                    rmn.NewType = enumType!.NewType;
+                }
             }
         }
     }

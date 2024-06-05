@@ -105,12 +105,10 @@ public class VariableNode : ASTNode
     public IType GetSpecificType(ModuleNode parentModule, VariableReferenceNode vrn) =>
         vrn.ExtensionType switch
         {
-            VrnExtType.ArrayIndex => GetArrayTypeSafe(),
+            // TODO: make exttype more expressive/type constrained
+            VrnExtType.ArrayIndex => ((ArrayType)NewType).Inner,
             VrnExtType.RecordMember
-                => GetRecordMemberType(
-                    vrn.GetRecordMemberReferenceSafe().Name,
-                    parentModule.Records
-                ),
+                => ((RecordType)NewType).Fields[vrn.GetRecordMemberReferenceSafe().Name],
             VrnExtType.None
                 => NewType switch
                 {

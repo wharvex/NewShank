@@ -725,14 +725,18 @@ public class Interpreter
             string => new StringDataType((string)temp),
             char => new CharDataType((char)temp),
             bool => new BooleanDataType((bool)temp),
-            EnumDataType => new EnumDataType((EnumDataType)temp),
-            RecordDataType => new RecordDataType((RecordDataType)temp),
-            ReferenceDataType => new ReferenceDataType((ReferenceDataType)temp),
+            EnumDataType type => new EnumDataType(type),
+            RecordDataType type => new RecordDataType(type),
+            ReferenceDataType type => new ReferenceDataType(type),
             _ => throw new Exception("Could not find nested type.")
         };
         throw new Exception("Could not get nested param");
     }
 
+    private static bool Lookup<TK, TU, TV>(Dictionary<TK, TV> dictionary, TK key, ref TU  result) where TU : class? where TK : notnull
+    {
+       return dictionary.TryGetValue(key, out var value) && (value is TU v && (result = v) == v)  ;
+    }
     // assumptions: already type checked/resolved all custom types
     private static InterpreterDataType VariableNodeToActivationRecord(VariableNode vn)
     {
@@ -753,18 +757,26 @@ public class Interpreter
             {
                 return new ArrayDataType(a.Inner);
             }
+            // TODO: merge record type and record node into one
             case RecordType r:
             {
-               return new RecordDataType(r.Fields);
+               var _ = (parentModule.Records.TryGetValue(r.Name, out var record) ||
+                    Lookup(parentModule.Imported, r.Name, ref record)) ;
+               return new RecordDataType(record!.Members);
             }
             case EnumType e:
             {
-                return new EnumDataType(e.Variants);
+               var _ = (parentModule.Enums.TryGetValue(e.Name, out var enumNode) ||
+                    Lookup(parentModule.Imported, e.Name, ref enumNode)) ;
+               return new EnumDataType( enumNode!);
             }
 
             case ReferenceType(RecordType r):
             {
-                return new ReferenceDataType(r);
+               var _ = (parentModule.Records.TryGetValue(r.Name, out var record) ||
+                    Lookup(parentModule.Imported, r.Name, ref record)) ;
+                return new ReferenceDataType(record!);
+                
             }
             default:
                 throw new Exception($"Unknown local variable type");

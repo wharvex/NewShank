@@ -131,21 +131,8 @@ public class ParameterNode : ASTNode
     )
     {
         // Check if the types are unequal.
-        if (givenVariable.NewType != GetVariableType(variablesInScope))
-        {
-            return false;
-        }
+        return (givenVariable.NewType == GetVariableType(variablesInScope));
 
-        // The types are equal. If they're not Unknown, no further action needed.
-        if (givenVariable.NewType is not UnknownType)
-        {
-            return true;
-        }
-
-        // The types are equal and Unknown. Check their UnknownTypes (string comparison).
-        return givenVariable
-            .GetUnknownTypeSafe()
-            .Equals(GetVariableDeclarationSafe(variablesInScope).GetUnknownTypeSafe());
     }
 
     public VariableNode GetVariableDeclarationSafe(

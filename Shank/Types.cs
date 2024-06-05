@@ -68,7 +68,7 @@ public struct CharacterType(Range range) : IRangeType
 
 public record struct EnumType(string Name, List<string> Variants) : IType; // enums are just a list of variants
 
-public record struct RecordType(string Name, Dictionary<string, IType> Fields, List<string> Generics) : IType; // records need to keep the types of their members along with any generics they declare
+public record struct RecordType(string Name, Dictionary<string, IType> Fields, List<string> Generics) : IType {} // records need to keep the types of their members along with any generics they declare
 
 public record struct ArrayType(IType Inner, Range Range ) : IRangeType // arrays have only one inner type
 {

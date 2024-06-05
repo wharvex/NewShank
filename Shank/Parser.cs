@@ -495,7 +495,7 @@ public class Parser
         var token = Peek(0);
         // and that they are token types the correspond with types
         // if so parse the type
-        var first = token is null || _shankTokenTypesPlusIdentifier.Contains(token.Type) ? null : Type(inVariables);
+        var first = token is null || !_shankTokenTypesPlusIdentifier.Contains(token.Type) ? null : Type(inVariables);
         // then parse each comma followed by another type parameter until we do find any more commas
         var typeParams = (first == null
             ? []
