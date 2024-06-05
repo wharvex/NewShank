@@ -342,8 +342,13 @@ public class LLVMVisitor : Visitor<LLVMValueRef>
         //do something with type information we could either utilize an enum or something along the lines
     }
 
-    public override void Visit(EnumNode enumNode)
+    public override LLVMValueRef Visit(EnumNode node)
     {
-        // _context.Ty
+        throw new NotImplementedException();
+    }
+
+    public override void Visit(ForNode node)
+    {
+        throw new NotImplementedException();
     }
 }

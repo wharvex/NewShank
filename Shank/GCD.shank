@@ -4,11 +4,15 @@
 
 define gcd (a,b : integer)
 variables r : integer
-    a := 0
+    {Test comment} 
     r := 1/a
 	while a mod b > 0 
 		r := a mod b
 		a := b
 		b := r
 	write b
+    {Test comment}
 
+
+define tester (a,b : integer)
+    write "hello"

@@ -85,4 +85,8 @@
     <Folder Include="Interfaces\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="bin\Debug\net8.0\win-x64\test.shank" />
+  </ItemGroup>
+
 </Project>
