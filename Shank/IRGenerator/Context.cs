@@ -160,7 +160,7 @@ public class Module
 
 public class Context
 {
-    public LLVMTypeRef LLVMStringType = LLVMTypeRef.CreateStruct(
+    public LLVMTypeRef StringType = LLVMTypeRef.CreateStruct(
         [LLVMTypeRef.Int32, LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0)],
         false
     );
@@ -198,7 +198,7 @@ public class Context
             IntegerType => LLVMTypeRef.Int64,
             RealType => LLVMTypeRef.Double,
             RecordType recordType => throw new NotImplementedException(),
-            StringType => LLVMStringType,
+            Shank.StringType => StringType,
             BooleanType => LLVMTypeRef.Int1,
             CharacterType => LLVMTypeRef.Int8,
             EnumType e=> LLVMTypeRef.Int32,
@@ -222,7 +222,7 @@ public class Context
             IntegerType => (LLVMInteger.New, LLVMTypeRef.Int64),
             RealType => (LLVMReal.New, LLVMTypeRef.Double),
             RecordType recordType => throw new NotImplementedException(),
-            StringType => (LLVMString.New, LLVMStringType),
+            Shank.StringType => (LLVMString.New, LLVMStringType: StringType),
             UnknownType unknownType => throw new NotImplementedException(),
             BooleanType => (LLVMBoolean.New, LLVMTypeRef.Int1),
             CharacterType => (LLVMCharacter.New, LLVMTypeRef.Int8),

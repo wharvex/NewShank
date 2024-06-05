@@ -34,7 +34,7 @@ public class LLVMVisitor : Visitor<LLVMValueRef>
             return Types.INTEGER;
         else if (typeRef == LLVMTypeRef.Double)
             return Types.FLOAT;
-        else if (typeRef == _context.LLVMStringType)
+        else if (typeRef == _context.StringType)
             return Types.STRING;
         else
             throw new Exception("undefined type");
@@ -273,7 +273,7 @@ public class LLVMVisitor : Visitor<LLVMValueRef>
         {
             var llvmParam = function.GetParam((uint)index);
             var name = param.GetNameSafe();
-            var parameter = _context.newVariable(param.Type, param.UnknownType)(
+            var parameter = _context.newVariable(param.NewType)(
                 llvmParam,
                 !param.IsConstant
             );

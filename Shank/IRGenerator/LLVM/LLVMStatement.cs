@@ -48,7 +48,7 @@ public class LLVMStatement : StatementVisitor
         {
             var llvmParam = function.GetParam((uint)index);
             var name = param.GetNameSafe();
-            var parameter = _context.newVariable(param.Type, param.UnknownType)(
+            var parameter = _context.newVariable(param.NewType)(
                 llvmParam,
                 !param.IsConstant
             );
@@ -191,11 +191,11 @@ public class LLVMStatement : StatementVisitor
 
         LLVMValueRef v = _builder.BuildAlloca(
             // isVar is false, because we are already creating it using alloca which makes it var
-            _context.GetLLVMTypeFromShankType(node.Type, node.UnknownType)
+            _context.GetLLVMTypeFromShankType(node.NewType)
                 ?? throw new Exception("null type"),
             name
         );
-        var variable = _context.newVariable(node.Type, node.UnknownType);
+        var variable = _context.newVariable(node.NewType);
         _context.AddVaraible(name, variable(v, !node.IsConstant), false);
     }
 

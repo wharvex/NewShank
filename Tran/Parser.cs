@@ -166,11 +166,11 @@ public class Parser
             AcceptSeparators();
             if (handler.MatchAndRemove(TokenType.STRING) != null)
             {
-                variable.Type = VariableNode.DataType.String;
+                variable.NewType = new StringType();
             }
             else if (handler.MatchAndRemove(TokenType.NUMBER) != null)
             {
-                variable.Type = VariableNode.DataType.Real;
+                variable.NewType = new RealType();
             }
             if ((name = handler.MatchAndRemove(TokenType.WORD)) != null)
             {
@@ -435,34 +435,34 @@ public class Parser
         return new IntNode(int.Parse(token.GetValue()));
     }
 
-    public static VariableNode.DataType GetDataTypeFromConstantNodeType(ASTNode constantNode) =>
+    public static IType GetDataTypeFromConstantNodeType(ASTNode constantNode) =>
         constantNode switch
         {
-            IntNode => VariableNode.DataType.Integer,
-            StringNode => VariableNode.DataType.String,
-            FloatNode => VariableNode.DataType.Real,
-            BooleanExpressionNode or BoolNode => VariableNode.DataType.Boolean,
+            IntNode => new IntegerType(),
+            StringNode => new StringType(),
+            FloatNode => new RealType(),
+            BooleanExpressionNode or BoolNode => new BooleanType(),
             _
                 => throw new InvalidOperationException(
                     "Bad constant node type for converting to data type."
                 )
         };
 
-    private static VariableNode.DataType GetDataTypeFromTokenType(TokenType tt) =>
+    private static IType GetDataTypeFromTokenType(TokenType tt) =>
         tt switch
         {
-            TokenType.NUMBER => VariableNode.DataType.Real,
-            TokenType.BOOLEAN => VariableNode.DataType.Boolean,
-            TokenType.STRING => VariableNode.DataType.String,
+            TokenType.NUMBER => new RealType(),
+            TokenType.BOOLEAN => new BooleanType(),
+            TokenType.STRING => new StringType(),
             _ => throw new InvalidOperationException("Bad TokenType for conversion into DataType"),
         };
 
-    private TypeUsage GetTypeUsageFromToken(Token t) =>
+    private IType GetTypeUsageFromToken(Token t) =>
         t.GetTokenType() switch
         {
-            TokenType.NUMBER => new TypeUsage(VariableNode.DataType.Real),
-            TokenType.BOOLEAN => new TypeUsage(VariableNode.DataType.Boolean),
-            TokenType.STRING => new TypeUsage(VariableNode.DataType.String),
+            TokenType.NUMBER => new RealType(),
+            TokenType.BOOLEAN => new BooleanType(),
+            TokenType.STRING => new StringType(),
             _
                 => throw new NotImplementedException(
                     "Bad TokenType for generating a TypeUsage: " + t.GetTokenType()

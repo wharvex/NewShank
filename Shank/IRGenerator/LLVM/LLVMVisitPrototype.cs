@@ -20,7 +20,7 @@ public class LLVMVisitPrototype : VisitPrototype
         var fnRetTy = _module.Context.Int32Type;
         var args = node.ParameterVariables.Select(
             s =>
-                _context.GetLLVMTypeFromShankType(s.Type, !s.IsConstant, s.UnknownType)
+                _context.GetLLVMTypeFromShankType(s.NewType)
                 ?? throw new CompilerException($"type of parameter {s.Name} is not found", s.Line)
         );
         var arguementMutability = node.ParameterVariables.Select(p => !p.IsConstant);
@@ -53,7 +53,7 @@ public class LLVMVisitPrototype : VisitPrototype
     {
         var args = node.Members2.Select(
             s =>
-                _context.GetLLVMTypeFromShankType(s.Type, !s.IsConstant, s.UnknownType)
+                _context.GetLLVMTypeFromShankType(s.NewType)
                 ?? throw new CompilerException($"type of parameter {s.Name} is not found", s.Line)
         );
         var a = LLVMTypeRef.CreateStruct(args.ToArray(), false);
