@@ -60,7 +60,8 @@ public enum TokenType
     PRIVATE,
     AND,
     OR,
-    RETURN
+    RETURN,
+    ELSE
 }
 
 public class Token

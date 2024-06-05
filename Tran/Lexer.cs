@@ -50,6 +50,8 @@ public class Lexer
         keywordHash["private"] = TokenType.PRIVATE;
         keywordHash["\t"] = TokenType.SEPARATOR;
         keywordHash["return"] = TokenType.RETURN;
+        keywordHash["else"] = TokenType.ELSE;
+        
     }
 
     private void TwoCharacterHashmap()
