@@ -265,7 +265,7 @@ public class Parser
                 throw new Exception("Term expected after.");
             }
 
-            lt = new MathOpNode(lt, MathOpNode.MathOpType.plus, rt);
+            lt = new MathOpNode(lt, ASTNode.MathOpType.plus, rt);
             return ParseExpressionRhs(lt);
         }
         else if (handler.MatchAndRemove(TokenType.MINUS) != null)
@@ -276,7 +276,7 @@ public class Parser
                 throw new Exception("Term expected after.");
             }
 
-            lt = new MathOpNode(lt, MathOpNode.MathOpType.minus, rt);
+            lt = new MathOpNode(lt, ASTNode.MathOpType.minus, rt);
             return ParseExpressionRhs(lt);
         }
         else if (handler.MatchAndRemove(TokenType.LESSEQUAL) != null)
@@ -381,7 +381,7 @@ public class Parser
                 throw new Exception("Factor expected after.");
             }
 
-            lt = new MathOpNode(lt, MathOpNode.MathOpType.times, rt);
+            lt = new MathOpNode(lt, ASTNode.MathOpType.times, rt);
             return ParseTermRhs(lt);
         }
         else if (handler.MatchAndRemove(TokenType.DIVIDE) != null)
@@ -392,7 +392,7 @@ public class Parser
                 throw new Exception("Factor expected after.");
             }
 
-            lt = new MathOpNode(lt, MathOpNode.MathOpType.divide, rt);
+            lt = new MathOpNode(lt, ASTNode.MathOpType.divide, rt);
             return ParseTermRhs(lt);
         }
         else if (handler.MatchAndRemove(TokenType.MODULUS) != null)
@@ -402,7 +402,7 @@ public class Parser
             {
                 throw new Exception("Factor expected after.");
             }
-            lt = new MathOpNode(lt, MathOpNode.MathOpType.modulo, rt);
+            lt = new MathOpNode(lt, ASTNode.MathOpType.modulo, rt);
             return ParseTermRhs(lt);
         }
         else
