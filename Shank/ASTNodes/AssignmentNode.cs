@@ -9,7 +9,7 @@ namespace Shank;
 /// </summary>
 public class AssignmentNode : StatementNode
 {
-    public AssignmentNode(VariableUsageNode target, ASTNode expression)
+    public AssignmentNode(VariableReferenceNode target, ASTNode expression)
     {
         Target = target;
         Expression = expression;
@@ -18,7 +18,7 @@ public class AssignmentNode : StatementNode
     /// <summary>
     /// The target variable to which the expression is assigned (LHS of the :=).
     /// </summary>
-    public VariableUsageNode Target { get; init; }
+    public VariableReferenceNode Target { get; init; }
 
     /// <summary>
     /// The expression assigned to the target variable (RHS of the :=).

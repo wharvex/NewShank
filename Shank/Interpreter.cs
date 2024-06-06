@@ -288,7 +288,7 @@ public class Interpreter
         Dictionary<string, InterpreterDataType> variables
     )
     {
-        if (an.Target.GetExtensionSafe() is VariableUsageNode vrn)
+        if (an.Target.GetExtensionSafe() is VariableReferenceNode vrn)
         {
             var t = rdt.MemberTypes[vrn.Name];
             rdt.Value[vrn.Name] = t switch
@@ -358,7 +358,7 @@ public class Interpreter
             return EvaluateBooleanExpressionNode(ben, variables);
         else if (node is BoolNode bn)
             return bn.Value;
-        else if (node is VariableUsageNode vrn)
+        else if (node is VariableReferenceNode vrn)
             return ((BooleanDataType)variables[vrn.Name]).Value;
         else
             throw new ArgumentException(nameof(node));
@@ -370,7 +370,7 @@ public class Interpreter
         Dictionary<string, InterpreterDataType> variables
     )
     {
-        if (node is VariableUsageNode variable)
+        if (node is VariableReferenceNode variable)
         {
             //if the variable is a variable and not an enum reference
             if (variables.ContainsKey(variable.Name))
@@ -390,7 +390,7 @@ public class Interpreter
         Dictionary<string, InterpreterDataType> variables
     )
     {
-        if (node is VariableUsageNode vrn)
+        if (node is VariableReferenceNode vrn)
         {
             return new EnumDataType(vrn.Name);
         }
@@ -519,7 +519,7 @@ public class Interpreter
                     case ReferenceDataType referenceVal:
                         if (fcp.Variable.Extension != null)
                         {
-                            var vrn = ((VariableUsageNode)fcp.Variable.Extension);
+                            var vrn = ((VariableReferenceNode)fcp.Variable.Extension);
                             if (referenceVal.Record is null)
                                 throw new Exception($"{fcp.Variable.Name} was never allocated.");
                             if (referenceVal.Record.Value[vrn.Name] is int)
@@ -694,28 +694,28 @@ public class Interpreter
         }
     }
 
-    public static InterpreterDataType GetNestedParam(RecordDataType rdt, VariableUsageNode vn)
+    public static InterpreterDataType GetNestedParam(RecordDataType rdt, VariableReferenceNode vn)
     {
-        var temp = rdt.Value[((VariableUsageNode)vn.GetExtensionSafe()).Name];
+        var temp = rdt.Value[((VariableReferenceNode)vn.GetExtensionSafe()).Name];
         if (
             temp is RecordDataType
-            && ((VariableUsageNode)vn.GetExtensionSafe()).Extension is null
+            && ((VariableReferenceNode)vn.GetExtensionSafe()).Extension is null
         )
         {
             return GetNestedParam(
                 (RecordDataType)temp,
-                (VariableUsageNode)vn.GetExtensionSafe()
+                (VariableReferenceNode)vn.GetExtensionSafe()
             );
         }
         if (
             temp is ReferenceDataType
-            && ((VariableUsageNode)vn.GetExtensionSafe()).Extension is null
+            && ((VariableReferenceNode)vn.GetExtensionSafe()).Extension is null
         )
         {
             return GetNestedParam(
                 ((ReferenceDataType)temp).Record
                     ?? throw new Exception($"Reference was never allocated, {vn.ToString()}"),
-                (VariableUsageNode)vn.GetExtensionSafe()
+                (VariableReferenceNode)vn.GetExtensionSafe()
             );
         }
         return temp switch
@@ -895,9 +895,9 @@ public class Interpreter
         {
             var lf = ben.Left;
             var rf = ben.Right;
-            if (rf is VariableUsageNode right)
+            if (rf is VariableReferenceNode right)
             {
-                if (lf is VariableUsageNode left)
+                if (lf is VariableReferenceNode left)
                 {
                     if (variables.ContainsKey(left.Name) && variables.ContainsKey(right.Name))
                     {
@@ -1031,7 +1031,7 @@ public class Interpreter
                         "It has not been implemented to perform any math operation on"
                             + " strings other than addition."
                     ),
-            VariableUsageNode vrn
+            VariableReferenceNode vrn
                 => vrn.ExtensionType switch
                 {
                     ASTNode.VrnExtType.ArrayIndex
@@ -1058,7 +1058,7 @@ public class Interpreter
             return cn.Value;
         }
 
-        if (node is VariableUsageNode vrn)
+        if (node is VariableReferenceNode vrn)
         {
             return vrn.ExtensionType switch
             {
@@ -1075,7 +1075,7 @@ public class Interpreter
         }
 
         throw new ArgumentException(
-            "Can only resolve a CharNode or a VariableUsageNode to a char.",
+            "Can only resolve a CharNode or a VariableReferenceNode to a char.",
             nameof(node)
         );
     }
@@ -1107,7 +1107,7 @@ public class Interpreter
         }
         else if (node is FloatNode fn)
             return fn.Value;
-        else if (node is VariableUsageNode vrn)
+        else if (node is VariableReferenceNode vrn)
         {
             return vrn.ExtensionType switch
             {
@@ -1150,7 +1150,7 @@ public class Interpreter
         }
         else if (node is IntNode fn)
             return fn.Value;
-        else if (node is VariableUsageNode vrn)
+        else if (node is VariableReferenceNode vrn)
         {
             return vrn.ExtensionType switch
             {
@@ -1194,7 +1194,7 @@ public class Interpreter
                 return ResolveChar(node, variables);
             case BoolNode b:
                 return ResolveBool(node, variables);
-            case VariableUsageNode v:
+            case VariableReferenceNode v:
                 return variables[v.Name];
             default:
                 throw new Exception(
@@ -1267,7 +1267,7 @@ public class Interpreter
         }
         else if (node is IntNode fn)
             return fn.Value;
-        else if (node is VariableUsageNode vr)
+        else if (node is VariableReferenceNode vr)
             throw new Exception(
                 "Variable references not allowed before all variables are declared"
             );

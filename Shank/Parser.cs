@@ -158,7 +158,7 @@ public class Parser
         return _tokens[offset];
     }
 
-    private VariableUsageNode? GetVariableReferenceNode()
+    private VariableReferenceNode? GetVariableReferenceNode()
     {
         if (MatchAndRemove(Token.TokenType.Identifier) is { } id)
         {
@@ -175,7 +175,7 @@ public class Parser
                         "Need a right bracket after the expression!",
                         Peek(0)
                     );
-                return new VariableUsageNode(
+                return new VariableReferenceNode(
                     id.GetValueSafe(),
                     exp,
                     ASTNode.VrnExtType.ArrayIndex
@@ -183,19 +183,19 @@ public class Parser
             }
             if (MatchAndRemove(Token.TokenType.Dot) is not null)
             {
-                VariableUsageNode? varRef = GetVariableReferenceNode();
+                VariableReferenceNode? varRef = GetVariableReferenceNode();
                 if (varRef is null)
                     throw new SyntaxErrorException(
                         "Need a record member reference after the dot!",
                         Peek(0)
                     );
-                return new VariableUsageNode(
+                return new VariableReferenceNode(
                     id.GetValueSafe(),
                     varRef,
                     ASTNode.VrnExtType.RecordMember
                 );
             }
-            return new VariableUsageNode(id.GetValueSafe());
+            return new VariableReferenceNode(id.GetValueSafe());
         }
         return null;
     }

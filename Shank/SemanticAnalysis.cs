@@ -341,7 +341,7 @@ public class SemanticAnalysis
             return i.Value;
         if (node is FloatNode f)
             return f.Value;
-        if (node is VariableUsageNode vrn)
+        if (node is VariableReferenceNode vrn)
         {
             if (variables[vrn.Name].To is null || variables[vrn.Name].From is null)
                 throw new Exception(
@@ -377,7 +377,7 @@ public class SemanticAnalysis
             return i.Value;
         if (node is FloatNode f)
             return f.Value;
-        if (node is VariableUsageNode vrn)
+        if (node is VariableReferenceNode vrn)
         {
             if (variables[vrn.Name].To is null || variables[vrn.Name].From is null)
                 throw new Exception(
@@ -409,7 +409,7 @@ public class SemanticAnalysis
             if (ben.Right is not FloatNode)
                 throw new Exception("Can only compare floats to other floats.");
         }
-        else if (ben.Left is VariableUsageNode vrn)
+        else if (ben.Left is VariableReferenceNode vrn)
         {
             VariableNode variable;
 
@@ -419,14 +419,14 @@ public class SemanticAnalysis
                 variable = variables[vrn.Name];
             else
                 // TODO: This will produce an InvalidCastException if ben.Right is not a VRN.
-                variable = variables[((VariableUsageNode)ben.Right).Name];
+                variable = variables[((VariableReferenceNode)ben.Right).Name];
             switch (variable.Type)
             {
                 case VariableNode.DataType.Integer:
                     if (
                         ben.Right is not IntNode
                         || (
-                            ben.Right is VariableUsageNode vrn2
+                            ben.Right is VariableReferenceNode vrn2
                             && variables[vrn2.Name].Type != VariableNode.DataType.Integer
                         )
                     )
@@ -438,7 +438,7 @@ public class SemanticAnalysis
                     if (
                         ben.Right is not FloatNode
                         || (
-                            ben.Right is VariableUsageNode vrn3
+                            ben.Right is VariableReferenceNode vrn3
                             && variables[vrn3.Name].Type != VariableNode.DataType.Real
                         )
                     )
@@ -456,15 +456,15 @@ public class SemanticAnalysis
                         ].getEnums();
                     if (
                         !enums[variable.UnknownType].EnumElements.Contains(
-                            ((VariableUsageNode)ben.Right).Name
+                            ((VariableReferenceNode)ben.Right).Name
                         )
                     )
                     {
-                        if ((variables.ContainsKey(((VariableUsageNode)ben.Right).Name)))
+                        if ((variables.ContainsKey(((VariableReferenceNode)ben.Right).Name)))
                         {
                             if (
                                 (
-                                    variables[((VariableUsageNode)ben.Right).Name].UnknownType
+                                    variables[((VariableReferenceNode)ben.Right).Name].UnknownType
                                     != variable.UnknownType
                                 )
                             )
@@ -485,7 +485,7 @@ public class SemanticAnalysis
     //may return null as GetRecordTypeRecursive can sometimes return null, although it should never reach here
     private static VariableNode.DataType? GetTargetTypeForAssignmentCheck(
         VariableNode targetDefinition,
-        VariableUsageNode targetUsage,
+        VariableReferenceNode targetUsage,
         ModuleNode parentModule
     ) =>
         targetDefinition.Type switch
@@ -522,7 +522,7 @@ public class SemanticAnalysis
     private static VariableNode.DataType GetSpecificRecordType(
         ModuleNode parentModule,
         VariableNode targetDefinition,
-        VariableUsageNode targetUsage
+        VariableReferenceNode targetUsage
     ) =>
         (
             (RecordNode)
@@ -542,7 +542,7 @@ public class SemanticAnalysis
     private static VariableNode.DataType? GetRecordTypeRecursive(
         ModuleNode parentModule,
         RecordNode targetDefinition,
-        VariableUsageNode targetUsage
+        VariableReferenceNode targetUsage
     )
     {
         if (targetUsage.Extension is null)
@@ -563,11 +563,11 @@ public class SemanticAnalysis
                         GetRecordsAndImports(parentModule.Records, parentModule.Imported)[
                             targetDefinition
                                 .GetFromMembersByNameSafe(
-                                    ((VariableUsageNode)targetUsage.GetExtensionSafe()).Name
+                                    ((VariableReferenceNode)targetUsage.GetExtensionSafe()).Name
                                 )
                                 .GetUnknownTypeSafe()
                         ],
-                    (VariableUsageNode)targetUsage.GetExtensionSafe()
+                    (VariableReferenceNode)targetUsage.GetExtensionSafe()
                 ) ?? vndt;
     }
 
@@ -677,7 +677,7 @@ public class SemanticAnalysis
                 )
                     throw new Exception("strings have to be assigned to string variables");
                 break;
-            case VariableUsageNode vrn:
+            case VariableReferenceNode vrn:
                 if (targetType == VariableNode.DataType.Enum)
                 {
                     EnumNode? enumDefinition = null;

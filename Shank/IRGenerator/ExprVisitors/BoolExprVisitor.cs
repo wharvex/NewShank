@@ -47,7 +47,7 @@ public class BoolExprVisitor : Visitor
     }
 
     public override LLVMValueRef Accept(
-        VariableUsageNode node,
+        VariableReferenceNode node,
         Context context,
         LLVMBuilderRef builder,
         LLVMModuleRef module

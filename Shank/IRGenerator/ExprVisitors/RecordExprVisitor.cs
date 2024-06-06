@@ -15,7 +15,7 @@ public class RecordExprVisitor : Visitor
     }
 
     public override LLVMValueRef Accept(
-        VariableUsageNode node,
+        VariableReferenceNode node,
         Context context,
         LLVMBuilderRef builder,
         LLVMModuleRef module

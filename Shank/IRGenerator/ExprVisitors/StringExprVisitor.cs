@@ -6,7 +6,7 @@ namespace Shank.ExprVisitors;
 public class StringExprVisitor : Visitor
 {
     public override LLVMValueRef Accept(
-        VariableUsageNode node,
+        VariableReferenceNode node,
         Context context,
         LLVMBuilderRef builder,
         LLVMModuleRef module

@@ -111,13 +111,13 @@ public class VariableNode : ASTNode
     }
 
     /// <summary>
-    /// Get this VariableNode's type based on what Extension the VariableUsageNode that
+    /// Get this VariableNode's type based on what Extension the VariableReferenceNode that
     /// points to it might have.
     /// </summary>
     /// <param name="parentModule"></param>
-    /// <param name="vrn">The VariableUsageNode that points to this VariableNode</param>
+    /// <param name="vrn">The VariableReferenceNode that points to this VariableNode</param>
     /// <returns></returns>
-    public DataType GetSpecificType(ModuleNode parentModule, VariableUsageNode vrn) =>
+    public DataType GetSpecificType(ModuleNode parentModule, VariableReferenceNode vrn) =>
         vrn.ExtensionType switch
         {
             VrnExtType.ArrayIndex => GetArrayTypeSafe(),

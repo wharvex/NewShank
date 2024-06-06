@@ -35,7 +35,7 @@ public abstract class Visitor
     }
 
     public virtual LLVMValueRef Accept(
-        VariableUsageNode node,
+        VariableReferenceNode node,
         Context context,
         LLVMBuilderRef builder,
         LLVMModuleRef module
