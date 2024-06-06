@@ -1,6 +1,6 @@
 using LLVMSharp.Interop;
 
-namespace Shank;
+namespace Shank.ASTNodes;
 
 public class ElseNode : IfNode
 {

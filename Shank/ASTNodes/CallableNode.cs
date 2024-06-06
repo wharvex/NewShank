@@ -1,10 +1,9 @@
 using System.Text.Json.Serialization;
 using LLVMSharp.Interop;
-using Shank.ASTNodes;
 using Shank.ExprVisitors;
 using Shank.Interfaces;
 
-namespace Shank;
+namespace Shank.ASTNodes;
 
 [JsonDerivedType(typeof(FunctionNode))]
 [JsonDerivedType(typeof(BuiltInFunctionNode))]

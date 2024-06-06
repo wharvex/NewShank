@@ -1,7 +1,7 @@
 using LLVMSharp.Interop;
 using Shank.ExprVisitors;
 
-namespace Shank;
+namespace Shank.ASTNodes;
 
 public class BuiltInFunctionNode : CallableNode
 {

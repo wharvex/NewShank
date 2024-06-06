@@ -3,7 +3,7 @@ using Shank.ASTNodes;
 using Shank.ExprVisitors;
 using Exception = System.Exception;
 
-namespace Shank;
+namespace Shank.ASTNodes;
 
 public class VariableNode : StatementNode
 {
