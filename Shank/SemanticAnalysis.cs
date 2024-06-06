@@ -821,7 +821,7 @@ public class SemanticAnalysis
                 else
                 {
                     var vn = variables[vrn.Name];
-                    if (!vn.GetSpecificType(parentModule, vrn).Equals(( targetType)))
+                    if (!vn.GetSpecificType(parentModule, vrn).Equals(targetType))
                         throw new Exception(
                             vrn.Name
                             + " is a "

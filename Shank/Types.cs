@@ -34,20 +34,9 @@ public interface IRangeType : IType // this is a bit more specific than a plain 
 }
 public struct BooleanType : IType;
 
-public struct  StringType(Range range) : IRangeType
+public  struct  StringType(Range range) : IRangeType
 {
-    public StringType(Range? range = null) : this(range ?? Range.DefaultSmallInteger()) {}
-
-
-    public static bool operator ==(StringType a, StringType b)
-    {
-        return a.Range == b.Range;
-    }
-
-    public static bool operator !=(StringType a, StringType b)
-    {
-        return !(a == b);
-    }
+    public StringType() : this( Range.DefaultSmallInteger()) {}
 
     public Range Range { get; set; } = range;
 }
@@ -56,20 +45,22 @@ public struct  StringType(Range range) : IRangeType
 
 public struct RealType(Range range) : IRangeType
 {
-    public RealType(Range? range = null) : this(range ?? Range.DefaultFloat()) {}
+    public RealType() : this(Range.DefaultFloat()) {}
     public Range Range { get; set; } = range;
 }
 
 public struct IntegerType(Range range) : IRangeType
 {
-    public IntegerType(Range? range = null) : this(range ?? Range.DefaultInteger()) {}
+    public IntegerType() : this(Range.DefaultInteger())
+    {
+    }
     public Range Range { get; set; } = range;
 }
 
 public struct CharacterType(Range range) : IRangeType
 {
 
-    public CharacterType(Range? range = null) : this(range ?? Range.DefaultCharacter())
+    public CharacterType() : this(Range.DefaultCharacter())
     {
         
     }
@@ -82,7 +73,7 @@ public record struct RecordType(string Name, Dictionary<string, IType> Fields, L
 
 public record struct ArrayType(IType Inner, Range Range ) : IRangeType // arrays have only one inner type
 {
-    public ArrayType(IType inner, Range? range = null): this(inner, range?? Range.DefaultSmallInteger())
+    public ArrayType(IType inner): this(inner, Range.DefaultSmallInteger())
     {
         
     }
