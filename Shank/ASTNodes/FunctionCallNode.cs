@@ -95,12 +95,14 @@ public class FunctionCallNode : StatementNode, ILlvmTranslatable
     public override string ToString()
     {
         var b = new StringBuilder();
-        b.AppendLine($"Function {Name}:");
-        if (Parameters.Any())
+        b.Append($"Call to function `{Name}'");
+        if (Parameters.Count <= 0)
         {
-            b.AppendLine("Parameters:");
-            Parameters.ForEach(p => b.AppendLine($"   {p}"));
+            return b.ToString();
         }
+        b.Append(" with arguments [ ");
+        Parameters.ForEach(p => b.Append($"{p} "));
+        b.Append(']');
 
         return b.ToString();
     }

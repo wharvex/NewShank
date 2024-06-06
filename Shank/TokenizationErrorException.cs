@@ -14,6 +14,16 @@ public class TokenizationErrorException : Exception
 
     public override string ToString()
     {
-        return Message + "\n at line " + _lineNum + ", cause: " + _cause;
+        string RED = "\x1b[91m"; // Red foreground
+        string RESET = "\x1b[0m"; // Reset to default colors
+        return RED
+            + Message
+            + " at line "
+            + _lineNum
+            + ", cause: "
+            + _cause
+            + "\nStack Trace: \n"
+            + RESET
+            + base.ToString();
     }
 }

@@ -68,4 +68,6 @@ public class RecordNode : StatementNode
     {
         visit.Accept(this);
     }
+
+    public override string ToString() => Name;
 }

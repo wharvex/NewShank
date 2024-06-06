@@ -1194,6 +1194,16 @@ public class SemanticAnalysis
         }
     }
 
+    public static void Experimental()
+    {
+        var a = GetStartModuleSafe()
+            .GetContents<ModuleNode>(AstNodeContentsCollectors.ContentsCollector);
+        OutputHelper.DebugPrintTxt(
+            string.Join("\n", a.Select((n, i) => i + ": " + n.NodeName + " `" + n + "'")),
+            "getContents"
+        );
+    }
+
     public static void reset()
     {
         Modules = new Dictionary<string, ModuleNode>();

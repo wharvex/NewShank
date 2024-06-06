@@ -35,6 +35,7 @@ public class Parser
     private readonly List<Token> _tokens;
 
     public static int Line { get; set; }
+    public static string FileName { get; set; }
 
     private Token? MatchAndRemove(Token.TokenType t)
     {
@@ -117,6 +118,7 @@ public class Parser
     {
         while (MatchAndRemove(Token.TokenType.EndOfLine) is not null)
         {
+            //while (MatchAndRemove(Token.TokenType.Indent) is not null) { }
         }
     }
 
@@ -369,7 +371,10 @@ public class Parser
     private void StatementsBody(List<StatementNode> statements, bool isRecord = false)
     {
         RequiresToken(Token.TokenType.Indent);
-
+        if (Peek(0)?.Type is Token.TokenType.EndOfLine)
+        {
+            MatchAndRemove(Token.TokenType.EndOfLine);
+        }
         Statements(statements, isRecord);
 
         RequiresToken(Token.TokenType.Dedent);
@@ -420,6 +425,12 @@ public class Parser
         // an "isRecord" flag. We need to use this flag because two arbitrary identifiers in a row
         // could be a record member declaration or a function call from the Parser's point of view,
         // so we need to know the context.
+
+        // if (Peek(0)?.Type is Token.TokenType.EndOfLine)
+        // {
+        //     MatchAndRemove(Token.TokenType.EndOfLine);
+        // }
+
         return Assignment()
                ?? While()
                ?? Repeat()

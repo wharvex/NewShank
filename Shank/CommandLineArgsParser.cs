@@ -150,6 +150,7 @@ public class CommandLineArgsParser
         program.SetStartModule();
         BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
         SemanticAnalysis.CheckModules(program);
+        SemanticAnalysis.Experimental();
         OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForProgramNode(program), "ast");
         switch (options.Flat)
         {

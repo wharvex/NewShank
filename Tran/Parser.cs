@@ -440,6 +440,7 @@ public class Parser
         {
             IntNode => new IntegerType(),
             StringNode => new StringType(),
+            CharNode => new  CharacterType(),
             FloatNode => new RealType(),
             BooleanExpressionNode or BoolNode => new BooleanType(),
             _
@@ -453,6 +454,7 @@ public class Parser
         {
             TokenType.NUMBER => new RealType(),
             TokenType.BOOLEAN => new BooleanType(),
+            TokenType.CHARACTER => new CharacterType(),
             TokenType.STRING => new StringType(),
             _ => throw new InvalidOperationException("Bad TokenType for conversion into DataType"),
         };
@@ -462,6 +464,7 @@ public class Parser
         {
             TokenType.NUMBER => new RealType(),
             TokenType.BOOLEAN => new BooleanType(),
+            TokenType.CHARACTER => new CharacterType(),
             TokenType.STRING => new StringType(),
             _
                 => throw new NotImplementedException(
@@ -475,6 +478,7 @@ public class Parser
         Token? tokenType =
             handler.MatchAndRemove(TokenType.NUMBER)
             ?? handler.MatchAndRemove(TokenType.STRING)
+            ?? handler.MatchAndRemove(TokenType.CHARACTER)
             ?? handler.MatchAndRemove(TokenType.BOOLEAN);
         if (tokenType == null)
         {
