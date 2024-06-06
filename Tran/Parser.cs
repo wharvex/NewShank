@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Shank.ASTNodes;
 
 namespace Shank.Tran;
@@ -36,7 +37,7 @@ public class Parser
             }
             AcceptSeparators();
 
-            if (ParseFields() || ParseFunction())
+            if (ParseField() || ParseFunction())
             {
                 AcceptSeparators();
                 continue;
@@ -51,10 +52,41 @@ public class Parser
         return program;
     }
 
-    //TODO: implement this such that fields (e.g. variables belonging to the class, not a function) are parsed appropriately
-    private bool ParseFields()
+    private bool ParseField()
     {
-        throw new NotImplementedException();
+        var variable = ParseVariableDeclaration();
+        bool hasField = false;
+        if (variable != null)
+        {
+            //TODO: Can properties be added to the class as regular functions?
+            //TODO: What should the name of the function be in this case?
+            var property = ParseProperty(TokenType.ACCESSOR, variable.Name);
+            if (property != null)
+            {
+                thisClass.addFunction(property);
+                hasField = true;
+            }
+
+            property = ParseProperty(TokenType.MUTATOR, variable.Name);
+            if (property != null)
+            {
+                thisClass.addFunction(property);
+                hasField = true;
+            }
+        }
+        return hasField;
+    }
+
+    private FunctionNode? ParseProperty(TokenType propertyType, String? variableName)
+    {
+        if (handler.MatchAndRemove(propertyType) != null && handler.MatchAndRemove(TokenType.COLON) != null)
+        {
+            var property = new FunctionNode(variableName + propertyType.ToString().ToLower(), thisClass.Name, true);
+            property.Statements = ParseBlock();
+            return property;
+        }
+
+        return null;
     }
 
     private bool ParseInterface()
@@ -160,21 +192,11 @@ public class Parser
     {
         var parameters = new List<VariableNode>();
         var variable = new VariableNode();
-        Token? name;
         do
         {
             AcceptSeparators();
-            if (handler.MatchAndRemove(TokenType.STRING) != null)
+            if ((variable = ParseVariableDeclaration()) != null)
             {
-                variable.Type = VariableNode.DataType.String;
-            }
-            else if (handler.MatchAndRemove(TokenType.NUMBER) != null)
-            {
-                variable.Type = VariableNode.DataType.Real;
-            }
-            if ((name = handler.MatchAndRemove(TokenType.WORD)) != null)
-            {
-                variable.Name = name.GetValue();
                 parameters.Add(variable);
                 continue;
             }
@@ -472,7 +494,7 @@ public class Parser
                 )
         };
 
-    private VariableNode? ParseVariableTypes()
+    private VariableNode? ParseVariableDeclaration()
     {
         var variableName = new VariableNode();
         Token? tokenType =

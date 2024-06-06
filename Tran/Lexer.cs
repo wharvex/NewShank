@@ -28,10 +28,7 @@ public class Lexer
         keywordHash["print"] = TokenType.PRINT;
         keywordHash["getline"] = TokenType.GETLINE;
         keywordHash["nextfile"] = TokenType.NEXTFILE;
-
-        //TODO: !!! no such keyword - add specific functionality to lex the name of the function and put into this type
         keywordHash["function"] = TokenType.FUNCTION;
-
         keywordHash["interface"] = TokenType.INTERFACE;
         keywordHash["class"] = TokenType.CLASS;
         keywordHash["string"] = TokenType.STRING;
