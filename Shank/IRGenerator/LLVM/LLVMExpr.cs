@@ -184,6 +184,8 @@ public class LLVMExpr : ExpressionVisitor<LLVMValueRef>
             {
                 ASTNode.BooleanExpressionOpType.eq
                     => _builder.BuildICmp(LLVMIntPredicate.LLVMIntEQ, L, R, "cmp"),
+                ASTNode.BooleanExpressionOpType.ne
+                    => _builder.BuildICmp(LLVMIntPredicate.LLVMIntNE, L, R, "cmp"),
                 ASTNode.BooleanExpressionOpType.lt
                     => _builder.BuildICmp(LLVMIntPredicate.LLVMIntSLT, L, R, "cmp"),
                 ASTNode.BooleanExpressionOpType.le
@@ -192,7 +194,6 @@ public class LLVMExpr : ExpressionVisitor<LLVMValueRef>
                     => _builder.BuildICmp(LLVMIntPredicate.LLVMIntSGT, L, R, "cmp"),
                 ASTNode.BooleanExpressionOpType.ge
                     => _builder.BuildICmp(LLVMIntPredicate.LLVMIntSGE, L, R, "cmp"),
-
                 _ => throw new Exception("not accepted op")
             };
         }
@@ -202,6 +203,8 @@ public class LLVMExpr : ExpressionVisitor<LLVMValueRef>
             {
                 ASTNode.BooleanExpressionOpType.eq
                     => _builder.BuildFCmp(LLVMRealPredicate.LLVMRealOEQ, L, R, "cmp"),
+                ASTNode.BooleanExpressionOpType.ne
+                    => _builder.BuildFCmp(LLVMRealPredicate.LLVMRealONE, L, R, "cmp"),
                 ASTNode.BooleanExpressionOpType.lt
                     => _builder.BuildFCmp(LLVMRealPredicate.LLVMRealOLT, L, R, "cmp"),
                 ASTNode.BooleanExpressionOpType.le
