@@ -3,7 +3,7 @@ namespace Shank;
 public class AssertResult
 {
     public string parentTestName;
-    public string? comparedValues;
+    public string? comparedValues;    
     public bool passed;
     public int lineNum;
 
