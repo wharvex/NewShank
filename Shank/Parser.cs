@@ -56,6 +56,7 @@ public class Parser
     private readonly List<Token> _tokens;
 
     public static int Line { get; set; }
+    public static string FileName { get; set; }
 
     private Token? MatchAndRemove(Token.TokenType t)
     {

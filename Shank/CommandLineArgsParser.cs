@@ -3,6 +3,8 @@ using System.Diagnostics;
 using System.Text.RegularExpressions;
 using CommandLine;
 using LLVMSharp.Interop;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Shank;
 using Shank.IRGenerator.CompilerPractice;
 
@@ -152,6 +154,13 @@ public class CommandLineArgsParser
         SemanticAnalysis.CheckModules(program);
         SemanticAnalysis.Experimental();
         OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForProgramNode(program), "ast");
+        var jSets = new JsonSerializerSettings
+        {
+            ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+            Converters = [new StringEnumConverter()],
+            Formatting = Formatting.Indented
+        };
+        OutputHelper.DebugPrintJson(JsonConvert.SerializeObject(program, jSets), "ast2");
         switch (options.Flat)
         {
             case "":

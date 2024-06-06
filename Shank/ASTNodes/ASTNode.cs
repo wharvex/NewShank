@@ -20,6 +20,7 @@ public abstract class ASTNode
     public string NodeName { get; init; }
     public string InheritsDirectlyFrom { get; init; }
     public int Line { get; init; }
+    public string FileName { get; init; } // "The AST needs filename added near line number and position"
 
     public enum BooleanExpressionOpType
     {
@@ -53,6 +54,7 @@ public abstract class ASTNode
         NodeName = GetType().Name;
         InheritsDirectlyFrom = GetType().BaseType?.Name ?? "None";
         Line = Parser.Line;
+        FileName = Parser.FileName;
     }
 
     // public abstract LLVMValueRef Accept(LLVMBuilderRef builder, LLVMModuleRef module);
