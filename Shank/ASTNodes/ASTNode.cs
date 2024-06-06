@@ -21,33 +21,6 @@ public abstract class ASTNode
     public int Line { get; init; }
     public string FileName { get; init; } // "The AST needs filename added near line number and position"
 
-    public enum BooleanExpressionOpType
-    {
-        lt,
-        le,
-        gt,
-        ge,
-        eq,
-        ne
-    }
-
-    public enum MathOpType
-    {
-        plus,
-        minus,
-        times,
-        divide,
-        modulo
-    }
-
-    public enum VrnExtType
-    {
-        RecordMember,
-        ArrayIndex,
-        Enum,
-        None
-    }
-
     protected ASTNode()
     {
         NodeName = GetType().Name;

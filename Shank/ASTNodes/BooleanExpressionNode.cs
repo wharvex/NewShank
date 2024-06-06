@@ -35,4 +35,14 @@ public class BooleanExpressionNode : ASTNode
     {
         return $"({Left.ToString()} {Op} {Right.ToString()})";
     }
+
+    public enum BooleanExpressionOpType
+    {
+        lt,
+        le,
+        gt,
+        ge,
+        eq,
+        ne
+    }
 }

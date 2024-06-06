@@ -411,15 +411,15 @@ public class SemanticAnalysis
         {
             switch (mon.Op)
             {
-                case ASTNode.MathOpType.plus:
+                case MathOpNode.MathOpType.plus:
                     return GetMaxRange(mon.Left, variables) + GetMaxRange(mon.Right, variables);
-                case ASTNode.MathOpType.minus:
+                case MathOpNode.MathOpType.minus:
                     return GetMaxRange(mon.Left, variables) - GetMinRange(mon.Right, variables);
-                case ASTNode.MathOpType.times:
+                case MathOpNode.MathOpType.times:
                     return GetMaxRange(mon.Left, variables) * GetMaxRange(mon.Right, variables);
-                case ASTNode.MathOpType.divide:
+                case MathOpNode.MathOpType.divide:
                     return GetMinRange(mon.Left, variables) / GetMaxRange(mon.Right, variables);
-                case ASTNode.MathOpType.modulo:
+                case MathOpNode.MathOpType.modulo:
                     return GetMaxRange(mon.Right, variables) - 1;
             }
         }
@@ -457,15 +457,15 @@ public class SemanticAnalysis
         {
             switch (mon.Op)
             {
-                case ASTNode.MathOpType.plus:
+                case MathOpNode.MathOpType.plus:
                     return GetMinRange(mon.Left, variables) + GetMinRange(mon.Right, variables);
-                case ASTNode.MathOpType.minus:
+                case MathOpNode.MathOpType.minus:
                     return GetMinRange(mon.Left, variables) - GetMaxRange(mon.Right, variables);
-                case ASTNode.MathOpType.times:
+                case MathOpNode.MathOpType.times:
                     return GetMinRange(mon.Left, variables) * GetMinRange(mon.Right, variables);
-                case ASTNode.MathOpType.divide:
+                case MathOpNode.MathOpType.divide:
                     return GetMaxRange(mon.Left, variables) / GetMinRange(mon.Right, variables);
-                case ASTNode.MathOpType.modulo:
+                case MathOpNode.MathOpType.modulo:
                     return 0;
             }
         }
@@ -596,7 +596,7 @@ public class SemanticAnalysis
         targetDefinition.Type switch
         {
             VariableNode.DataType.Array
-                => targetUsage.ExtensionType == ASTNode.VrnExtType.None
+                => targetUsage.ExtensionType == VariableReferenceNode.VrnExtType.None
                     ? throw new NotImplementedException(
                         "It is not implemented yet to assign to the base of an array variable."
                     )
@@ -1175,7 +1175,7 @@ public class SemanticAnalysis
                         {
                             if (assignment.Target.Name == variable.Name)
                             {
-                                assignment.Target.ExtensionType = ASTNode.VrnExtType.Enum;
+                                assignment.Target.ExtensionType = VariableReferenceNode.VrnExtType.Enum;
                             }
                         }
                     }

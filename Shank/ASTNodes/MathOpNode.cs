@@ -36,4 +36,13 @@ public class MathOpNode : ASTNode
     {
         return visit.Accept(this);
     }
+
+    public enum MathOpType
+    {
+        plus,
+        minus,
+        times,
+        divide,
+        modulo
+    }
 }

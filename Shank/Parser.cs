@@ -182,7 +182,7 @@ public class Parser
                 return new VariableReferenceNode(
                     id.GetValueSafe(),
                     exp,
-                    ASTNode.VrnExtType.ArrayIndex
+                    VariableReferenceNode.VrnExtType.ArrayIndex
                 );
             }
             if (MatchAndRemove(Token.TokenType.Dot) is not null)
@@ -196,7 +196,7 @@ public class Parser
                 return new VariableReferenceNode(
                     id.GetValueSafe(),
                     varRef,
-                    ASTNode.VrnExtType.RecordMember
+                    VariableReferenceNode.VrnExtType.RecordMember
                 );
             }
             return new VariableReferenceNode(id.GetValueSafe());

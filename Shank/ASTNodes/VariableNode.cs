@@ -121,13 +121,13 @@ public class VariableNode : StatementNode
     public DataType GetSpecificType(ModuleNode parentModule, VariableReferenceNode vrn) =>
         vrn.ExtensionType switch
         {
-            VrnExtType.ArrayIndex => GetArrayTypeSafe(),
-            VrnExtType.RecordMember
+            VariableReferenceNode.VrnExtType.ArrayIndex => GetArrayTypeSafe(),
+            VariableReferenceNode.VrnExtType.RecordMember
                 => GetRecordMemberType(
                     vrn.GetRecordMemberReferenceSafe().Name,
                     parentModule.Records
                 ),
-            VrnExtType.None
+            VariableReferenceNode.VrnExtType.None
                 => Type switch
                 {
                     DataType.Record

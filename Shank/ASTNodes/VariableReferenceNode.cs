@@ -119,4 +119,12 @@ public class VariableReferenceNode : ASTNode
     {
         return visit.Accept(this);
     }
+
+    public enum VrnExtType
+    {
+        RecordMember,
+        ArrayIndex,
+        Enum,
+        None
+    }
 }
