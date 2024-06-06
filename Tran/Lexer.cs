@@ -119,7 +119,9 @@ public class Lexer
                     stringHandler.GetChar();
                     lineNumber++;
                     characterPosition++;
-                    tokens.AddLast((new Token(TokenType.FUNCTIONSTATEMENT, lineNumber, characterPosition)));
+                    tokens.AddLast(
+                        (new Token(TokenType.FUNCTIONSTATEMENT, lineNumber, characterPosition))
+                    );
                 }
                 else
                 {
