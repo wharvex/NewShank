@@ -79,9 +79,16 @@ public class Parser
 
     private FunctionNode? ParseProperty(TokenType propertyType, String? variableName)
     {
-        if (handler.MatchAndRemove(propertyType) != null && handler.MatchAndRemove(TokenType.COLON) != null)
+        if (
+            handler.MatchAndRemove(propertyType) != null
+            && handler.MatchAndRemove(TokenType.COLON) != null
+        )
         {
-            var property = new FunctionNode(variableName + propertyType.ToString().ToLower(), thisClass.Name, true);
+            var property = new FunctionNode(
+                variableName + propertyType.ToString().ToLower(),
+                thisClass.Name,
+                true
+            );
             property.Statements = ParseBlock();
             return property;
         }
