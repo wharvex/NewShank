@@ -117,7 +117,7 @@ public class SemanticAnalysis
                         targetDeclaration
                     );
 
-                    CheckRange(an, variables, targetDeclaration, parentModule);
+                    CheckRange(an, variables, targetType, parentModule);
                 }
                 else
                 {
@@ -321,12 +321,13 @@ public class SemanticAnalysis
     private static void CheckRange(
         AssignmentNode an,
         Dictionary<string, VariableNode> variablesLookup,
-        VariableNode targetDefinition,
+        IType targetType,
         ModuleNode parentModule
     )
     {
-        if (an.Expression is StringNode s)
-        {
+        // TODO: traverse record type if necesary
+        // if (an.Expression is StringNode s)
+        /*{
             try
             {
                 var type = (StringType)variablesLookup[an.Target.Name].NewType;
@@ -339,28 +340,16 @@ public class SemanticAnalysis
             }
             catch (InvalidCastException e)
             {
-                throw new Exception("String types can only be assigned a range of two integers.");
+                
+                throw new Exception("String types can only be assigned a range of two integers.", e);
             }
-        }
-        else
+        }*/
+        // else
         {
-            try
+            // try
             {
-                if (variablesLookup[an.Target.Name].NewType is RealType f)
-                {
-                    var from = f.Range.From;
-                    var to = f.Range.To;
-                    float upper = GetMaxRange(an.Expression, variablesLookup);
-                    float lower = GetMinRange(an.Expression, variablesLookup);
-
-                    if (lower < from || upper > to)
-                        throw new Exception(
-                            $"The variable {an.Target.Name} can only be assigned expressions that won't overstep its range."
-                        );
-                }
-                else if
-                    (variablesLookup[an.Target.Name]
-                         .NewType is IRangeType i) // all other i range type are bounded by integers
+                if
+                          (targetType is IRangeType i) // all other i range type are bounded by integers
                 {
                     var from = i.Range.From;
                     var to = i.Range.To;
@@ -373,10 +362,10 @@ public class SemanticAnalysis
                         );
                 }
             }
-            catch (InvalidCastException e)
+            /*catch (InvalidCastException e)
             {
                 throw new Exception("Incorrect type of range.");
-            }
+            }*/
         }
     }
 
@@ -576,17 +565,21 @@ public class SemanticAnalysis
                         "It is not implemented yet to assign to the base of an array variable."
                     )
                     : a.Inner,
-            /*
             RecordType r
                 => GetRecordTypeRecursive(
                     parentModule,
-                    (RecordNode)
-                        GetRecordsAndImports(parentModule.Records, parentModule.Imported)[
-                            targetDefinition.GetUnknownTypeSafe()
-                        ],
+                    r,
                     targetUsage
-                ),
-            */
+                    
+                ) ?? r,
+            ReferenceType (RecordType r)
+                => GetRecordTypeRecursive(
+                    parentModule,
+                    r,
+                    targetUsage
+                    
+                ) ?? r,
+            /*
             /*
             ReferenceType r
                 => GetRecordTypeRecursive(
@@ -623,22 +616,29 @@ public class SemanticAnalysis
     //if we checked for an extension when the target should be one of these types, an error is thrown, so if there is no extension
     //on the variable reference node, we return null to the previous recursive pass, which returns either VariableNode.DataType.Record
     //or Reference depending on what the previous loop found
-    /*private static IType? GetRecordTypeRecursive(
+    private static IType? GetRecordTypeRecursive(
         ModuleNode parentModule,
-        RecordNode targetDefinition,
+        RecordType targetDefinition,
         VariableReferenceNode targetUsage
     )
     {
         if (targetUsage.Extension is null)
             return null;
-        var vndt = targetDefinition
-            .GetFromMembersByNameSafe(targetUsage.GetRecordMemberReferenceSafe().Name)
-            .NewType;
-        if (
-            vndt is not RecordType or ReferenceType or UnknownType
-        )
-            return vndt;
-        else
+        var vndt = targetDefinition.Fields[targetUsage.GetRecordMemberReferenceSafe().Name];
+
+        var innerVndt = vndt switch
+        {
+            RecordType r => r,
+            ReferenceType(RecordType r1) => r1,
+            _ => (RecordType?)null
+        };
+        return innerVndt is { } recordType
+            ? GetRecordTypeRecursive(parentModule, recordType, (VariableReferenceNode)targetUsage.GetExtensionSafe()) ??
+              vndt
+            : vndt; 
+        
+
+        /*else
             return GetRecordTypeRecursive(
                     parentModule,
                     (RecordNode)
@@ -650,8 +650,8 @@ public class SemanticAnalysis
                                 .GetUnknownTypeSafe()
                         ],
                     (VariableReferenceNode)targetUsage.GetExtensionSafe()
-                ) ?? vndt;
-    }*/
+                */
+    }
 
     public static Dictionary<string, ASTNode> GetRecordsAndImports(
         Dictionary<string, RecordNode> records,

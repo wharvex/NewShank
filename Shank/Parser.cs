@@ -511,7 +511,6 @@ public class Parser
     {
         if (MatchAndRemove(first) is { } t)
         {
-            Console.WriteLine(t);
             var result = parser();
             _ = MatchAndRemove(last) ??
                 throw new SyntaxErrorException("Could not find closing parenthesis after " + type, t);

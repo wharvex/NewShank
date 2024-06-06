@@ -253,10 +253,6 @@ public class ArrayDataType : InterpreterDataType
 
 public class RecordDataType : InterpreterDataType
 {
-    public RecordDataType()
-    {
-    }
-
     public Dictionary<string, object> Value { get; init; } = [];
 
     public Dictionary<string, IType> MemberTypes { get; init; } = [];

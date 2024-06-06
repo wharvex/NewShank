@@ -760,23 +760,22 @@ public class Interpreter
             // TODO: merge record type and record node into one
             case RecordType r:
             {
-               var _ = (parentModule.Records.TryGetValue(r.Name, out var record) ||
-                    Lookup(parentModule.Imported, r.Name, ref record)) ;
-               return new RecordDataType(record!.Members);
+                _ = (parentModule.Records.TryGetValue(r.Name, out var record) ||
+                     Lookup(parentModule.Imported, r.Name, ref record));
+                return new RecordDataType(record!.Members2);
             }
             case EnumType e:
             {
-               var _ = (parentModule.Enums.TryGetValue(e.Name, out var enumNode) ||
-                    Lookup(parentModule.Imported, e.Name, ref enumNode)) ;
-               return new EnumDataType( enumNode!);
+                _ = (parentModule.Enums.TryGetValue(e.Name, out var enumNode) ||
+                     Lookup(parentModule.Imported, e.Name, ref enumNode));
+                return new EnumDataType( enumNode!);
             }
 
             case ReferenceType(RecordType r):
             {
-               var _ = (parentModule.Records.TryGetValue(r.Name, out var record) ||
-                    Lookup(parentModule.Imported, r.Name, ref record)) ;
+                _ = (parentModule.Records.TryGetValue(r.Name, out var record) ||
+                     Lookup(parentModule.Imported, r.Name, ref record));
                 return new ReferenceDataType(record!);
-                
             }
             default:
                 throw new Exception($"Unknown local variable type");
