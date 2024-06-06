@@ -9,7 +9,7 @@ namespace Shank.ASTNodes;
 [JsonDerivedType(typeof(FloatNode))]
 [JsonDerivedType(typeof(BoolNode))]
 [JsonDerivedType(typeof(CharNode))]
-[JsonDerivedType(typeof(VariableReferenceNode))]
+[JsonDerivedType(typeof(VariableUsageNode))]
 [JsonDerivedType(typeof(MathOpNode))]
 [JsonDerivedType(typeof(BooleanExpressionNode))]
 [JsonDerivedType(typeof(StatementNode))]

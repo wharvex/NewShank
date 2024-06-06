@@ -7,7 +7,7 @@ namespace Shank;
 public class ForNode : StatementNode
 {
     public ForNode(
-        VariableReferenceNode variable,
+        VariableUsageNode variable,
         ASTNode from,
         ASTNode to,
         List<StatementNode> children
@@ -19,7 +19,7 @@ public class ForNode : StatementNode
         Children = children;
     }
 
-    public VariableReferenceNode Variable { get; init; }
+    public VariableUsageNode Variable { get; init; }
     public ASTNode From { get; init; }
     public ASTNode To { get; init; }
     public List<StatementNode> Children { get; init; }

@@ -16,7 +16,7 @@ public class IntegerExprVisitor : Visitor
     }
 
     public override LLVMValueRef Accept(
-        VariableReferenceNode node,
+        VariableUsageNode node,
         Context context,
         LLVMBuilderRef builder,
         LLVMModuleRef module
