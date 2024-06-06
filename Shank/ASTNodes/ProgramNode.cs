@@ -4,7 +4,7 @@ using Shank.ExprVisitors;
 
 namespace Shank;
 
-public class ProgramNode : ASTNode
+public class ProgramNode : StatementNode
 {
     public Dictionary<string, ModuleNode> Modules { get; } = [];
     public ModuleNode? StartModule { get; set; }
@@ -69,36 +69,38 @@ public class ProgramNode : ASTNode
         };
     }
 
-    public void Visit(Context context, LLVMBuilderRef builder, LLVMModuleRef module)
-    {
-        foreach (var keyValuePair in Modules)
-        {
-            foreach (var modulesValue in Modules.Values)
-            {
-                modulesValue.VisitStatement(context, builder, module);
-            }
-        }
-    }
-
-    public override LLVMValueRef Visit(
-        Visitor visitor,
+    public void VisitProgram(
+        LLVMVisitor visitor,
         Context context,
         LLVMBuilderRef builder,
         LLVMModuleRef module
     )
     {
-        // context = new Context(StartModule.Functions, );
-        // Modules.
+        // add all modules to the context
+        context.setModules(Modules.Keys);
         foreach (var keyValuePair in Modules)
         {
-            foreach (var modulesValue in Modules.Values)
-            {
-                modulesValue.Visit(new IntegerExprVisitor(), context, builder, module);
-            }
+            keyValuePair.Value.VisitPrototype(context, module);
         }
 
-        throw new Exception();
+        foreach (var keyValuePair in Modules)
+        {
+            keyValuePair.Value.VisitStatement(visitor, context, builder, module);
+        }
+    }
 
-        // Context context = new Context(StartModule.Visit(visitor,));
+    public override LLVMValueRef Visit(
+        LLVMVisitor visitor,
+        Context context,
+        LLVMBuilderRef builder,
+        LLVMModuleRef module
+    )
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void Visit(StatementVisitor visit)
+    {
+        visit.Accept(this);
     }
 }

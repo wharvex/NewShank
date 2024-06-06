@@ -91,16 +91,18 @@ public class SemanticAnalysis
             {
                 if (variables.TryGetValue(an.Target.Name, out var targetDeclaration))
                 {
-                    OutputHelper.DebugPrintTxt(
-                        string.Join(", ", an.Target.GetNestedNamesAsList()),
-                        3
-                    );
-
                     var targetTypeNull = GetTargetTypeForAssignmentCheck(
                         targetDeclaration,
                         an.Target,
                         parentModule
                     );
+                    if (targetDeclaration.IsConstant)
+                    {
+                        throw new SemanticErrorException(
+                            $"Variable {an.Target.Name} is not mutable, you cannot assign to it.",
+                            an
+                        );
+                    }
 
                     //GetTargetTypeForAssignmentCheck can now maybe return null, we catch it here
                     if (targetTypeNull == null)
@@ -141,10 +143,11 @@ public class SemanticAnalysis
                 {
                     foundFunction = true;
                     if (parentModule.getFunctions()[fn.Name] is not BuiltInFunctionNode)
-                        CheckParameterRanges(
+                        fn.InstiatedGenerics = CheckFunctionCall(
                             fn.Parameters,
                             variables,
-                            (FunctionNode)parentModule.getFunctions()[fn.Name]
+                            (FunctionNode)parentModule.getFunctions()[fn.Name],
+                            fn
                         );
                 }
                 else
@@ -154,14 +157,16 @@ public class SemanticAnalysis
                         if (Modules[import.Key].getExportNames().Contains(fn.Name))
                         {
                             foundFunction = true;
-                            CheckParameterRanges(
+                            fn.InstiatedGenerics = CheckFunctionCall(
                                 fn.Parameters,
                                 variables,
-                                (FunctionNode)parentModule.Imported[fn.Name]
+                                (FunctionNode)parentModule.Imported[fn.Name],
+                                fn
                             );
                         }
                     }
                 }
+
                 if (
                     GetStartModuleSafe().getFunctions().ContainsKey((string)fn.Name)
                     && GetStartModuleSafe().getFunctions()[(string)fn.Name] is BuiltInFunctionNode
@@ -190,66 +195,145 @@ public class SemanticAnalysis
         }
     }
 
-    private static void CheckParameterRanges(
+    // This is why something like type usage/IType is useful, because when we just return the datatype
+    // for instiation we do lose type information, such as what type of record, or enum, what is the inner type of the array?
+    // and IType is the best because it only stores whats neccesary for a givern type
+    private static Dictionary<string, VariableNode.DataType> CheckFunctionCall(
         List<ParameterNode> param,
+        Dictionary<string, VariableNode> variables,
+        FunctionNode fn,
+        FunctionCallNode functionCallNode
+    )
+    {
+        // TODO: overloads and default parameters might have different arrity
+        return fn.ParameterVariables.Zip(param)
+            .SelectMany(paramAndArg =>
+            {
+                var param = paramAndArg.First;
+                var arguement = paramAndArg.Second;
+
+                var actualArguement =
+                    arguement.Variable == null
+                        ? arguement.Constant
+                        : variables[arguement.Variable.Name];
+                // assumption ranges are already checked to be only on types that allow them
+                CheckParameterRange(param, arguement, variables, fn);
+                CheckParameterMutability(param, arguement, variables, functionCallNode);
+                return TypeCheckAndInstiateGenericParameter(param, arguement, variables, fn);
+            })
+            .ToDictionary();
+    }
+
+    public static IEnumerable<(String, VariableNode.DataType)> TypeCheckAndInstiateGenericParameter(
+        VariableNode param,
+        ParameterNode argument,
         Dictionary<string, VariableNode> variables,
         FunctionNode fn
     )
     {
-        var sourceParams = fn.ParameterVariables;
-        for (int i = 0; i < param.Count; i++)
+        // check that the arguement passed in has the right type for its parameter
+        // and also if the parameter has any generics try to instiate them
+        return [];
+    }
+
+    // assumptions if the arguement is a variable it assumed to be there already from previous check in check function call
+    private static void CheckParameterMutability(
+        VariableNode param,
+        ParameterNode argument,
+        Dictionary<string, VariableNode> variables,
+        FunctionCallNode fn
+    )
+    {
+        // check that the arguement passed in has the right type of mutablility for its parameter
+        if (argument.IsVariable)
         {
-            if (param[i].Variable is not null)
+            VariableNode? lookedUpArguement = variables.GetValueOrDefault(
+                (
+                    argument.Variable
+                    ?? throw new SemanticErrorException(
+                        $"Cannot pass a non variable as being var to a function call",
+                        fn
+                    )
+                ).Name
+            );
+            if (lookedUpArguement.IsConstant)
             {
-                var vrn = param[i].Variable;
-                var from = variables[vrn.Name].From;
-                var to = variables[vrn.Name].To;
-                var targetFrom = sourceParams[i].From;
-                var targetTo = sourceParams[i].To;
-                if (from is null || targetFrom is null)
-                    continue;
-                if (from is IntNode)
-                {
-                    if (
-                        ((IntNode)from).Value < ((IntNode)targetFrom).Value
-                        || ((IntNode)to).Value > ((IntNode)targetTo).Value
-                    )
-                        throw new Exception($"Mismatched range in a call to {fn.Name}");
-                }
-                else
-                {
-                    if (
-                        ((FloatNode)from).Value < ((FloatNode)targetFrom).Value
-                        || ((FloatNode)to).Value < ((FloatNode)targetFrom).Value
-                    )
-                        throw new Exception($"Mismatched range in a call to {fn.Name}");
-                }
+                throw new SemanticErrorException(
+                    $"cannot pass non var argument when you annotate an argument var",
+                    fn
+                );
+            }
+
+            if (param.IsConstant)
+            {
+                // TODO: warning of unused var annotation
+            }
+        }
+        else if (!param.IsConstant)
+        {
+            throw new SemanticErrorException(
+                $"cannot pass non var argument when function is expecting it to be var",
+                fn
+            );
+        }
+    }
+
+    private static void CheckParameterRange(
+        VariableNode param,
+        ParameterNode argument,
+        Dictionary<string, VariableNode> variables,
+        FunctionNode fn
+    )
+    {
+        if (argument.Variable is not null)
+        {
+            var vrn = argument.Variable;
+            var from = variables[vrn.Name].From;
+            var to = variables[vrn.Name].To;
+            var targetFrom = param.From;
+            var targetTo = param.To;
+            if (from is null || targetFrom is null)
+                return;
+            if (from is IntNode)
+            {
+                if (
+                    ((IntNode)from).Value < ((IntNode)targetFrom).Value
+                    || ((IntNode)to).Value > ((IntNode)targetTo).Value
+                )
+                    throw new Exception($"Mismatched range in a call to {fn.Name}");
             }
             else
             {
-                var actualFrom = GetMaxRange(param[i].Constant, variables);
-                var actualTo = GetMinRange(param[i].Constant, variables);
-                var targetFrom = sourceParams[i].From;
-                var targetTo = sourceParams[i].To;
-                if (targetFrom is null)
-                    continue;
-
-                if (targetFrom is IntNode)
-                {
-                    if (
-                        ((IntNode)targetFrom).Value > actualFrom
-                        || ((IntNode)targetTo).Value < actualTo
-                    )
-                        throw new Exception($"Mismatched range in a call to {fn.Name}");
-                }
-                else
-                {
-                    if (
-                        ((FloatNode)targetFrom).Value < actualFrom
-                        || ((FloatNode)targetTo).Value < actualTo
-                    )
-                        throw new Exception($"Mismatched range in a call to {fn.Name}");
-                }
+                if (
+                    ((FloatNode)from).Value < ((FloatNode)targetFrom).Value
+                    || ((FloatNode)to).Value < ((FloatNode)targetFrom).Value
+                )
+                    throw new Exception($"Mismatched range in a call to {fn.Name}");
+            }
+        }
+        else
+        {
+            var actualFrom = GetMaxRange(argument.Constant, variables);
+            var actualTo = GetMinRange(argument.Constant, variables);
+            var targetFrom = param.From;
+            var targetTo = param.To;
+            if (targetFrom is null)
+                return;
+            if (targetFrom is IntNode)
+            {
+                if (
+                    ((IntNode)targetFrom).Value > actualFrom
+                    || ((IntNode)targetTo).Value < actualTo
+                )
+                    throw new Exception($"Mismatched range in a call to {fn.Name}");
+            }
+            else
+            {
+                if (
+                    ((FloatNode)targetFrom).Value < actualFrom
+                    || ((FloatNode)targetTo).Value < actualTo
+                )
+                    throw new Exception($"Mismatched range in a call to {fn.Name}");
             }
         }
     }
@@ -293,6 +377,7 @@ public class SemanticAnalysis
                         return;
                     float upper = GetMaxRange(an.Expression, variablesLookup);
                     float lower = GetMinRange(an.Expression, variablesLookup);
+
                     if (lower < from.Value || upper > to.Value)
                         throw new Exception(
                             $"The variable {an.Target.Name} can only be assigned expressions that won't overstep its range."
@@ -306,6 +391,7 @@ public class SemanticAnalysis
                         return;
                     int upper = (int)GetMaxRange(an.Expression, variablesLookup);
                     int lower = (int)GetMinRange(an.Expression, variablesLookup);
+
                     if (lower < from.Value || upper > to.Value)
                         throw new Exception(
                             $"The variable {an.Target.Name} can only be assigned expressions that wont overstep its range."
@@ -337,22 +423,32 @@ public class SemanticAnalysis
                     return GetMaxRange(mon.Right, variables) - 1;
             }
         }
+
         if (node is IntNode i)
             return i.Value;
         if (node is FloatNode f)
             return f.Value;
+        if (node is StringNode s)
+            return s.Value.Length;
         if (node is VariableReferenceNode vrn)
         {
             if (variables[vrn.Name].To is null || variables[vrn.Name].From is null)
                 throw new Exception(
                     "Ranged variables can only be assigned variables with a range."
                 );
-            if (variables[vrn.Name].Type is VariableNode.DataType.Integer)
+            var dataType = variables[vrn.Name].Type;
+            if (dataType is VariableNode.DataType.Integer)
                 return ((IntNode)variables[vrn.Name].To).Value;
-            else
+            else if (dataType is VariableNode.DataType.Real)
                 return ((FloatNode)variables[vrn.Name].To).Value;
+            else if (dataType is VariableNode.DataType.String)
+                return ((StringNode)variables[vrn.Name].To).Value.Length;
         }
-        throw new Exception("Unrecognized node type in math expression while checking range");
+        throw new Exception(
+            "Unrecognized node type on line "
+                + node.Line
+                + " in math expression while checking range"
+        );
     }
 
     private static float GetMinRange(ASTNode node, Dictionary<string, VariableNode> variables)
@@ -373,21 +469,28 @@ public class SemanticAnalysis
                     return 0;
             }
         }
+
         if (node is IntNode i)
             return i.Value;
         if (node is FloatNode f)
             return f.Value;
+        if (node is StringNode s)
+            return s.Value.Length;
         if (node is VariableReferenceNode vrn)
         {
             if (variables[vrn.Name].To is null || variables[vrn.Name].From is null)
                 throw new Exception(
                     "Ranged variables can only be assigned variables with a range."
                 );
-            if (variables[vrn.Name].Type is VariableNode.DataType.Integer)
-                return ((IntNode)variables[vrn.Name].From).Value;
-            else
-                return ((FloatNode)variables[vrn.Name].From).Value;
+            var dataType = variables[vrn.Name].Type;
+            if (dataType is VariableNode.DataType.Integer)
+                return ((IntNode)variables[vrn.Name].To).Value;
+            else if (dataType is VariableNode.DataType.Real)
+                return ((FloatNode)variables[vrn.Name].To).Value;
+            else if (dataType is VariableNode.DataType.String)
+                return ((StringNode)variables[vrn.Name].To).Value.Length;
         }
+
         throw new Exception("Unrecognized node type in math expression while checking range");
     }
 
@@ -473,10 +576,12 @@ public class SemanticAnalysis
                                 );
                             break;
                         }
+
                         throw new Exception(
                             "Enums can only be compared to enums or enum variables of the same type."
                         );
                     }
+
                     break;
             }
         }
@@ -696,12 +801,14 @@ public class SemanticAnalysis
                                 break;
                             }
                         }
+
                         if (e.Value.EnumElements.Contains(vrn.Name))
                         {
                             enumDefinition = e.Value;
                             break;
                         }
                     }
+
                     foreach (var e in parentModule.Imported)
                     {
                         if (e.Value is not EnumNode)
@@ -741,6 +848,7 @@ public class SemanticAnalysis
                                 + targetType
                         );
                 }
+
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(anExpression));
@@ -765,6 +873,7 @@ public class SemanticAnalysis
                 if (module.Value.getExportNames().Any())
                     throw new Exception("Cannot export from an unnamed module.");
             }
+
             //checking exports
             foreach (string exportName in module.Value.getExportNames())
             {
@@ -777,6 +886,7 @@ public class SemanticAnalysis
                         $"Cannot export {exportName} from the module {module.Key} as it wasn't defined in that file."
                     );
             }
+
             //checking imports
             foreach (
                 KeyValuePair<string, LinkedList<string>> import in module.Value.getImportNames()
@@ -807,6 +917,7 @@ public class SemanticAnalysis
                     }
                 }
             }
+
             CheckFunctions(module.Value.getFunctions(), module.Value);
         }
     }
@@ -828,6 +939,7 @@ public class SemanticAnalysis
                 if (module.Value.getExportNames().Any())
                     throw new Exception("Cannot export from an unnamed module.");
             }
+
             //checking exports
             foreach (string exportName in module.Value.getExportNames())
             {
@@ -840,6 +952,7 @@ public class SemanticAnalysis
                         $"Cannot export {exportName} from the module {module.Key} as it wasn't defined in that file."
                     );
             }
+
             //checking imports
             foreach (
                 KeyValuePair<string, LinkedList<string>> import in module.Value.getImportNames()
@@ -870,6 +983,7 @@ public class SemanticAnalysis
                     }
                 }
             }
+
             CheckFunctions(module.Value.getFunctions(), module.Value);
         }
     }
@@ -888,6 +1002,7 @@ public class SemanticAnalysis
                 return StartModule;
             }
         }
+
         return null;
     }
 
@@ -1002,6 +1117,7 @@ public class SemanticAnalysis
                 {
                     continue;
                 }
+
                 FunctionNode currentFunction = (FunctionNode)function.Value;
                 foreach (VariableNode variable in currentFunction.LocalVariables)
                 {
@@ -1044,12 +1160,14 @@ public class SemanticAnalysis
                             );
                     }
                 }
+
                 foreach (var statement in currentFunction.Statements)
                 {
                     if (statement is not AssignmentNode)
                     {
                         continue;
                     }
+
                     var assignment = (AssignmentNode)statement;
                     foreach (var variable in currentFunction.LocalVariables)
                     {
@@ -1092,6 +1210,16 @@ public class SemanticAnalysis
                 rmn.Type = VariableNode.DataType.Enum;
             }
         }
+    }
+
+    public static void Experimental()
+    {
+        var a = GetStartModuleSafe()
+            .GetContents<ModuleNode>(AstNodeContentsCollectors.ContentsCollector);
+        OutputHelper.DebugPrintTxt(
+            string.Join("\n", a.Select((n, i) => i + ": " + n.NodeName + " `" + n + "'")),
+            "getContents"
+        );
     }
 
     public static void reset()

@@ -1,15 +1,20 @@
 using System.Text;
 using LLVMSharp.Interop;
 using Shank.ExprVisitors;
+using Shank.Interfaces;
 
 namespace Shank.ASTNodes;
 
-public class FunctionCallNode : StatementNode
+public class FunctionCallNode : StatementNode, ILlvmTranslatable
 {
     public string Name { get; set; }
     public int LineNum { get; set; }
     public List<ParameterNode> Parameters { get; } = [];
     public string OverloadNameExt { get; set; } = "";
+
+    // generics of the called function that this call site instiated to specific types
+    // useful/needed for monomorphization
+    public Dictionary<string, VariableNode.DataType> InstiatedGenerics { get; set; }
 
     public FunctionCallNode(string name)
     {
@@ -55,21 +60,55 @@ public class FunctionCallNode : StatementNode
         return arr;
     }
 
-    public void VisitStatement(Context context, LLVMBuilderRef builder, LLVMModuleRef module)
+    public override void VisitStatement(
+        LLVMVisitor visitor,
+        Context context,
+        LLVMBuilderRef builder,
+        LLVMModuleRef module
+    )
     {
-        throw new NotImplementedException();
+        visitor.Visit(this);
+        // var function =
+        //     context.GetFunction(Name) ?? throw new Exception($"function {Name} not found");
+        // // if any arguement is not mutable, but is required to be mutable
+        // if (
+        //     function
+        //         .ArguementMutability.Zip(Parameters.Select(p => p.IsVariable))
+        //         .Any(a => a is { First: true, Second: false })
+        // )
+        // {
+        //     throw new Exception($"call to {Name} has a mismatch of mutability");
+        // }
+        //
+        // var parameters = Parameters.Select(p => p.Visit(visitor, context, builder, module));
+        // builder.BuildCall2(function.TypeOf, function.Function, parameters.ToArray());
     }
+
+    public string GetNameForLlvm() =>
+        Name switch
+        {
+            "write" => "printf",
+            "start" => "main",
+            _ => Name
+        };
 
     public override string ToString()
     {
         var b = new StringBuilder();
-        b.AppendLine($"Function {Name}:");
-        if (Parameters.Any())
+        b.Append($"Call to function `{Name}'");
+        if (Parameters.Count <= 0)
         {
-            b.AppendLine("Parameters:");
-            Parameters.ForEach(p => b.AppendLine($"   {p}"));
+            return b.ToString();
         }
+        b.Append(" with arguments [ ");
+        Parameters.ForEach(p => b.Append($"{p} "));
+        b.Append(']');
 
         return b.ToString();
+    }
+
+    public override void Visit(StatementVisitor visit)
+    {
+        visit.Accept(this);
     }
 }

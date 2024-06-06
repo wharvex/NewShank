@@ -20,14 +20,17 @@ public class StringNode : ASTNode
     }
 
     public override LLVMValueRef Visit(
-        Visitor visitor,
+        LLVMVisitor visitor,
         Context context,
         LLVMBuilderRef builder,
         LLVMModuleRef module
     )
     {
-        // TODO: maybe make a string type that keeps track of length
-        // meaning we do not rely do c style strings
-        return builder.BuildGlobalStringPtr(Value);
+        return visitor.Visit(this);
+    }
+
+    public override T Visit<T>(ExpressionVisitor<T> visit)
+    {
+        return visit.Accept(this);
     }
 }

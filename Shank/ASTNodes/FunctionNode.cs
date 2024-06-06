@@ -1,5 +1,6 @@
 using System.Text;
 using LLVMSharp.Interop;
+using Shank.ASTNodes;
 using Shank.ExprVisitors;
 
 namespace Shank;
@@ -628,19 +629,21 @@ public class FunctionNode : CallableNode
     }
 
     // we separate function prototype compilation from function body
-    public LLVMValueRef VisitPrototype(Context context, LLVMModuleRef module)
+    public void VisitPrototype(Context context, LLVMModuleRef module)
     {
         // we could also return errors from the return type as it is not being used any where
         var fnRetTy = module.Context.Int32Type;
         var args = ParameterVariables.Select(
             s =>
-                context.GetLLVMTypeFromShankType(s.Type, s.UnknownType)
+                context.GetLLVMTypeFromShankType(s.Type, !s.IsConstant, s.UnknownType)
                 ?? throw new CompilerException($"type of parameter {s.Name} is not found", s.Line)
         );
+        var arguementMutability = ParameterVariables.Select(p => !p.IsConstant);
         Name = (Name.Equals("start") ? "main" : Name);
-        var function = module.AddFunction(
+        var function = module.addFunction(
             Name,
-            LLVMTypeRef.CreateFunction(fnRetTy, args.ToArray())
+            LLVMTypeRef.CreateFunction(fnRetTy, args.ToArray()),
+            arguementMutability
         );
         foreach (var (param, index) in ParameterVariables.Select((param, index) => (param, index)))
         {
@@ -650,34 +653,29 @@ public class FunctionNode : CallableNode
         }
 
         context.addFunction(Name, function);
-        return function;
     }
 
     public override LLVMValueRef Visit(
-        Visitor visitor,
+        LLVMVisitor visitor,
         Context context,
         LLVMBuilderRef builder,
         LLVMModuleRef module
     )
     {
-        var function = context.GetFunction(Name);
-        context.CurrentFunction = function;
-        context.ResetLocal();
-        foreach (var (param, index) in ParameterVariables.Select((param, index) => (param, index)))
-        {
-            var llvmParam = function.GetParam((uint)index);
-            var name = param.GetNameSafe();
-            context.AddVaraible(name, llvmParam, llvmParam.TypeOf, false);
-        }
+        return visitor.Visit(this);
+    }
 
-        function.Linkage = LLVMLinkage.LLVMExternalLinkage;
+    public override void Visit(StatementVisitor visit)
+    {
+        visit.Accept(this);
+    }
 
-        var block = function.AppendBasicBlock("entry");
-        builder.PositionAtEnd(block);
-        LocalVariables.ForEach(variable => variable.Visit(visitor, context, builder, module));
-        Statements.ForEach(s => s.VisitStatement(context, builder, module));
-        builder.BuildRet(LLVMValueRef.CreateConstInt(module.Context.Int32Type, (ulong)1));
-        context.ResetLocal();
-        return function;
+    /// <summary>
+    /// visitor anti pattern :')
+    /// </summary>
+    /// <param name="visitPrototype"></param>
+    public void VisitProto(VisitPrototype visitPrototype)
+    {
+        visitPrototype.Accept(this);
     }
 }

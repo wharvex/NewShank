@@ -3,7 +3,7 @@ using Shank.ASTNodes;
 
 namespace Shank.ExprVisitors;
 
-public abstract class Visitor
+public abstract class Visitor<T>
 {
     /// <summary>
     /// Integer nodes (ie 1,2,3,4...)
@@ -14,93 +14,29 @@ public abstract class Visitor
     /// <param name="module"></param>
     /// <returns>an LLVM value ref containing an i64 int</returns>
     /// <exception cref="Exception"></exception>
-    public virtual LLVMValueRef Accept(
-        IntNode node,
-        Context context,
-        LLVMBuilderRef builder,
-        LLVMModuleRef module
-    )
-    {
-        throw new Exception();
-    }
+    public abstract T Visit(IntNode node);
 
-    public virtual LLVMValueRef Accept(
-        FloatNode node,
-        Context context,
-        LLVMBuilderRef builder,
-        LLVMModuleRef module
-    )
-    {
-        throw new Exception();
-    }
+    public abstract T Visit(FloatNode node);
 
-    public virtual LLVMValueRef Accept(
-        VariableReferenceNode node,
-        Context context,
-        LLVMBuilderRef builder,
-        LLVMModuleRef module
-    )
-    {
-        throw new Exception();
-    }
+    public abstract T Visit(VariableReferenceNode node);
 
-    public virtual LLVMValueRef Accept(
-        CharNode node,
-        Context context,
-        LLVMBuilderRef builder,
-        LLVMModuleRef module
-    )
-    {
-        throw new Exception();
-    }
+    public abstract T Visit(CharNode node);
 
-    public virtual LLVMValueRef Accept(
-        BoolNode node,
-        Context context,
-        LLVMBuilderRef builder,
-        LLVMModuleRef module
-    )
-    {
-        throw new Exception("in Vsitor.cs");
-    }
+    public abstract T Visit(BoolNode node);
 
-    public virtual LLVMValueRef Accept(
-        StringNode node,
-        Context context,
-        LLVMBuilderRef builder,
-        LLVMModuleRef module
-    )
-    {
-        throw new Exception();
-    }
+    public abstract T Visit(StringNode node);
+    public abstract T Visit(MathOpNode node);
+    public abstract T Visit(BooleanExpressionNode node);
+    public abstract T Visit(RecordNode node);
+    public abstract void Visit(IfNode node);
+    public abstract T Visit(FunctionNode node);
 
-    public virtual LLVMValueRef Accept(
-        MathOpNode node,
-        Context context,
-        LLVMBuilderRef builder,
-        LLVMModuleRef module
-    )
-    {
-        throw new Exception();
-    }
+    public abstract void Visit(FunctionCallNode node);
 
-    public virtual LLVMValueRef Accept(
-        BooleanExpressionNode node,
-        Context context,
-        LLVMBuilderRef builder,
-        LLVMModuleRef module
-    )
-    {
-        throw new Exception();
-    }
+    public abstract void Visit(WhileNode node);
 
-    public virtual LLVMValueRef Accept(
-        RecordNode node,
-        Context context,
-        LLVMBuilderRef builder,
-        LLVMModuleRef module
-    )
-    {
-        throw new Exception();
-    }
+    public abstract void Visit(AssignmentNode node);
+    public abstract T Visit(EnumNode enumNode);
+
+    public abstract void Visit(ForNode node);
 }

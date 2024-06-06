@@ -19,12 +19,17 @@ public class FloatNode : ASTNode
     }
 
     public override LLVMValueRef Visit(
-        Visitor visitor,
+        LLVMVisitor visitor,
         Context context,
         LLVMBuilderRef builder,
         LLVMModuleRef module
     )
     {
-        return visitor.Accept(this, context, builder, module);
+        return visitor.Visit(this);
+    }
+
+    public override T Visit<T>(ExpressionVisitor<T> visit)
+    {
+        return visit.Accept(this);
     }
 }

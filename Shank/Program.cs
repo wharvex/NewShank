@@ -12,28 +12,37 @@ public class Program
         // with the appropriate input file paths.
         // var cmdLineArgsHelper = new CmdLineArgsHelper(args);
         // RunCompiler(args);
-        var cmdLineArgsHelper = new CmdLineArgsHelper(args);
-        // Create the root of the AST.
-        var program = new ProgramNode();
+        var cmdLineParser = new CommandLineArgsParser(args);
+        // bool a = true;
+        // if (a)
+        // return;
 
-        // Scan and Parse each input file.
-        cmdLineArgsHelper.InPaths.ForEach(ip => ScanAndParse(ip, program));
-
-        // Set the program's entry point.
-        program.SetStartModule();
-
-        // Save the pre-SA AST to $env:APPDATA\ShankDebugOutput4.json
-        OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForProgramNode(program), 4);
-
-        // Add Builtin Functions to program.StartModule's functions.
-
-        //TODO:
-        BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
-        // Check the program for semantic issues.
-        SemanticAnalysis.CheckModules(program);
-
-        // Interpret the program in normal or unit test mode.
-        InterpretAndTest(cmdLineArgsHelper, program);
+        // var cmdLineArgsHelper = new CmdLineArgsHelper(args);
+        // // Create the root of the AST.
+        //
+        // var program = new ProgramNode();
+        //
+        // // Scan and Parse each input file.
+        // cmdLineArgsHelper.InPaths.ForEach(ip => ScanAndParse(ip, program));
+        //
+        // // Set the program's entry point.
+        // program.SetStartModule();
+        //
+        // // Save the pre-SA AST to $env:APPDATA\ShankDebugOutput4.json
+        // OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForProgramNode(program), 4);
+        //
+        // // Add Builtin Functions to program.StartModule's functions.
+        //
+        // //TODO:
+        // BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
+        // // Check the program for semantic issues.
+        // SemanticAnalysis.CheckModules(program);
+        // var irGen = new IrGenerator(program);
+        // irGen.GenerateIr();
+        //
+        // // Interpret the program in normal or unit test mode.
+        // InterpretAndTest(cmdLineArgsHelper, program);
+        // // RunCompiler(args);
     }
 
     /// <summary>
@@ -54,7 +63,7 @@ public class Program
         program.SetStartModule();
 
         // Save the pre-SA AST to $env:APPDATA\ShankDebugOutput4.json
-        OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForProgramNode(program), 4);
+        OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForProgramNode(program), "ast");
 
         // Check the program for semantic issues.
         SemanticAnalysis.CheckModules(program);
@@ -72,8 +81,8 @@ public class Program
         var lines = File.ReadAllLines(inPath);
         tokens.AddRange(lexer.Lex(lines));
 
-        // Save the tokens to $env:APPDATA\ShankDebugOutput1.json
-        OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForTokenList(tokens), 1);
+        // Save the tokens to $env:APPDATA\ShankDebugOutput_tokens.json
+        OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForTokenList(tokens), "tokens");
 
         var parser = new Parser(tokens);
 
@@ -129,6 +138,6 @@ public class Program
     public static void TestLLVM(ProgramNode programNode, string outFile)
     {
         LLVMCodeGen a = new LLVMCodeGen();
-        a.CodeGen(outFile, programNode);
+        // a.CodeGen(outFile, programNode);
     }
 }

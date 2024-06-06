@@ -19,22 +19,22 @@ namespace Shank;
 /// </summary>
 public class OutputHelper
 {
-    public static void DebugPrintJson(string output, int i)
+    public static string DocPath { get; } =
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+
+    public static void DebugPrintJson(string output, string suffix)
     {
-        var docPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         using var outputFile = new StreamWriter(
-            Path.Combine(docPath, $"ShankDebugOutput{i}.json"),
-            true
+            Path.Combine(DocPath, "ShankDebugOutput_" + suffix + ".json")
         );
         outputFile.WriteLine(output);
     }
 
-    public static void DebugPrintTxt(string output, int i)
+    public static void DebugPrintTxt(string output, string suffix, bool append = false)
     {
-        var docPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         using var outputFile = new StreamWriter(
-            Path.Combine(docPath, $"ShankDebugOutput{i}.txt"),
-            true
+            Path.Combine(DocPath, "ShankDebugOutput_" + suffix + ".txt"),
+            append
         );
         outputFile.WriteLine(output);
     }

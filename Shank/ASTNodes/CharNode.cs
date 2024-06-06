@@ -19,7 +19,7 @@ public class CharNode : ASTNode
     }
 
     public override LLVMValueRef Visit(
-        Visitor visitor,
+        LLVMVisitor visitor,
         Context context,
         LLVMBuilderRef builder,
         LLVMModuleRef module
@@ -27,5 +27,10 @@ public class CharNode : ASTNode
     {
         // characters are equivalant to an unsigned 8 bit integer
         return LLVMValueRef.CreateConstInt(module.Context.Int8Type, Value, true);
+    }
+
+    public override T Visit<T>(ExpressionVisitor<T> visit)
+    {
+        return visit.Accept(this);
     }
 }

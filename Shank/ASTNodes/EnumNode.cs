@@ -20,11 +20,18 @@ public class EnumNode : ASTNode
     }
 
     public override LLVMValueRef Visit(
-        Visitor visitor,
+        LLVMVisitor visitor,
         Context context,
         LLVMBuilderRef builder,
         LLVMModuleRef module
     )
+    {
+        visitor.Visit(this);
+        throw new Exception("not implemented uet");
+        // return b
+    }
+
+    public override T Visit<T>(ExpressionVisitor<T> visit)
     {
         throw new NotImplementedException();
     }

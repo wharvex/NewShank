@@ -1,0 +1,10 @@
+
+
+define start()
+variables n : integer
+    n := 1
+    
+    
+define add(a, b : integer; var c : integer)
+	c:= a + b
+

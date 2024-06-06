@@ -1,0 +1,10 @@
+module invalidAssignmentToImmutableParam
+variables f: string
+
+define start(bar: integer)
+variables baz: boolean
+    f := "ji"
+    baz := false
+    bar := 5
+    
+  

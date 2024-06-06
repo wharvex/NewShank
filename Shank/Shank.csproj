@@ -62,8 +62,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="CommandLineParser" Version="2.9.1" />
     <PackageReference Include="LLVMSharp" Version="16.0.0" />
     <PackageReference Include="LLVMSharp.Interop" Version="16.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
   <ItemGroup>
@@ -81,6 +83,11 @@
     <Folder Include="dotShank\Overloads\" />
     <Folder Include="dotShank\Records\" />
     <Folder Include="dotShank\UnitTestTests1\" />
+    <Folder Include="Interfaces\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="bin\Debug\net8.0\win-x64\test.shank" />
   </ItemGroup>
 
 </Project>

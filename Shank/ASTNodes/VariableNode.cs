@@ -5,7 +5,7 @@ using Exception = System.Exception;
 
 namespace Shank;
 
-public class VariableNode : ASTNode
+public class VariableNode : StatementNode
 {
     public string? Name { get; set; }
     public string? ModuleName { get; set; }
@@ -44,7 +44,8 @@ public class VariableNode : ASTNode
     public DataType Type { get; set; }
 
     public LLVMTypeRef GetLLVMType(Context context, DataType type) =>
-        context.GetLLVMTypeFromShankType(type) ?? throw new Exception($"Type {Type} doesnt exist");
+        context.GetLLVMTypeFromShankType(type, false)
+        ?? throw new Exception($"Type {Type} doesnt exist");
 
     // If Type is Array, then ArrayType is the type of its elements, or else it is null.
     public DataType? ArrayType { get; set; }
@@ -168,18 +169,27 @@ public class VariableNode : ASTNode
     }
 
     public override LLVMValueRef Visit(
-        Visitor visitor,
+        LLVMVisitor visitor,
         Context context,
         LLVMBuilderRef builder,
         LLVMModuleRef module
     )
     {
-        string name = GetNameSafe();
+        var name = GetNameSafe();
+        // TODO: only alloca when !isConstant
+
         LLVMValueRef v = builder.BuildAlloca(
-            context.GetLLVMTypeFromShankType(Type) ?? throw new Exception("null type"),
-            GetNameSafe()
+            // isVar is false, because we are already creating it using alloca which makes it var
+            context.GetLLVMTypeFromShankType(Type, UnknownType) ?? throw new Exception("null type"),
+            name
         );
-        context.AddVaraible(GetNameSafe(), v, GetLLVMType(context, Type), false);
+        var variable = context.newVariable(Type, UnknownType);
+        context.AddVaraible(name, variable(v, !IsConstant), false);
         return v;
+    }
+
+    public override void Visit(StatementVisitor visit)
+    {
+        visit.Accept(this);
     }
 }

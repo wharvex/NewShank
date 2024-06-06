@@ -35,12 +35,17 @@ public class ForNode : StatementNode
         return $" For: {Variable} From: {From} To: {To} {Environment.NewLine} {StatementListToString(Children)}";
     }
 
-    public void VisitStatement(Context context, LLVMBuilderRef builder, LLVMModuleRef module)
+    public override void VisitStatement(
+        LLVMVisitor visitor,
+        Context context,
+        LLVMBuilderRef builder,
+        LLVMModuleRef module
+    )
     {
-        var forStart = module.Context.AppendBasicBlock(context.CurrentFunction, "for.start");
-        var afterFor = module.Context.AppendBasicBlock(context.CurrentFunction, "for.after");
-        var forBody = module.Context.AppendBasicBlock(context.CurrentFunction, "for.body");
-        var forIncremnet = module.Context.AppendBasicBlock(context.CurrentFunction, "for.inc");
+        var forStart = context.CurrentFunction.AppendBasicBlock("for.start");
+        var afterFor = context.CurrentFunction.AppendBasicBlock("for.after");
+        var forBody = context.CurrentFunction.AppendBasicBlock("for.body");
+        var forIncremnet = context.CurrentFunction.AppendBasicBlock("for.inc");
         // TODO: assign loop variable initial from value
         builder.BuildBr(forStart);
         builder.PositionAtEnd(forStart);
@@ -49,9 +54,9 @@ public class ForNode : StatementNode
 
 
 
-        var fromValue = From.Visit(new IntegerExprVisitor(), context, builder, module);
-        var toValue = To.Visit(new IntegerExprVisitor(), context, builder, module);
-        var currentIterable = Variable.Visit(new IntegerExprVisitor(), context, builder, module);
+        var fromValue = From.Visit(visitor, context, builder, module);
+        var toValue = To.Visit(visitor, context, builder, module);
+        var currentIterable = Variable.Visit(visitor, context, builder, module);
 
         // right now we assume, from, to, and the variable are all integers
         // in the future we should check and give some error at runtime/compile time if not
@@ -62,11 +67,16 @@ public class ForNode : StatementNode
         );
         builder.BuildCondBr(condition, forBody, afterFor);
         builder.PositionAtEnd(forBody);
-        Children.ForEach(c => c.VisitStatement(context, builder, module));
+        Children.ForEach(c => c.VisitStatement(visitor, context, builder, module));
         builder.BuildBr(forIncremnet);
         builder.PositionAtEnd(forIncremnet);
         // TODO: increment
         builder.BuildBr(forStart);
         builder.PositionAtEnd(afterFor);
+    }
+
+    public override void Visit(StatementVisitor visit)
+    {
+        visit.Accept(this);
     }
 }

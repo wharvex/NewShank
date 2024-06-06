@@ -1,0 +1,5 @@
+﻿define foo(a : string)
+    write a
+
+define start()
+    foo "hi"
