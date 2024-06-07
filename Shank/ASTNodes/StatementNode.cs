@@ -4,7 +4,7 @@ using LLVMSharp.Interop;
 using Shank.ASTNodes;
 using Shank.ExprVisitors;
 
-namespace Shank;
+namespace Shank.ASTNodes;
 
 [JsonDerivedType(typeof(RecordMemberNode))]
 [JsonDerivedType(typeof(AssignmentNode))]

@@ -28,10 +28,7 @@ public class Lexer
         keywordHash["print"] = TokenType.PRINT;
         keywordHash["getline"] = TokenType.GETLINE;
         keywordHash["nextfile"] = TokenType.NEXTFILE;
-
-        //TODO: !!! no such keyword - add specific functionality to lex the name of the function and put into this type
         keywordHash["function"] = TokenType.FUNCTION;
-
         keywordHash["interface"] = TokenType.INTERFACE;
         keywordHash["class"] = TokenType.CLASS;
         keywordHash["string"] = TokenType.STRING;
@@ -48,7 +45,6 @@ public class Lexer
         keywordHash["false"] = TokenType.FALSE;
         keywordHash["shared"] = TokenType.SHARED;
         keywordHash["private"] = TokenType.PRIVATE;
-        keywordHash["\t"] = TokenType.SEPARATOR;
         keywordHash["return"] = TokenType.RETURN;
         keywordHash["else"] = TokenType.ELSE;
     }
@@ -69,6 +65,7 @@ public class Lexer
         twoCharacterHash["-="] = TokenType.MINUSEQUALS;
         twoCharacterHash["&&"] = TokenType.AND;
         twoCharacterHash["||"] = TokenType.OR;
+        twoCharacterHash["\n\t"] = TokenType.FUNCTIONSTATEMENT;
     }
 
     private void OneCharacterHashmap()
@@ -90,6 +87,8 @@ public class Lexer
         oneCharacterHash[","] = TokenType.COMMA;
         oneCharacterHash["."] = TokenType.PERIOD;
         oneCharacterHash["!"] = TokenType.NOT;
+        oneCharacterHash["\n"] = TokenType.NEWLINE;
+        oneCharacterHash["\t"] = TokenType.TAB;
         oneCharacterHash["\""] = TokenType.QUOTE;
     }
 
@@ -103,12 +102,31 @@ public class Lexer
                 stringHandler.GetChar();
                 characterPosition++;
             }
-            else if (currentCharacter == '\n' || currentCharacter == '\t')
+            else if (currentCharacter == '\t')
             {
                 stringHandler.GetChar();
                 lineNumber++;
                 characterPosition++;
-                tokens.AddLast((new Token(TokenType.SEPARATOR, lineNumber, characterPosition)));
+                tokens.AddLast((new Token(TokenType.TAB, lineNumber, characterPosition)));
+            }
+            else if (currentCharacter == '\n')
+            {
+                stringHandler.GetChar();
+                lineNumber++;
+                characterPosition++;
+                if (stringHandler.Peek(0) == '\t')
+                {
+                    stringHandler.GetChar();
+                    lineNumber++;
+                    characterPosition++;
+                    tokens.AddLast(
+                        (new Token(TokenType.FUNCTIONSTATEMENT, lineNumber, characterPosition))
+                    );
+                }
+                else
+                {
+                    tokens.AddLast((new Token(TokenType.NEWLINE, lineNumber, characterPosition)));
+                }
             }
             else if (currentCharacter == '\r')
             {

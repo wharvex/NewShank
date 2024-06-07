@@ -3,7 +3,7 @@ using Shank.ASTNodes;
 using Shank.ExprVisitors;
 using Exception = System.Exception;
 
-namespace Shank;
+namespace Shank.ASTNodes;
 
 public class VariableNode : StatementNode
 {
@@ -106,10 +106,10 @@ public class VariableNode : StatementNode
         vrn.ExtensionType switch
         {
             // TODO: make exttype more expressive/type constrained
-            VrnExtType.ArrayIndex => ((ArrayType)NewType).Inner,
-            VrnExtType.RecordMember
+            VariableReferenceNode.VrnExtType.ArrayIndex => ((ArrayType)NewType).Inner,
+            VariableReferenceNode.VrnExtType.RecordMember
                 => ((RecordType)NewType).Fields[vrn.GetRecordMemberReferenceSafe().Name],
-            VrnExtType.None
+            VariableReferenceNode.VrnExtType.None
                 => NewType switch
                 {
                     RecordType

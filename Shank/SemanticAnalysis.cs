@@ -185,7 +185,7 @@ public class SemanticAnalysis
            
             if (targetType is EnumType e && expression is VariableReferenceNode v && e.Variants.Contains(v.Name))
             {
-                if (v.ExtensionType != ASTNode.VrnExtType.None)
+                if (v.ExtensionType != VariableReferenceNode.VrnExtType.None)
                 {
                     throw new SemanticErrorException($"ambiguous variable name {v.Name}", expression);
                 }
@@ -345,15 +345,15 @@ public class SemanticAnalysis
         {
             switch (mon.Op)
             {
-                case ASTNode.MathOpType.plus:
+                case MathOpNode.MathOpType.plus:
                     return GetMaxRange(mon.Left, variables) + GetMaxRange(mon.Right, variables);
-                case ASTNode.MathOpType.minus:
+                case MathOpNode.MathOpType.minus:
                     return GetMaxRange(mon.Left, variables) - GetMinRange(mon.Right, variables);
-                case ASTNode.MathOpType.times:
+                case MathOpNode.MathOpType.times:
                     return GetMaxRange(mon.Left, variables) * GetMaxRange(mon.Right, variables);
-                case ASTNode.MathOpType.divide:
+                case MathOpNode.MathOpType.divide:
                     return GetMinRange(mon.Left, variables) / GetMaxRange(mon.Right, variables);
-                case ASTNode.MathOpType.modulo:
+                case MathOpNode.MathOpType.modulo:
                     return GetMaxRange(mon.Right, variables) - 1;
             }
         }
@@ -386,15 +386,15 @@ public class SemanticAnalysis
         {
             switch (mon.Op)
             {
-                case ASTNode.MathOpType.plus:
+                case MathOpNode.MathOpType.plus:
                     return GetMinRange(mon.Left, variables) + GetMinRange(mon.Right, variables);
-                case ASTNode.MathOpType.minus:
+                case MathOpNode.MathOpType.minus:
                     return GetMinRange(mon.Left, variables) - GetMaxRange(mon.Right, variables);
-                case ASTNode.MathOpType.times:
+                case MathOpNode.MathOpType.times:
                     return GetMinRange(mon.Left, variables) * GetMinRange(mon.Right, variables);
-                case ASTNode.MathOpType.divide:
+                case MathOpNode.MathOpType.divide:
                     return GetMaxRange(mon.Left, variables) / GetMinRange(mon.Right, variables);
-                case ASTNode.MathOpType.modulo:
+                case MathOpNode.MathOpType.modulo:
                     return 0;
             }
         }
@@ -454,7 +454,7 @@ public class SemanticAnalysis
                 // TODO: preserver ranges
             return (lhs, rhs) switch
             {
-                (StringType or CharacterType, StringType or CharacterType) => mathOpNode.Op == ASTNode.MathOpType.plus ? new StringType() : throw  new SemanticErrorException($"cannot {mathOpNode.Op} two strings", mathOpNode),
+                (StringType or CharacterType, StringType or CharacterType) => mathOpNode.Op == MathOpNode.MathOpType.plus ? new StringType() : throw  new SemanticErrorException($"cannot {mathOpNode.Op} two strings", mathOpNode),
                 (RealType, RealType) => lhs,
                 (IntegerType, IntegerType) => lhs,
                 (StringType or CharacterType or IntegerType or RealType, RealType or StringType or CharacterType or IntegerType) => throw new SemanticErrorException($"{lhs} and {rhs} are not the same so you cannot perform math operations on them", mathOpNode),
@@ -471,16 +471,16 @@ public class SemanticAnalysis
                                variableReferenceNode);
             return (variableReferenceNode.ExtensionType, variable.NewType) switch
             {
-                (ExtensionType: ASTNode.VrnExtType.None, _) => variable.NewType,
-                (ExtensionType: ASTNode.VrnExtType.RecordMember, NewType: RecordType r) => GetTypeRecursive(r, variableReferenceNode),
-                (ExtensionType: ASTNode.VrnExtType.RecordMember, NewType: ReferenceType(RecordType r)) => GetTypeRecursive(r, variableReferenceNode),
-                (ExtensionType: ASTNode.VrnExtType.ArrayIndex, NewType: ArrayType a) =>
+                (ExtensionType: VariableReferenceNode.VrnExtType.None, _) => variable.NewType,
+                (ExtensionType: VariableReferenceNode.VrnExtType.RecordMember, NewType: RecordType r) => GetTypeRecursive(r, variableReferenceNode),
+                (ExtensionType: VariableReferenceNode.VrnExtType.RecordMember, NewType: ReferenceType(RecordType r)) => GetTypeRecursive(r, variableReferenceNode),
+                (ExtensionType: VariableReferenceNode.VrnExtType.ArrayIndex, NewType: ArrayType a) =>
                     GetTypeOfExpression(variableReferenceNode.Extension!, variables) is IntegerType
                         ? a.Inner
                         : throw new SemanticErrorException("Array indexer does not resolve to a number",
                             variableReferenceNode),
-                (ExtensionType: ASTNode.VrnExtType.ArrayIndex, _) => throw new SemanticErrorException("Invalid array index, tried to index into non array", variableReferenceNode),
-                (ExtensionType: ASTNode.VrnExtType.RecordMember, NewType: { } t) => throw new SemanticErrorException($"Invalid member access, tried to access non record {t}", variableReferenceNode),
+                (ExtensionType: VariableReferenceNode.VrnExtType.ArrayIndex, _) => throw new SemanticErrorException("Invalid array index, tried to index into non array", variableReferenceNode),
+                (ExtensionType: VariableReferenceNode.VrnExtType.RecordMember, NewType: { } t) => throw new SemanticErrorException($"Invalid member access, tried to access non record {t}", variableReferenceNode),
             };
         }
     }

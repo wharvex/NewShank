@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text;
 using LLVMSharp;
+using Shank.ASTNodes;
 
 namespace Shank;
 

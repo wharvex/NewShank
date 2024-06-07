@@ -162,7 +162,7 @@ public class Parser
                 return new VariableReferenceNode(
                     id.GetValueSafe(),
                     exp,
-                    ASTNode.VrnExtType.ArrayIndex
+                    VariableReferenceNode.VrnExtType.ArrayIndex
                 );
             }
 
@@ -177,7 +177,7 @@ public class Parser
                 return new VariableReferenceNode(
                     id.GetValueSafe(),
                     varRef,
-                    ASTNode.VrnExtType.RecordMember
+                    VariableReferenceNode.VrnExtType.RecordMember
                 );
             }
 

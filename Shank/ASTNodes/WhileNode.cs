@@ -1,7 +1,8 @@
 using LLVMSharp.Interop;
+using Shank.ASTNodes;
 using Shank.ExprVisitors;
 
-namespace Shank;
+namespace Shank.ASTNodes;
 
 public class WhileNode : StatementNode
 {

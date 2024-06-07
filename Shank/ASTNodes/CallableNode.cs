@@ -1,10 +1,9 @@
 using System.Text.Json.Serialization;
 using LLVMSharp.Interop;
-using Shank.ASTNodes;
 using Shank.ExprVisitors;
 using Shank.Interfaces;
 
-namespace Shank;
+namespace Shank.ASTNodes;
 
 [JsonDerivedType(typeof(FunctionNode))]
 [JsonDerivedType(typeof(BuiltInFunctionNode))]
@@ -50,6 +49,11 @@ public abstract class CallableNode : ASTNode, ILlvmTranslatable
     public delegate void BuiltInCall(List<InterpreterDataType> parameters);
 
     public BuiltInCall? Execute;
+
+    public bool ShouldSerializeExecute()
+    {
+        return false;
+    }
 
     public bool IsValidOverloadOf(CallableNode cn) =>
         ParameterVariables.Where((pv, i) => !cn.ParameterVariables[i].EqualsForOverload(pv)).Any();

@@ -61,7 +61,10 @@ public enum TokenType
     AND,
     OR,
     RETURN,
-    ELSE
+    ELSE,
+    FUNCTIONSTATEMENT,
+    TAB,
+    NEWLINE
 }
 
 public class Token

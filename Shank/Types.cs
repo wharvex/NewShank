@@ -1,3 +1,5 @@
+using Shank.ASTNodes;
+
 namespace Shank;
 
 public interface IType; // our marker interface anything that implements is known to represent a shank type
