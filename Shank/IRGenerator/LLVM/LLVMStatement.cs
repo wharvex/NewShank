@@ -52,7 +52,7 @@ public class LLVMStatement : StatementVisitor
             var name = param.GetNameSafe();
             LLVMValueRef paramAllocation = _builder.BuildAlloca(llvmParam.TypeOf, name);
             var parameter = _context.newVariable(param.Type, param.UnknownType)(
-                paramAllocation,
+                paramAllocation, //a
                 !param.IsConstant
             );
 
