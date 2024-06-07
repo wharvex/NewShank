@@ -42,24 +42,26 @@ public class LLVMStatement : StatementVisitor
         var function = (LLVMFunction)_context.GetFunction(node.Name);
         _context.CurrentFunction = function;
         _context.ResetLocal();
+        var block = function.AppendBasicBlock("entry");
+        _builder.PositionAtEnd(block);
         foreach (
             var (param, index) in node.ParameterVariables.Select((param, index) => (param, index))
         )
         {
             var llvmParam = function.GetParam((uint)index);
             var name = param.GetNameSafe();
+            LLVMValueRef paramAllocation = _builder.BuildAlloca(llvmParam.TypeOf, name);
             var parameter = _context.newVariable(param.Type, param.UnknownType)(
-                llvmParam,
+                paramAllocation,
                 !param.IsConstant
             );
 
+            _builder.BuildStore(llvmParam, paramAllocation);
             _context.AddVaraible(name, parameter, false);
         }
 
         function.Linkage = LLVMLinkage.LLVMExternalLinkage;
 
-        var block = function.AppendBasicBlock("entry");
-        _builder.PositionAtEnd(block);
         node.LocalVariables.ForEach(variable => variable.Visit(this));
         node.Statements.ForEach(s => s.Visit(this));
         // return 0 to singify ok
