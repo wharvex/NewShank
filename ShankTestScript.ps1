@@ -45,10 +45,10 @@ function st
         $args_list[1] = "$($ds)$($args_list[1])"
 
         $progress = if ($i -ne $null) `
-        {"$i of $($path_list.Length - 1)"} `
+        {"($i of $($path_list.Length - 1))"} `
         Else {''}
 
-        "`n**** Running The Following Command ($($progress))****`n"
+        "`n**** Running The Following Command $($progress)****`n"
         "dotnet run $($args_list -join ' ') --project $sp`n"
         dotnet run @args_list --project $sp
     }
