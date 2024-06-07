@@ -1025,7 +1025,7 @@ public class Interpreter
             StringNode sn => sn.Value,
             CharNode cn => cn.Value.ToString(),
             MathOpNode mon
-                => mon.Op == MathOpNode.MathOpType.plus
+                => mon.Op == MathOpNode.MathOpType.Plus
                     ? ResolveString(mon.Left, variables) + ResolveString(mon.Right, variables)
                     : throw new NotImplementedException(
                         "It has not been implemented to perform any math operation on"
@@ -1091,15 +1091,15 @@ public class Interpreter
             var right = ResolveFloat(mon.Right, variables);
             switch (mon.Op)
             {
-                case MathOpNode.MathOpType.plus:
+                case MathOpNode.MathOpType.Plus:
                     return left + right;
-                case MathOpNode.MathOpType.minus:
+                case MathOpNode.MathOpType.Minus:
                     return left - right;
-                case MathOpNode.MathOpType.times:
+                case MathOpNode.MathOpType.Times:
                     return left * right;
-                case MathOpNode.MathOpType.divide:
+                case MathOpNode.MathOpType.Divide:
                     return left / right;
-                case MathOpNode.MathOpType.modulo:
+                case MathOpNode.MathOpType.Modulo:
                     return left % right;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -1134,15 +1134,15 @@ public class Interpreter
             var right = ResolveInt(mon.Right, variables);
             switch (mon.Op)
             {
-                case MathOpNode.MathOpType.plus:
+                case MathOpNode.MathOpType.Plus:
                     return left + right;
-                case MathOpNode.MathOpType.minus:
+                case MathOpNode.MathOpType.Minus:
                     return left - right;
-                case MathOpNode.MathOpType.times:
+                case MathOpNode.MathOpType.Times:
                     return left * right;
-                case MathOpNode.MathOpType.divide:
+                case MathOpNode.MathOpType.Divide:
                     return left / right;
-                case MathOpNode.MathOpType.modulo:
+                case MathOpNode.MathOpType.Modulo:
                     return left % right;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -1251,15 +1251,15 @@ public class Interpreter
             var right = ResolveIntBeforeVarDecs(mon.Right);
             switch (mon.Op)
             {
-                case MathOpNode.MathOpType.plus:
+                case MathOpNode.MathOpType.Plus:
                     return left + right;
-                case MathOpNode.MathOpType.minus:
+                case MathOpNode.MathOpType.Minus:
                     return left - right;
-                case MathOpNode.MathOpType.times:
+                case MathOpNode.MathOpType.Times:
                     return left * right;
-                case MathOpNode.MathOpType.divide:
+                case MathOpNode.MathOpType.Divide:
                     return left / right;
-                case MathOpNode.MathOpType.modulo:
+                case MathOpNode.MathOpType.Modulo:
                     return left % right;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(mon.Op), "Invalid operation type");

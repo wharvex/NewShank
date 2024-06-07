@@ -100,11 +100,11 @@ public class LLVMExpr : ExpressionVisitor<LLVMValueRef>
         {
             return node.Op switch
             {
-                MathOpNode.MathOpType.plus => _builder.BuildAdd(L, R, "addtmp"),
-                MathOpNode.MathOpType.minus => _builder.BuildSub(L, R, "subtmp"),
-                MathOpNode.MathOpType.times => _builder.BuildMul(L, R, "multmp"),
-                MathOpNode.MathOpType.divide => _builder.BuildSDiv(L, R, "divtmp"),
-                MathOpNode.MathOpType.modulo => _builder.BuildURem(L, R, "modtmp"),
+                MathOpNode.MathOpType.Plus => _builder.BuildAdd(L, R, "addtmp"),
+                MathOpNode.MathOpType.Minus => _builder.BuildSub(L, R, "subtmp"),
+                MathOpNode.MathOpType.Times => _builder.BuildMul(L, R, "multmp"),
+                MathOpNode.MathOpType.Divide => _builder.BuildSDiv(L, R, "divtmp"),
+                MathOpNode.MathOpType.Modulo => _builder.BuildURem(L, R, "modtmp"),
                 _ => throw new Exception("unsupported operation")
             };
         }
@@ -112,16 +112,16 @@ public class LLVMExpr : ExpressionVisitor<LLVMValueRef>
         {
             return node.Op switch
             {
-                MathOpNode.MathOpType.plus => _builder.BuildFAdd(L, R, "addtmp"),
-                MathOpNode.MathOpType.minus => _builder.BuildFSub(L, R, "subtmp"),
-                MathOpNode.MathOpType.times => _builder.BuildFMul(L, R, "multmp"),
-                MathOpNode.MathOpType.divide => _builder.BuildFDiv(L, R, "divtmp"),
+                MathOpNode.MathOpType.Plus => _builder.BuildFAdd(L, R, "addtmp"),
+                MathOpNode.MathOpType.Minus => _builder.BuildFSub(L, R, "subtmp"),
+                MathOpNode.MathOpType.Times => _builder.BuildFMul(L, R, "multmp"),
+                MathOpNode.MathOpType.Divide => _builder.BuildFDiv(L, R, "divtmp"),
                 _ => throw new Exception("unsupported operation")
             };
         }
         else if (_types(L.TypeOf) == Types.STRING)
         {
-            if (node.Op == MathOpNode.MathOpType.plus)
+            if (node.Op == MathOpNode.MathOpType.Plus)
             {
                 // LLVMValueRef r = node.Right.Visit(this);
                 // LLVMValueRef l = node.Left.Visit(this);

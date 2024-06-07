@@ -411,15 +411,15 @@ public class SemanticAnalysis
         {
             switch (mon.Op)
             {
-                case MathOpNode.MathOpType.plus:
+                case MathOpNode.MathOpType.Plus:
                     return GetMaxRange(mon.Left, variables) + GetMaxRange(mon.Right, variables);
-                case MathOpNode.MathOpType.minus:
+                case MathOpNode.MathOpType.Minus:
                     return GetMaxRange(mon.Left, variables) - GetMinRange(mon.Right, variables);
-                case MathOpNode.MathOpType.times:
+                case MathOpNode.MathOpType.Times:
                     return GetMaxRange(mon.Left, variables) * GetMaxRange(mon.Right, variables);
-                case MathOpNode.MathOpType.divide:
+                case MathOpNode.MathOpType.Divide:
                     return GetMinRange(mon.Left, variables) / GetMaxRange(mon.Right, variables);
-                case MathOpNode.MathOpType.modulo:
+                case MathOpNode.MathOpType.Modulo:
                     return GetMaxRange(mon.Right, variables) - 1;
             }
         }
@@ -457,15 +457,15 @@ public class SemanticAnalysis
         {
             switch (mon.Op)
             {
-                case MathOpNode.MathOpType.plus:
+                case MathOpNode.MathOpType.Plus:
                     return GetMinRange(mon.Left, variables) + GetMinRange(mon.Right, variables);
-                case MathOpNode.MathOpType.minus:
+                case MathOpNode.MathOpType.Minus:
                     return GetMinRange(mon.Left, variables) - GetMaxRange(mon.Right, variables);
-                case MathOpNode.MathOpType.times:
+                case MathOpNode.MathOpType.Times:
                     return GetMinRange(mon.Left, variables) * GetMinRange(mon.Right, variables);
-                case MathOpNode.MathOpType.divide:
+                case MathOpNode.MathOpType.Divide:
                     return GetMaxRange(mon.Left, variables) / GetMinRange(mon.Right, variables);
-                case MathOpNode.MathOpType.modulo:
+                case MathOpNode.MathOpType.Modulo:
                     return 0;
             }
         }
