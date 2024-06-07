@@ -3,23 +3,13 @@ using Shank.ASTNodes;
 
 namespace Shank.ExprVisitors;
 
-public class LLVMStatement : StatementVisitor
+public class LLVMStatement(Context context, LLVMBuilderRef builder, LLVMModuleRef module)
+    : StatementVisitor
 {
-    public Context _context { get; set; }
-    public LLVMBuilderRef _builder { get; set; }
-    public LLVMModuleRef _module { get; set; }
-
-    public LLVMStatement(Context context, LLVMBuilderRef builder, LLVMModuleRef module)
-    {
-        _context = context;
-        _builder = builder;
-        _module = module;
-    }
-
     public override void Accept(FunctionCallNode node)
     {
         var function =
-            _context.GetFunction(node.Name)
+            context.GetFunction(node.Name)
             ?? throw new Exception($"function {node.Name} not found");
         // if any arguement is not mutable, but is required to be mutable
         if (
@@ -32,32 +22,32 @@ public class LLVMStatement : StatementVisitor
         }
 
         var parameters = node.Parameters.Select(
-            p => p.Visit(new LLVMExpr(_context, _builder, _module))
+            p => p.Visit(new LLVMExpr(context, builder, module))
         );
-        _builder.BuildCall2(function.TypeOf, function.Function, parameters.ToArray());
+        builder.BuildCall2(function.TypeOf, function.Function, parameters.ToArray());
     }
 
     public override void Accept(FunctionNode node)
     {
-        var function = (LLVMFunction)_context.GetFunction(node.Name);
-        _context.CurrentFunction = function;
-        _context.ResetLocal();
+        var function = (LLVMFunction)context.GetFunction(node.Name);
+        context.CurrentFunction = function;
+        context.ResetLocal();
         var block = function.AppendBasicBlock("entry");
-        _builder.PositionAtEnd(block);
+        builder.PositionAtEnd(block);
         foreach (
             var (param, index) in node.ParameterVariables.Select((param, index) => (param, index))
         )
         {
             var llvmParam = function.GetParam((uint)index);
             var name = param.GetNameSafe();
-            LLVMValueRef paramAllocation = _builder.BuildAlloca(llvmParam.TypeOf, name);
-            var parameter = _context.newVariable(param.Type, param.UnknownType)(
+            LLVMValueRef paramAllocation = builder.BuildAlloca(llvmParam.TypeOf, name);
+            var parameter = context.newVariable(param.Type, param.UnknownType)(
                 paramAllocation, //a
                 !param.IsConstant
             );
 
-            _builder.BuildStore(llvmParam, paramAllocation);
-            _context.AddVaraible(name, parameter, false);
+            builder.BuildStore(llvmParam, paramAllocation);
+            context.AddVaraible(name, parameter, false);
         }
 
         function.Linkage = LLVMLinkage.LLVMExternalLinkage;
@@ -65,36 +55,36 @@ public class LLVMStatement : StatementVisitor
         node.LocalVariables.ForEach(variable => variable.Visit(this));
         node.Statements.ForEach(s => s.Visit(this));
         // return 0 to singify ok
-        _builder.BuildRet(LLVMValueRef.CreateConstInt(_module.Context.Int32Type, (ulong)0));
-        _context.ResetLocal();
+        builder.BuildRet(LLVMValueRef.CreateConstInt(module.Context.Int32Type, (ulong)0));
+        context.ResetLocal();
     }
 
     public override void Accept(WhileNode node)
     {
-        var whileCond = _context.CurrentFunction.AppendBasicBlock("while.cond");
-        var whileBody = _context.CurrentFunction.AppendBasicBlock("while.body");
-        var whileDone = _context.CurrentFunction.AppendBasicBlock("while.done");
-        _builder.BuildBr(whileCond);
-        _builder.PositionAtEnd(whileCond);
-        var condition = node.Expression.Visit(new LLVMExpr(_context, _builder, _module));
-        _builder.BuildCondBr(condition, whileBody, whileDone);
-        _builder.PositionAtEnd(whileBody);
+        var whileCond = context.CurrentFunction.AppendBasicBlock("while.cond");
+        var whileBody = context.CurrentFunction.AppendBasicBlock("while.body");
+        var whileDone = context.CurrentFunction.AppendBasicBlock("while.done");
+        builder.BuildBr(whileCond);
+        builder.PositionAtEnd(whileCond);
+        var condition = node.Expression.Visit(new LLVMExpr(context, builder, module));
+        builder.BuildCondBr(condition, whileBody, whileDone);
+        builder.PositionAtEnd(whileBody);
         node.Children.ForEach(c => c.Visit(this));
-        _builder.BuildBr(whileCond);
-        _builder.PositionAtEnd(whileDone);
+        builder.BuildBr(whileCond);
+        builder.PositionAtEnd(whileDone);
     }
 
     public override void Accept(AssignmentNode node)
     {
-        var llvmValue = _context.GetVaraible(node.Target.Name);
+        var llvmValue = context.GetVaraible(node.Target.Name);
         if (!llvmValue.IsMutable)
         {
             throw new Exception($"tried to mutate non mutable variable {node.Target.Name}");
         }
         // node.Expression<LLVMValueRef>.Visit(new LLVM)
 
-        _builder.BuildStore(
-            node.Expression.Visit(new LLVMExpr(_context, _builder, _module)),
+        builder.BuildStore(
+            node.Expression.Visit(new LLVMExpr(context, builder, module)),
             llvmValue.ValueRef
         );
     }
@@ -106,17 +96,17 @@ public class LLVMStatement : StatementVisitor
 
     public override void Accept(ModuleNode node)
     {
-        _context.SetCurrentModule(node.Name);
+        context.SetCurrentModule(node.Name);
         // then we add to our scope all our imports
         foreach (var (moduleName, imports) in node.ImportTargetNames)
         {
-            var shankModule = _context.Modules[moduleName];
+            var shankModule = context.Modules[moduleName];
             foreach (var import in imports)
             {
                 // TODO: type imports
                 if (shankModule.Functions.TryGetValue(import, out var function))
                 {
-                    _context.addFunction(import, function);
+                    context.addFunction(import, function);
                 }
             }
         }
@@ -138,19 +128,19 @@ public class LLVMStatement : StatementVisitor
         // and we visit(compile) the IfNode for when the condition is false if needed, followed by a goto to the after branch
         // note we could make this a bit better by checking if next is null and then make the conditional branch to after block in the false cas
         {
-            var condition = node.Expression.Visit(new LLVMExpr(_context, _builder, _module));
-            var ifBlock = _context.CurrentFunction.AppendBasicBlock("if block");
-            var elseBlock = _context.CurrentFunction.AppendBasicBlock("else block");
-            var afterBlock = _context.CurrentFunction.AppendBasicBlock("after if statement");
-            _builder.BuildCondBr(condition, ifBlock, elseBlock);
+            var condition = node.Expression.Visit(new LLVMExpr(context, builder, module));
+            var ifBlock = context.CurrentFunction.AppendBasicBlock("if block");
+            var elseBlock = context.CurrentFunction.AppendBasicBlock("else block");
+            var afterBlock = context.CurrentFunction.AppendBasicBlock("after if statement");
+            builder.BuildCondBr(condition, ifBlock, elseBlock);
 
-            _builder.PositionAtEnd(ifBlock);
+            builder.PositionAtEnd(ifBlock);
             node.Children.ForEach(c => c.Visit(this));
-            _builder.BuildBr(afterBlock);
-            _builder.PositionAtEnd(elseBlock);
+            builder.BuildBr(afterBlock);
+            builder.PositionAtEnd(elseBlock);
             node.NextIfNode?.Visit(this);
-            _builder.BuildBr(afterBlock);
-            _builder.PositionAtEnd(afterBlock);
+            builder.BuildBr(afterBlock);
+            builder.PositionAtEnd(afterBlock);
         }
         else
         {
@@ -160,16 +150,16 @@ public class LLVMStatement : StatementVisitor
 
     public override void Accept(RepeatNode node)
     {
-        var whileBody = _context.CurrentFunction.AppendBasicBlock("while.body");
-        var whileDone = _context.CurrentFunction.AppendBasicBlock("while.done");
+        var whileBody = context.CurrentFunction.AppendBasicBlock("while.body");
+        var whileDone = context.CurrentFunction.AppendBasicBlock("while.done");
         // first execute the body
-        _builder.BuildBr(whileBody);
-        _builder.PositionAtEnd(whileBody);
+        builder.BuildBr(whileBody);
+        builder.PositionAtEnd(whileBody);
         node.Children.ForEach(c => c.Visit(this));
         // and then test the condition
-        var condition = node.Expression.Visit(new LLVMExpr(_context, _builder, _module));
-        _builder.BuildCondBr(condition, whileBody, whileDone);
-        _builder.PositionAtEnd(whileDone);
+        var condition = node.Expression.Visit(new LLVMExpr(context, builder, module));
+        builder.BuildCondBr(condition, whileBody, whileDone);
+        builder.PositionAtEnd(whileDone);
     }
 
     public override void Accept(RecordNode node)
@@ -191,23 +181,23 @@ public class LLVMStatement : StatementVisitor
         var name = node.GetNameSafe();
         // TODO: only alloca when !isConstant
 
-        LLVMValueRef v = _builder.BuildAlloca(
+        LLVMValueRef v = builder.BuildAlloca(
             // isVar is false, because we are already creating it using alloca which makes it var
-            _context.GetLLVMTypeFromShankType(node.Type, node.UnknownType)
+            context.GetLLVMTypeFromShankType(node.Type, node.UnknownType)
                 ?? throw new Exception("null type"),
             name
         );
-        var variable = _context.newVariable(node.Type, node.UnknownType);
-        _context.AddVaraible(name, variable(v, !node.IsConstant), false);
+        var variable = context.newVariable(node.Type, node.UnknownType);
+        context.AddVaraible(name, variable(v, !node.IsConstant), false);
     }
 
     public override void Accept(ProgramNode node)
     {
-        _context.setModules(node.Modules.Keys);
+        context.setModules(node.Modules.Keys);
 
         foreach (var keyValuePair in node.Modules)
         {
-            keyValuePair.Value.VisitProto(new LLVMVisitPrototype(_context, _builder, _module));
+            keyValuePair.Value.VisitProto(new LLVMVisitPrototype(context, builder, module));
         }
 
         foreach (var keyValuePair in node.Modules)
@@ -218,35 +208,35 @@ public class LLVMStatement : StatementVisitor
 
     public override void Accept(ForNode node)
     {
-        var forStart = _context.CurrentFunction.AppendBasicBlock("for.start");
-        var afterFor = _context.CurrentFunction.AppendBasicBlock("for.after");
-        var forBody = _context.CurrentFunction.AppendBasicBlock("for.body");
-        var forIncremnet = _context.CurrentFunction.AppendBasicBlock("for.inc");
+        var forStart = context.CurrentFunction.AppendBasicBlock("for.start");
+        var afterFor = context.CurrentFunction.AppendBasicBlock("for.after");
+        var forBody = context.CurrentFunction.AppendBasicBlock("for.body");
+        var forIncremnet = context.CurrentFunction.AppendBasicBlock("for.inc");
         // TODO: assign loop variable initial from value
-        _builder.BuildBr(forStart);
-        _builder.PositionAtEnd(forStart);
+        builder.BuildBr(forStart);
+        builder.PositionAtEnd(forStart);
         // we have to compile the to and from in the loop so that the get run each time, we go through the loop
         // in case we modify them in the loop
 
 
-        var fromValue = node.From.Visit(new LLVMExpr(_context, _builder, _module));
-        var toValue = node.To.Visit(new LLVMExpr(_context, _builder, _module));
-        var currentIterable = node.Variable.Visit(new LLVMExpr(_context, _builder, _module));
+        var fromValue = node.From.Visit(new LLVMExpr(context, builder, module));
+        var toValue = node.To.Visit(new LLVMExpr(context, builder, module));
+        var currentIterable = node.Variable.Visit(new LLVMExpr(context, builder, module));
 
         // right now we assume, from, to, and the variable are all integers
         // in the future we should check and give some error at runtime/compile time if not
         // TODO: signed or unsigned comparison
-        var condition = _builder.BuildAnd(
-            _builder.BuildICmp(LLVMIntPredicate.LLVMIntSGE, currentIterable, fromValue),
-            _builder.BuildICmp(LLVMIntPredicate.LLVMIntSLE, currentIterable, toValue)
+        var condition = builder.BuildAnd(
+            builder.BuildICmp(LLVMIntPredicate.LLVMIntSGE, currentIterable, fromValue),
+            builder.BuildICmp(LLVMIntPredicate.LLVMIntSLE, currentIterable, toValue)
         );
-        _builder.BuildCondBr(condition, forBody, afterFor);
-        _builder.PositionAtEnd(forBody);
+        builder.BuildCondBr(condition, forBody, afterFor);
+        builder.PositionAtEnd(forBody);
         node.Children.ForEach(c => c.Visit(this));
-        _builder.BuildBr(forIncremnet);
-        _builder.PositionAtEnd(forIncremnet);
+        builder.BuildBr(forIncremnet);
+        builder.PositionAtEnd(forIncremnet);
         // TODO: increment
-        _builder.BuildBr(forStart);
-        _builder.PositionAtEnd(afterFor);
+        builder.BuildBr(forStart);
+        builder.PositionAtEnd(afterFor);
     }
 }
