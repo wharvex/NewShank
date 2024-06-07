@@ -472,8 +472,8 @@ public class SemanticAnalysis
             return (variableReferenceNode.ExtensionType, variable.NewType) switch
             {
                 (ExtensionType: VariableReferenceNode.VrnExtType.None, _) => variable.NewType,
-                (ExtensionType: VariableReferenceNode.VrnExtType.RecordMember, NewType: RecordType r) => GetTypeRecursive(r, variableReferenceNode),
-                (ExtensionType: VariableReferenceNode.VrnExtType.RecordMember, NewType: ReferenceType(RecordType r)) => GetTypeRecursive(r, variableReferenceNode),
+                (ExtensionType: VariableReferenceNode.VrnExtType.RecordMember, NewType: RecordType r) => GetTypeRecursive(r, variableReferenceNode) ?? variable.NewType,
+                (ExtensionType: VariableReferenceNode.VrnExtType.RecordMember, NewType: ReferenceType(RecordType r)) => GetTypeRecursive(r, variableReferenceNode) ?? variable.NewType,
                 (ExtensionType: VariableReferenceNode.VrnExtType.ArrayIndex, NewType: ArrayType a) =>
                     GetTypeOfExpression(variableReferenceNode.Extension!, variables) is IntegerType
                         ? a.Inner
@@ -505,24 +505,24 @@ public class SemanticAnalysis
     //if we checked for an extension when the target should be one of these types, an error is thrown, so if there is no extension
     //on the variable reference node, we return null to the previous recursive pass, which returns either VariableNode.DataType.Record
     //or Reference depending on what the previous loop found
-    private static IType GetTypeRecursive(
+    private static IType? GetTypeRecursive(
         // ModuleNode parentModule,
         RecordType targetDefinition,
         VariableReferenceNode targetUsage
     )
     {
         if (targetUsage.Extension is null)
-            return targetDefinition;
+            return null;
         var vndt = targetDefinition.Fields[targetUsage.GetRecordMemberReferenceSafe().Name];
 
         var innerVndt = vndt switch
         {
             RecordType r => r,
             ReferenceType(RecordType r1) => r1,
-            _ => (RecordType?)null
+            _ => null
         };
-        return innerVndt is { } recordType
-            ? GetTypeRecursive( recordType, (VariableReferenceNode)targetUsage.GetExtensionSafe())
+        return innerVndt is not null
+            ? GetTypeRecursive( innerVndt, (VariableReferenceNode)targetUsage.GetExtensionSafe()) ?? vndt
             : vndt; 
         
 
@@ -599,6 +599,7 @@ public class SemanticAnalysis
         HandleExports();
         HandleImports();
         handleUnknownTypes();
+        AssignNestedTypes();
         handleTests();
         foreach (KeyValuePair<string, ModuleNode> module in Modules)
         {
@@ -664,6 +665,7 @@ public class SemanticAnalysis
         StartModule = pn.GetStartModuleSafe();
         HandleExports();
         HandleImports();
+        AssignNestedTypes();
         handleUnknownTypes();
         handleTests();
         foreach (KeyValuePair<string, ModuleNode> module in Modules)
@@ -865,38 +867,13 @@ public class SemanticAnalysis
                         currentModule.Value.Records,
                         currentModule.Value.Imported
                     );
-                    if (variable.NewType is UnknownType unknownType)
-                    {
-                        if (enumsAndImports.TryGetValue(unknownType.TypeName, out var enumType)
-                            && enumType is EnumNode e
-                           )
-                        {
-                            variable.NewType = e.NewType;
-                            if (unknownType.TypeParameters.Count != 0)
-                            {
-                                throw new SemanticErrorException("type parameter are not allowed for enums", variable);
-                            }
-                        }
-                        else if (
-                            variable.NewType is UnknownType u
-                            && recordsAndImports.TryGetValue(u.TypeName, out var type)
-                            && type is RecordNode r
-                        )
-                        {
-                            variable.NewType = r.NewType;
-                            var allRecords = GetRecordsAndImports(
-                                currentModule.Value.Records,
-                                currentModule.Value.Imported
-                            );
-
-                            AssignNestedRecordTypes(r.Members, currentModule.Value);
-                        }
-                        else
-                            throw new Exception(
-                                "Could not find a definition for the unknown type "
-                                + unknownType.TypeName
-                            );
-                    }
+                    variable.NewType = variable.NewType switch
+                                            {
+                                                UnknownType u => ResolveType(u, currentModule.Value, currentFunction.GenericTypeParameterNames),
+                                                ReferenceType (UnknownType u)   => new ReferenceType(ResolveType(u, currentModule.Value, currentFunction.GenericTypeParameterNames)),
+                                                {} type => type
+                                            };
+                    
                 }
 
                 // foreach (var statement in currentFunction.Statements)
@@ -921,34 +898,6 @@ public class SemanticAnalysis
         return dictionary.TryGetValue(key, out var value) && (value is U v && (result = v) == v);
     }
 
-    public static void AssignNestedRecordTypes(
-        List<StatementNode> statements,
-        ModuleNode parentModule
-    )
-    {
-        foreach (var statement in statements)
-        {
-            var rmn = (RecordMemberNode)statement;
-            if (rmn.NewType is UnknownType u)
-            {
-                if (
-                    parentModule.Records.TryGetValue(u.TypeName, out var record) ||
-                    Lookup(parentModule.Imported, u.TypeName, ref record)
-                )
-                {
-                    rmn.NewType = record!.NewType;
-                }
-                else if (
-                    parentModule.Enums.TryGetValue(u.TypeName, out var enumType) ||
-                    Lookup(parentModule.Imported, u.TypeName, ref enumType)
-                )
-                {
-                    rmn.NewType = enumType!.NewType;
-                }
-            }
-        }
-    }
-
     public static void Experimental()
     {
         var a = GetStartModuleSafe()
@@ -957,6 +906,45 @@ public class SemanticAnalysis
             string.Join("\n", a.Select((n, i) => i + ": " + n.NodeName + " `" + n + "'")),
             "getContents"
         );
+    }
+
+    public static void AssignNestedTypes()
+    {
+        Dictionary<(string, string), RecordNode> resolvedRecords = new();
+        foreach (var module in Modules.Values)
+        {
+            foreach (var record in module.Records.Values)
+            {
+                record.NewType.Fields =
+                
+                    record.NewType.Fields.Select(field =>
+                        {
+                            var unknown = field.Value switch
+                            {
+                                UnknownType u => ResolveType(u, module, record.NewType.Generics),
+                                ReferenceType (UnknownType u) => new ReferenceType(ResolveType(u, module,
+                                    record.NewType.Generics)),
+                                _ => field.Value
+                            };
+                            return KeyValuePair.Create(field.Key, unknown);
+                        })
+                        .ToDictionary();
+                 
+            }
+        }
+    }
+
+    private static IType ResolveType(UnknownType member, ModuleNode module, List<string> generics)
+    {
+        var resolveType = module.Records.GetValueOrDefault(member.TypeName)?.NewType ??
+                          (IType?)module.Enums.GetValueOrDefault(member.TypeName)?.NewType ?? (generics.Contains(member.TypeName)
+                              ? member
+                              : throw new SemanticErrorException($"Unbound type {member}", module));
+        if (resolveType is EnumType && member.TypeParameters.Count != 0)
+        {
+            throw new SemanticErrorException($"Enums do not have generic types", module);
+        }
+        return resolveType;
     }
 
     public static void reset()

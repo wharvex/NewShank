@@ -458,7 +458,7 @@ public class BuiltInFunctions
     public static void AllocateMemory(List<InterpreterDataType> parameters)
     {
         if (parameters[0] is ReferenceDataType rdt)
-            rdt.Record = new RecordDataType(rdt.RecordType.Members2);
+            rdt.Record = new RecordDataType(rdt.RecordType.NewType.Fields);
         else
             throw new Exception("Can only allocate memory for record pointers.");
     }

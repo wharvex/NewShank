@@ -333,8 +333,7 @@ public class Parser
 
         RequiresEndOfLine();
 
-        var recNode = new RecordNode(name.GetValueSafe(), moduleName, genericTypeParameterNames);
-        BodyRecord(recNode);
+        var recNode = new RecordNode(name.GetValueSafe(), moduleName, BodyRecord(moduleName), genericTypeParameterNames);
         return recNode;
     }
 
@@ -360,12 +359,12 @@ public class Parser
         StatementsBody(function.Statements);
     }
 
-    private void BodyRecord(RecordNode record)
+    private List<VariableNode> BodyRecord(string parentModule)
     {
         //StatementsBody(record.Members, true);
-        var members = record.Members2.Select(vn => (ASTNode)vn).ToList();
-        Body(members, record.ParentModuleName, GetVariablesRecord);
-        record.Members2.AddRange(members.Select(an => (VariableNode)an));
+        List<ASTNode> bodyContents = [];
+        Body(bodyContents, parentModule, GetVariablesRecord);
+        return bodyContents.Cast<VariableNode>().ToList();
     }
 
     private void StatementsBody(List<StatementNode> statements, bool isRecord = false)
@@ -1466,7 +1465,7 @@ public class Parser
             );
         }
 
-        EnumNode enumNode = new EnumNode(token.Value, parentModuleName, GetEnumElements());
+        EnumNode enumNode = new EnumNode(token.Value, parentModuleName, GetEnumElements().ToList());
         return enumNode;
     }
 

@@ -65,7 +65,7 @@ broken means it is broken due to the refactor
    - [x] ModuleTest2_3.shank
 - [x] Negative
    - [x] negativesTest.shank
-- [ ] OldShankFiles
+- [x] OldShankFiles
    - [x] arraySum.shank
    - [x] catalan.shank
    - [x] collatz.shank
@@ -84,8 +84,8 @@ broken means it is broken due to the refactor
 - [ ] Records
    - [ ] complex
       - [ ] recordTest.shank - old syntax
-   - [ ] nested
-      - [ ] nestedRecords.shank - broken because recursive records not working
+   - [x] nested
+      - [x] nestedRecords.shank
    - [x] simple
        - [x] recordTest.shank
 - [x] String

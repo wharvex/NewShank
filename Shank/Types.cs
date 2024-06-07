@@ -55,21 +55,31 @@ public record struct CharacterType(Range Range) : IRangeType
     public CharacterType() : this(Range.DefaultCharacter()) {}
 }
 
-public readonly record struct EnumType(string Name, List<string> Variants) : IType
+public class EnumType(string name, List<string> variants) : IType
 {
-    // even though record struct implement equal they do not do the right thing for collections see https://github.com/dotnet/csharplang/discussions/5767
-    public bool Equals(EnumType other) => Name == other.Name && Variants.SequenceEqual(other.Variants);
+    public string Name { get; } = name;
+    public List<string> Variants { get; } = variants;
+} // enums are just a list of variants
 
-    public override int GetHashCode() => HashCode.Combine(Name, Variants);
-}; // enums are just a list of variants
-
-public readonly record struct RecordType(string Name, Dictionary<string, IType> Fields, List<string> Generics) : IType
+public  class RecordType(string name, Dictionary<string, IType> fields, List<string> generics) : IType
 {
-    
-    // even though record struct implement equal they do not do the right thing for collections see https://github.com/dotnet/csharplang/discussions/5767
-    public bool Equals(RecordType other) => Name == other.Name && Fields.SequenceEqual(other.Fields) && Generics.SequenceEqual(other.Generics);
+    public List<string> Generics
+    {
+        get;
+        set;
+    } = generics;
 
-    public override int GetHashCode() => HashCode.Combine(Name, Fields, Generics);
+    public Dictionary<string, IType> Fields
+    {
+        get;
+        set ;
+    } = fields;
+
+    public string Name
+    {
+        get;
+    } = name;
+
 } // records need to keep the types of their members along with any generics they declare
 
 public record struct ArrayType(IType Inner, Range Range ) : IRangeType // arrays have only one inner type
@@ -83,6 +93,7 @@ public readonly record struct UnknownType(string TypeName, List<IType> TypeParam
     public UnknownType(string TypeName) : this(TypeName, []) {}
 
     // even though record struct implement equal they do not do the right thing for collections see https://github.com/dotnet/csharplang/discussions/5767
+    // what does equality even mean here?
     public bool Equals(UnknownType other) => TypeName == other.TypeName && TypeParameters.SequenceEqual(other.TypeParameters);
 
     public override int GetHashCode() => HashCode.Combine(TypeName, TypeParameters);

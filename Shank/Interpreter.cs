@@ -762,7 +762,7 @@ public class Interpreter
             {
                 _ = (parentModule.Records.TryGetValue(r.Name, out var record) ||
                      Lookup(parentModule.Imported, r.Name, ref record));
-                return new RecordDataType(record!.Members2);
+                return new RecordDataType(record!.NewType.Fields);
             }
             case EnumType e:
             {
@@ -918,7 +918,7 @@ public class Interpreter
 
     private static bool EnumLessThan(EnumDataType left, EnumDataType right)
     {
-        var enumElements = left.Type.EnumElements.ToArray();
+        var enumElements = left.Type.NewType.Variants.ToArray();
         int leftIndex = 0,
             rightIndex = 0;
         for (int i = 0; i < enumElements.Length; i++)
@@ -933,7 +933,7 @@ public class Interpreter
 
     private static bool EnumLessThan(EnumDataType left, string right)
     {
-        var enumElements = left.Type.EnumElements.ToArray();
+        var enumElements = left.Type.NewType.Variants.ToArray();
         int leftIndex = 0,
             rightIndex = 0;
         for (int i = 0; i < enumElements.Length; i++)

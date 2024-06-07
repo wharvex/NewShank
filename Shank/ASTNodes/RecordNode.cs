@@ -8,23 +8,25 @@ public class RecordNode : StatementNode
 {
     public string Name { get; init; }
 
-    public List<string>? GenericTypeParameterNames { get; init; }
+    // public List<string>? GenericTypeParameterNames { get; init; }
 
-    public IType NewType => new RecordType(Name, Members2.Select((node => (node.Name, node.NewType))).ToDictionary(), GenericTypeParameterNames);
+    public RecordType NewType;
 
     public string ParentModuleName { get; init; }
 
-    public List<StatementNode> Members { get; init; }
-    public List<VariableNode> Members2 { get; init; }
+    // public List<StatementNode> Members { get; init; }
+    // public List<VariableNode> Members2 { get; init; }
     public bool IsPublic { get; set; }
 
-    public RecordNode(string name, string moduleName, List<string>? genericTypeParameterNames)
+    public RecordNode(string name, string moduleName, List<VariableNode> members, List<string>? genericTypeParameterNames)
     {
         Name = name;
         ParentModuleName = moduleName;
-        GenericTypeParameterNames = genericTypeParameterNames;
-        Members = [];
-        Members2 = [];
+        NewType = new RecordType(name, members.Select(member => (member.Name, member.NewType)).ToDictionary(),
+            genericTypeParameterNames ?? []);
+        // GenericTypeParameterNames = genericTypeParameterNames;
+        // Members = [];
+        // Members2 = [];
         IsPublic = false;
     }
 
@@ -34,15 +36,15 @@ public class RecordNode : StatementNode
             ?? throw new ArgumentNullException(nameof(sn), "Expected StatementNode to not be null")
         );
 
-    public VariableNode? GetFromMembersByName(string name) =>
-        Members2.FirstOrDefault(v => v?.Name?.Equals(name) ?? false, null);
-
-    public VariableNode GetFromMembersByNameSafe(string name) =>
-        GetFromMembersByName(name)
-        ?? throw new ArgumentOutOfRangeException(
-            nameof(name),
-            "Member " + name + " not found on record."
-        );
+    // public VariableNode? GetFromMembersByName(string name) =>
+    //     Members2.FirstOrDefault(v => v?.Name?.Equals(name) ?? false, null);
+    //
+    // public VariableNode GetFromMembersByNameSafe(string name) =>
+        // GetFromMembersByName(name)
+        // ?? throw new ArgumentOutOfRangeException(
+        //     nameof(name),
+        //     "Member " + name + " not found on record."
+        // );
 
     public string GetParentModuleSafe()
     {

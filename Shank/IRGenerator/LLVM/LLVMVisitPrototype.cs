@@ -52,10 +52,10 @@ public class LLVMVisitPrototype : VisitPrototype
 
     public override void Accept(RecordNode node)
     {
-        var args = node.Members2.Select(
+        var args = node.NewType.Fields.Select(
             s =>
-                _context.GetLLVMTypeFromShankType(s.NewType)
-                ?? throw new CompilerException($"type of parameter {s.Name} is not found", s.Line)
+                _context.GetLLVMTypeFromShankType(s.Value)
+                ?? throw new CompilerException($"type of parameter {s.Key} is not found", node.Line)
         );
         var a = LLVMTypeRef.CreateStruct(args.ToArray(), false);
         _context.CurrentModule.CustomTypes.Add(node.Name, a);
