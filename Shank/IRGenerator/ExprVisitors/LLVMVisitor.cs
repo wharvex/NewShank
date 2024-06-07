@@ -108,11 +108,11 @@ public class LLVMVisitor : Visitor<LLVMValueRef>
         {
             return node.Op switch
             {
-                ASTNode.MathOpType.plus => _builder.BuildAdd(L, R, "addtmp"),
-                ASTNode.MathOpType.minus => _builder.BuildSub(L, R, "subtmp"),
-                ASTNode.MathOpType.times => _builder.BuildMul(L, R, "multmp"),
-                ASTNode.MathOpType.divide => _builder.BuildSDiv(L, R, "divtmp"),
-                ASTNode.MathOpType.modulo => _builder.BuildURem(L, R, "modtmp"),
+                MathOpNode.MathOpType.Plus => _builder.BuildAdd(L, R, "addtmp"),
+                MathOpNode.MathOpType.Minus => _builder.BuildSub(L, R, "subtmp"),
+                MathOpNode.MathOpType.Times => _builder.BuildMul(L, R, "multmp"),
+                MathOpNode.MathOpType.Divide => _builder.BuildSDiv(L, R, "divtmp"),
+                MathOpNode.MathOpType.Modulo => _builder.BuildURem(L, R, "modtmp"),
                 _ => throw new Exception("unsupported operation")
             };
         }
@@ -120,16 +120,16 @@ public class LLVMVisitor : Visitor<LLVMValueRef>
         {
             return node.Op switch
             {
-                ASTNode.MathOpType.plus => _builder.BuildFAdd(L, R, "addtmp"),
-                ASTNode.MathOpType.minus => _builder.BuildFSub(L, R, "subtmp"),
-                ASTNode.MathOpType.times => _builder.BuildFMul(L, R, "multmp"),
-                ASTNode.MathOpType.divide => _builder.BuildFDiv(L, R, "divtmp"),
+                MathOpNode.MathOpType.Plus => _builder.BuildFAdd(L, R, "addtmp"),
+                MathOpNode.MathOpType.Minus => _builder.BuildFSub(L, R, "subtmp"),
+                MathOpNode.MathOpType.Times => _builder.BuildFMul(L, R, "multmp"),
+                MathOpNode.MathOpType.Divide => _builder.BuildFDiv(L, R, "divtmp"),
                 _ => throw new Exception("unsupported operation")
             };
         }
         else if (_types(L.TypeOf) == Types.STRING)
         {
-            if (node.Op == ASTNode.MathOpType.plus)
+            if (node.Op == MathOpNode.MathOpType.Plus)
             {
                 LLVMValueRef r = node.Right.Visit(this, _context, _builder, _module);
                 LLVMValueRef l = node.Left.Visit(this, _context, _builder, _module);
@@ -188,15 +188,15 @@ public class LLVMVisitor : Visitor<LLVMValueRef>
         {
             return node.Op switch
             {
-                ASTNode.BooleanExpressionOpType.eq
+                BooleanExpressionNode.BooleanExpressionOpType.eq
                     => _builder.BuildICmp(LLVMIntPredicate.LLVMIntEQ, L, R, "cmp"),
-                ASTNode.BooleanExpressionOpType.lt
+                BooleanExpressionNode.BooleanExpressionOpType.lt
                     => _builder.BuildICmp(LLVMIntPredicate.LLVMIntSLT, L, R, "cmp"),
-                ASTNode.BooleanExpressionOpType.le
+                BooleanExpressionNode.BooleanExpressionOpType.le
                     => _builder.BuildICmp(LLVMIntPredicate.LLVMIntSLE, L, R, "cmp"),
-                ASTNode.BooleanExpressionOpType.gt
+                BooleanExpressionNode.BooleanExpressionOpType.gt
                     => _builder.BuildICmp(LLVMIntPredicate.LLVMIntSGT, L, R, "cmp"),
-                ASTNode.BooleanExpressionOpType.ge
+                BooleanExpressionNode.BooleanExpressionOpType.ge
                     => _builder.BuildICmp(LLVMIntPredicate.LLVMIntSGE, L, R, "cmp"),
 
                 _ => throw new Exception("not accepted op")
@@ -206,15 +206,15 @@ public class LLVMVisitor : Visitor<LLVMValueRef>
         {
             return node.Op switch
             {
-                ASTNode.BooleanExpressionOpType.eq
+                BooleanExpressionNode.BooleanExpressionOpType.eq
                     => _builder.BuildFCmp(LLVMRealPredicate.LLVMRealOEQ, L, R, "cmp"),
-                ASTNode.BooleanExpressionOpType.lt
+                BooleanExpressionNode.BooleanExpressionOpType.lt
                     => _builder.BuildFCmp(LLVMRealPredicate.LLVMRealOLT, L, R, "cmp"),
-                ASTNode.BooleanExpressionOpType.le
+                BooleanExpressionNode.BooleanExpressionOpType.le
                     => _builder.BuildFCmp(LLVMRealPredicate.LLVMRealOLE, L, R, "cmp"),
-                ASTNode.BooleanExpressionOpType.gt
+                BooleanExpressionNode.BooleanExpressionOpType.gt
                     => _builder.BuildFCmp(LLVMRealPredicate.LLVMRealOGT, L, R, "cmp"),
-                ASTNode.BooleanExpressionOpType.ge
+                BooleanExpressionNode.BooleanExpressionOpType.ge
                     => _builder.BuildFCmp(LLVMRealPredicate.LLVMRealOGE, L, R, "cmp"),
 
                 _ => throw new Exception("")

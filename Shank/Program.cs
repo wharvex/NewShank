@@ -1,4 +1,6 @@
-﻿namespace Shank;
+﻿using Shank.ASTNodes;
+
+namespace Shank;
 
 public class Program
 {

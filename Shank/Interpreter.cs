@@ -656,7 +656,7 @@ public class Interpreter
     )
     {
         var pnVrn = pn.GetVariableSafe();
-        if (pnVrn.ExtensionType == ASTNode.VrnExtType.RecordMember)
+        if (pnVrn.ExtensionType == VariableReferenceNode.VrnExtType.RecordMember)
         {
             var rmVrn = pnVrn.GetRecordMemberReferenceSafe();
             paramsList.Add(
@@ -863,12 +863,12 @@ public class Interpreter
             var rf = ResolveFloat(ben.Right, variables);
             return ben.Op switch
             {
-                ASTNode.BooleanExpressionOpType.lt => lf < rf,
-                ASTNode.BooleanExpressionOpType.le => lf <= rf,
-                ASTNode.BooleanExpressionOpType.gt => lf > rf,
-                ASTNode.BooleanExpressionOpType.ge => lf >= rf,
-                ASTNode.BooleanExpressionOpType.eq => lf == rf,
-                ASTNode.BooleanExpressionOpType.ne => lf != rf,
+                BooleanExpressionNode.BooleanExpressionOpType.lt => lf < rf,
+                BooleanExpressionNode.BooleanExpressionOpType.le => lf <= rf,
+                BooleanExpressionNode.BooleanExpressionOpType.gt => lf > rf,
+                BooleanExpressionNode.BooleanExpressionOpType.ge => lf >= rf,
+                BooleanExpressionNode.BooleanExpressionOpType.eq => lf == rf,
+                BooleanExpressionNode.BooleanExpressionOpType.ne => lf != rf,
                 _ => throw new Exception("Unknown boolean operation")
             };
         }
@@ -880,12 +880,12 @@ public class Interpreter
             var rf = ResolveInt(ben.Right, variables);
             return ben.Op switch
             {
-                ASTNode.BooleanExpressionOpType.lt => lf < rf,
-                ASTNode.BooleanExpressionOpType.le => lf <= rf,
-                ASTNode.BooleanExpressionOpType.gt => lf > rf,
-                ASTNode.BooleanExpressionOpType.ge => lf >= rf,
-                ASTNode.BooleanExpressionOpType.eq => lf == rf,
-                ASTNode.BooleanExpressionOpType.ne => lf != rf,
+                BooleanExpressionNode.BooleanExpressionOpType.lt => lf < rf,
+                BooleanExpressionNode.BooleanExpressionOpType.le => lf <= rf,
+                BooleanExpressionNode.BooleanExpressionOpType.gt => lf > rf,
+                BooleanExpressionNode.BooleanExpressionOpType.ge => lf >= rf,
+                BooleanExpressionNode.BooleanExpressionOpType.eq => lf == rf,
+                BooleanExpressionNode.BooleanExpressionOpType.ne => lf != rf,
                 _ => throw new Exception("Unknown boolean operation")
             };
         }
@@ -903,30 +903,30 @@ public class Interpreter
                     {
                         return ben.Op switch
                         {
-                            ASTNode.BooleanExpressionOpType.eq
+                            BooleanExpressionNode.BooleanExpressionOpType.eq
                                 => variables[left.Name].ToString()
                                     == variables[right.Name].ToString(),
-                            ASTNode.BooleanExpressionOpType.ne
+                            BooleanExpressionNode.BooleanExpressionOpType.ne
                                 => variables[left.Name].ToString()
                                     != variables[right.Name].ToString(),
-                            ASTNode.BooleanExpressionOpType.lt
+                            BooleanExpressionNode.BooleanExpressionOpType.lt
                                 => EnumLessThan(
                                     (EnumDataType)variables[left.Name],
                                     (EnumDataType)variables[right.Name]
                                 ),
-                            ASTNode.BooleanExpressionOpType.gt
+                            BooleanExpressionNode.BooleanExpressionOpType.gt
                                 => !EnumLessThan(
                                     (EnumDataType)variables[left.Name],
                                     (EnumDataType)variables[right.Name]
                                 ),
-                            ASTNode.BooleanExpressionOpType.le
+                            BooleanExpressionNode.BooleanExpressionOpType.le
                                 => EnumLessThan(
                                     (EnumDataType)variables[left.Name],
                                     (EnumDataType)variables[right.Name]
                                 )
                                     || variables[left.Name].ToString()
                                         == variables[right.Name].ToString(),
-                            ASTNode.BooleanExpressionOpType.ge
+                            BooleanExpressionNode.BooleanExpressionOpType.ge
                                 => !EnumLessThan(
                                     (EnumDataType)variables[left.Name],
                                     (EnumDataType)variables[right.Name]
@@ -940,18 +940,18 @@ public class Interpreter
                     {
                         return ben.Op switch
                         {
-                            ASTNode.BooleanExpressionOpType.eq
+                            BooleanExpressionNode.BooleanExpressionOpType.eq
                                 => left.Name == variables[right.Name].ToString(),
-                            ASTNode.BooleanExpressionOpType.ne
+                            BooleanExpressionNode.BooleanExpressionOpType.ne
                                 => left.Name != variables[right.Name].ToString(),
-                            ASTNode.BooleanExpressionOpType.lt
+                            BooleanExpressionNode.BooleanExpressionOpType.lt
                                 => EnumLessThan((EnumDataType)variables[right.Name], left.Name),
-                            ASTNode.BooleanExpressionOpType.gt
+                            BooleanExpressionNode.BooleanExpressionOpType.gt
                                 => !EnumLessThan((EnumDataType)variables[right.Name], left.Name),
-                            ASTNode.BooleanExpressionOpType.le
+                            BooleanExpressionNode.BooleanExpressionOpType.le
                                 => EnumLessThan((EnumDataType)variables[right.Name], left.Name)
                                     || left.Name == variables[right.Name].ToString(),
-                            ASTNode.BooleanExpressionOpType.ge
+                            BooleanExpressionNode.BooleanExpressionOpType.ge
                                 => !EnumLessThan((EnumDataType)variables[right.Name], left.Name)
                                     || left.Name == variables[right.Name].ToString(),
                             _ => throw new Exception("Enums can only be compared with <> and =.")
@@ -961,18 +961,18 @@ public class Interpreter
                     {
                         return ben.Op switch
                         {
-                            ASTNode.BooleanExpressionOpType.eq
+                            BooleanExpressionNode.BooleanExpressionOpType.eq
                                 => variables[left.Name].ToString() == right.Name,
-                            ASTNode.BooleanExpressionOpType.ne
+                            BooleanExpressionNode.BooleanExpressionOpType.ne
                                 => variables[left.Name].ToString() != right.Name,
-                            ASTNode.BooleanExpressionOpType.lt
+                            BooleanExpressionNode.BooleanExpressionOpType.lt
                                 => EnumLessThan((EnumDataType)variables[left.Name], right.Name),
-                            ASTNode.BooleanExpressionOpType.gt
+                            BooleanExpressionNode.BooleanExpressionOpType.gt
                                 => !EnumLessThan((EnumDataType)variables[left.Name], right.Name),
-                            ASTNode.BooleanExpressionOpType.le
+                            BooleanExpressionNode.BooleanExpressionOpType.le
                                 => EnumLessThan((EnumDataType)variables[left.Name], right.Name)
                                     || right.Name == variables[left.Name].ToString(),
-                            ASTNode.BooleanExpressionOpType.ge
+                            BooleanExpressionNode.BooleanExpressionOpType.ge
                                 => !EnumLessThan((EnumDataType)variables[left.Name], right.Name)
                                     || right.Name == variables[left.Name].ToString(),
                             _ => throw new Exception("Enums can only be compared with <> and =.")
@@ -1025,7 +1025,7 @@ public class Interpreter
             StringNode sn => sn.Value,
             CharNode cn => cn.Value.ToString(),
             MathOpNode mon
-                => mon.Op == ASTNode.MathOpType.plus
+                => mon.Op == MathOpNode.MathOpType.Plus
                     ? ResolveString(mon.Left, variables) + ResolveString(mon.Right, variables)
                     : throw new NotImplementedException(
                         "It has not been implemented to perform any math operation on"
@@ -1034,11 +1034,11 @@ public class Interpreter
             VariableReferenceNode vrn
                 => vrn.ExtensionType switch
                 {
-                    ASTNode.VrnExtType.ArrayIndex
+                    VariableReferenceNode.VrnExtType.ArrayIndex
                         => ((ArrayDataType)variables[vrn.Name]).GetElementString(
                             ResolveInt(vrn.GetExtensionSafe(), variables)
                         ),
-                    ASTNode.VrnExtType.RecordMember
+                    VariableReferenceNode.VrnExtType.RecordMember
                         => ((RecordDataType)variables[vrn.Name]).GetValueString(
                             vrn.GetRecordMemberReferenceSafe().Name
                         ),
@@ -1062,11 +1062,11 @@ public class Interpreter
         {
             return vrn.ExtensionType switch
             {
-                ASTNode.VrnExtType.ArrayIndex
+                VariableReferenceNode.VrnExtType.ArrayIndex
                     => ((ArrayDataType)variables[vrn.Name]).GetElementCharacter(
                         ResolveInt(vrn.GetExtensionSafe(), variables)
                     ),
-                ASTNode.VrnExtType.RecordMember
+                VariableReferenceNode.VrnExtType.RecordMember
                     => ((RecordDataType)variables[vrn.Name]).GetValueCharacter(
                         vrn.GetRecordMemberReferenceSafe().Name
                     ),
@@ -1091,15 +1091,15 @@ public class Interpreter
             var right = ResolveFloat(mon.Right, variables);
             switch (mon.Op)
             {
-                case MathOpNode.MathOpType.plus:
+                case MathOpNode.MathOpType.Plus:
                     return left + right;
-                case MathOpNode.MathOpType.minus:
+                case MathOpNode.MathOpType.Minus:
                     return left - right;
-                case MathOpNode.MathOpType.times:
+                case MathOpNode.MathOpType.Times:
                     return left * right;
-                case MathOpNode.MathOpType.divide:
+                case MathOpNode.MathOpType.Divide:
                     return left / right;
-                case MathOpNode.MathOpType.modulo:
+                case MathOpNode.MathOpType.Modulo:
                     return left % right;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -1111,11 +1111,11 @@ public class Interpreter
         {
             return vrn.ExtensionType switch
             {
-                ASTNode.VrnExtType.ArrayIndex
+                VariableReferenceNode.VrnExtType.ArrayIndex
                     => ((ArrayDataType)variables[vrn.Name]).GetElementReal(
                         ResolveInt(vrn.GetExtensionSafe(), variables)
                     ),
-                ASTNode.VrnExtType.RecordMember
+                VariableReferenceNode.VrnExtType.RecordMember
                     => ((RecordDataType)variables[vrn.Name]).GetValueReal(
                         vrn.GetRecordMemberReferenceSafe().Name
                     ),
@@ -1134,15 +1134,15 @@ public class Interpreter
             var right = ResolveInt(mon.Right, variables);
             switch (mon.Op)
             {
-                case MathOpNode.MathOpType.plus:
+                case MathOpNode.MathOpType.Plus:
                     return left + right;
-                case MathOpNode.MathOpType.minus:
+                case MathOpNode.MathOpType.Minus:
                     return left - right;
-                case MathOpNode.MathOpType.times:
+                case MathOpNode.MathOpType.Times:
                     return left * right;
-                case MathOpNode.MathOpType.divide:
+                case MathOpNode.MathOpType.Divide:
                     return left / right;
-                case MathOpNode.MathOpType.modulo:
+                case MathOpNode.MathOpType.Modulo:
                     return left % right;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -1154,11 +1154,11 @@ public class Interpreter
         {
             return vrn.ExtensionType switch
             {
-                ASTNode.VrnExtType.ArrayIndex
+                VariableReferenceNode.VrnExtType.ArrayIndex
                     => ((ArrayDataType)variables[vrn.Name]).GetElementInteger(
                         ResolveInt(vrn.GetExtensionSafe(), variables)
                     ),
-                ASTNode.VrnExtType.RecordMember
+                VariableReferenceNode.VrnExtType.RecordMember
                     => ((RecordDataType)variables[vrn.Name]).GetValueInteger(
                         vrn.GetRecordMemberReferenceSafe().Name
                     ),
@@ -1251,15 +1251,15 @@ public class Interpreter
             var right = ResolveIntBeforeVarDecs(mon.Right);
             switch (mon.Op)
             {
-                case MathOpNode.MathOpType.plus:
+                case MathOpNode.MathOpType.Plus:
                     return left + right;
-                case MathOpNode.MathOpType.minus:
+                case MathOpNode.MathOpType.Minus:
                     return left - right;
-                case MathOpNode.MathOpType.times:
+                case MathOpNode.MathOpType.Times:
                     return left * right;
-                case MathOpNode.MathOpType.divide:
+                case MathOpNode.MathOpType.Divide:
                     return left / right;
-                case MathOpNode.MathOpType.modulo:
+                case MathOpNode.MathOpType.Modulo:
                     return left % right;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(mon.Op), "Invalid operation type");

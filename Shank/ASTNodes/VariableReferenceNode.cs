@@ -2,7 +2,7 @@ using LLVMSharp.Interop;
 using Shank.ASTNodes;
 using Shank.ExprVisitors;
 
-namespace Shank;
+namespace Shank.ASTNodes;
 
 public class VariableReferenceNode : ASTNode
 {
@@ -118,5 +118,13 @@ public class VariableReferenceNode : ASTNode
     public override T Visit<T>(ExpressionVisitor<T> visit)
     {
         return visit.Accept(this);
+    }
+
+    public enum VrnExtType
+    {
+        RecordMember,
+        ArrayIndex,
+        Enum,
+        None
     }
 }

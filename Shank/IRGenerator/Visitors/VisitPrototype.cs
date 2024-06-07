@@ -1,3 +1,5 @@
+using Shank.ASTNodes;
+
 namespace Shank.ExprVisitors;
 
 public abstract class VisitPrototype

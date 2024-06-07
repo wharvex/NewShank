@@ -182,7 +182,7 @@ public class Parser
                 return new VariableReferenceNode(
                     id.GetValueSafe(),
                     exp,
-                    ASTNode.VrnExtType.ArrayIndex
+                    VariableReferenceNode.VrnExtType.ArrayIndex
                 );
             }
             if (MatchAndRemove(Token.TokenType.Dot) is not null)
@@ -196,7 +196,7 @@ public class Parser
                 return new VariableReferenceNode(
                     id.GetValueSafe(),
                     varRef,
-                    ASTNode.VrnExtType.RecordMember
+                    VariableReferenceNode.VrnExtType.RecordMember
                 );
             }
             return new VariableReferenceNode(id.GetValueSafe());
@@ -1193,7 +1193,7 @@ public class Parser
             var rt = Term();
             if (rt == null)
                 throw new SyntaxErrorException("Expected a term.", Peek(0));
-            lt = new MathOpNode(lt, MathOpNode.MathOpType.plus, rt);
+            lt = new MathOpNode(lt, MathOpNode.MathOpType.Plus, rt);
             return ExpressionRHS(lt);
         }
         else if (MatchAndRemove(Token.TokenType.Minus) != null)
@@ -1201,7 +1201,7 @@ public class Parser
             var rt = Term();
             if (rt == null)
                 throw new SyntaxErrorException("Expected a term.", Peek(0));
-            lt = new MathOpNode(lt, MathOpNode.MathOpType.minus, rt);
+            lt = new MathOpNode(lt, MathOpNode.MathOpType.Minus, rt);
             return ExpressionRHS(lt);
         }
         else if (MatchAndRemove(Token.TokenType.LessEqual) != null)
@@ -1291,7 +1291,7 @@ public class Parser
             var rt = Factor();
             if (rt == null)
                 throw new SyntaxErrorException("Expected a factor.", Peek(0));
-            lt = new MathOpNode(lt, MathOpNode.MathOpType.times, rt);
+            lt = new MathOpNode(lt, MathOpNode.MathOpType.Times, rt);
             return TermRHS(lt);
         }
         else if (MatchAndRemove(Token.TokenType.Divide) != null)
@@ -1299,7 +1299,7 @@ public class Parser
             var rt = Factor();
             if (rt == null)
                 throw new SyntaxErrorException("Expected a factor.", Peek(0));
-            lt = new MathOpNode(lt, MathOpNode.MathOpType.divide, rt);
+            lt = new MathOpNode(lt, MathOpNode.MathOpType.Divide, rt);
             return TermRHS(lt);
         }
         else if (MatchAndRemove(Token.TokenType.Mod) != null)
@@ -1307,7 +1307,7 @@ public class Parser
             var rt = Factor();
             if (rt == null)
                 throw new SyntaxErrorException("Expected a factor.", Peek(0));
-            lt = new MathOpNode(lt, MathOpNode.MathOpType.modulo, rt);
+            lt = new MathOpNode(lt, MathOpNode.MathOpType.Modulo, rt);
             return TermRHS(lt);
         }
         else

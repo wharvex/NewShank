@@ -63,7 +63,7 @@ namespace TranUnitTests
         [TestMethod]
         public void OneSymbols()
         {
-            string file = "} ( ) = > < + ^ + - : * / % , ! \"";
+            string file = "} ( ) = > < + ^ + - : * / % , ! \" \n \t";
             Lexer lexer = new Lexer(file);
             LinkedList<Token> tokens = lexer.Lex();
             string actualTokensString = string.Join("\n", tokens) + "\n";
@@ -85,6 +85,8 @@ namespace TranUnitTests
                 + " COMMA\n"
                 + " NOT\n"
                 + " QUOTE\n"
+                + " NEWLINE\n"
+                + " TAB\n"
                 + " SEPARATOR\n";
 
             Assert.AreEqual(expectedTokensString, actualTokensString);
@@ -93,7 +95,7 @@ namespace TranUnitTests
         [TestMethod]
         public void TwoCharacterHashmap()
         {
-            string file = ">= ++ -- <= == != ^= %= *= /= += -= && ||";
+            string file = ">= ++ -- <= == != ^= %= *= /= += -= && || \n\t";
             Lexer lexer = new Lexer(file);
             LinkedList<Token> tokens = lexer.Lex();
             string actualTokensString = string.Join("\n", tokens) + "\n";
@@ -112,6 +114,7 @@ namespace TranUnitTests
                 + " MINUSEQUALS\n"
                 + " AND\n"
                 + " OR\n"
+                + " FUNCTIONSTATEMENT\n"
                 + " SEPARATOR\n";
             Assert.AreEqual(expectedTokensString, actualTokensString);
         }
@@ -147,8 +150,8 @@ namespace TranUnitTests
                 + " TRUE\n"
                 + " FALSE\n"
                 + " SHARED\n"
-                + " SEPARATOR\n"
-                + " SEPARATOR\n"
+                + " TAB\n"
+                + " NEWLINE\n"
                 + " RETURN\n"
                 + " SEPARATOR\n";
             Assert.AreEqual(expectedTokensString, actualTokensString);

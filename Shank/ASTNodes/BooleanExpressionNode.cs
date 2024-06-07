@@ -1,8 +1,7 @@
 using LLVMSharp.Interop;
-using Shank.ASTNodes;
 using Shank.ExprVisitors;
 
-namespace Shank;
+namespace Shank.ASTNodes;
 
 public class BooleanExpressionNode : ASTNode
 {
@@ -35,5 +34,15 @@ public class BooleanExpressionNode : ASTNode
     public override string ToString()
     {
         return $"({Left.ToString()} {Op} {Right.ToString()})";
+    }
+
+    public enum BooleanExpressionOpType
+    {
+        lt,
+        le,
+        gt,
+        ge,
+        eq,
+        ne
     }
 }
