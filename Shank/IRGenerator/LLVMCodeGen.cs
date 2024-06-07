@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using LLVMSharp.Interop;
+using Shank.ASTNodes;
 using Shank.ExprVisitors;
 
 namespace Shank;

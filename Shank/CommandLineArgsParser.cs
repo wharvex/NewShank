@@ -6,6 +6,7 @@ using LLVMSharp.Interop;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Shank;
+using Shank.ASTNodes;
 using Shank.IRGenerator.CompilerPractice;
 
 [Verb("Compile", isDefault: false)]

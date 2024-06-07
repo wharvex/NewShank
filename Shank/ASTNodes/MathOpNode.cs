@@ -2,7 +2,7 @@ using LLVMSharp.Interop;
 using Shank.ASTNodes;
 using Shank.ExprVisitors;
 
-namespace Shank;
+namespace Shank.ASTNodes;
 
 public class MathOpNode : ASTNode
 {
@@ -35,5 +35,14 @@ public class MathOpNode : ASTNode
     public override T Visit<T>(ExpressionVisitor<T> visit)
     {
         return visit.Accept(this);
+    }
+
+    public enum MathOpType
+    {
+        plus,
+        minus,
+        times,
+        divide,
+        modulo
     }
 }

@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 using LLVMSharp.Interop;
 using Shank.ExprVisitors;
@@ -21,33 +20,6 @@ public abstract class ASTNode
     public string InheritsDirectlyFrom { get; init; }
     public int Line { get; init; }
     public string FileName { get; init; } // "The AST needs filename added near line number and position"
-
-    public enum BooleanExpressionOpType
-    {
-        lt,
-        le,
-        gt,
-        ge,
-        eq,
-        ne
-    }
-
-    public enum MathOpType
-    {
-        plus,
-        minus,
-        times,
-        divide,
-        modulo
-    }
-
-    public enum VrnExtType
-    {
-        RecordMember,
-        ArrayIndex,
-        Enum,
-        None
-    }
 
     protected ASTNode()
     {
