@@ -1179,9 +1179,7 @@ public class SemanticAnalysis
                         {
                             if (assignment.Target.Name == variable.Name)
                             {
-                                assignment.Target.ExtensionType = VariableUsageNode
-                                    .VrnExtType
-                                    .Enum;
+                                assignment.Target.ExtensionType = VariableUsageNode.VrnExtType.Enum;
                             }
                         }
                     }

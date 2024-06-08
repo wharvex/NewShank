@@ -697,15 +697,9 @@ public class Interpreter
     public static InterpreterDataType GetNestedParam(RecordDataType rdt, VariableUsageNode vn)
     {
         var temp = rdt.Value[((VariableUsageNode)vn.GetExtensionSafe()).Name];
-        if (
-            temp is RecordDataType
-            && ((VariableUsageNode)vn.GetExtensionSafe()).Extension is null
-        )
+        if (temp is RecordDataType && ((VariableUsageNode)vn.GetExtensionSafe()).Extension is null)
         {
-            return GetNestedParam(
-                (RecordDataType)temp,
-                (VariableUsageNode)vn.GetExtensionSafe()
-            );
+            return GetNestedParam((RecordDataType)temp, (VariableUsageNode)vn.GetExtensionSafe());
         }
         if (
             temp is ReferenceDataType
