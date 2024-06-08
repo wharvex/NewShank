@@ -50,7 +50,7 @@ public class LLVMVisitor : Visitor<LLVMValueRef>
         return LLVMValueRef.CreateConstReal(LLVMTypeRef.Double, node.Value);
     }
 
-    public override LLVMValueRef Visit(VariableReferenceNode node)
+    public override LLVMValueRef Visit(VariableUsageNode node)
     {
         LLVMValue value = _context.GetVaraible(node.Name);
         return _builder.BuildLoad2(value.TypeRef, value.ValueRef);

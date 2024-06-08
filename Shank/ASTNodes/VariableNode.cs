@@ -118,16 +118,16 @@ public class VariableNode : StatementNode
     /// <param name="parentModule"></param>
     /// <param name="vrn">The VariableReferenceNode that points to this VariableNode</param>
     /// <returns></returns>
-    public DataType GetSpecificType(ModuleNode parentModule, VariableReferenceNode vrn) =>
+    public DataType GetSpecificType(ModuleNode parentModule, VariableUsageNode vrn) =>
         vrn.ExtensionType switch
         {
-            VariableReferenceNode.VrnExtType.ArrayIndex => GetArrayTypeSafe(),
-            VariableReferenceNode.VrnExtType.RecordMember
+            VariableUsageNode.VrnExtType.ArrayIndex => GetArrayTypeSafe(),
+            VariableUsageNode.VrnExtType.RecordMember
                 => GetRecordMemberType(
                     vrn.GetRecordMemberReferenceSafe().Name,
                     parentModule.Records
                 ),
-            VariableReferenceNode.VrnExtType.None
+            VariableUsageNode.VrnExtType.None
                 => Type switch
                 {
                     DataType.Record
