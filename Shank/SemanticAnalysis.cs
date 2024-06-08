@@ -1218,46 +1218,14 @@ public class SemanticAnalysis
 
     public static void Experimental()
     {
-        var moduleFunctions = GetAstRootSafe()
-            .GetContents<ProgramNode>(AstNodeContentsCollectors.ContentsCollector)
-            .SelectMany(
-                n =>
-                    n.GetContents<ModuleNode, FunctionNode>(
-                        AstNodeContentsCollectors.ContentsCollector
-                    )
-            )
-            .ToList();
         var moduleAnythings = GetAstRootSafe()
-            .GetContents(AstNodeContentsCollectors.ContentsCollector)
-            .SelectMany(n => n.GetContents(AstNodeContentsCollectors.ContentsCollector))
+            .GetChildNodes(ContentsCollectors.ChildNodesCollector)
+            .SelectMany(n => n?.GetChildNodes(ContentsCollectors.ChildNodesCollector) ?? [])
             .ToList();
 
-        var x = moduleFunctions.SelectMany(
-            n => n.GetContents<FunctionNode, IfNode>(AstNodeContentsCollectors.ContentsCollector)
-        );
-        var a = GetStartModuleSafe()
-            .GetContents<ModuleNode>(AstNodeContentsCollectors.ContentsCollector);
         OutputHelper.DebugPrintTxt(
-            string.Join("\n", a.Select((n, i) => i + "\n" + n.NodeName + " `" + n + "'")),
-            "getContents"
-        );
-        OutputHelper.DebugPrintTxt(
-            string.Join(
-                "\n",
-                moduleFunctions.Select((n, i) => i + "\n" + n.NodeName + " `" + n + "'")
-            ),
-            "getContents2"
-        );
-        OutputHelper.DebugPrintTxt(
-            string.Join("\n", x.Select((n, i) => i + "\n" + n.NodeName + " `" + n + "'")),
-            "getContents3"
-        );
-        OutputHelper.DebugPrintTxt(
-            string.Join(
-                "\n",
-                moduleAnythings.Select((n, i) => i + "\n" + n.NodeName + " `" + n + "'")
-            ),
-            "getContents4"
+            string.Join("\n", moduleAnythings.Select((n, i) => i + "\n" + n)),
+            "getChildNodes"
         );
     }
 

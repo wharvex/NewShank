@@ -331,7 +331,7 @@ public class Parser
 
         RequiresEndOfLine();
 
-        // Process local variables.
+        // Process local variables .
         funcNode.LocalVariables.AddRange(ProcessConstants(moduleName));
         funcNode.LocalVariables.AddRange(ProcessVariables(moduleName));
 

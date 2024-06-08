@@ -39,18 +39,9 @@ public abstract class ASTNode
 
     public abstract T Visit<T>(ExpressionVisitor<T> visit);
 
-    public List<ASTNode> GetContents(Func<ASTNode, List<ASTNode>> contentsCollector)
-    {
-        return contentsCollector(this);
-    }
+    public List<ASTNode?> GetChildNodes(Func<ASTNode, List<ASTNode?>> contentsCollector) =>
+        contentsCollector(this);
 
-    public List<ASTNode> GetContents<T>(Func<T, List<ASTNode>> contentsCollector)
-        where T : ASTNode => contentsCollector((T)this);
-
-    public List<ASTNode> GetContents<TTarget, TFilter>(
-        Func<TTarget, List<ASTNode>> contentsCollector
-    )
-        where TTarget : ASTNode
-        where TFilter : ASTNode =>
-        contentsCollector((TTarget)this).Where(n => n is TFilter).ToList();
+    public List<ASTNode?> GetChildNodes<T>(Func<ASTNode, List<ASTNode?>> contentsCollector)
+        where T : ASTNode => [..GetChildNodes(contentsCollector).Where(n => n is T)];
 }

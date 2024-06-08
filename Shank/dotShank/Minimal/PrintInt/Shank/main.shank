@@ -2,6 +2,8 @@ record test1
     a : string
 
 define blah(var a : integer)
+constants c = "c"
+variables b : string
     if a = 7 then
         a := 4
     else
