@@ -5,8 +5,12 @@ namespace Shank;
 
 public class SemanticAnalysis
 {
+    public static ProgramNode? AstRoot { get; set; }
     public static Dictionary<string, ModuleNode>? Modules { get; set; }
     public static ModuleNode? StartModule { get; set; }
+
+    private static ProgramNode GetAstRootSafe() =>
+        AstRoot ?? throw new InvalidOperationException("Expected AstRoot to not be null");
 
     private static Dictionary<string, ModuleNode> GetModulesSafe() =>
         Modules ?? throw new InvalidOperationException("Expected Modules to not be null.");
@@ -411,15 +415,15 @@ public class SemanticAnalysis
         {
             switch (mon.Op)
             {
-                case MathOpNode.MathOpType.plus:
+                case MathOpNode.MathOpType.Plus:
                     return GetMaxRange(mon.Left, variables) + GetMaxRange(mon.Right, variables);
-                case MathOpNode.MathOpType.minus:
+                case MathOpNode.MathOpType.Minus:
                     return GetMaxRange(mon.Left, variables) - GetMinRange(mon.Right, variables);
-                case MathOpNode.MathOpType.times:
+                case MathOpNode.MathOpType.Times:
                     return GetMaxRange(mon.Left, variables) * GetMaxRange(mon.Right, variables);
-                case MathOpNode.MathOpType.divide:
+                case MathOpNode.MathOpType.Divide:
                     return GetMinRange(mon.Left, variables) / GetMaxRange(mon.Right, variables);
-                case MathOpNode.MathOpType.modulo:
+                case MathOpNode.MathOpType.Modulo:
                     return GetMaxRange(mon.Right, variables) - 1;
             }
         }
@@ -457,15 +461,15 @@ public class SemanticAnalysis
         {
             switch (mon.Op)
             {
-                case MathOpNode.MathOpType.plus:
+                case MathOpNode.MathOpType.Plus:
                     return GetMinRange(mon.Left, variables) + GetMinRange(mon.Right, variables);
-                case MathOpNode.MathOpType.minus:
+                case MathOpNode.MathOpType.Minus:
                     return GetMinRange(mon.Left, variables) - GetMaxRange(mon.Right, variables);
-                case MathOpNode.MathOpType.times:
+                case MathOpNode.MathOpType.Times:
                     return GetMinRange(mon.Left, variables) * GetMinRange(mon.Right, variables);
-                case MathOpNode.MathOpType.divide:
+                case MathOpNode.MathOpType.Divide:
                     return GetMaxRange(mon.Left, variables) / GetMinRange(mon.Right, variables);
-                case MathOpNode.MathOpType.modulo:
+                case MathOpNode.MathOpType.Modulo:
                     return 0;
             }
         }
@@ -1216,11 +1220,46 @@ public class SemanticAnalysis
 
     public static void Experimental()
     {
+        var moduleFunctions = GetAstRootSafe()
+            .GetContents<ProgramNode>(AstNodeContentsCollectors.ContentsCollector)
+            .SelectMany(
+                n =>
+                    n.GetContents<ModuleNode, FunctionNode>(
+                        AstNodeContentsCollectors.ContentsCollector
+                    )
+            )
+            .ToList();
+        var moduleAnythings = GetAstRootSafe()
+            .GetContents(AstNodeContentsCollectors.ContentsCollector)
+            .SelectMany(n => n.GetContents(AstNodeContentsCollectors.ContentsCollector))
+            .ToList();
+
+        var x = moduleFunctions.SelectMany(
+            n => n.GetContents<FunctionNode, IfNode>(AstNodeContentsCollectors.ContentsCollector)
+        );
         var a = GetStartModuleSafe()
             .GetContents<ModuleNode>(AstNodeContentsCollectors.ContentsCollector);
         OutputHelper.DebugPrintTxt(
-            string.Join("\n", a.Select((n, i) => i + ": " + n.NodeName + " `" + n + "'")),
+            string.Join("\n", a.Select((n, i) => i + "\n" + n.NodeName + " `" + n + "'")),
             "getContents"
+        );
+        OutputHelper.DebugPrintTxt(
+            string.Join(
+                "\n",
+                moduleFunctions.Select((n, i) => i + "\n" + n.NodeName + " `" + n + "'")
+            ),
+            "getContents2"
+        );
+        OutputHelper.DebugPrintTxt(
+            string.Join("\n", x.Select((n, i) => i + "\n" + n.NodeName + " `" + n + "'")),
+            "getContents3"
+        );
+        OutputHelper.DebugPrintTxt(
+            string.Join(
+                "\n",
+                moduleAnythings.Select((n, i) => i + "\n" + n.NodeName + " `" + n + "'")
+            ),
+            "getContents4"
         );
     }
 

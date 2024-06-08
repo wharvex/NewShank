@@ -152,6 +152,7 @@ public class CommandLineArgsParser
         GetFiles(options.File).ForEach(ip => ScanAndParse(ip, program));
         program.SetStartModule();
         BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
+        SemanticAnalysis.AstRoot = program;
         SemanticAnalysis.CheckModules(program);
         SemanticAnalysis.Experimental();
         OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForProgramNode(program), "ast");

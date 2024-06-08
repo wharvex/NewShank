@@ -1,5 +1,11 @@
 record test1
     a : string
 
+define blah(var a : integer)
+    if a = 7 then
+        a := 4
+    else
+        a := 5
+
 define start()
     write 1234
