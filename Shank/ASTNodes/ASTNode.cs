@@ -9,7 +9,7 @@ namespace Shank.ASTNodes;
 [JsonDerivedType(typeof(FloatNode))]
 [JsonDerivedType(typeof(BoolNode))]
 [JsonDerivedType(typeof(CharNode))]
-[JsonDerivedType(typeof(VariableReferenceNode))]
+[JsonDerivedType(typeof(VariableUsageNode))]
 [JsonDerivedType(typeof(MathOpNode))]
 [JsonDerivedType(typeof(BooleanExpressionNode))]
 [JsonDerivedType(typeof(StatementNode))]
@@ -39,6 +39,9 @@ public abstract class ASTNode
 
     public abstract T Visit<T>(ExpressionVisitor<T> visit);
 
-    public List<ASTNode> GetContents<T>(Func<T, List<ASTNode>> contentsCollector)
-        where T : ASTNode => contentsCollector((T)this);
+    public List<ASTNode?> GetChildNodes(Func<ASTNode, List<ASTNode?>> contentsCollector) =>
+        contentsCollector(this);
+
+    public List<ASTNode?> GetChildNodes<T>(Func<ASTNode, List<ASTNode?>> contentsCollector)
+        where T : ASTNode => [..GetChildNodes(contentsCollector).Where(n => n is T)];
 }

@@ -2,6 +2,7 @@ using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shank;
+using Shank.ASTNodes;
 
 namespace ShankUnitTests
 {

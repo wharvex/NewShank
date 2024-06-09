@@ -42,7 +42,13 @@ public class IfNode : StatementNode
 
     public override string ToString()
     {
-        return $"If: {Expression} {StatementListToString(Children)} {((NextIfNode == null) ? string.Empty : Environment.NewLine + NextIfNode)}";
+        return "begin: if statement\n"
+            + "if condition: "
+            + Expression
+            + " "
+            + StatementListToString(Children)
+            + " "
+            + (NextIfNode == null ? string.Empty : Environment.NewLine + NextIfNode);
     }
 
     public override void VisitStatement(

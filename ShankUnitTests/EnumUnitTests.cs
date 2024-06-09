@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Shank.ASTNodes;
 
 namespace ShankUnitTests
 {
@@ -38,7 +39,7 @@ namespace ShankUnitTests
             Assert.IsNotNull(module);
             Assert.AreEqual(1, module.getEnums().Count());
             Assert.IsTrue(module.getEnums().ContainsKey("colors"));
-            Assert.AreEqual(1, module.getEnums()["colors"].EnumElements.Count);
+            Assert.AreEqual(1, module.getEnums()["colors"].NewType.Variants.Count);
         }
 
         [TestMethod]
@@ -55,7 +56,7 @@ namespace ShankUnitTests
             Assert.IsNotNull(module);
             Assert.AreEqual(1, module.getEnums().Count());
             Assert.IsTrue(module.getEnums().ContainsKey("colors"));
-            Assert.AreEqual(3, module.getEnums()["colors"].EnumElements.Count);
+            Assert.AreEqual(3, module.getEnums()["colors"].NewType.Variants.Count);
         }
 
         [TestMethod]
@@ -72,7 +73,7 @@ namespace ShankUnitTests
             Assert.IsNotNull(module);
             Assert.AreEqual(1, module.getEnums().Count());
             Assert.IsTrue(module.getEnums().ContainsKey("colors"));
-            Assert.AreEqual(3, module.getEnums()["colors"].EnumElements.Count);
+            Assert.AreEqual(3, module.getEnums()["colors"].NewType.Variants.Count);
         }
 
         //checking if the line "e := red" would be parsed without throwing an error

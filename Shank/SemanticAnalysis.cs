@@ -5,8 +5,12 @@ namespace Shank;
 
 public class SemanticAnalysis
 {
+    public static ProgramNode? AstRoot { get; set; }
     public static Dictionary<string, ModuleNode>? Modules { get; set; }
     public static ModuleNode? StartModule { get; set; }
+
+    private static ProgramNode GetAstRootSafe() =>
+        AstRoot ?? throw new InvalidOperationException("Expected AstRoot to not be null");
 
     private static Dictionary<string, ModuleNode> GetModulesSafe() =>
         Modules ?? throw new InvalidOperationException("Expected Modules to not be null.");
@@ -183,9 +187,9 @@ public class SemanticAnalysis
                     
                 CheckRange(targetName,targetType, expression, variables);
            
-            if (targetType is EnumType e && expression is VariableReferenceNode v && e.Variants.Contains(v.Name))
+            if (targetType is EnumType e && expression is VariableUsageNode v && e.Variants.Contains(v.Name))
             {
-                if (v.ExtensionType != VariableReferenceNode.VrnExtType.None)
+                if (v.ExtensionType != VariableUsageNode.VrnExtType.None)
                 {
                     throw new SemanticErrorException($"ambiguous variable name {v.Name}", expression);
                 }
@@ -345,15 +349,15 @@ public class SemanticAnalysis
         {
             switch (mon.Op)
             {
-                case MathOpNode.MathOpType.plus:
+                case MathOpNode.MathOpType.Plus:
                     return GetMaxRange(mon.Left, variables) + GetMaxRange(mon.Right, variables);
-                case MathOpNode.MathOpType.minus:
+                case MathOpNode.MathOpType.Minus:
                     return GetMaxRange(mon.Left, variables) - GetMinRange(mon.Right, variables);
-                case MathOpNode.MathOpType.times:
+                case MathOpNode.MathOpType.Times:
                     return GetMaxRange(mon.Left, variables) * GetMaxRange(mon.Right, variables);
-                case MathOpNode.MathOpType.divide:
+                case MathOpNode.MathOpType.Divide:
                     return GetMinRange(mon.Left, variables) / GetMaxRange(mon.Right, variables);
-                case MathOpNode.MathOpType.modulo:
+                case MathOpNode.MathOpType.Modulo:
                     return GetMaxRange(mon.Right, variables) - 1;
             }
         }
@@ -364,7 +368,7 @@ public class SemanticAnalysis
             return f.Value;
         if (node is StringNode s)
             return s.Value.Length;
-        if (node is VariableReferenceNode vrn)
+        if (node is VariableUsageNode vrn)
         {
             var dataType = variables[vrn.Name].NewType;
             if (dataType is IRangeType t)
@@ -386,15 +390,15 @@ public class SemanticAnalysis
         {
             switch (mon.Op)
             {
-                case MathOpNode.MathOpType.plus:
+                case MathOpNode.MathOpType.Plus:
                     return GetMinRange(mon.Left, variables) + GetMinRange(mon.Right, variables);
-                case MathOpNode.MathOpType.minus:
+                case MathOpNode.MathOpType.Minus:
                     return GetMinRange(mon.Left, variables) - GetMaxRange(mon.Right, variables);
-                case MathOpNode.MathOpType.times:
+                case MathOpNode.MathOpType.Times:
                     return GetMinRange(mon.Left, variables) * GetMinRange(mon.Right, variables);
-                case MathOpNode.MathOpType.divide:
+                case MathOpNode.MathOpType.Divide:
                     return GetMaxRange(mon.Left, variables) / GetMinRange(mon.Right, variables);
-                case MathOpNode.MathOpType.modulo:
+                case MathOpNode.MathOpType.Modulo:
                     return 0;
             }
         }
@@ -405,7 +409,7 @@ public class SemanticAnalysis
             return f.Value;
         if (node is StringNode s)
             return s.Value.Length;
-        if (node is VariableReferenceNode vrn)
+        if (node is VariableUsageNode vrn)
         {
               var dataType = variables[vrn.Name].NewType;
             if (dataType is IRangeType t)
@@ -431,7 +435,7 @@ public class SemanticAnalysis
             FloatNode floatNode => new CharacterType(),
             MathOpNode mathOpNode => GetTypeOfMathOp(mathOpNode, variables),
             StringNode stringNode => new StringType(),
-            VariableReferenceNode variableReferenceNode => GetTypeOfVariableUsage(variableReferenceNode, variables),
+            VariableUsageNode variableReferenceNode => GetTypeOfVariableUsage(variableReferenceNode, variables),
             _ => throw new ArgumentOutOfRangeException(nameof(expression))
         };
 
@@ -454,7 +458,7 @@ public class SemanticAnalysis
                 // TODO: preserver ranges
             return (lhs, rhs) switch
             {
-                (StringType or CharacterType, StringType or CharacterType) => mathOpNode.Op == MathOpNode.MathOpType.plus ? new StringType() : throw  new SemanticErrorException($"cannot {mathOpNode.Op} two strings", mathOpNode),
+                (StringType or CharacterType, StringType or CharacterType) => mathOpNode.Op == MathOpNode.MathOpType.Plus ? new StringType() : throw  new SemanticErrorException($"cannot {mathOpNode.Op} two strings", mathOpNode),
                 (RealType, RealType) => lhs,
                 (IntegerType, IntegerType) => lhs,
                 (StringType or CharacterType or IntegerType or RealType, RealType or StringType or CharacterType or IntegerType) => throw new SemanticErrorException($"{lhs} and {rhs} are not the same so you cannot perform math operations on them", mathOpNode),
@@ -464,23 +468,23 @@ public class SemanticAnalysis
             };
         }
 
-        IType GetTypeOfVariableUsage(VariableReferenceNode variableReferenceNode, Dictionary<string, VariableNode> variableNodes)
+        IType GetTypeOfVariableUsage(VariableUsageNode variableReferenceNode, Dictionary<string, VariableNode> variableNodes)
         {
             var variable = variables.GetValueOrDefault(variableReferenceNode.Name) ??
                            throw new SemanticErrorException($"Variable {variableReferenceNode.Name} not found",
                                variableReferenceNode);
             return (variableReferenceNode.ExtensionType, variable.NewType) switch
             {
-                (ExtensionType: VariableReferenceNode.VrnExtType.None, _) => variable.NewType,
-                (ExtensionType: VariableReferenceNode.VrnExtType.RecordMember, NewType: RecordType r) => GetTypeRecursive(r, variableReferenceNode) ?? variable.NewType,
-                (ExtensionType: VariableReferenceNode.VrnExtType.RecordMember, NewType: ReferenceType(RecordType r)) => GetTypeRecursive(r, variableReferenceNode) ?? variable.NewType,
-                (ExtensionType: VariableReferenceNode.VrnExtType.ArrayIndex, NewType: ArrayType a) =>
+                (ExtensionType: VariableUsageNode.VrnExtType.None, _) => variable.NewType,
+                (ExtensionType: VariableUsageNode.VrnExtType.RecordMember, NewType: RecordType r) => GetTypeRecursive(r, variableReferenceNode) ?? variable.NewType,
+                (ExtensionType: VariableUsageNode.VrnExtType.RecordMember, NewType: ReferenceType(RecordType r)) => GetTypeRecursive(r, variableReferenceNode) ?? variable.NewType,
+                (ExtensionType: VariableUsageNode.VrnExtType.ArrayIndex, NewType: ArrayType a) =>
                     GetTypeOfExpression(variableReferenceNode.Extension!, variables) is IntegerType
                         ? a.Inner
                         : throw new SemanticErrorException("Array indexer does not resolve to a number",
                             variableReferenceNode),
-                (ExtensionType: VariableReferenceNode.VrnExtType.ArrayIndex, _) => throw new SemanticErrorException("Invalid array index, tried to index into non array", variableReferenceNode),
-                (ExtensionType: VariableReferenceNode.VrnExtType.RecordMember, NewType: { } t) => throw new SemanticErrorException($"Invalid member access, tried to access non record {t}", variableReferenceNode),
+                (ExtensionType: VariableUsageNode.VrnExtType.ArrayIndex, _) => throw new SemanticErrorException("Invalid array index, tried to index into non array", variableReferenceNode),
+                (ExtensionType: VariableUsageNode.VrnExtType.RecordMember, NewType: { } t) => throw new SemanticErrorException($"Invalid member access, tried to access non record {t}", variableReferenceNode),
             };
         }
     }
@@ -488,7 +492,7 @@ public class SemanticAnalysis
     /*private static IType GetSpecificRecordType(
         ModuleNode parentModule,
         VariableNode targetDefinition,
-        VariableReferenceNode targetUsage
+        VariableUsageNode targetUsage
     ) =>
         (
             (RecordNode)
@@ -508,7 +512,7 @@ public class SemanticAnalysis
     private static IType? GetTypeRecursive(
         // ModuleNode parentModule,
         RecordType targetDefinition,
-        VariableReferenceNode targetUsage
+        VariableUsageNode targetUsage
     )
     {
         if (targetUsage.Extension is null)
@@ -522,7 +526,7 @@ public class SemanticAnalysis
             _ => null
         };
         return innerVndt is not null
-            ? GetTypeRecursive( innerVndt, (VariableReferenceNode)targetUsage.GetExtensionSafe()) ?? vndt
+            ? GetTypeRecursive( innerVndt, (VariableUsageNode)targetUsage.GetExtensionSafe()) ?? vndt
             : vndt; 
         
 
@@ -533,7 +537,7 @@ public class SemanticAnalysis
                         GetRecordsAndImports(parentModule.Records, parentModule.Imported)[
                             targetDefinition
                                 .GetFromMembersByNameSafe(
-                                    ((VariableReferenceNode)targetUsage.GetExtensionSafe()).Name
+                                    ((VariableUsageNode)targetUsage.GetExtensionSafe()).Name
                                 )
                                 .GetUnknownTypeSafe()
                         ],
@@ -898,13 +902,17 @@ public class SemanticAnalysis
         return dictionary.TryGetValue(key, out var value) && (value is U v && (result = v) == v);
     }
 
+  
     public static void Experimental()
     {
-        var a = GetStartModuleSafe()
-            .GetContents<ModuleNode>(AstNodeContentsCollectors.ContentsCollector);
+        var moduleAnythings = GetAstRootSafe()
+            .GetChildNodes(ContentsCollectors.ChildNodesCollector)
+            .SelectMany(n => n?.GetChildNodes(ContentsCollectors.ChildNodesCollector) ?? [])
+            .ToList();
+
         OutputHelper.DebugPrintTxt(
-            string.Join("\n", a.Select((n, i) => i + ": " + n.NodeName + " `" + n + "'")),
-            "getContents"
+            string.Join("\n", moduleAnythings.Select((n, i) => i + "\n" + n)),
+            "getChildNodes"
         );
     }
 

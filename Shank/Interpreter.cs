@@ -288,7 +288,7 @@ public class Interpreter
         Dictionary<string, InterpreterDataType> variables
     )
     {
-        if (an.Target.GetExtensionSafe() is VariableReferenceNode vrn)
+        if (an.Target.GetExtensionSafe() is VariableUsageNode vrn)
         {
             var t = rdt.MemberTypes[vrn.Name];
             rdt.Value[vrn.Name] = t switch
@@ -358,7 +358,7 @@ public class Interpreter
             return EvaluateBooleanExpressionNode(ben, variables);
         else if (node is BoolNode bn)
             return bn.Value;
-        else if (node is VariableReferenceNode vrn)
+        else if (node is VariableUsageNode vrn)
             return ((BooleanDataType)variables[vrn.Name]).Value;
         else
             throw new ArgumentException(nameof(node));
@@ -370,7 +370,7 @@ public class Interpreter
         Dictionary<string, InterpreterDataType> variables
     )
     {
-        if (node is VariableReferenceNode variable)
+        if (node is VariableUsageNode variable)
         {
             //if the variable is a variable and not an enum reference
             if (variables.ContainsKey(variable.Name))
@@ -390,7 +390,7 @@ public class Interpreter
         Dictionary<string, InterpreterDataType> variables
     )
     {
-        if (node is VariableReferenceNode vrn)
+        if (node is VariableUsageNode vrn)
         {
             return new EnumDataType(vrn.Name);
         }
@@ -519,7 +519,7 @@ public class Interpreter
                     case ReferenceDataType referenceVal:
                         if (fcp.Variable.Extension != null)
                         {
-                            var vrn = ((VariableReferenceNode)fcp.Variable.Extension);
+                            var vrn = ((VariableUsageNode)fcp.Variable.Extension);
                             if (referenceVal.Record is null)
                                 throw new Exception($"{fcp.Variable.Name} was never allocated.");
                             if (referenceVal.Record.Value[vrn.Name] is int)
@@ -656,7 +656,7 @@ public class Interpreter
     )
     {
         var pnVrn = pn.GetVariableSafe();
-        if (pnVrn.ExtensionType == VariableReferenceNode.VrnExtType.RecordMember)
+        if (pnVrn.ExtensionType == VariableUsageNode.VrnExtType.RecordMember)
         {
             var rmVrn = pnVrn.GetRecordMemberReferenceSafe();
             paramsList.Add(
@@ -694,28 +694,22 @@ public class Interpreter
         }
     }
 
-    public static InterpreterDataType GetNestedParam(RecordDataType rdt, VariableReferenceNode vn)
+    public static InterpreterDataType GetNestedParam(RecordDataType rdt, VariableUsageNode vn)
     {
-        var temp = rdt.Value[((VariableReferenceNode)vn.GetExtensionSafe()).Name];
-        if (
-            temp is RecordDataType
-            && ((VariableReferenceNode)vn.GetExtensionSafe()).Extension is null
-        )
+        var temp = rdt.Value[((VariableUsageNode)vn.GetExtensionSafe()).Name];
+        if (temp is RecordDataType && ((VariableUsageNode)vn.GetExtensionSafe()).Extension is null)
         {
-            return GetNestedParam(
-                (RecordDataType)temp,
-                (VariableReferenceNode)vn.GetExtensionSafe()
-            );
+            return GetNestedParam((RecordDataType)temp, (VariableUsageNode)vn.GetExtensionSafe());
         }
         if (
             temp is ReferenceDataType
-            && ((VariableReferenceNode)vn.GetExtensionSafe()).Extension is null
+            && ((VariableUsageNode)vn.GetExtensionSafe()).Extension is null
         )
         {
             return GetNestedParam(
                 ((ReferenceDataType)temp).Record
                     ?? throw new Exception($"Reference was never allocated, {vn.ToString()}"),
-                (VariableReferenceNode)vn.GetExtensionSafe()
+                (VariableUsageNode)vn.GetExtensionSafe()
             );
         }
         return temp switch
@@ -825,9 +819,9 @@ public class Interpreter
         {
             var lf = ben.Left;
             var rf = ben.Right;
-            if (rf is VariableReferenceNode right)
+            if (rf is VariableUsageNode right)
             {
-                if (lf is VariableReferenceNode left)
+                if (lf is VariableUsageNode left)
                 {
                     if (variables.ContainsKey(left.Name) && variables.ContainsKey(right.Name))
                     {
@@ -955,20 +949,20 @@ public class Interpreter
             StringNode sn => sn.Value,
             CharNode cn => cn.Value.ToString(),
             MathOpNode mon
-                => mon.Op == MathOpNode.MathOpType.plus
+                => mon.Op == MathOpNode.MathOpType.Plus
                     ? ResolveString(mon.Left, variables) + ResolveString(mon.Right, variables)
                     : throw new NotImplementedException(
                         "It has not been implemented to perform any math operation on"
                             + " strings other than addition."
                     ),
-            VariableReferenceNode vrn
+            VariableUsageNode vrn
                 => vrn.ExtensionType switch
                 {
-                    VariableReferenceNode.VrnExtType.ArrayIndex
+                    VariableUsageNode.VrnExtType.ArrayIndex
                         => ((ArrayDataType)variables[vrn.Name]).GetElementString(
                             ResolveInt(vrn.GetExtensionSafe(), variables)
                         ),
-                    VariableReferenceNode.VrnExtType.RecordMember
+                    VariableUsageNode.VrnExtType.RecordMember
                         => ((RecordDataType)variables[vrn.Name]).GetValueString(
                             vrn.GetRecordMemberReferenceSafe().Name
                         ),
@@ -988,15 +982,15 @@ public class Interpreter
             return cn.Value;
         }
 
-        if (node is VariableReferenceNode vrn)
+        if (node is VariableUsageNode vrn)
         {
             return vrn.ExtensionType switch
             {
-                VariableReferenceNode.VrnExtType.ArrayIndex
+                VariableUsageNode.VrnExtType.ArrayIndex
                     => ((ArrayDataType)variables[vrn.Name]).GetElementCharacter(
                         ResolveInt(vrn.GetExtensionSafe(), variables)
                     ),
-                VariableReferenceNode.VrnExtType.RecordMember
+                VariableUsageNode.VrnExtType.RecordMember
                     => ((RecordDataType)variables[vrn.Name]).GetValueCharacter(
                         vrn.GetRecordMemberReferenceSafe().Name
                     ),
@@ -1021,15 +1015,15 @@ public class Interpreter
             var right = ResolveFloat(mon.Right, variables);
             switch (mon.Op)
             {
-                case MathOpNode.MathOpType.plus:
+                case MathOpNode.MathOpType.Plus:
                     return left + right;
-                case MathOpNode.MathOpType.minus:
+                case MathOpNode.MathOpType.Minus:
                     return left - right;
-                case MathOpNode.MathOpType.times:
+                case MathOpNode.MathOpType.Times:
                     return left * right;
-                case MathOpNode.MathOpType.divide:
+                case MathOpNode.MathOpType.Divide:
                     return left / right;
-                case MathOpNode.MathOpType.modulo:
+                case MathOpNode.MathOpType.Modulo:
                     return left % right;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -1037,15 +1031,15 @@ public class Interpreter
         }
         else if (node is FloatNode fn)
             return fn.Value;
-        else if (node is VariableReferenceNode vrn)
+        else if (node is VariableUsageNode vrn)
         {
             return vrn.ExtensionType switch
             {
-                VariableReferenceNode.VrnExtType.ArrayIndex
+                VariableUsageNode.VrnExtType.ArrayIndex
                     => ((ArrayDataType)variables[vrn.Name]).GetElementReal(
                         ResolveInt(vrn.GetExtensionSafe(), variables)
                     ),
-                VariableReferenceNode.VrnExtType.RecordMember
+                VariableUsageNode.VrnExtType.RecordMember
                     => ((RecordDataType)variables[vrn.Name]).GetValueReal(
                         vrn.GetRecordMemberReferenceSafe().Name
                     ),
@@ -1064,15 +1058,15 @@ public class Interpreter
             var right = ResolveInt(mon.Right, variables);
             switch (mon.Op)
             {
-                case MathOpNode.MathOpType.plus:
+                case MathOpNode.MathOpType.Plus:
                     return left + right;
-                case MathOpNode.MathOpType.minus:
+                case MathOpNode.MathOpType.Minus:
                     return left - right;
-                case MathOpNode.MathOpType.times:
+                case MathOpNode.MathOpType.Times:
                     return left * right;
-                case MathOpNode.MathOpType.divide:
+                case MathOpNode.MathOpType.Divide:
                     return left / right;
-                case MathOpNode.MathOpType.modulo:
+                case MathOpNode.MathOpType.Modulo:
                     return left % right;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -1080,15 +1074,15 @@ public class Interpreter
         }
         else if (node is IntNode fn)
             return fn.Value;
-        else if (node is VariableReferenceNode vrn)
+        else if (node is VariableUsageNode vrn)
         {
             return vrn.ExtensionType switch
             {
-                VariableReferenceNode.VrnExtType.ArrayIndex
+                VariableUsageNode.VrnExtType.ArrayIndex
                     => ((ArrayDataType)variables[vrn.Name]).GetElementInteger(
                         ResolveInt(vrn.GetExtensionSafe(), variables)
                     ),
-                VariableReferenceNode.VrnExtType.RecordMember
+                VariableUsageNode.VrnExtType.RecordMember
                     => ((RecordDataType)variables[vrn.Name]).GetValueInteger(
                         vrn.GetRecordMemberReferenceSafe().Name
                     ),
@@ -1124,7 +1118,7 @@ public class Interpreter
                 return ResolveChar(node, variables);
             case BoolNode b:
                 return ResolveBool(node, variables);
-            case VariableReferenceNode v:
+            case VariableUsageNode v:
                 return variables[v.Name];
             default:
                 throw new Exception(
@@ -1181,15 +1175,15 @@ public class Interpreter
             var right = ResolveIntBeforeVarDecs(mon.Right);
             switch (mon.Op)
             {
-                case MathOpNode.MathOpType.plus:
+                case MathOpNode.MathOpType.Plus:
                     return left + right;
-                case MathOpNode.MathOpType.minus:
+                case MathOpNode.MathOpType.Minus:
                     return left - right;
-                case MathOpNode.MathOpType.times:
+                case MathOpNode.MathOpType.Times:
                     return left * right;
-                case MathOpNode.MathOpType.divide:
+                case MathOpNode.MathOpType.Divide:
                     return left / right;
-                case MathOpNode.MathOpType.modulo:
+                case MathOpNode.MathOpType.Modulo:
                     return left % right;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(mon.Op), "Invalid operation type");
@@ -1197,7 +1191,7 @@ public class Interpreter
         }
         else if (node is IntNode fn)
             return fn.Value;
-        else if (node is VariableReferenceNode vr)
+        else if (node is VariableUsageNode vr)
             throw new Exception(
                 "Variable references not allowed before all variables are declared"
             );

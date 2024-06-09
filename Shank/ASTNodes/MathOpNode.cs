@@ -1,25 +1,17 @@
 using LLVMSharp.Interop;
-using Shank.ASTNodes;
 using Shank.ExprVisitors;
 
 namespace Shank.ASTNodes;
 
-public class MathOpNode : ASTNode
+public class MathOpNode(ASTNode left, MathOpNode.MathOpType op, ASTNode right) : ASTNode
 {
-    public MathOpNode(ASTNode left, MathOpType op, ASTNode right)
-    {
-        Left = left;
-        Op = op;
-        Right = right;
-    }
-
-    public MathOpType Op { get; init; }
-    public ASTNode Left { get; init; }
-    public ASTNode Right { get; init; }
+    public MathOpType Op { get; init; } = op;
+    public ASTNode Left { get; init; } = left;
+    public ASTNode Right { get; init; } = right;
 
     public override string ToString()
     {
-        return $"{Left.ToString()} {Op} {Right.ToString()}";
+        return $"{Left} {Op} {Right}";
     }
 
     public override LLVMValueRef Visit(
@@ -39,10 +31,10 @@ public class MathOpNode : ASTNode
 
     public enum MathOpType
     {
-        plus,
-        minus,
-        times,
-        divide,
-        modulo
+        Plus,
+        Minus,
+        Times,
+        Divide,
+        Modulo
     }
 }

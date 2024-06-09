@@ -142,7 +142,7 @@ public class Parser
         return _tokens[offset];
     }
 
-    private VariableReferenceNode? GetVariableReferenceNode()
+    private VariableUsageNode? GetVariableReferenceNode()
     {
         if (MatchAndRemove(Token.TokenType.Identifier) is { } id)
         {
@@ -159,29 +159,28 @@ public class Parser
                         "Need a right bracket after the expression!",
                         Peek(0)
                     );
-                return new VariableReferenceNode(
+                return new VariableUsageNode(
                     id.GetValueSafe(),
                     exp,
-                    VariableReferenceNode.VrnExtType.ArrayIndex
+                    VariableUsageNode.VrnExtType.ArrayIndex
                 );
             }
 
             if (MatchAndRemove(Token.TokenType.Dot) is not null)
             {
-                VariableReferenceNode? varRef = GetVariableReferenceNode();
+                VariableUsageNode? varRef = GetVariableReferenceNode();
                 if (varRef is null)
                     throw new SyntaxErrorException(
                         "Need a record member reference after the dot!",
                         Peek(0)
                     );
-                return new VariableReferenceNode(
+                return new VariableUsageNode(
                     id.GetValueSafe(),
                     varRef,
-                    VariableReferenceNode.VrnExtType.RecordMember
+                    VariableUsageNode.VrnExtType.RecordMember
                 );
             }
-
-            return new VariableReferenceNode(id.GetValueSafe());
+            return new VariableUsageNode(id.GetValueSafe());
         }
 
         return null;
@@ -316,7 +315,7 @@ public class Parser
 
         RequiresEndOfLine();
 
-        // Process local variables.
+        // Process local variables .
         funcNode.LocalVariables.AddRange(ProcessConstants(moduleName));
         funcNode.LocalVariables.AddRange(ProcessVariables(moduleName));
 
@@ -1145,7 +1144,7 @@ public class Parser
             var rt = Term();
             if (rt == null)
                 throw new SyntaxErrorException("Expected a term.", Peek(0));
-            lt = new MathOpNode(lt, MathOpNode.MathOpType.plus, rt);
+            lt = new MathOpNode(lt, MathOpNode.MathOpType.Plus, rt);
             return ExpressionRHS(lt);
         }
         else if (MatchAndRemove(Token.TokenType.Minus) != null)
@@ -1153,7 +1152,7 @@ public class Parser
             var rt = Term();
             if (rt == null)
                 throw new SyntaxErrorException("Expected a term.", Peek(0));
-            lt = new MathOpNode(lt, MathOpNode.MathOpType.minus, rt);
+            lt = new MathOpNode(lt, MathOpNode.MathOpType.Minus, rt);
             return ExpressionRHS(lt);
         }
         else if (MatchAndRemove(Token.TokenType.LessEqual) != null)
@@ -1243,7 +1242,7 @@ public class Parser
             var rt = Factor();
             if (rt == null)
                 throw new SyntaxErrorException("Expected a factor.", Peek(0));
-            lt = new MathOpNode(lt, MathOpNode.MathOpType.times, rt);
+            lt = new MathOpNode(lt, MathOpNode.MathOpType.Times, rt);
             return TermRHS(lt);
         }
         else if (MatchAndRemove(Token.TokenType.Divide) != null)
@@ -1251,7 +1250,7 @@ public class Parser
             var rt = Factor();
             if (rt == null)
                 throw new SyntaxErrorException("Expected a factor.", Peek(0));
-            lt = new MathOpNode(lt, MathOpNode.MathOpType.divide, rt);
+            lt = new MathOpNode(lt, MathOpNode.MathOpType.Divide, rt);
             return TermRHS(lt);
         }
         else if (MatchAndRemove(Token.TokenType.Mod) != null)
@@ -1259,7 +1258,7 @@ public class Parser
             var rt = Factor();
             if (rt == null)
                 throw new SyntaxErrorException("Expected a factor.", Peek(0));
-            lt = new MathOpNode(lt, MathOpNode.MathOpType.modulo, rt);
+            lt = new MathOpNode(lt, MathOpNode.MathOpType.Modulo, rt);
             return TermRHS(lt);
         }
         else
