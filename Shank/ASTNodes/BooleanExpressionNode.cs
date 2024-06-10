@@ -34,7 +34,7 @@ public class BooleanExpressionNode : ASTNode
 
     public override string ToString()
     {
-        return $"({Left.ToString()} {Op} {Right.ToString()})";
+        return $"{Left} {Op} {Right}";
     }
 
     public enum BooleanExpressionOpType

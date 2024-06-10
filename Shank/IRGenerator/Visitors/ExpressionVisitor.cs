@@ -8,7 +8,7 @@ public abstract class ExpressionVisitor<T>
 
     public abstract T Accept(FloatNode node);
 
-    public abstract T Accept(VariableReferenceNode node);
+    public abstract T Accept(VariableUsageNode node);
 
     public abstract T Accept(CharNode node);
 

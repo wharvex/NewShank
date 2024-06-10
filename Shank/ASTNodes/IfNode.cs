@@ -1,3 +1,4 @@
+using System.Text;
 using LLVMSharp.Interop;
 using Shank.ASTNodes;
 using Shank.ExprVisitors;
@@ -43,7 +44,21 @@ public class IfNode : StatementNode
 
     public override string ToString()
     {
-        return $"If: {Expression} {StatementListToString(Children)} {((NextIfNode == null) ? string.Empty : Environment.NewLine + NextIfNode)}";
+        var linePrefix = $"if, line {Line}, {Expression}, ";
+        var b = new StringBuilder();
+        b.AppendLine(linePrefix + "begin");
+        b.AppendLine(linePrefix + "statements begin");
+        Children.ForEach(s => b.AppendLine(s.ToString()));
+        b.AppendLine(linePrefix + "statements end");
+        b.AppendLine(linePrefix + "next begin");
+        if (NextIfNode != null)
+        {
+            b.Append(NextIfNode);
+        }
+        b.AppendLine(linePrefix + "next end");
+        b.Append(linePrefix + "end");
+
+        return b.ToString();
     }
 
     public override void VisitStatement(

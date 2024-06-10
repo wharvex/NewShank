@@ -22,7 +22,7 @@ public class ParameterNode : ASTNode
      * passed in, meaning it can be changed in the function, and its new value will persist in
      * the caller's scope.
      */
-    public ParameterNode(VariableReferenceNode variable, bool isVariable)
+    public ParameterNode(VariableUsageNode variable, bool isVariable)
     {
         IsVariable = isVariable;
         Variable = variable;
@@ -30,10 +30,10 @@ public class ParameterNode : ASTNode
     }
 
     public ASTNode? Constant { get; init; }
-    public VariableReferenceNode? Variable { get; init; }
+    public VariableUsageNode? Variable { get; init; }
     public bool IsVariable { get; init; }
 
-    public VariableReferenceNode GetVariableSafe() =>
+    public VariableUsageNode GetVariableSafe() =>
         Variable ?? throw new InvalidOperationException("Expected Variable to not be null");
 
     public ASTNode GetConstantSafe() =>

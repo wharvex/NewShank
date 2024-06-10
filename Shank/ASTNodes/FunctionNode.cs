@@ -76,26 +76,20 @@ public class FunctionNode : CallableNode
 
     public override string ToString()
     {
+        var linePrefix = $"function {Name}, line {Line}, ";
         var b = new StringBuilder();
-        b.AppendLine($"Function {Name}:");
-        if (ParameterVariables.Any())
-        {
-            b.AppendLine("Parameters:");
-            ParameterVariables.ForEach(p => b.AppendLine($"   {p}"));
-        }
-
-        if (LocalVariables.Any())
-        {
-            b.AppendLine("Local Variables:");
-            LocalVariables.ForEach(p => b.AppendLine($"   {p}"));
-        }
-
-        if (Statements.Any())
-        {
-            b.AppendLine("-------------------------------------");
-            Statements.ForEach(p => b.AppendLine($"   {p}"));
-            b.AppendLine("-------------------------------------");
-        }
+        b.AppendLine(linePrefix + "begin");
+        b.AppendLine(linePrefix + "param vars begin");
+        ParameterVariables.ForEach(p => b.AppendLine(p + "; "));
+        b.AppendLine(linePrefix + "param vars end");
+        b.AppendLine(linePrefix + "local vars begin");
+        LocalVariables.ForEach(v => b.Append(v + "; "));
+        b.Append('\n');
+        b.AppendLine(linePrefix + "local vars end");
+        b.AppendLine(linePrefix + "statements begin");
+        Statements.ForEach(s => b.AppendLine(s.ToString()));
+        b.AppendLine(linePrefix + "statements end");
+        b.AppendLine(linePrefix + "end");
 
         return b.ToString();
     }

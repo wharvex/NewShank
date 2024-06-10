@@ -1,3 +1,4 @@
+using System.Text;
 using LLVMSharp.Interop;
 using Shank.ASTNodes;
 using Shank.ExprVisitors;
@@ -119,16 +120,16 @@ public class VariableNode : StatementNode
     /// <param name="parentModule"></param>
     /// <param name="vrn">The VariableReferenceNode that points to this VariableNode</param>
     /// <returns></returns>
-    public DataType GetSpecificType(ModuleNode parentModule, VariableReferenceNode vrn) =>
+    public DataType GetSpecificType(ModuleNode parentModule, VariableUsageNode vrn) =>
         vrn.ExtensionType switch
         {
-            VariableReferenceNode.VrnExtType.ArrayIndex => GetArrayTypeSafe(),
-            VariableReferenceNode.VrnExtType.RecordMember
+            VariableUsageNode.VrnExtType.ArrayIndex => GetArrayTypeSafe(),
+            VariableUsageNode.VrnExtType.RecordMember
                 => GetRecordMemberType(
                     vrn.GetRecordMemberReferenceSafe().Name,
                     parentModule.Records
                 ),
-            VariableReferenceNode.VrnExtType.None
+            VariableUsageNode.VrnExtType.None
                 => Type switch
                 {
                     DataType.Record
@@ -156,17 +157,11 @@ public class VariableNode : StatementNode
 
     public override string ToString()
     {
-        return Name
-            + " : "
-            + (Type == DataType.Array ? "Array of " + ArrayType : Type)
-            + " "
-            + (IsConstant ? "const" : string.Empty)
-            + " "
-            + (InitialValue == null ? string.Empty : InitialValue)
-            + " "
-            + (From == null ? string.Empty : " From: " + From)
-            + " "
-            + (To == null ? string.Empty : " To: " + To);
+        var b = new StringBuilder();
+        b.Append($"{Name} declared as {Type}");
+        b.Append(IsConstant ? " const" : "");
+        b.Append(InitialValue is not null ? $" init {InitialValue}" : "");
+        return b.ToString();
     }
 
     public override LLVMValueRef Visit(

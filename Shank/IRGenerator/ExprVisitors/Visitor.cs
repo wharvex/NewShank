@@ -18,7 +18,7 @@ public abstract class Visitor<T>
 
     public abstract T Visit(FloatNode node);
 
-    public abstract T Visit(VariableReferenceNode node);
+    public abstract T Visit(VariableUsageNode node);
 
     public abstract T Visit(CharNode node);
 

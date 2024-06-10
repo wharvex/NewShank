@@ -5,16 +5,6 @@ using Shank.IRGenerator;
 
 namespace Shank.ASTNodes;
 
-[JsonDerivedType(typeof(StringNode))]
-[JsonDerivedType(typeof(IntNode))]
-[JsonDerivedType(typeof(FloatNode))]
-[JsonDerivedType(typeof(BoolNode))]
-[JsonDerivedType(typeof(CharNode))]
-[JsonDerivedType(typeof(VariableReferenceNode))]
-[JsonDerivedType(typeof(MathOpNode))]
-[JsonDerivedType(typeof(BooleanExpressionNode))]
-[JsonDerivedType(typeof(StatementNode))]
-[JsonDerivedType(typeof(FunctionNode))]
 public abstract class ASTNode
 {
     public string NodeName { get; init; }
@@ -40,6 +30,9 @@ public abstract class ASTNode
 
     public abstract T Visit<T>(ExpressionVisitor<T> visit);
 
-    public List<ASTNode> GetContents<T>(Func<T, List<ASTNode>> contentsCollector)
-        where T : ASTNode => contentsCollector((T)this);
+    public List<ASTNode?> GetChildNodes(Func<ASTNode, List<ASTNode?>> contentsCollector) =>
+        contentsCollector(this);
+
+    public List<ASTNode?> GetChildNodes<T>(Func<ASTNode, List<ASTNode?>> contentsCollector)
+        where T : ASTNode => [..GetChildNodes(contentsCollector).Where(n => n is T)];
 }

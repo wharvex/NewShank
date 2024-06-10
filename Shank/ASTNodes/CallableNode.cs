@@ -6,8 +6,6 @@ using Shank.IRGenerator;
 
 namespace Shank.ASTNodes;
 
-[JsonDerivedType(typeof(FunctionNode))]
-[JsonDerivedType(typeof(BuiltInFunctionNode))]
 public abstract class CallableNode : ASTNode, ILlvmTranslatable
 {
     public string Name { get; set; }

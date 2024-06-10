@@ -123,7 +123,6 @@ public class CommandLineArgsParser
         GetFiles(options.InputFile).ForEach(ip => ScanAndParse(ip, program));
         program.SetStartModule();
         SemanticAnalysis.CheckModules(program);
-        OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForProgramNode(program), "ast");
 
         Interpreter.Modules = program.Modules;
         Interpreter.StartModule = program.GetStartModuleSafe();
@@ -135,7 +134,6 @@ public class CommandLineArgsParser
         // scan and parse :p
         GetFiles(options.file).ForEach(ip => ScanAndParse(ip, program));
         program.SetStartModule();
-        OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForProgramNode(program), "ast");
         BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
         SemanticAnalysis.CheckModules(program);
 
@@ -152,9 +150,9 @@ public class CommandLineArgsParser
         GetFiles(options.File).ForEach(ip => ScanAndParse(ip, program));
         program.SetStartModule();
         BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
+        SemanticAnalysis.AstRoot = program;
         SemanticAnalysis.CheckModules(program);
         SemanticAnalysis.Experimental();
-        OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForProgramNode(program), "ast");
         var jSets = new JsonSerializerSettings
         {
             ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
@@ -205,9 +203,6 @@ public class CommandLineArgsParser
         // Read the file and turn it into tokens.
         var lines = File.ReadAllLines(inPath);
         tokens.AddRange(lexer.Lex(lines));
-
-        // Save the tokens to $env:APPDATA\ShankDebugOutput_tokens.json
-        OutputHelper.DebugPrintJson(OutputHelper.GetDebugJsonForTokenList(tokens), "tokens");
 
         var parser = new Shank.Parser(tokens);
 
