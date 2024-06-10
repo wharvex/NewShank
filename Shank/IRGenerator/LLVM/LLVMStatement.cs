@@ -78,16 +78,27 @@ public class LLVMStatement(Context context, LLVMBuilderRef builder, LLVMModuleRe
     public override void Accept(AssignmentNode node)
     {
         var llvmValue = context.GetVariable(node.Target.Name);
+        Console.WriteLine(node.ToString());
+
+        var expr = node.Expression.Visit(new LLVMExpr(context, builder, module));
         if (!llvmValue.IsMutable)
         {
             throw new Exception($"tried to mutate non mutable variable {node.Target.Name}");
         }
-        // node.Expression<LLVMValueRef>.Visit(new LLVM)
 
-        builder.BuildStore(
-            node.Expression.Visit(new LLVMExpr(context, builder, module)),
-            llvmValue.ValueRef
-        );
+        if (node.Target.Extension != null)
+        {
+            var a = builder.BuildGEP2(
+                llvmValue.TypeRef,
+                llvmValue.ValueRef,
+                new[] { node.Target.Extension.Visit(new LLVMExpr(context, builder, module)) }
+            );
+            builder.BuildStore(expr, a);
+        }
+        else
+        {
+            builder.BuildStore(expr, llvmValue.ValueRef);
+        }
     }
 
     public override void Accept(EnumNode node)
