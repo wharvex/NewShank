@@ -587,10 +587,10 @@ public class Parser
 
         return GetTypeUsageFromToken(tokenType);
     }
-    
+
     private VariableNode? ParseVariableDeclaration()
     {
-        Token? tokenType = 
+        Token? tokenType =
             handler.MatchAndRemove(TokenType.NUMBER)
             ?? handler.MatchAndRemove(TokenType.STRING)
             ?? handler.MatchAndRemove(TokenType.CHARACTER)
