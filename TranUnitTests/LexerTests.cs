@@ -85,8 +85,8 @@ namespace TranUnitTests
                 + " COMMA\n"
                 + " NOT\n"
                 + " QUOTE\n"
-                + " NEWLINE\n"
-                + " TAB\n"
+                + " SEPARATOR\n"
+                + " SEPARATOR\n"
                 + " SEPARATOR\n";
 
             Assert.AreEqual(expectedTokensString, actualTokensString);
@@ -114,7 +114,7 @@ namespace TranUnitTests
                 + " MINUSEQUALS\n"
                 + " AND\n"
                 + " OR\n"
-                + " FUNCTIONSTATEMENT\n"
+                + " FUNCTIONBLOCKIDENTIFIER\n"
                 + " SEPARATOR\n";
             Assert.AreEqual(expectedTokensString, actualTokensString);
         }
@@ -150,8 +150,8 @@ namespace TranUnitTests
                 + " TRUE\n"
                 + " FALSE\n"
                 + " SHARED\n"
-                + " TAB\n"
-                + " NEWLINE\n"
+                + " SEPARATOR\n"
+                + " SEPARATOR\n"
                 + " RETURN\n"
                 + " SEPARATOR\n";
             Assert.AreEqual(expectedTokensString, actualTokensString);
