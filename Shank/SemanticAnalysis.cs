@@ -200,7 +200,7 @@ public class SemanticAnalysis
                 if (!targetType.Equals(expressionType))
                 {
                     throw new SemanticErrorException(
-                        $"Type mismatch cannot assign to {targetName}: {targetType} {expressionType}", expression);
+                        $"Type mismatch cannot assign to {targetName}: {targetType} {expression}: {expressionType}", expression);
                 }
 
 
@@ -436,13 +436,23 @@ public class SemanticAnalysis
             MathOpNode mathOpNode => GetTypeOfMathOp(mathOpNode, variables),
             StringNode stringNode => new StringType(),
             VariableUsageNode variableReferenceNode => GetTypeOfVariableUsage(variableReferenceNode, variables),
-            _ => throw new ArgumentOutOfRangeException(nameof(expression))
+            _ => throw new ArgumentOutOfRangeException(expression.ToString())
         };
 
         IType GetTypeOfBooleanExpression(BooleanExpressionNode booleanExpressionNode, Dictionary<string, VariableNode> variableNodes)
         {
             // TODO: are all things of the same type comparable
             var leftType = GetTypeOfExpression(booleanExpressionNode.Left, variables);
+            if (leftType is EnumType e &&  booleanExpressionNode.Right is VariableUsageNode v && e.Variants.Contains(v.Name )) 
+            {
+
+                if  (  v.ExtensionType != VariableUsageNode.VrnExtType.None)
+                {
+                    throw new SemanticErrorException($"ambiguous variable name {v.Name}", expression);
+                }
+
+                return new BooleanType();
+            }
             var rightType = GetTypeOfExpression(booleanExpressionNode.Right, variables);
             return leftType.Equals(
                    rightType)
@@ -855,30 +865,27 @@ public class SemanticAnalysis
                 KeyValuePair<string, CallableNode> function in currentModule.Value.getFunctions()
             )
             {
+                CheckVariables(currentModule.Value.GlobalVariables.Values.ToList(), currentModule.Value, []);
                 if (function.Value is BuiltInFunctionNode)
                 {
                     continue;
                 }
 
                 FunctionNode currentFunction = (FunctionNode)function.Value;
-                foreach (var variable in currentFunction.LocalVariables.Concat(currentFunction.ParameterVariables))
+                CheckVariables(currentFunction.LocalVariables, currentModule.Value, currentFunction.GenericTypeParameterNames ?? []);
+                var generics = currentFunction.GenericTypeParameterNames ?? [];
+                foreach (var variable in currentFunction.ParameterVariables)
                 {
-                    var enumsAndImports = GetEnumsAndImports(
-                        currentModule.Value.getEnums(),
-                        currentModule.Value.Imported
-                    );
-                    var recordsAndImports = GetRecordsAndImports(
-                        currentModule.Value.Records,
-                        currentModule.Value.Imported
-                    );
-                    variable.NewType = variable.NewType switch
-                                            {
-                                                UnknownType u => ResolveType(u, currentModule.Value, currentFunction.GenericTypeParameterNames),
-                                                ReferenceType (UnknownType u)   => new ReferenceType(ResolveType(u, currentModule.Value, currentFunction.GenericTypeParameterNames)),
-                                                {} type => type
-                                            };
-                    
+                        variable.NewType = variable.NewType switch
+                        {
+                            UnknownType u => ResolveType(u, currentModule.Value,
+                                generics),
+                            ReferenceType (UnknownType u) => new ReferenceType(ResolveType(u, currentModule.Value,
+                                generics)),
+                            { } type => type
+                        };
                 }
+
 
                 // foreach (var statement in currentFunction.Statements)
                 /*{
@@ -893,6 +900,54 @@ public class SemanticAnalysis
                         }
                     }
                 }*/
+            }
+        }
+    }
+
+    private static void CheckVariables(List<VariableNode> variables, ModuleNode currentModule, List<String> generics)
+    {
+        foreach (var variable in variables)
+        {
+            // if its a constant then it cannot refer to another constant/variable so the only case for variable is its an emum cohnstant
+            // might need  similiar logic for defaulat values of functions, and weird enum comparissons i.e. red = bar, where red is an enum constant
+            // because currently we do assume lhs determine type
+            if (variable is { IsConstant: true, InitialValue: { } init })
+            {
+                // from the parsers pov we should make an enum node, b/c this can't be any random varialbe
+                if (init is StringNode n)
+                {
+                    foreach (var enumDefinition in currentModule.Enums.Values.Concat(currentModule.Imported.Values))
+                    {
+                        if (enumDefinition is EnumNode e)
+                        {
+                            if (e.NewType.Variants.Contains(n.Value))
+                            {
+                                variable.NewType = e.NewType;
+                                break;
+                            }
+                        } 
+                    }
+
+                    if (variable.NewType is not EnumType)
+                    {
+                        variable.NewType = new StringType();
+                    }
+                }
+                else
+                {
+                    variable.NewType = GetTypeOfExpression(init, []);
+                }
+            }
+            else
+            {
+                variable.NewType = variable.NewType switch
+                {
+                    UnknownType u => ResolveType(u, currentModule,
+                        generics),
+                    ReferenceType (UnknownType u) => new ReferenceType(ResolveType(u, currentModule,
+                        generics)),
+                    { } type => type
+                };
             }
         }
     }

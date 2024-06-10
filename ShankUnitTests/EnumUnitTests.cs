@@ -249,6 +249,7 @@ namespace ShankUnitTests
             LinkedList<string[]> files = new LinkedList<string[]>();
             files.AddLast(file);
             initializeInterpreter(files);
+
             SemanticAnalysis.CheckModules();
             runInterpreter();
             Console.Write(Interpreter.testOutput.ToString());
@@ -256,7 +257,7 @@ namespace ShankUnitTests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Exception), "Cannot compare two enum elements")]
+        [ExpectedException(typeof(SemanticErrorException), "Cannot compare two enum elements")]
         public void CompareEnumValues()
         {
             string[] file =

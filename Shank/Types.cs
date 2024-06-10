@@ -37,21 +37,55 @@ public struct BooleanType : IType;
 
 public  record struct  StringType(Range Range) : IRangeType
 {
+    public bool Equals(StringType other)
+    {
+        return true; // we do range checking seperatly as we do not know which is the one with more important range
+    }
+
+    public readonly override int GetHashCode()
+    {
+        return 0;
+    }
+
     public StringType() : this( Range.DefaultSmallInteger()) {}
 }
 
 public record struct RealType(Range Range) : IRangeType
-{
+{    public bool Equals(RealType other)
+     {
+         return true; // we do range checking seperatly as we do not know which is the one with more important range
+     }
+ 
+     public readonly override int GetHashCode()
+     {
+         return 0;
+     }
     public RealType() : this(Range.DefaultFloat()) {}
 }
 
 public record struct IntegerType(Range Range) : IRangeType
-{
+{    public bool Equals(IntegerType other)
+     {
+         return true; // we do range checking seperatly as we do not know which is the one with more important range
+     }
+ 
+     public readonly override int GetHashCode()
+     {
+         return 0;
+     }
     public IntegerType() : this(Range.DefaultInteger()) {}
 }
 
 public record struct CharacterType(Range Range) : IRangeType
-{
+{    public bool Equals(CharacterType other)
+     {
+         return true; // we do range checking seperatly as we do not know which is the one with more important range
+     }
+ 
+     public readonly override int GetHashCode()
+     {
+         return 0;
+     }
     public CharacterType() : this(Range.DefaultCharacter()) {}
 }
 
@@ -83,7 +117,15 @@ public  class RecordType(string name, Dictionary<string, IType> fields, List<str
 } // records need to keep the types of their members along with any generics they declare
 
 public record struct ArrayType(IType Inner, Range Range ) : IRangeType // arrays have only one inner type
-{
+{    public bool Equals(ArrayType other)
+    {
+        return other.Inner.Equals(Inner);
+    }
+ 
+     public readonly override int GetHashCode()
+     {
+         return Inner.GetHashCode();
+     }
     public ArrayType(IType inner): this(inner, Range.DefaultSmallInteger()) {}
 }
 
