@@ -1,3 +1,4 @@
+using System.Text;
 using LLVMSharp.Interop;
 using Shank.ASTNodes;
 using Shank.ExprVisitors;
@@ -137,17 +138,11 @@ public class VariableNode : StatementNode
 
     public override string ToString()
     {
-        return Name
-            + " : "
-            + NewType
-            + " "
-            + (IsConstant ? "const" : string.Empty)
-            + " "
-            + (InitialValue == null ? string.Empty : InitialValue);
-        // + " "
-        // + (From == null ? string.Empty : " From: " + From)
-        // + " "
-        // + (To == null ? string.Empty : " To: " + To);
+        var b = new StringBuilder();
+        b.Append($"{Name} declared as {NewType}");
+        b.Append(IsConstant ? " const" : "");
+        b.Append(InitialValue is not null ? $" init {InitialValue}" : "");
+        return b.ToString();
     }
 
     public override LLVMValueRef Visit(

@@ -1,4 +1,4 @@
-using LLVMSharp.Interop;
+using System.Text;
 
 namespace Shank.ASTNodes;
 
@@ -10,6 +10,11 @@ public class ElseNode : IfNode
 
     public override string ToString()
     {
-        return $" Else: {StatementListToString(Children)} {((NextIfNode == null) ? string.Empty : NextIfNode)}";
+        var linePrefix = $"else, line {Line}, ";
+        var b = new StringBuilder();
+        b.AppendLine(linePrefix + "statements begin");
+        Children.ForEach(c => b.AppendLine(c.ToString()));
+        b.AppendLine(linePrefix + "statements end");
+        return b.ToString();
     }
 }

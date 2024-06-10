@@ -4,16 +4,6 @@ using Shank.ExprVisitors;
 
 namespace Shank.ASTNodes;
 
-[JsonDerivedType(typeof(StringNode))]
-[JsonDerivedType(typeof(IntNode))]
-[JsonDerivedType(typeof(FloatNode))]
-[JsonDerivedType(typeof(BoolNode))]
-[JsonDerivedType(typeof(CharNode))]
-[JsonDerivedType(typeof(VariableUsageNode))]
-[JsonDerivedType(typeof(MathOpNode))]
-[JsonDerivedType(typeof(BooleanExpressionNode))]
-[JsonDerivedType(typeof(StatementNode))]
-[JsonDerivedType(typeof(FunctionNode))]
 public abstract class ASTNode
 {
     public string NodeName { get; init; }

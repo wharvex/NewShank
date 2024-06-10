@@ -1,16 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices.ComTypes;
-using System.Runtime.Serialization;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
-using System.Web;
-using Shank.ASTNodes;
-
-namespace Shank;
+﻿namespace Shank;
 
 /// <summary>
 /// If you're using Windows, these output files should save to something like:
@@ -39,41 +27,4 @@ public class OutputHelper
         );
         outputFile.WriteLine(output);
     }
-
-    public static string GetDebugJsonForProgramNode(ProgramNode pn)
-    {
-        return JsonSerializer.Serialize(pn, ProgramNodeContext.Default.ProgramNode);
-    }
-
-    public static string GetDebugJsonForModuleNode(ModuleNode mn)
-    {
-        return JsonSerializer.Serialize(mn, ModuleNodeContext.Default.ModuleNode);
-    }
-
-    public static string GetDebugJsonForTokenList(List<Token> tokenList)
-    {
-        return JsonSerializer.Serialize(tokenList, LexerContext.Default.ListToken);
-    }
-
-    public static string GetDebugJsonForRecordDataType(RecordDataType rdt)
-    {
-        return JsonSerializer.Serialize(rdt, RecordDataTypeContext.Default.RecordDataType);
-    }
 }
-
-[JsonSourceGenerationOptions(WriteIndented = true, UseStringEnumConverter = true)]
-[JsonSerializable(typeof(ProgramNode))]
-internal partial class ProgramNodeContext : JsonSerializerContext { }
-
-[JsonSourceGenerationOptions(WriteIndented = true, UseStringEnumConverter = true)]
-[JsonSerializable(typeof(ModuleNode))]
-internal partial class ModuleNodeContext : JsonSerializerContext { }
-
-[JsonSourceGenerationOptions(WriteIndented = true, UseStringEnumConverter = true)]
-[JsonSerializable(typeof(List<Token>))]
-internal partial class LexerContext : JsonSerializerContext { }
-
-[JsonSourceGenerationOptions(WriteIndented = true, UseStringEnumConverter = true)]
-[JsonSerializable(typeof(RecordDataType))]
-[JsonSerializable(typeof(Int32))]
-internal partial class RecordDataTypeContext : JsonSerializerContext { }
