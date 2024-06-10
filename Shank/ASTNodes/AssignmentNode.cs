@@ -54,6 +54,6 @@ public class AssignmentNode : StatementNode
 
     public override string ToString()
     {
-        return $"{Target} := {Expression}";
+        return $"{Target} assigned as {Expression}";
     }
 }

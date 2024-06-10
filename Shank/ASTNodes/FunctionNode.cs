@@ -75,27 +75,20 @@ public class FunctionNode : CallableNode
 
     public override string ToString()
     {
-        var linePrefix = $"function `{Name}' (Starting Line {Line}) ";
+        var linePrefix = $"function {Name}, line {Line}, ";
         var b = new StringBuilder();
-        b.AppendLine(linePrefix + "definition begin");
-        b.AppendLine(linePrefix + "declaration begin");
-        b.AppendLine(linePrefix + "declaration parameters begin");
-        ParameterVariables.ForEach(p => b.AppendLine(p.ToString()));
-        b.AppendLine(linePrefix + "declaration parameters end");
-        b.AppendLine(linePrefix + "declaration generic type parameter names begin");
-        GenericTypeParameterNames?.ForEach(p => b.AppendLine(p.ToString()));
-        b.AppendLine(linePrefix + "declaration generic type parameter names end");
-        b.AppendLine(linePrefix + "declaration end");
-        b.AppendLine(linePrefix + "body setup begin");
-        LocalVariables.ForEach(p => b.AppendLine(p.ToString()));
-        b.AppendLine(linePrefix + "body setup end");
-
-        if (Statements.Any())
-        {
-            b.AppendLine("-------------------------------------");
-            Statements.ForEach(p => b.AppendLine($"   {p}"));
-            b.AppendLine("-------------------------------------");
-        }
+        b.AppendLine(linePrefix + "begin");
+        b.AppendLine(linePrefix + "param vars begin");
+        ParameterVariables.ForEach(p => b.AppendLine(p + "; "));
+        b.AppendLine(linePrefix + "param vars end");
+        b.AppendLine(linePrefix + "local vars begin");
+        LocalVariables.ForEach(v => b.Append(v + "; "));
+        b.Append('\n');
+        b.AppendLine(linePrefix + "local vars end");
+        b.AppendLine(linePrefix + "statements begin");
+        Statements.ForEach(s => b.AppendLine(s.ToString()));
+        b.AppendLine(linePrefix + "statements end");
+        b.AppendLine(linePrefix + "end");
 
         return b.ToString();
     }
