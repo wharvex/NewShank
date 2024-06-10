@@ -488,7 +488,7 @@ public class FunctionNode : CallableNode
         var hash_variables = new Dictionary<string, LLVMValueRef>();
 
         LocalVariables
-            .Where(localVar => localVar.NewType is IntegerType)
+            .Where(localVar => localVar.Type is IntegerType)
             .ToList()
             .ForEach(localVar =>
             {
@@ -628,7 +628,7 @@ public class FunctionNode : CallableNode
         var fnRetTy = module.Context.Int32Type;
         var args = ParameterVariables.Select(
             s =>
-                context.GetLLVMTypeFromShankType(s.NewType, !s.IsConstant)
+                context.GetLLVMTypeFromShankType(s.Type, !s.IsConstant)
                 ?? throw new CompilerException($"type of parameter {s.Name} is not found", s.Line)
         );
         var arguementMutability = ParameterVariables.Select(p => !p.IsConstant);

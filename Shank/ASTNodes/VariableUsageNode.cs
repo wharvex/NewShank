@@ -89,11 +89,11 @@ public class VariableUsageNode : ASTNode
     )
     {
         var recordsAndImports = SemanticAnalysis.GetRecordsAndImports(records, imports);
-        return variables[name].NewType switch
+        return variables[name].Type switch
         {
             RecordType r => r,
             ArrayType a => a.Inner,
-            _ => variables[name].NewType
+            _ => variables[name].Type
         };
     }
 

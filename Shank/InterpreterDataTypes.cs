@@ -282,7 +282,7 @@ public class RecordDataType : InterpreterDataType
 
     public RecordDataType(List<VariableNode> members)
     {
-        members.ForEach(vn => MemberTypes[vn.GetNameSafe()] = vn.NewType);
+        members.ForEach(vn => MemberTypes[vn.GetNameSafe()] = vn.Type);
     }
 
     public RecordDataType(RecordDataType rdt)

@@ -117,7 +117,7 @@ public class ParameterNode : ASTNode
 
     public bool ConstantTypeEquals(VariableNode givenVariable)
     {
-        return givenVariable.NewType.Equals( GetConstantType());
+        return givenVariable.Type.Equals( GetConstantType());
     }
 
     public IType GetConstantType()
@@ -131,7 +131,7 @@ public class ParameterNode : ASTNode
     )
     {
         // Check if the types are unequal.
-        return (givenVariable.NewType.Equals(GetVariableType(variablesInScope)));
+        return (givenVariable.Type.Equals(GetVariableType(variablesInScope)));
 
     }
 
@@ -149,7 +149,7 @@ public class ParameterNode : ASTNode
 
     public IType GetVariableType(Dictionary<string, VariableNode> variablesInScope)
     {
-        return GetVariableDeclarationSafe(variablesInScope).NewType;
+        return GetVariableDeclarationSafe(variablesInScope).Type;
     }
 
     public override string ToString()

@@ -836,7 +836,7 @@ public class Parser
 
         {
             IsConstant = isConstant,
-            NewType = type,
+            Type = type,
             Name = n,
             ModuleName = parentModuleName,
         }).ToList();
@@ -1028,7 +1028,7 @@ public class Parser
                             ? new VariableNode()
                             {
                                 InitialValue = node,
-                                NewType = new RealType(),
+                                Type = new RealType(),
                                 IsConstant = true,
                                 Name = name.Value ?? "",
                                 ModuleName = parentModuleName
@@ -1036,7 +1036,7 @@ public class Parser
                             : new VariableNode()
                             {
                                 InitialValue = node,
-                                NewType = new IntegerType(),
+                                Type = new IntegerType(),
                                 IsConstant = true,
                                 Name = name.Value ?? "",
                                 ModuleName = parentModuleName
@@ -1052,7 +1052,7 @@ public class Parser
                             new VariableNode()
                             {
                                 InitialValue = new CharNode((chr?.Value ?? " ")[0]),
-                                NewType = new CharacterType(),
+                                Type = new CharacterType(),
                                 IsConstant = true,
                                 Name = name.Value ?? "",
                                 ModuleName = parentModuleName
@@ -1068,7 +1068,7 @@ public class Parser
                                 new VariableNode()
                                 {
                                     InitialValue = new StringNode(str?.Value ?? ""),
-                                    NewType = new StringType(),
+                                    Type = new StringType(),
                                     IsConstant = true,
                                     Name = name.Value ?? "",
                                     ModuleName = parentModuleName
@@ -1087,7 +1087,7 @@ public class Parser
                                         new VariableNode()
                                         {
                                             InitialValue = new StringNode(enm.Value),
-                                            NewType = new UnknownType(enm.Value),
+                                            Type = new UnknownType(enm.Value),
                                             IsConstant = true,
                                             Name = name.Value ?? "",
                                             ModuleName = parentModuleName,

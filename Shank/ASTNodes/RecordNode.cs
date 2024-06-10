@@ -22,7 +22,7 @@ public class RecordNode : StatementNode
     {
         Name = name;
         ParentModuleName = moduleName;
-        NewType = new RecordType(name, members.Select(member => (member.Name, member.NewType)).ToDictionary(),
+        NewType = new RecordType(name, members.Select(member => (member.Name, NewType: member.Type)).ToDictionary(),
             genericTypeParameterNames ?? []);
         // GenericTypeParameterNames = genericTypeParameterNames;
         // Members = [];

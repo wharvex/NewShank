@@ -245,7 +245,7 @@ public class SemanticAnalysis
     {
         // check that the arguement passed in has the right type for its parameter
         // and also if the parameter has any generics try to instiate them
-        return CheckAssignment(param.Name!, param.NewType, argument.Variable ?? argument.Constant!, variables);
+        return CheckAssignment(param.Name!, param.Type, argument.Variable ?? argument.Constant!, variables);
     }
 
     // assumptions if the arguement is a variable it assumed to be there already from previous check in check function call
@@ -370,7 +370,7 @@ public class SemanticAnalysis
             return s.Value.Length;
         if (node is VariableUsageNode vrn)
         {
-            var dataType = variables[vrn.Name].NewType;
+            var dataType = variables[vrn.Name].Type;
             if (dataType is IRangeType t)
                return t.Range.To;
             throw new Exception(
@@ -411,7 +411,7 @@ public class SemanticAnalysis
             return s.Value.Length;
         if (node is VariableUsageNode vrn)
         {
-              var dataType = variables[vrn.Name].NewType;
+              var dataType = variables[vrn.Name].Type;
             if (dataType is IRangeType t)
                return t.Range.From;
             throw new Exception(
@@ -483,11 +483,11 @@ public class SemanticAnalysis
             var variable = variables.GetValueOrDefault(variableReferenceNode.Name) ??
                            throw new SemanticErrorException($"Variable {variableReferenceNode.Name} not found",
                                variableReferenceNode);
-            return (variableReferenceNode.ExtensionType, variable.NewType) switch
+            return (variableReferenceNode.ExtensionType, NewType: variable.Type) switch
             {
-                (ExtensionType: VariableUsageNode.VrnExtType.None, _) => variable.NewType,
-                (ExtensionType: VariableUsageNode.VrnExtType.RecordMember, NewType: RecordType r) => GetTypeRecursive(r, variableReferenceNode) ?? variable.NewType,
-                (ExtensionType: VariableUsageNode.VrnExtType.RecordMember, NewType: ReferenceType(RecordType r)) => GetTypeRecursive(r, variableReferenceNode) ?? variable.NewType,
+                (ExtensionType: VariableUsageNode.VrnExtType.None, _) => variable.Type,
+                (ExtensionType: VariableUsageNode.VrnExtType.RecordMember, NewType: RecordType r) => GetTypeRecursive(r, variableReferenceNode) ?? variable.Type,
+                (ExtensionType: VariableUsageNode.VrnExtType.RecordMember, NewType: ReferenceType(RecordType r)) => GetTypeRecursive(r, variableReferenceNode) ?? variable.Type,
                 (ExtensionType: VariableUsageNode.VrnExtType.ArrayIndex, NewType: ArrayType a) =>
                     GetTypeOfExpression(variableReferenceNode.Extension!, variables) is IntegerType
                         ? a.Inner
@@ -876,7 +876,7 @@ public class SemanticAnalysis
                 var generics = currentFunction.GenericTypeParameterNames ?? [];
                 foreach (var variable in currentFunction.ParameterVariables)
                 {
-                        variable.NewType = variable.NewType switch
+                        variable.Type = variable.Type switch
                         {
                             UnknownType u => ResolveType(u, currentModule.Value,
                                 generics),
@@ -922,25 +922,25 @@ public class SemanticAnalysis
                         {
                             if (e.NewType.Variants.Contains(n.Value))
                             {
-                                variable.NewType = e.NewType;
+                                variable.Type = e.NewType;
                                 break;
                             }
                         } 
                     }
 
-                    if (variable.NewType is not EnumType)
+                    if (variable.Type is not EnumType)
                     {
-                        variable.NewType = new StringType();
+                        variable.Type = new StringType();
                     }
                 }
                 else
                 {
-                    variable.NewType = GetTypeOfExpression(init, []);
+                    variable.Type = GetTypeOfExpression(init, []);
                 }
             }
             else
             {
-                variable.NewType = variable.NewType switch
+                variable.Type = variable.Type switch
                 {
                     UnknownType u => ResolveType(u, currentModule,
                         generics),

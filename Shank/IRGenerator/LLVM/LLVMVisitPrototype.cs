@@ -11,7 +11,7 @@ public class LLVMVisitPrototype(Context context, LLVMBuilderRef builder, LLVMMod
         var fnRetTy = module.Context.Int32Type;
         var args = node.ParameterVariables.Select(
             s =>
-                context.GetLLVMTypeFromShankType(s.NewType)
+                context.GetLLVMTypeFromShankType(s.Type)
                 ?? throw new CompilerException($"type of parameter {s.Name} is not found", s.Line)
         );
         var arguementMutability = node.ParameterVariables.Select(p => !p.IsConstant);

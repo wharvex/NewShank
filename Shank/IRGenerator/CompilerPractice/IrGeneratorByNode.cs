@@ -40,7 +40,7 @@ public static class IrGeneratorByNode
         switch (node)
         {
             case VariableNode vn:
-                return CreateTypeRefFromShankType(irGen.LlvmContext, vn.NewType);
+                return CreateTypeRefFromShankType(irGen.LlvmContext, vn.Type);
             default:
                 throw new NotImplementedException();
         }

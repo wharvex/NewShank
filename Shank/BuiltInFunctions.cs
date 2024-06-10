@@ -22,13 +22,13 @@ public class BuiltInFunctions
                     new VariableNode()
                     {
                         Name = "value",
-                        NewType = new RealType(),
+                        Type = new RealType(),
                         IsConstant = true
                     },
                     new VariableNode()
                     {
                         Name = "result",
-                        NewType = new RealType(),
+                        Type = new RealType(),
                         IsConstant = false
                     },
                 },
@@ -42,7 +42,7 @@ public class BuiltInFunctions
                     new VariableNode()
                     {
                         Name = "result",
-                        NewType = new IntegerType(),
+                        Type = new IntegerType(),
                         IsConstant = false
                     },
                 },
@@ -56,13 +56,13 @@ public class BuiltInFunctions
                     new VariableNode()
                     {
                         Name = "value",
-                        NewType = new IntegerType(),
+                        Type = new IntegerType(),
                         IsConstant = true
                     },
                     new VariableNode()
                     {
                         Name = "result",
-                        NewType = new RealType(),
+                        Type = new RealType(),
                         IsConstant = false
                     },
                 },
@@ -76,13 +76,13 @@ public class BuiltInFunctions
                     new VariableNode()
                     {
                         Name = "value",
-                        NewType = new RealType(),
+                        Type = new RealType(),
                         IsConstant = true
                     },
                     new VariableNode()
                     {
                         Name = "result",
-                        NewType = new IntegerType(),
+                        Type = new IntegerType(),
                         IsConstant = false
                     },
                 },
@@ -96,19 +96,19 @@ public class BuiltInFunctions
                     new VariableNode()
                     {
                         Name = "value",
-                        NewType = new StringType(),
+                        Type = new StringType(),
                         IsConstant = true
                     },
                     new VariableNode()
                     {
                         Name = "amount",
-                        NewType = new IntegerType(),
+                        Type = new IntegerType(),
                         IsConstant = true
                     },
                     new VariableNode()
                     {
                         Name = "result",
-                        NewType = new StringType(),
+                        Type = new StringType(),
                         IsConstant = false
                     },
                 },
@@ -122,19 +122,19 @@ public class BuiltInFunctions
                     new VariableNode()
                     {
                         Name = "value",
-                        NewType = new StringType(),
+                        Type = new StringType(),
                         IsConstant = true
                     },
                     new VariableNode()
                     {
                         Name = "amount",
-                        NewType = new IntegerType(),
+                        Type = new IntegerType(),
                         IsConstant = true
                     },
                     new VariableNode()
                     {
                         Name = "result",
-                        NewType = new StringType(),
+                        Type = new StringType(),
                         IsConstant = false
                     },
                 },
@@ -148,25 +148,25 @@ public class BuiltInFunctions
                     new VariableNode()
                     {
                         Name = "value",
-                        NewType = new StringType(),
+                        Type = new StringType(),
                         IsConstant = true
                     },
                     new VariableNode()
                     {
                         Name = "index",
-                        NewType = new IntegerType(),
+                        Type = new IntegerType(),
                         IsConstant = true
                     },
                     new VariableNode()
                     {
                         Name = "amount",
-                        NewType = new IntegerType(),
+                        Type = new IntegerType(),
                         IsConstant = true
                     },
                     new VariableNode()
                     {
                         Name = "result",
-                        NewType = new StringType(),
+                        Type = new StringType(),
                         IsConstant = false
                     },
                 },
@@ -180,13 +180,13 @@ public class BuiltInFunctions
                     new VariableNode()
                     {
                         Name = "actualValue",
-                        NewType = new IntegerType(),
+                        Type = new IntegerType(),
                         IsConstant = true
                     },
                     new VariableNode()
                     {
                         Name = "targetValue",
-                        NewType = new IntegerType(),
+                        Type = new IntegerType(),
                         IsConstant = true
                     }
                 },
@@ -200,7 +200,7 @@ public class BuiltInFunctions
                     new VariableNode()
                     {
                         Name = "refersTo",
-                        NewType = new ReferenceType(),
+                        Type = new ReferenceType(),
                         IsConstant = false
                     }
                 },
@@ -214,7 +214,7 @@ public class BuiltInFunctions
                     new VariableNode()
                     {
                         Name = "refersTo",
-                        NewType = new ReferenceType(),
+                        Type = new ReferenceType(),
                         IsConstant = false
                     }
                 },
@@ -228,13 +228,13 @@ public class BuiltInFunctions
                     new VariableNode()
                     {
                         Name = "refersTo",
-                        NewType = new ReferenceType(),
+                        Type = new ReferenceType(),
                         IsConstant = true
                     },
                     new VariableNode()
                     {
                         Name = "value",
-                        NewType = new BooleanType(),
+                        Type = new BooleanType(),
                         IsConstant = false
                     }
                 },
@@ -248,13 +248,13 @@ public class BuiltInFunctions
                     new VariableNode()
                     {
                         Name = "refersTo",
-                        NewType = new ReferenceType(),
+                        Type = new ReferenceType(),
                         IsConstant = true
                     },
                     new VariableNode()
                     {
                         Name = "value",
-                        NewType = new IntegerType(),
+                        Type = new IntegerType(),
                         IsConstant = false
                     }
                 },

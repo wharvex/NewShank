@@ -43,7 +43,7 @@ public class VariableNode : StatementNode
     };
 
     // public DataType Type { get; set; }
-    public IType NewType { get; set; }
+    public IType Type { get; set; }
 
     public LLVMTypeRef GetLLVMType(Context context, IType type) =>
         context.GetLLVMTypeFromShankType(type, false)
@@ -91,7 +91,7 @@ public class VariableNode : StatementNode
     public string ToStringForOverloadExt() =>
         "_"
         + (IsConstant ? "" : "VAR_")
-        + NewType;
+        + Type;
 
     // TODO implemnted in unkown type
     
@@ -107,11 +107,11 @@ public class VariableNode : StatementNode
         vrn.ExtensionType switch
         {
             // TODO: make exttype more expressive/type constrained
-            VariableUsageNode.VrnExtType.ArrayIndex => ((ArrayType)NewType).Inner,
+            VariableUsageNode.VrnExtType.ArrayIndex => ((ArrayType)Type).Inner,
             VariableUsageNode.VrnExtType.RecordMember
-                => ((RecordType)NewType).Fields[vrn.GetRecordMemberReferenceSafe().Name],
+                => ((RecordType)Type).Fields[vrn.GetRecordMemberReferenceSafe().Name],
             VariableUsageNode.VrnExtType.None
-                => NewType switch
+                => Type switch
                 {
                     RecordType
                         => throw new NotImplementedException(
@@ -121,7 +121,7 @@ public class VariableNode : StatementNode
                         => throw new NotImplementedException(
                             "It is not implemented yet to assign an array variable base to a target."
                         ),
-                    _ => NewType
+                    _ => Type
                 },
             _ => throw new NotImplementedException("Unknown VrnExtType member.")
         };
@@ -133,13 +133,13 @@ public class VariableNode : StatementNode
 
     public bool EqualsForOverload(VariableNode vn)
     {
-        return vn.NewType.Equals(NewType) && vn.IsConstant == IsConstant;
+        return vn.Type.Equals(Type) && vn.IsConstant == IsConstant;
     }
 
     public override string ToString()
     {
         var b = new StringBuilder();
-        b.Append($"{Name} declared as {NewType}");
+        b.Append($"{Name} declared as {Type}");
         b.Append(IsConstant ? " const" : "");
         b.Append(InitialValue is not null ? $" init {InitialValue}" : "");
         return b.ToString();
@@ -157,10 +157,10 @@ public class VariableNode : StatementNode
 
         LLVMValueRef v = builder.BuildAlloca(
             // isVar is false, because we are already creating it using alloca which makes it var
-            context.GetLLVMTypeFromShankType(NewType) ?? throw new Exception("null type"),
+            context.GetLLVMTypeFromShankType(Type) ?? throw new Exception("null type"),
             name
         );
-        var variable = context.newVariable(NewType);
+        var variable = context.newVariable(Type);
         context.AddVaraible(name, variable(v, !IsConstant), false);
         return v;
     }

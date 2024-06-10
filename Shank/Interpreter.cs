@@ -735,7 +735,7 @@ public class Interpreter
     private static InterpreterDataType VariableNodeToActivationRecord(VariableNode vn)
     {
         var parentModule = Modules[vn.GetModuleNameSafe()];
-        switch (vn.NewType)
+        switch (vn.Type)
         {
             case RealType:
                 return new FloatDataType(((vn.InitialValue as FloatNode)?.Value) ?? 0.0F);

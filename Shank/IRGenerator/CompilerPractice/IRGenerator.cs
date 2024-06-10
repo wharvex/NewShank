@@ -315,7 +315,7 @@ public class IrGenerator
         };
 
     private LLVMTypeRef[] GetParamTypes(IEnumerable<VariableNode> varNodes) =>
-        varNodes.Select(vn => GetLlvmTypeFromShankType(vn.NewType)).ToArray();
+        varNodes.Select(vn => GetLlvmTypeFromShankType(vn.Type)).ToArray();
 
     /// <summary>
     /// Find the first non-constant VariableNode in the given list and return its corresponding LLVM
@@ -328,7 +328,7 @@ public class IrGenerator
     /// <returns></returns>
     private LLVMTypeRef GetReturnType(IEnumerable<VariableNode> vns) =>
         vns.Where(vn => !vn.IsConstant)
-            .Select(vn => GetLlvmTypeFromShankType(vn.NewType))
+            .Select(vn => GetLlvmTypeFromShankType(vn.Type))
             .FirstOrDefault(LlvmContext.VoidType);
 
     private LLVMTypeRef GetLlvmTypeFromShankType(IType type) =>
