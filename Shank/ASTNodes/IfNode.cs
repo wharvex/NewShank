@@ -84,7 +84,7 @@ public class IfNode : StatementNode
     //     //     var elseBlock = context.CurrentFunction.AppendBasicBlock("else block");
     //     //     var afterBlock = context.CurrentFunction.AppendBasicBlock("after if statement");
     //     //     builder.BuildCondBr(condition, ifBlock, elseBlock);
-    //     //
+    //     //;
     //     //     builder.PositionAtEnd(ifBlock);
     //     //     Children.ForEach(c => c.VisitStatement(visitor, context, builder, module));
     //     //     builder.BuildBr(afterBlock);
