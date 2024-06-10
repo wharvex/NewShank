@@ -116,7 +116,15 @@ public class Lexer
                     stringHandler.GetChar();
                     lineNumber++;
                     characterPosition++;
-                    tokens.AddLast((new Token(TokenType.FUNCTIONBLOCKIDENTIFIER, lineNumber, characterPosition)));
+                    tokens.AddLast(
+                        (
+                            new Token(
+                                TokenType.FUNCTIONBLOCKIDENTIFIER,
+                                lineNumber,
+                                characterPosition
+                            )
+                        )
+                    );
                 }
                 else
                 {
