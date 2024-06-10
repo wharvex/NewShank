@@ -1,5 +1,6 @@
 using LLVMSharp.Interop;
 using Shank.ASTNodes;
+using Shank.IRGenerator;
 
 namespace Shank.ExprVisitors;
 
@@ -34,7 +35,7 @@ public class LLVMExpr(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
 
     public override LLVMValueRef Accept(VariableReferenceNode node)
     {
-        LLVMValue value = context.GetVaraible(node.Name);
+        LLVMValue value = context.GetVariable(node.Name);
         return builder.BuildLoad2(value.TypeRef, value.ValueRef);
     }
 
@@ -219,7 +220,7 @@ public class LLVMExpr(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
     public override LLVMValueRef Accept(ParameterNode node)
     {
         return node.IsVariable
-            ? context.GetVaraible(node.Variable?.Name).ValueRef
+            ? context.GetVariable(node.Variable?.Name).ValueRef
             : node.Constant.Visit(this);
     }
 }

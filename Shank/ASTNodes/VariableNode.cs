@@ -1,6 +1,7 @@
 using LLVMSharp.Interop;
 using Shank.ASTNodes;
 using Shank.ExprVisitors;
+using Shank.IRGenerator;
 using Exception = System.Exception;
 
 namespace Shank.ASTNodes;
@@ -183,9 +184,14 @@ public class VariableNode : StatementNode
             context.GetLLVMTypeFromShankType(Type, UnknownType) ?? throw new Exception("null type"),
             name
         );
-        var variable = context.newVariable(Type, UnknownType);
-        context.AddVaraible(name, variable(v, !IsConstant), false);
+        var variable = context.NewVariable(Type, UnknownType);
+        context.AddVariable(name, variable(v, !IsConstant), false);
         return v;
+    }
+
+    public void VisitProto(VisitPrototype visitPrototype)
+    {
+        visitPrototype.Accept(this);
     }
 
     public override void Visit(StatementVisitor visit)

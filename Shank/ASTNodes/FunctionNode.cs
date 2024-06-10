@@ -1,6 +1,7 @@
 using System.Text;
 using LLVMSharp.Interop;
 using Shank.ExprVisitors;
+using Shank.IRGenerator;
 
 namespace Shank.ASTNodes;
 
@@ -651,7 +652,7 @@ public class FunctionNode : CallableNode
             llvmParam.Name = name;
         }
 
-        context.addFunction(Name, function);
+        context.AddFunction(Name, function);
     }
 
     public override LLVMValueRef Visit(

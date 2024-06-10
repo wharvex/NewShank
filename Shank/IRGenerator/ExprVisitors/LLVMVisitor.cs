@@ -1,5 +1,6 @@
 using LLVMSharp.Interop;
 using Shank.ASTNodes;
+using Shank.IRGenerator;
 
 namespace Shank.ExprVisitors;
 
@@ -52,7 +53,7 @@ public class LLVMVisitor : Visitor<LLVMValueRef>
 
     public override LLVMValueRef Visit(VariableReferenceNode node)
     {
-        LLVMValue value = _context.GetVaraible(node.Name);
+        LLVMValue value = _context.GetVariable(node.Name);
         return _builder.BuildLoad2(value.TypeRef, value.ValueRef);
     }
 
@@ -273,12 +274,12 @@ public class LLVMVisitor : Visitor<LLVMValueRef>
         {
             var llvmParam = function.GetParam((uint)index);
             var name = param.GetNameSafe();
-            var parameter = _context.newVariable(param.Type, param.UnknownType)(
+            var parameter = _context.NewVariable(param.Type, param.UnknownType)(
                 llvmParam,
                 !param.IsConstant
             );
 
-            _context.AddVaraible(name, parameter, false);
+            _context.AddVariable(name, parameter, false);
         }
 
         function.Linkage = LLVMLinkage.LLVMExternalLinkage;
@@ -329,7 +330,7 @@ public class LLVMVisitor : Visitor<LLVMValueRef>
 
     public override void Visit(AssignmentNode node)
     {
-        var llvmValue = _context.GetVaraible(node.Target.Name);
+        var llvmValue = _context.GetVariable(node.Target.Name);
         if (!llvmValue.IsMutable)
         {
             throw new Exception($"tried to mutate non mutable variable {node.Target.Name}");

@@ -1,5 +1,6 @@
 using LLVMSharp.Interop;
 using Shank.ASTNodes;
+using Shank.IRGenerator;
 
 namespace Shank.ExprVisitors;
 
@@ -41,13 +42,13 @@ public class LLVMStatement(Context context, LLVMBuilderRef builder, LLVMModuleRe
             var llvmParam = function.GetParam((uint)index);
             var name = param.GetNameSafe();
             LLVMValueRef paramAllocation = builder.BuildAlloca(llvmParam.TypeOf, name);
-            var parameter = context.newVariable(param.Type, param.UnknownType)(
+            var parameter = context.NewVariable(param.Type, param.UnknownType)(
                 paramAllocation, //a
                 !param.IsConstant
             );
 
             builder.BuildStore(llvmParam, paramAllocation);
-            context.AddVaraible(name, parameter, false);
+            context.AddVariable(name, parameter, false);
         }
 
         function.Linkage = LLVMLinkage.LLVMExternalLinkage;
@@ -76,7 +77,7 @@ public class LLVMStatement(Context context, LLVMBuilderRef builder, LLVMModuleRe
 
     public override void Accept(AssignmentNode node)
     {
-        var llvmValue = context.GetVaraible(node.Target.Name);
+        var llvmValue = context.GetVariable(node.Target.Name);
         if (!llvmValue.IsMutable)
         {
             throw new Exception($"tried to mutate non mutable variable {node.Target.Name}");
@@ -106,7 +107,11 @@ public class LLVMStatement(Context context, LLVMBuilderRef builder, LLVMModuleRe
                 // TODO: type imports
                 if (shankModule.Functions.TryGetValue(import, out var function))
                 {
-                    context.addFunction(import, function);
+                    context.AddFunction(import, function);
+                }
+                else if (shankModule.GloabalVariables.TryGetValue(import, out var Var))
+                {
+                    context.AddVariable(import, Var, true);
                 }
             }
         }
@@ -187,8 +192,8 @@ public class LLVMStatement(Context context, LLVMBuilderRef builder, LLVMModuleRe
                 ?? throw new Exception("null type"),
             name
         );
-        var variable = context.newVariable(node.Type, node.UnknownType);
-        context.AddVaraible(name, variable(v, !node.IsConstant), false);
+        var variable = context.NewVariable(node.Type, node.UnknownType);
+        context.AddVariable(name, variable(v, !node.IsConstant), false);
     }
 
     public override void Accept(ProgramNode node)
