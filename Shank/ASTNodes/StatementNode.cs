@@ -1,18 +1,9 @@
 using System.Text;
-using System.Text.Json.Serialization;
 using LLVMSharp.Interop;
-using Shank.ASTNodes;
 using Shank.ExprVisitors;
 
 namespace Shank.ASTNodes;
 
-[JsonDerivedType(typeof(RecordMemberNode))]
-[JsonDerivedType(typeof(AssignmentNode))]
-[JsonDerivedType(typeof(FunctionCallNode))]
-[JsonDerivedType(typeof(IfNode))]
-[JsonDerivedType(typeof(ForNode))]
-[JsonDerivedType(typeof(WhileNode))]
-[JsonDerivedType(typeof(RepeatNode))]
 public class StatementNode : ASTNode
 {
     protected static string StatementListToString(List<StatementNode> statements)
