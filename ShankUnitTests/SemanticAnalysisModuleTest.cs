@@ -381,7 +381,7 @@ namespace ShankUnitTests
         // TODO: better bad import exceptions
         [ExpectedException(
             typeof(SemanticErrorException)
-            // "Cannot create an enum of type colors as it was never exported"
+        // "Cannot create an enum of type colors as it was never exported"
         )]
         public void ImportedEnumPrivacy()
         {
@@ -417,7 +417,7 @@ namespace ShankUnitTests
         [TestMethod]
         [ExpectedException(
             typeof(SemanticErrorException)
-            // "Enums can only be compared to enums or enum variables of the same type."
+        // "Enums can only be compared to enums or enum variables of the same type."
         )]
         public void compareTwoDifferentEnumTypes()
         {

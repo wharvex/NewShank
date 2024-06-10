@@ -11,6 +11,7 @@ public class EnumNode : ASTNode
     public EnumType NewType;
 
     public string ParentModuleName { get; set; }
+
     // public LinkedList<String> EnumElements;
     public bool IsPublic { get; set; }
 
@@ -18,7 +19,7 @@ public class EnumNode : ASTNode
     {
         Type = type;
         ParentModuleName = parentModuleName;
-        NewType = new EnumType(type,(enumElements));
+        NewType = new EnumType(type, (enumElements));
         IsPublic = false;
     }
 

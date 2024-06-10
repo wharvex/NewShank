@@ -67,6 +67,7 @@ public class VariableNode : StatementNode
 
     public bool IsConstant { get; set; }
     public ASTNode? InitialValue { get; set; }
+
     // public ASTNode? From { get; set; }
     // public ASTNode? To { get; set; }
 
@@ -89,13 +90,10 @@ public class VariableNode : StatementNode
 
     public string GetModuleNameSafe() => ModuleName ?? "default";
 
-    public string ToStringForOverloadExt() =>
-        "_"
-        + (IsConstant ? "" : "VAR_")
-        + Type;
+    public string ToStringForOverloadExt() => "_" + (IsConstant ? "" : "VAR_") + Type;
 
     // TODO implemnted in unkown type
-    
+
 
     /// <summary>
     /// Get this VariableNode's type based on what Extension the VariableReferenceNode that
@@ -108,7 +106,8 @@ public class VariableNode : StatementNode
         vrn.ExtensionType switch
         {
             // TODO: make exttype more expressive/type constrained
-            VariableUsageNode.VrnExtType.ArrayIndex => ((ArrayType)Type).Inner,
+            VariableUsageNode.VrnExtType.ArrayIndex
+                => ((ArrayType)Type).Inner,
             VariableUsageNode.VrnExtType.RecordMember
                 => ((RecordType)Type).Fields[vrn.GetRecordMemberReferenceSafe().Name],
             VariableUsageNode.VrnExtType.None

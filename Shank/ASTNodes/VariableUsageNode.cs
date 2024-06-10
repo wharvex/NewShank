@@ -117,7 +117,7 @@ public class VariableUsageNode : ASTNode
     {
         return visit.Accept(this);
     }
-    
+
     public enum VrnExtType
     {
         RecordMember,

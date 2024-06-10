@@ -188,8 +188,7 @@ public class LLVMStatement(Context context, LLVMBuilderRef builder, LLVMModuleRe
 
         LLVMValueRef v = builder.BuildAlloca(
             // isVar is false, because we are already creating it using alloca which makes it var
-            context.GetLLVMTypeFromShankType(node.Type)
-                ?? throw new Exception("null type"),
+            context.GetLLVMTypeFromShankType(node.Type) ?? throw new Exception("null type"),
             name
         );
         var variable = context.NewVariable(node.Type);

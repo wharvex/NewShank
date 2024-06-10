@@ -19,12 +19,20 @@ public class RecordNode : StatementNode
     // public List<VariableNode> Members2 { get; init; }
     public bool IsPublic { get; set; }
 
-    public RecordNode(string name, string moduleName, List<VariableNode> members, List<string>? genericTypeParameterNames)
+    public RecordNode(
+        string name,
+        string moduleName,
+        List<VariableNode> members,
+        List<string>? genericTypeParameterNames
+    )
     {
         Name = name;
         ParentModuleName = moduleName;
-        NewType = new RecordType(name, members.Select(member => (member.Name, NewType: member.Type)).ToDictionary(),
-            genericTypeParameterNames ?? []);
+        NewType = new RecordType(
+            name,
+            members.Select(member => (member.Name, NewType: member.Type)).ToDictionary(),
+            genericTypeParameterNames ?? []
+        );
         // GenericTypeParameterNames = genericTypeParameterNames;
         // Members = [];
         // Members2 = [];
@@ -41,11 +49,11 @@ public class RecordNode : StatementNode
     //     Members2.FirstOrDefault(v => v?.Name?.Equals(name) ?? false, null);
     //
     // public VariableNode GetFromMembersByNameSafe(string name) =>
-        // GetFromMembersByName(name)
-        // ?? throw new ArgumentOutOfRangeException(
-        //     nameof(name),
-        //     "Member " + name + " not found on record."
-        // );
+    // GetFromMembersByName(name)
+    // ?? throw new ArgumentOutOfRangeException(
+    //     nameof(name),
+    //     "Member " + name + " not found on record."
+    // );
 
     public string GetParentModuleSafe()
     {

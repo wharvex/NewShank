@@ -92,7 +92,6 @@ public class SemanticAnalysis
         {
             var foundFunction = false;
             if (s is AssignmentNode an)
-
             {
                 if (variables.TryGetValue(an.Target.Name, out var targetDeclaration))
                     if (targetDeclaration.IsConstant)
@@ -105,7 +104,7 @@ public class SemanticAnalysis
 
                 var targetType = GetTypeOfExpression(an.Target, variables);
 
-                CheckAssignment(an.Target.Name, targetType,an.Expression, variables);
+                CheckAssignment(an.Target.Name, targetType, an.Expression, variables);
             }
             else if (s is FunctionCallNode fn)
             {
@@ -157,7 +156,7 @@ public class SemanticAnalysis
                 {
                     throw new Exception(
                         $"Could not find a definition for the function {fn.Name}."
-                        + $" Make sure it was defined and properly exported if it was imported."
+                            + $" Make sure it was defined and properly exported if it was imported."
                     );
                 }
             }
@@ -173,7 +172,7 @@ public class SemanticAnalysis
             {
                 GetTypeOfExpression(ifNode.Expression, variables);
                 var nextNode = ifNode.NextIfNode;
-                while (nextNode is not null and not ElseNode )
+                while (nextNode is not null and not ElseNode)
                 {
                     GetTypeOfExpression(nextNode.Expression, variables);
                     nextNode = nextNode.NextIfNode;
@@ -182,31 +181,39 @@ public class SemanticAnalysis
         }
     }
 
-    private static Dictionary<string, Type> CheckAssignment(String targetName, Type targetType, ASTNode expression,  Dictionary<string, VariableNode> variables)
+    private static Dictionary<string, Type> CheckAssignment(
+        String targetName,
+        Type targetType,
+        ASTNode expression,
+        Dictionary<string, VariableNode> variables
+    )
     {
-                    
-                CheckRange(targetName,targetType, expression, variables);
-           
-            if (targetType is EnumType e && expression is VariableUsageNode v && e.Variants.Contains(v.Name))
+        CheckRange(targetName, targetType, expression, variables);
+
+        if (
+            targetType is EnumType e
+            && expression is VariableUsageNode v
+            && e.Variants.Contains(v.Name)
+        )
+        {
+            if (v.ExtensionType != VariableUsageNode.VrnExtType.None)
             {
-                if (v.ExtensionType != VariableUsageNode.VrnExtType.None)
-                {
-                    throw new SemanticErrorException($"ambiguous variable name {v.Name}", expression);
-                }
+                throw new SemanticErrorException($"ambiguous variable name {v.Name}", expression);
             }
-            else
+        }
+        else
+        {
+            var expressionType = GetTypeOfExpression(expression, variables);
+            if (!targetType.Equals(expressionType))
             {
-                var expressionType = GetTypeOfExpression(expression, variables);
-                if (!targetType.Equals(expressionType))
-                {
-                    throw new SemanticErrorException(
-                        $"Type mismatch cannot assign to {targetName}: {targetType} {expression}: {expressionType}", expression);
-                }
-
-
+                throw new SemanticErrorException(
+                    $"Type mismatch cannot assign to {targetName}: {targetType} {expression}: {expressionType}",
+                    expression
+                );
             }
+        }
 
-            return [];
+        return [];
     }
 
     // This is why something like type usage/IType is useful, because when we just return the datatype
@@ -245,7 +252,12 @@ public class SemanticAnalysis
     {
         // check that the arguement passed in has the right type for its parameter
         // and also if the parameter has any generics try to instiate them
-        return CheckAssignment(param.Name!, param.Type, argument.Variable ?? argument.Constant!, variables);
+        return CheckAssignment(
+            param.Name!,
+            param.Type,
+            argument.Variable ?? argument.Constant!,
+            variables
+        );
     }
 
     // assumptions if the arguement is a variable it assumed to be there already from previous check in check function call
@@ -290,8 +302,6 @@ public class SemanticAnalysis
         }
     }
 
-    
-
     private static void CheckRange(
         String? variable,
         Type targetType,
@@ -322,8 +332,7 @@ public class SemanticAnalysis
         {
             // try
             {
-                if
-                          (targetType is RangeType i) // all other i range type are bounded by integers
+                if (targetType is RangeType i) // all other i range type are bounded by integers
                 {
                     var from = i.Range.From;
                     var to = i.Range.To;
@@ -372,10 +381,8 @@ public class SemanticAnalysis
         {
             var dataType = variables[vrn.Name].Type;
             if (dataType is RangeType t)
-               return t.Range.To;
-            throw new Exception(
-                "Ranged variables can only be assigned variables with a range."
-            );
+                return t.Range.To;
+            throw new Exception("Ranged variables can only be assigned variables with a range.");
         }
         throw new Exception(
             "Unrecognized node type on line "
@@ -411,90 +418,154 @@ public class SemanticAnalysis
             return s.Value.Length;
         if (node is VariableUsageNode vrn)
         {
-              var dataType = variables[vrn.Name].Type;
+            var dataType = variables[vrn.Name].Type;
             if (dataType is RangeType t)
-               return t.Range.From;
-            throw new Exception(
-                "Ranged variables can only be assigned variables with a range."
-            );
+                return t.Range.From;
+            throw new Exception("Ranged variables can only be assigned variables with a range.");
         }
-
 
         throw new Exception("Unrecognized node type in math expression while checking range");
     }
 
-    private static Type GetTypeOfExpression(ASTNode expression,
+    private static Type GetTypeOfExpression(
+        ASTNode expression,
         Dictionary<string, VariableNode> variables
     )
     {
         return expression switch
         {
             IntNode intNode => new IntegerType(),
-            BooleanExpressionNode booleanExpressionNode => GetTypeOfBooleanExpression(booleanExpressionNode, variables),
+            BooleanExpressionNode booleanExpressionNode
+                => GetTypeOfBooleanExpression(booleanExpressionNode, variables),
             CharNode charNode => new CharacterType(),
             FloatNode floatNode => new CharacterType(),
             MathOpNode mathOpNode => GetTypeOfMathOp(mathOpNode, variables),
             StringNode stringNode => new StringType(),
-            VariableUsageNode variableReferenceNode => GetTypeOfVariableUsage(variableReferenceNode, variables),
+            VariableUsageNode variableReferenceNode
+                => GetTypeOfVariableUsage(variableReferenceNode, variables),
             _ => throw new ArgumentOutOfRangeException(expression.ToString())
         };
 
-        Type GetTypeOfBooleanExpression(BooleanExpressionNode booleanExpressionNode, Dictionary<string, VariableNode> variableNodes)
+        Type GetTypeOfBooleanExpression(
+            BooleanExpressionNode booleanExpressionNode,
+            Dictionary<string, VariableNode> variableNodes
+        )
         {
             // TODO: are all things of the same type comparable
             var leftType = GetTypeOfExpression(booleanExpressionNode.Left, variables);
-            if (leftType is EnumType e &&  booleanExpressionNode.Right is VariableUsageNode v && e.Variants.Contains(v.Name )) 
+            if (
+                leftType is EnumType e
+                && booleanExpressionNode.Right is VariableUsageNode v
+                && e.Variants.Contains(v.Name)
+            )
             {
-
-                if  (  v.ExtensionType != VariableUsageNode.VrnExtType.None)
+                if (v.ExtensionType != VariableUsageNode.VrnExtType.None)
                 {
-                    throw new SemanticErrorException($"ambiguous variable name {v.Name}", expression);
+                    throw new SemanticErrorException(
+                        $"ambiguous variable name {v.Name}",
+                        expression
+                    );
                 }
 
                 return new BooleanType();
             }
             var rightType = GetTypeOfExpression(booleanExpressionNode.Right, variables);
-            return leftType.Equals(
-                   rightType)
+            return leftType.Equals(rightType)
                 ? new BooleanType()
-                : throw new SemanticErrorException($"could not compare expressions of different types {leftType} to {rightType}",
-                    booleanExpressionNode);
+                : throw new SemanticErrorException(
+                    $"could not compare expressions of different types {leftType} to {rightType}",
+                    booleanExpressionNode
+                );
         }
 
         Type GetTypeOfMathOp(MathOpNode mathOpNode, Dictionary<string, VariableNode> variableNodes)
         {
             var lhs = GetTypeOfExpression(mathOpNode.Left, variables);
             var rhs = GetTypeOfExpression(mathOpNode.Right, variables);
-                // TODO: preserver ranges
+            // TODO: preserver ranges
             return (lhs, rhs) switch
             {
-                (StringType or CharacterType, StringType or CharacterType) => mathOpNode.Op == MathOpNode.MathOpType.Plus ? new StringType() : throw  new SemanticErrorException($"cannot {mathOpNode.Op} two strings", mathOpNode),
+                (StringType or CharacterType, StringType or CharacterType)
+                    => mathOpNode.Op == MathOpNode.MathOpType.Plus
+                        ? new StringType()
+                        : throw new SemanticErrorException(
+                            $"cannot {mathOpNode.Op} two strings",
+                            mathOpNode
+                        ),
                 (RealType, RealType) => lhs,
                 (IntegerType, IntegerType) => lhs,
-                (StringType or CharacterType or IntegerType or RealType, RealType or StringType or CharacterType or IntegerType) => throw new SemanticErrorException($"{lhs} and {rhs} are not the same so you cannot perform math operations on them", mathOpNode),
-                (StringType or CharacterType or IntegerType or RealType, _) => throw  new SemanticErrorException($"the right hand side of this math expression is not able to be used in math expression", mathOpNode),
-                (_, StringType or CharacterType or IntegerType or RealType) => throw  new SemanticErrorException($"the left hand side of this math expression is not able to be used in math expression", mathOpNode),
-                _ => throw  new SemanticErrorException("the expression used in this math expression are not valid in math expressions", mathOpNode)
+                (
+                    StringType
+                        or CharacterType
+                        or IntegerType
+                        or RealType,
+                    RealType
+                        or StringType
+                        or CharacterType
+                        or IntegerType
+                )
+                    => throw new SemanticErrorException(
+                        $"{lhs} and {rhs} are not the same so you cannot perform math operations on them",
+                        mathOpNode
+                    ),
+                (StringType or CharacterType or IntegerType or RealType, _)
+                    => throw new SemanticErrorException(
+                        $"the right hand side of this math expression is not able to be used in math expression",
+                        mathOpNode
+                    ),
+                (_, StringType or CharacterType or IntegerType or RealType)
+                    => throw new SemanticErrorException(
+                        $"the left hand side of this math expression is not able to be used in math expression",
+                        mathOpNode
+                    ),
+                _
+                    => throw new SemanticErrorException(
+                        "the expression used in this math expression are not valid in math expressions",
+                        mathOpNode
+                    )
             };
         }
 
-        Type GetTypeOfVariableUsage(VariableUsageNode variableReferenceNode, Dictionary<string, VariableNode> variableNodes)
+        Type GetTypeOfVariableUsage(
+            VariableUsageNode variableReferenceNode,
+            Dictionary<string, VariableNode> variableNodes
+        )
         {
-            var variable = variables.GetValueOrDefault(variableReferenceNode.Name) ??
-                           throw new SemanticErrorException($"Variable {variableReferenceNode.Name} not found",
-                               variableReferenceNode);
+            var variable =
+                variables.GetValueOrDefault(variableReferenceNode.Name)
+                ?? throw new SemanticErrorException(
+                    $"Variable {variableReferenceNode.Name} not found",
+                    variableReferenceNode
+                );
             return (variableReferenceNode.ExtensionType, NewType: variable.Type) switch
             {
                 (ExtensionType: VariableUsageNode.VrnExtType.None, _) => variable.Type,
-                (ExtensionType: VariableUsageNode.VrnExtType.RecordMember, NewType: RecordType r) => GetTypeRecursive(r, variableReferenceNode) ?? variable.Type,
-                (ExtensionType: VariableUsageNode.VrnExtType.RecordMember, NewType: ReferenceType(RecordType r)) => GetTypeRecursive(r, variableReferenceNode) ?? variable.Type,
-                (ExtensionType: VariableUsageNode.VrnExtType.ArrayIndex, NewType: ArrayType a) =>
-                    GetTypeOfExpression(variableReferenceNode.Extension!, variables) is IntegerType
+                (ExtensionType: VariableUsageNode.VrnExtType.RecordMember, NewType: RecordType r)
+                    => GetTypeRecursive(r, variableReferenceNode) ?? variable.Type,
+                (
+                    ExtensionType: VariableUsageNode.VrnExtType.RecordMember,
+                    NewType: ReferenceType
+                    (RecordType r)
+                )
+                    => GetTypeRecursive(r, variableReferenceNode) ?? variable.Type,
+                (ExtensionType: VariableUsageNode.VrnExtType.ArrayIndex, NewType: ArrayType a)
+                    => GetTypeOfExpression(variableReferenceNode.Extension!, variables)
+                    is IntegerType
                         ? a.Inner
-                        : throw new SemanticErrorException("Array indexer does not resolve to a number",
-                            variableReferenceNode),
-                (ExtensionType: VariableUsageNode.VrnExtType.ArrayIndex, _) => throw new SemanticErrorException("Invalid array index, tried to index into non array", variableReferenceNode),
-                (ExtensionType: VariableUsageNode.VrnExtType.RecordMember, NewType: { } t) => throw new SemanticErrorException($"Invalid member access, tried to access non record {t}", variableReferenceNode),
+                        : throw new SemanticErrorException(
+                            "Array indexer does not resolve to a number",
+                            variableReferenceNode
+                        ),
+                (ExtensionType: VariableUsageNode.VrnExtType.ArrayIndex, _)
+                    => throw new SemanticErrorException(
+                        "Invalid array index, tried to index into non array",
+                        variableReferenceNode
+                    ),
+                (ExtensionType: VariableUsageNode.VrnExtType.RecordMember, NewType: { } t)
+                    => throw new SemanticErrorException(
+                        $"Invalid member access, tried to access non record {t}",
+                        variableReferenceNode
+                    ),
             };
         }
     }
@@ -536,9 +607,8 @@ public class SemanticAnalysis
             _ => null
         };
         return innerVndt is not null
-            ? GetTypeRecursive( innerVndt, (VariableUsageNode)targetUsage.GetExtensionSafe()) ?? vndt
-            : vndt; 
-        
+            ? GetTypeRecursive(innerVndt, (VariableUsageNode)targetUsage.GetExtensionSafe()) ?? vndt
+            : vndt;
 
         /*else
             return GetRecordTypeRecursive(
@@ -846,7 +916,7 @@ public class SemanticAnalysis
                 {
                     (
                         (FunctionNode)
-                        currentModule.Value.getFunctions()[test.Value.targetFunctionName]
+                            currentModule.Value.getFunctions()[test.Value.targetFunctionName]
                     ).Tests.Add(test.Key, test.Value);
                 }
                 else
@@ -865,27 +935,33 @@ public class SemanticAnalysis
                 KeyValuePair<string, CallableNode> function in currentModule.Value.getFunctions()
             )
             {
-                CheckVariables(currentModule.Value.GlobalVariables.Values.ToList(), currentModule.Value, []);
+                CheckVariables(
+                    currentModule.Value.GlobalVariables.Values.ToList(),
+                    currentModule.Value,
+                    []
+                );
                 if (function.Value is BuiltInFunctionNode)
                 {
                     continue;
                 }
 
                 FunctionNode currentFunction = (FunctionNode)function.Value;
-                CheckVariables(currentFunction.LocalVariables, currentModule.Value, currentFunction.GenericTypeParameterNames ?? []);
+                CheckVariables(
+                    currentFunction.LocalVariables,
+                    currentModule.Value,
+                    currentFunction.GenericTypeParameterNames ?? []
+                );
                 var generics = currentFunction.GenericTypeParameterNames ?? [];
                 foreach (var variable in currentFunction.ParameterVariables)
                 {
-                        variable.Type = variable.Type switch
-                        {
-                            UnknownType u => ResolveType(u, currentModule.Value,
-                                generics),
-                            ReferenceType (UnknownType u) => new ReferenceType(ResolveType(u, currentModule.Value,
-                                generics)),
-                            { } type => type
-                        };
+                    variable.Type = variable.Type switch
+                    {
+                        UnknownType u => ResolveType(u, currentModule.Value, generics),
+                        ReferenceType(UnknownType u)
+                            => new ReferenceType(ResolveType(u, currentModule.Value, generics)),
+                        { } type => type
+                    };
                 }
-
 
                 // foreach (var statement in currentFunction.Statements)
                 /*{
@@ -904,7 +980,11 @@ public class SemanticAnalysis
         }
     }
 
-    private static void CheckVariables(List<VariableNode> variables, ModuleNode currentModule, List<String> generics)
+    private static void CheckVariables(
+        List<VariableNode> variables,
+        ModuleNode currentModule,
+        List<String> generics
+    )
     {
         foreach (var variable in variables)
         {
@@ -916,7 +996,11 @@ public class SemanticAnalysis
                 // from the parsers pov we should make an enum node, b/c this can't be any random varialbe
                 if (init is StringNode n)
                 {
-                    foreach (var enumDefinition in currentModule.Enums.Values.Concat(currentModule.Imported.Values))
+                    foreach (
+                        var enumDefinition in currentModule.Enums.Values.Concat(
+                            currentModule.Imported.Values
+                        )
+                    )
                     {
                         if (enumDefinition is EnumNode e)
                         {
@@ -925,7 +1009,7 @@ public class SemanticAnalysis
                                 variable.Type = e.NewType;
                                 break;
                             }
-                        } 
+                        }
                     }
 
                     if (variable.Type is not EnumType)
@@ -942,22 +1026,21 @@ public class SemanticAnalysis
             {
                 variable.Type = variable.Type switch
                 {
-                    UnknownType u => ResolveType(u, currentModule,
-                        generics),
-                    ReferenceType (UnknownType u) => new ReferenceType(ResolveType(u, currentModule,
-                        generics)),
+                    UnknownType u => ResolveType(u, currentModule, generics),
+                    ReferenceType(UnknownType u)
+                        => new ReferenceType(ResolveType(u, currentModule, generics)),
                     { } type => type
                 };
             }
         }
     }
 
-    private static bool Lookup<K, U, V>(Dictionary<K, V> dictionary, K key, ref U result) where U : class?
+    private static bool Lookup<K, U, V>(Dictionary<K, V> dictionary, K key, ref U result)
+        where U : class?
     {
         return dictionary.TryGetValue(key, out var value) && (value is U v && (result = v) == v);
     }
 
-  
     public static void Experimental()
     {
         var moduleAnythings = GetAstRootSafe()
@@ -978,31 +1061,35 @@ public class SemanticAnalysis
         {
             foreach (var record in module.Records.Values)
             {
-                record.NewType.Fields =
-                
-                    record.NewType.Fields.Select(field =>
+                record.NewType.Fields = record
+                    .NewType.Fields.Select(field =>
+                    {
+                        var unknown = field.Value switch
                         {
-                            var unknown = field.Value switch
-                            {
-                                UnknownType u => ResolveType(u, module, record.NewType.Generics),
-                                ReferenceType (UnknownType u) => new ReferenceType(ResolveType(u, module,
-                                    record.NewType.Generics)),
-                                _ => field.Value
-                            };
-                            return KeyValuePair.Create(field.Key, unknown);
-                        })
-                        .ToDictionary();
-                 
+                            UnknownType u => ResolveType(u, module, record.NewType.Generics),
+                            ReferenceType(UnknownType u)
+                                => new ReferenceType(
+                                    ResolveType(u, module, record.NewType.Generics)
+                                ),
+                            _ => field.Value
+                        };
+                        return KeyValuePair.Create(field.Key, unknown);
+                    })
+                    .ToDictionary();
             }
         }
     }
 
     private static Type ResolveType(UnknownType member, ModuleNode module, List<string> generics)
     {
-        var resolveType = module.Records.GetValueOrDefault(member.TypeName)?.NewType ??
-                          (Type?)module.Enums.GetValueOrDefault(member.TypeName)?.NewType ?? (generics.Contains(member.TypeName)
-                              ? member
-                              : throw new SemanticErrorException($"Unbound type {member}", module));
+        var resolveType =
+            module.Records.GetValueOrDefault(member.TypeName)?.NewType
+            ?? (Type?)module.Enums.GetValueOrDefault(member.TypeName)?.NewType
+            ?? (
+                generics.Contains(member.TypeName)
+                    ? member
+                    : throw new SemanticErrorException($"Unbound type {member}", module)
+            );
         if (resolveType is EnumType && member.TypeParameters.Count != 0)
         {
             throw new SemanticErrorException($"Enums do not have generic types", module);

@@ -309,8 +309,8 @@ public class IrGenerator
             _
                 => throw new NotImplementedException(
                     "Creating an LLVM function for Shank-builtin `"
-                    + builtin.Name
-                    + "' not supported yet."
+                        + builtin.Name
+                        + "' not supported yet."
                 )
         };
 

@@ -662,17 +662,12 @@ public class Interpreter
             paramsList.Add(
                 rdt.MemberTypes[rmVrn.Name] switch
                 {
-                    CharacterType
-                        => new CharDataType(rdt.GetValueCharacter(rmVrn.Name)),
-                    BooleanType
-                        => new BooleanDataType(rdt.GetValueBoolean(rmVrn.Name)),
-                    StringType
-                        => new StringDataType(rdt.GetValueString(rmVrn.Name)),
-                    IntegerType
-                        => new IntDataType(rdt.GetValueInteger(rmVrn.Name)),
+                    CharacterType => new CharDataType(rdt.GetValueCharacter(rmVrn.Name)),
+                    BooleanType => new BooleanDataType(rdt.GetValueBoolean(rmVrn.Name)),
+                    StringType => new StringDataType(rdt.GetValueString(rmVrn.Name)),
+                    IntegerType => new IntDataType(rdt.GetValueInteger(rmVrn.Name)),
                     RealType => new FloatDataType(rdt.GetValueReal(rmVrn.Name)),
-                    ReferenceType
-                        => new ReferenceDataType(rdt.GetValueReference(rmVrn.Name)),
+                    ReferenceType => new ReferenceDataType(rdt.GetValueReference(rmVrn.Name)),
                     RecordType
                         => GetNestedParam(
                             rdt,
@@ -727,10 +722,13 @@ public class Interpreter
         throw new Exception("Could not get nested param");
     }
 
-    private static bool Lookup<TK, TU, TV>(Dictionary<TK, TV> dictionary, TK key, ref TU  result) where TU : class? where TK : notnull
+    private static bool Lookup<TK, TU, TV>(Dictionary<TK, TV> dictionary, TK key, ref TU result)
+        where TU : class?
+        where TK : notnull
     {
-       return dictionary.TryGetValue(key, out var value) && (value is TU v && (result = v) == v)  ;
+        return dictionary.TryGetValue(key, out var value) && (value is TU v && (result = v) == v);
     }
+
     // assumptions: already type checked/resolved all custom types
     private static InterpreterDataType VariableNodeToActivationRecord(VariableNode vn)
     {
@@ -754,21 +752,27 @@ public class Interpreter
             // TODO: merge record type and record node into one
             case RecordType r:
             {
-                _ = (parentModule.Records.TryGetValue(r.Name, out var record) ||
-                     Lookup(parentModule.Imported, r.Name, ref record));
+                _ = (
+                    parentModule.Records.TryGetValue(r.Name, out var record)
+                    || Lookup(parentModule.Imported, r.Name, ref record)
+                );
                 return new RecordDataType(record!.NewType.Fields);
             }
             case EnumType e:
             {
-                _ = (parentModule.Enums.TryGetValue(e.Name, out var enumNode) ||
-                     Lookup(parentModule.Imported, e.Name, ref enumNode));
-                return new EnumDataType( enumNode!);
+                _ = (
+                    parentModule.Enums.TryGetValue(e.Name, out var enumNode)
+                    || Lookup(parentModule.Imported, e.Name, ref enumNode)
+                );
+                return new EnumDataType(enumNode!);
             }
 
             case ReferenceType(RecordType r):
             {
-                _ = (parentModule.Records.TryGetValue(r.Name, out var record) ||
-                     Lookup(parentModule.Imported, r.Name, ref record));
+                _ = (
+                    parentModule.Records.TryGetValue(r.Name, out var record)
+                    || Lookup(parentModule.Imported, r.Name, ref record)
+                );
                 return new ReferenceDataType(record!);
             }
             default:

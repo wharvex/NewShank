@@ -515,7 +515,7 @@ public class Parser
         {
             IntNode => new IntegerType(),
             StringNode => new StringType(),
-            CharNode => new  CharacterType(),
+            CharNode => new CharacterType(),
             FloatNode => new RealType(),
             BooleanExpressionNode or BoolNode => new BooleanType(),
             _

@@ -79,7 +79,6 @@ public class Parser
     }
 
     private Token? MatchAndRemoveMultiple(params Token.TokenType[] ts)
-
     {
         Token? ret = null;
         var i = 0;
@@ -192,7 +191,7 @@ public class Parser
         var moduleName = MatchAndRemove(Token.TokenType.Module) is null
             ? "default"
             : MatchAndRemove(Token.TokenType.Identifier)?.GetValueSafe()
-              ?? throw new SyntaxErrorException("Expected a module name", Peek(0));
+                ?? throw new SyntaxErrorException("Expected a module name", Peek(0));
 
         // Require EOL if a module declaration was found.
         if (!moduleName.Equals("default"))
@@ -262,8 +261,8 @@ public class Parser
                 default:
                     throw new NotImplementedException(
                         "Support for parsing indent zero token "
-                        + indentZeroToken
-                        + " has not been implemented."
+                            + indentZeroToken
+                            + " has not been implemented."
                     );
             }
 
@@ -332,7 +331,12 @@ public class Parser
 
         RequiresEndOfLine();
 
-        var recNode = new RecordNode(name.GetValueSafe(), moduleName, BodyRecord(moduleName), genericTypeParameterNames);
+        var recNode = new RecordNode(
+            name.GetValueSafe(),
+            moduleName,
+            BodyRecord(moduleName),
+            genericTypeParameterNames
+        );
         return recNode;
     }
 
@@ -430,11 +434,11 @@ public class Parser
         // }
 
         return Assignment()
-               ?? While()
-               ?? Repeat()
-               ?? For()
-               ?? If()
-               ?? (isRecord ? RecordMember() : FunctionCall());
+            ?? While()
+            ?? Repeat()
+            ?? For()
+            ?? If()
+            ?? (isRecord ? RecordMember() : FunctionCall());
     }
 
     private StatementNode? Statement2()
@@ -464,7 +468,7 @@ public class Parser
             IntNode => new IntegerType(),
             // TODO: math op node?
             FloatNode => new RealType(),
-            StringNode => new  StringType(),
+            StringNode => new StringType(),
             CharNode => new CharacterType(),
             BooleanExpressionNode or BoolNode => new BooleanType(),
             _
@@ -476,8 +480,9 @@ public class Parser
     // assumptions you want to parse a type
     private Type Type(VariableNode.DeclarationContext declarationContext)
     {
-        var typeToken = MatchAndRemoveMultiple(_shankTokenTypesPlusIdentifier) ??
-                        throw new SyntaxErrorException("expected start of a type", Peek(0));
+        var typeToken =
+            MatchAndRemoveMultiple(_shankTokenTypesPlusIdentifier)
+            ?? throw new SyntaxErrorException("expected start of a type", Peek(0));
 
         return typeToken.Type switch
         {
@@ -485,7 +490,8 @@ public class Parser
             Token.TokenType.Identifier => CustomType(declarationContext, typeToken),
             Token.TokenType.Integer => new IntegerType(CheckRange(true, Range.DefaultInteger())),
             Token.TokenType.Boolean => new BooleanType(),
-            Token.TokenType.Character => new CharacterType(CheckRange(true, Range.DefaultCharacter())),
+            Token.TokenType.Character
+                => new CharacterType(CheckRange(true, Range.DefaultCharacter())),
             Token.TokenType.String => new StringType(CheckRange(true, Range.DefaultSmallInteger())),
             Token.TokenType.Array => ArrayType(declarationContext, typeToken),
             Token.TokenType.RefersTo => new ReferenceType(Type(declarationContext)),
@@ -504,50 +510,89 @@ public class Parser
         var token = Peek(0);
         // and that they are token types the correspond with types
         // if so parse the type
-        var first = token is not null && (_shankTokenTypesPlusIdentifier.Contains(token.Type) || token.Type == Token.TokenType.LeftParen) ? TypeParser() : null;
+        var first =
+            token is not null
+            && (
+                _shankTokenTypesPlusIdentifier.Contains(token.Type)
+                || token.Type == Token.TokenType.LeftParen
+            )
+                ? TypeParser()
+                : null;
         // then parse each comma followed by another type parameter until we do find any more commas
-        var typeParams = (first == null
-            ? []
-            : Enumerable.Concat([first],
-                Repeat(() => MatchAndRemove(Token.TokenType.Comma) is null ? null : TypeParser())
-                    .TakeWhile(r => r is not null)).ToList())!;
+        var typeParams = (
+            first == null
+                ? []
+                : Enumerable
+                    .Concat(
+                        [first],
+                        Repeat(
+                                () =>
+                                    MatchAndRemove(Token.TokenType.Comma) is null
+                                        ? null
+                                        : TypeParser()
+                            )
+                            .TakeWhile(r => r is not null)
+                    )
+                    .ToList()
+        )!;
         return new UnknownType(typeToken.GetValueSafe(), typeParams!);
         // parses a type optionally surrounded by parenthesis
-        Type TypeParser() => InBetweenOpt(Token.TokenType.LeftParen, () => Type(declarationContext), Token.TokenType.RightParen, "record");
+        Type TypeParser() =>
+            InBetweenOpt(
+                Token.TokenType.LeftParen,
+                () => Type(declarationContext),
+                Token.TokenType.RightParen,
+                "record"
+            );
     }
 
-    private T InBetweenOpt<T>(Token.TokenType first, Func<T> parser, Token.TokenType last, string type)
+    private T InBetweenOpt<T>(
+        Token.TokenType first,
+        Func<T> parser,
+        Token.TokenType last,
+        string type
+    )
     {
         if (MatchAndRemove(first) is { } t)
         {
             var result = parser();
-            _ = MatchAndRemove(last) ??
-                throw new SyntaxErrorException("Could not find closing parenthesis after " + type, t);
+            _ =
+                MatchAndRemove(last)
+                ?? throw new SyntaxErrorException(
+                    "Could not find closing parenthesis after " + type,
+                    t
+                );
             return result;
         }
 
         return parser();
     }
 
-    private ArrayType ArrayType(VariableNode.DeclarationContext declarationContext, Token? arrayToken)
+    private ArrayType ArrayType(
+        VariableNode.DeclarationContext declarationContext,
+        Token? arrayToken
+    )
     {
         var range = CheckRangeInner(false, Range.DefaultSmallInteger());
         if (range is null && declarationContext == VariableNode.DeclarationContext.VariablesLine)
         {
-            throw new SyntaxErrorException("Array in variables declared without a size", arrayToken);
+            throw new SyntaxErrorException(
+                "Array in variables declared without a size",
+                arrayToken
+            );
         }
 
-        var _ = MatchAndRemove(Token.TokenType.Of) ??
-                throw new SyntaxErrorException("Array declared without type missing of", arrayToken);
+        var _ =
+            MatchAndRemove(Token.TokenType.Of)
+            ?? throw new SyntaxErrorException("Array declared without type missing of", arrayToken);
 
         return new ArrayType(Type(declarationContext));
     }
 
     private Range CheckRange(bool isFloat, Range defaultRange)
     {
-       return CheckRangeInner(isFloat, defaultRange) ?? defaultRange;
+        return CheckRangeInner(isFloat, defaultRange) ?? defaultRange;
     }
-
 
     private Range? CheckRangeInner(bool isFloat, Range defaultRange)
     {
@@ -558,16 +603,14 @@ public class Parser
 
         var fromToken = MatchAndRemove(Token.TokenType.Number);
         var fromNode = ProcessNumericConstant(
-            fromToken
-            ?? throw new SyntaxErrorException("Expected a number", Peek(0))
+            fromToken ?? throw new SyntaxErrorException("Expected a number", Peek(0))
         );
 
         RequiresToken(Token.TokenType.To);
 
         var toToken = MatchAndRemove(Token.TokenType.Number);
         var toNode = ProcessNumericConstant(
-            toToken
-            ?? throw new SyntaxErrorException("Expected a number", Peek(0))
+            toToken ?? throw new SyntaxErrorException("Expected a number", Peek(0))
         );
         if (!isFloat && fromNode is FloatNode || toNode is FloatNode)
         {
@@ -579,14 +622,19 @@ public class Parser
         // TODO: check range is not inverted?
         if (fromValue < defaultRange.From || fromValue > defaultRange.To)
         {
-            throw new SyntaxErrorException($"range starting at {fromValue} is  not valid for this type", fromToken);
+            throw new SyntaxErrorException(
+                $"range starting at {fromValue} is  not valid for this type",
+                fromToken
+            );
         }
         if (toValue < defaultRange.From || toValue > defaultRange.To)
         {
-            throw new SyntaxErrorException($"range ending at {toValue} is  not valid for this type", toToken);
+            throw new SyntaxErrorException(
+                $"range ending at {toValue} is  not valid for this type",
+                toToken
+            );
         }
-        return new Range(fromValue,
-            toValue);
+        return new Range(fromValue, toValue);
     }
 
     private FunctionCallNode? FunctionCall()
@@ -738,8 +786,8 @@ public class Parser
         if (
             Peek(1)?.Type
             is Token.TokenType.Assignment
-            or Token.TokenType.LeftBracket
-            or Token.TokenType.Dot
+                or Token.TokenType.LeftBracket
+                or Token.TokenType.Dot
         )
         {
             var target = GetVariableReferenceNode();
@@ -809,19 +857,16 @@ public class Parser
         return retVal;
     }
 
-    private List<VariableNode> CreateVariables(List<string> names,
+    private List<VariableNode> CreateVariables(
+        List<string> names,
         bool isConstant,
-        string parentModuleName, VariableNode.DeclarationContext declarationContext)
+        string parentModuleName,
+        VariableNode.DeclarationContext declarationContext
+    )
     {
         var type = Type(declarationContext);
 
-
-        return CreateVariablesBasic(
-            names,
-            isConstant,
-            parentModuleName,
-            type
-        );
+        return CreateVariablesBasic(names, isConstant, parentModuleName, type);
     }
 
     private List<VariableNode> CreateVariablesBasic(
@@ -832,16 +877,19 @@ public class Parser
     )
     {
         // ranges parsed in the type
-        return names.Select(n => new VariableNode()
-
-        {
-            IsConstant = isConstant,
-            Type = type,
-            Name = n,
-            ModuleName = parentModuleName,
-        }).ToList();
+        return names
+            .Select(
+                n =>
+                    new VariableNode()
+                    {
+                        IsConstant = isConstant,
+                        Type = type,
+                        Name = n,
+                        ModuleName = parentModuleName,
+                    }
+            )
+            .ToList();
     }
-
 
     private Type GetTypeFromToken(Token t) =>
         t.Type switch
@@ -851,14 +899,12 @@ public class Parser
             Token.TokenType.Boolean => new BooleanType(),
             Token.TokenType.Character => new CharacterType(),
             Token.TokenType.String => new StringType(),
-            Token.TokenType.Identifier
-                => new UnknownType(t.GetValueSafe()),
+            Token.TokenType.Identifier => new UnknownType(t.GetValueSafe()),
             _
                 => throw new NotImplementedException(
                     "Bad TokenType for generating a TypeUsage: " + t.Type
                 )
         };
-
 
     private static bool GetMutability(
         VariableNode.DeclarationContext declarationContext,
@@ -896,8 +942,8 @@ public class Parser
             _
                 => throw new NotImplementedException(
                     "Invalid variable declaration context `"
-                    + declarationContext
-                    + "' for determining variable mutability."
+                        + declarationContext
+                        + "' for determining variable mutability."
                 )
         };
 
@@ -971,10 +1017,10 @@ public class Parser
         {
             tokens.Add(
                 MatchAndRemoveMultiple(matchAgainst)
-                ?? throw new SyntaxErrorException(
-                    "Expected one of: " + string.Join(", ", matchAgainst),
-                    Peek(0)
-                )
+                    ?? throw new SyntaxErrorException(
+                        "Expected one of: " + string.Join(", ", matchAgainst),
+                        Peek(0)
+                    )
             );
         }
     }
@@ -995,14 +1041,14 @@ public class Parser
 
         var fromNode = ProcessNumericConstant(
             MatchAndRemove(Token.TokenType.Number)
-            ?? throw new SyntaxErrorException("Expected a number", Peek(0))
+                ?? throw new SyntaxErrorException("Expected a number", Peek(0))
         );
 
         RequiresToken(Token.TokenType.To);
 
         var toNode = ProcessNumericConstant(
             MatchAndRemove(Token.TokenType.Number)
-            ?? throw new SyntaxErrorException("Expected a number", Peek(0))
+                ?? throw new SyntaxErrorException("Expected a number", Peek(0))
         );
         return (fromNode, toNode);
     }
