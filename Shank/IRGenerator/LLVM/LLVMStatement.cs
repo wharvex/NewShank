@@ -81,7 +81,7 @@ public class LLVMStatement(Context context, LLVMBuilderRef builder, LLVMModuleRe
         Console.WriteLine(node.ToString());
 
         var expr = node.Expression.Visit(new LLVMExpr(context, builder, module));
-        if (!llvmValue.IsMutable)
+        if (!llvmValue.IsMutable) // :')
         {
             throw new Exception($"tried to mutate non mutable variable {node.Target.Name}");
         }
