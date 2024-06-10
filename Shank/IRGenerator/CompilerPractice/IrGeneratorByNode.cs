@@ -48,7 +48,7 @@ public static class IrGeneratorByNode
 
     private static LLVMTypeRef CreateTypeRefFromShankType(
         LLVMContextRef llvmContext,
-        IType dataType
+        Type dataType
     ) =>
         dataType switch
         {

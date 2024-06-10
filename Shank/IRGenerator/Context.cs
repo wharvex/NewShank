@@ -189,7 +189,7 @@ public class Context
     /// <param name="unknownType"></param>
     /// <returns></returns>
     public LLVMTypeRef? GetLLVMTypeFromShankType(
-        IType dataType
+        Type dataType
     )
     {
         return dataType switch
@@ -213,7 +213,7 @@ public class Context
 
     // given a shank type this gives back the correct constructor for the CDT (compiler date type)
     public Func<LLVMValueRef, bool, LLVMValue>? NewVariable(
-        IType type
+        Type type
     )
     {
         (Func<LLVMValueRef, bool, LLVMTypeRef, LLVMValue>, LLVMTypeRef)? typeConstructor = type switch
@@ -244,7 +244,7 @@ public class Context
     /// <param name="unknownType"></param>
     /// <returns></returns>
     public LLVMTypeRef? GetLLVMTypeFromShankType(
-        IType type,
+        Type type,
         bool isVar
     )
     {

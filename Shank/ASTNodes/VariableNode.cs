@@ -44,9 +44,9 @@ public class VariableNode : StatementNode
     };
 
     // public DataType Type { get; set; }
-    public IType Type { get; set; }
+    public Type Type { get; set; }
 
-    public LLVMTypeRef GetLLVMType(Context context, IType type) =>
+    public LLVMTypeRef GetLLVMType(Context context, Type type) =>
         context.GetLLVMTypeFromShankType(type, false)
         ?? throw new Exception($"Type {type} doesnt exist");
 
@@ -104,7 +104,7 @@ public class VariableNode : StatementNode
     /// <param name="parentModule"></param>
     /// <param name="vrn">The VariableReferenceNode that points to this VariableNode</param>
     /// <returns></returns>
-    public IType GetSpecificType(ModuleNode parentModule, VariableUsageNode vrn) =>
+    public Type GetSpecificType(ModuleNode parentModule, VariableUsageNode vrn) =>
         vrn.ExtensionType switch
         {
             // TODO: make exttype more expressive/type constrained

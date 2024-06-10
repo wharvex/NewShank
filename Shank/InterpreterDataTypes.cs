@@ -182,17 +182,17 @@ public class ArrayDataType : InterpreterDataType
 
     // TODO: Is this bad form since DataType is part of an AST node (VariableNode), and
     // ArrayDataType is part of the Interpreter?
-    public IType ArrayContentsType { get; init; }
+    public Type ArrayContentsType { get; init; }
 
     // We don't need 'from' or 'to' because Semantic Analysis should take care of error-checking
     // issues with these.
-    public ArrayDataType(IType arrayContentsType)
+    public ArrayDataType(Type arrayContentsType)
     {
         Value = [];
         ArrayContentsType = arrayContentsType;
     }
 
-    public ArrayDataType(List<object> val, IType arrayContentsType)
+    public ArrayDataType(List<object> val, Type arrayContentsType)
     {
         Value = val;
         ArrayContentsType = arrayContentsType;
@@ -256,9 +256,9 @@ public class RecordDataType : InterpreterDataType
 {
     public Dictionary<string, object> Value { get; init; } = [];
 
-    public Dictionary<string, IType> MemberTypes { get; init; } = [];
+    public Dictionary<string, Type> MemberTypes { get; init; } = [];
 
-    public RecordDataType(Dictionary<String, IType> members)
+    public RecordDataType(Dictionary<String, Type> members)
     {
         MemberTypes = members;
     }

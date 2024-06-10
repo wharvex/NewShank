@@ -2,7 +2,8 @@ using Shank.ASTNodes;
 
 namespace Shank;
 
-public interface IType; // our marker interface anything that implements is known to represent a shank type
+// ReSharper disable once InconsistentNaming
+public interface Type; // our marker interface anything that implements is known to represent a shank type
 
 public record struct 
     Range // the type that represents a type range in shank (from .. to ..), as ranges on types are part of the types
@@ -27,15 +28,16 @@ public record struct
         return new Range(byte.MinValue, byte.MaxValue);
     }
 }
-public interface IRangeType : IType // this is a bit more specific than a plain IType in that besides for being a type it must also be able to use type limits (the range from before)
+// ReSharper disable once InconsistentNaming
+public interface RangeType : Type // this is a bit more specific than a plain IType in that besides for being a type it must also be able to use type limits (the range from before)
 {
     // TODO: ranges should not be part of type equality as its not this range == the other range
     // its more this range in that range, so we do it seperatly
     public Range Range { get; set; }
 }
-public struct BooleanType : IType;
+public struct BooleanType : Type;
 
-public  record struct  StringType(Range Range) : IRangeType
+public  record struct  StringType(Range Range) : RangeType
 {
     public bool Equals(StringType other)
     {
@@ -50,7 +52,7 @@ public  record struct  StringType(Range Range) : IRangeType
     public StringType() : this( Range.DefaultSmallInteger()) {}
 }
 
-public record struct RealType(Range Range) : IRangeType
+public record struct RealType(Range Range) : RangeType
 {    public bool Equals(RealType other)
      {
          return true; // we do range checking seperatly as we do not know which is the one with more important range
@@ -63,7 +65,7 @@ public record struct RealType(Range Range) : IRangeType
     public RealType() : this(Range.DefaultFloat()) {}
 }
 
-public record struct IntegerType(Range Range) : IRangeType
+public record struct IntegerType(Range Range) : RangeType
 {    public bool Equals(IntegerType other)
      {
          return true; // we do range checking seperatly as we do not know which is the one with more important range
@@ -76,7 +78,7 @@ public record struct IntegerType(Range Range) : IRangeType
     public IntegerType() : this(Range.DefaultInteger()) {}
 }
 
-public record struct CharacterType(Range Range) : IRangeType
+public record struct CharacterType(Range Range) : RangeType
 {    public bool Equals(CharacterType other)
      {
          return true; // we do range checking seperatly as we do not know which is the one with more important range
@@ -89,13 +91,13 @@ public record struct CharacterType(Range Range) : IRangeType
     public CharacterType() : this(Range.DefaultCharacter()) {}
 }
 
-public class EnumType(string name, List<string> variants) : IType
+public class EnumType(string name, List<string> variants) : Type
 {
     public string Name { get; } = name;
     public List<string> Variants { get; } = variants;
 } // enums are just a list of variants
 
-public  class RecordType(string name, Dictionary<string, IType> fields, List<string> generics) : IType
+public  class RecordType(string name, Dictionary<string, Type> fields, List<string> generics) : Type
 {
     public List<string> Generics
     {
@@ -103,7 +105,7 @@ public  class RecordType(string name, Dictionary<string, IType> fields, List<str
         set;
     } = generics;
 
-    public Dictionary<string, IType> Fields
+    public Dictionary<string, Type> Fields
     {
         get;
         set ;
@@ -116,7 +118,7 @@ public  class RecordType(string name, Dictionary<string, IType> fields, List<str
 
 } // records need to keep the types of their members along with any generics they declare
 
-public record struct ArrayType(IType Inner, Range Range ) : IRangeType // arrays have only one inner type
+public record struct ArrayType(Type Inner, Range Range ) : RangeType // arrays have only one inner type
 {    public bool Equals(ArrayType other)
     {
         return other.Inner.Equals(Inner);
@@ -126,10 +128,10 @@ public record struct ArrayType(IType Inner, Range Range ) : IRangeType // arrays
      {
          return Inner.GetHashCode();
      }
-    public ArrayType(IType inner): this(inner, Range.DefaultSmallInteger()) {}
+    public ArrayType(Type inner): this(inner, Range.DefaultSmallInteger()) {}
 }
 
-public readonly record struct UnknownType(string TypeName, List<IType> TypeParameters) : IType // unknown types are those types that we have not found their proper definition during semantic analysis yet
+public readonly record struct UnknownType(string TypeName, List<Type> TypeParameters) : Type // unknown types are those types that we have not found their proper definition during semantic analysis yet
 // they also need to keep and generics they instiate like Int, String in HashMap Int, String
 {
     public UnknownType(string TypeName) : this(TypeName, []) {}
@@ -160,4 +162,4 @@ public readonly record struct UnknownType(string TypeName, List<IType> TypeParam
             : VariableNode.UnknownTypeResolver.None;
     }
 }
-public record struct ReferenceType(IType Inner) : IType;
+public record struct ReferenceType(Type Inner) : Type;

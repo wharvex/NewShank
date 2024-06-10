@@ -331,7 +331,7 @@ public class IrGenerator
             .Select(vn => GetLlvmTypeFromShankType(vn.Type))
             .FirstOrDefault(LlvmContext.VoidType);
 
-    private LLVMTypeRef GetLlvmTypeFromShankType(IType type) =>
+    private LLVMTypeRef GetLlvmTypeFromShankType(Type type) =>
         type switch
         {
             IntegerType => LlvmContext.Int64Type,

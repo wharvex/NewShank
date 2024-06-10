@@ -510,7 +510,7 @@ public class Parser
         return new IntNode(int.Parse(token.GetValue()));
     }
 
-    public static IType GetDataTypeFromConstantNodeType(ASTNode constantNode) =>
+    public static Type GetDataTypeFromConstantNodeType(ASTNode constantNode) =>
         constantNode switch
         {
             IntNode => new IntegerType(),
@@ -524,7 +524,7 @@ public class Parser
                 )
         };
 
-    private static IType GetDataTypeFromTokenType(TokenType tt) =>
+    private static Type GetDataTypeFromTokenType(TokenType tt) =>
         tt switch
         {
             TokenType.NUMBER => new RealType(),
@@ -534,7 +534,7 @@ public class Parser
             _ => throw new InvalidOperationException("Bad TokenType for conversion into DataType"),
         };
 
-    private IType GetTypeUsageFromToken(Token t) =>
+    private Type GetTypeUsageFromToken(Token t) =>
         t.GetTokenType() switch
         {
             TokenType.NUMBER => new RealType(),

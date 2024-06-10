@@ -458,7 +458,7 @@ public class Parser
         return new RecordMemberNode(nameToken.GetValueSafe(), type);
     }
 
-    public static IType GetDataTypeFromConstantNodeType(ASTNode constantNode) =>
+    public static Type GetDataTypeFromConstantNodeType(ASTNode constantNode) =>
         constantNode switch
         {
             IntNode => new IntegerType(),
@@ -474,7 +474,7 @@ public class Parser
         };
 
     // assumptions you want to parse a type
-    private IType Type(VariableNode.DeclarationContext declarationContext)
+    private Type Type(VariableNode.DeclarationContext declarationContext)
     {
         var typeToken = MatchAndRemoveMultiple(_shankTokenTypesPlusIdentifier) ??
                         throw new SyntaxErrorException("expected start of a type", Peek(0));
@@ -498,7 +498,7 @@ public class Parser
         yield return generator();
     }
 
-    private IType CustomType(VariableNode.DeclarationContext declarationContext, Token typeToken)
+    private Type CustomType(VariableNode.DeclarationContext declarationContext, Token typeToken)
     {
         // see if there are type parameters
         var token = Peek(0);
@@ -513,7 +513,7 @@ public class Parser
                     .TakeWhile(r => r is not null)).ToList())!;
         return new UnknownType(typeToken.GetValueSafe(), typeParams!);
         // parses a type optionally surrounded by parenthesis
-        IType TypeParser() => InBetweenOpt(Token.TokenType.LeftParen, () => Type(declarationContext), Token.TokenType.RightParen, "record");
+        Type TypeParser() => InBetweenOpt(Token.TokenType.LeftParen, () => Type(declarationContext), Token.TokenType.RightParen, "record");
     }
 
     private T InBetweenOpt<T>(Token.TokenType first, Func<T> parser, Token.TokenType last, string type)
@@ -828,7 +828,7 @@ public class Parser
         List<string> names,
         bool isConstant,
         string parentModuleName,
-        IType type
+        Type type
     )
     {
         // ranges parsed in the type
@@ -843,7 +843,7 @@ public class Parser
     }
 
 
-    private IType GetTypeFromToken(Token t) =>
+    private Type GetTypeFromToken(Token t) =>
         t.Type switch
         {
             Token.TokenType.Integer => new IntegerType(),

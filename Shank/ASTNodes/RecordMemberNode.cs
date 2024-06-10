@@ -7,7 +7,7 @@ namespace Shank.ASTNodes;
 
 public class RecordMemberNode : StatementNode
 {
-    public RecordMemberNode(string name, IType newType)
+    public RecordMemberNode(string name, Type newType)
     {
         Name = name;
         NewType = newType;
@@ -19,7 +19,7 @@ public class RecordMemberNode : StatementNode
 
     // public string? UnknownType { get; init; }
 
-    public IType NewType { get; set; }
+    public Type NewType { get; set; }
     public ASTNode? From { get; set; }
     public ASTNode? To { get; set; }
 

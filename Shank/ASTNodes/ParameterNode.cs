@@ -121,7 +121,7 @@ public class ParameterNode : ASTNode
         return givenVariable.Type.Equals( GetConstantType());
     }
 
-    public IType GetConstantType()
+    public Type GetConstantType()
     {
         return Parser.GetDataTypeFromConstantNodeType(GetConstantSafe());
     }
@@ -148,7 +148,7 @@ public class ParameterNode : ASTNode
         throw new InvalidOperationException("Could not find given variable in scope");
     }
 
-    public IType GetVariableType(Dictionary<string, VariableNode> variablesInScope)
+    public Type GetVariableType(Dictionary<string, VariableNode> variablesInScope)
     {
         return GetVariableDeclarationSafe(variablesInScope).Type;
     }

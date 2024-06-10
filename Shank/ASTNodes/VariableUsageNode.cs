@@ -82,7 +82,7 @@ public class VariableUsageNode : ASTNode
     }
 
     // asumptions already analized
-    public IType GetSpecificType(
+    public Type GetSpecificType(
         Dictionary<string, RecordNode> records,
         Dictionary<string, ASTNode> imports,
         Dictionary<string, VariableNode> variables,
