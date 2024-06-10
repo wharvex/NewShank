@@ -540,7 +540,6 @@ public class Parser
     public static Type GetDataTypeFromConstantNodeType(ASTNode constantNode) =>
         constantNode switch
         {
-            IntNode => new IntegerType(),
             StringNode => new StringType(),
             CharNode => new CharacterType(),
             FloatNode => new RealType(),
@@ -574,10 +573,24 @@ public class Parser
                 )
         };
 
+    private Type Type(VariableNode.DeclarationContext declarationContext)
+    {
+        Token? tokenType =
+            handler.MatchAndRemove(TokenType.NUMBER)
+            ?? handler.MatchAndRemove(TokenType.STRING)
+            ?? handler.MatchAndRemove(TokenType.CHARACTER)
+            ?? handler.MatchAndRemove(TokenType.BOOLEAN);
+        if (tokenType == null)
+        {
+            throw new Exception("Expected start of a type");
+        }
+
+        return GetTypeUsageFromToken(tokenType);
+    }
+    
     private VariableNode? ParseVariableDeclaration()
     {
-        var variableName = new VariableNode();
-        Token? tokenType =
+        Token? tokenType = 
             handler.MatchAndRemove(TokenType.NUMBER)
             ?? handler.MatchAndRemove(TokenType.STRING)
             ?? handler.MatchAndRemove(TokenType.CHARACTER)
@@ -586,13 +599,17 @@ public class Parser
         {
             return null;
         }
-        var variableType = GetTypeUsageFromToken(tokenType);
+        Type variableType = GetTypeUsageFromToken(tokenType);
         Token? nameToken = handler.MatchAndRemove(TokenType.WORD);
         if (nameToken == null)
         {
-            throw new Exception("Nothing followed after variable declaration");
+            throw new Exception("Variable declaration missing a name");
         }
-        variableName.Name = nameToken.GetValue();
-        return variableName;
+        VariableNode variableNode = new VariableNode
+        {
+            Type = variableType,
+            Name = nameToken.GetValue()
+        };
+        return variableNode;
     }
 }
