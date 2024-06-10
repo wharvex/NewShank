@@ -491,3 +491,6 @@ $RECYCLE.BIN/
 
 # Visual Studio Debug Settings for Setting Run Directory
 */Properties/launchSettings.json
+*.exe
+*.ll
+*.o
