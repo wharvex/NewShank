@@ -23,17 +23,17 @@ public class EnumNode : ASTNode
         IsPublic = false;
     }
 
-    public override LLVMValueRef Visit(
-        LLVMVisitor visitor,
-        Context context,
-        LLVMBuilderRef builder,
-        LLVMModuleRef module
-    )
-    {
-        visitor.Visit(this);
-        throw new Exception("not implemented uet");
-        // return b
-    }
+    // public override LLVMValueRef Visit(
+    //     LLVMVisitor visitor,
+    //     Context context,
+    //     LLVMBuilderRef builder,
+    //     LLVMModuleRef module
+    // )
+    // {
+    //     visitor.Visit(this);
+    //     throw new Exception("not implemented uet");
+    //     // return b
+    // }
 
     public override T Visit<T>(ExpressionVisitor<T> visit)
     {

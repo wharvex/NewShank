@@ -1,10 +1,11 @@
+record student
+    name : string
+    gpa : real
 
+variables thisIsGlobal : integer { left indented, not in a function }
 
 define start()
-variables n : integer
-    n := 1
+variables goodStudent : student { declaration }
+    goodStudent.gpa := 3.0 
+    thisIsGlobal := 1
     
-    
-define add(a, b : integer; var c : integer)
-	c:= a + b
-

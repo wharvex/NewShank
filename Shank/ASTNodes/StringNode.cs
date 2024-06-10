@@ -20,15 +20,15 @@ public class StringNode : ASTNode
         return $"{Value}";
     }
 
-    public override LLVMValueRef Visit(
-        LLVMVisitor visitor,
-        Context context,
-        LLVMBuilderRef builder,
-        LLVMModuleRef module
-    )
-    {
-        return visitor.Visit(this);
-    }
+    // public override LLVMValueRef Visit(
+    //     LLVMVisitor visitor,
+    //     Context context,
+    //     LLVMBuilderRef builder,
+    //     LLVMModuleRef module
+    // )
+    // {
+    //     return visitor.Visit(this);
+    // }
 
     public override T Visit<T>(ExpressionVisitor<T> visit)
     {

@@ -160,19 +160,19 @@ public class ParameterNode : ASTNode
             return $"{Constant}";
     }
 
-    public override LLVMValueRef Visit(
-        LLVMVisitor visitor,
-        Context context,
-        LLVMBuilderRef builder,
-        LLVMModuleRef module
-    )
-    {
-        // if its mutable then we should have already verified that it's coresponding parameter is also mutable, and thn we just need to look it up because you cannot have mutable constants
-        // otherwise we pass the value not via a pointer by visiting the node
-        return IsVariable
-            ? context.GetVariable(Variable.Name).ValueRef
-            : Constant.Visit(visitor, context, builder, module);
-    }
+    // public override LLVMValueRef Visit(
+    //     LLVMVisitor visitor,
+    //     Context context,
+    //     LLVMBuilderRef builder,
+    //     LLVMModuleRef module
+    // )
+    // {
+    //     // if its mutable then we should have already verified that it's coresponding parameter is also mutable, and thn we just need to look it up because you cannot have mutable constants
+    //     // otherwise we pass the value not via a pointer by visiting the node
+    //     return IsVariable
+    //         ? context.GetVariable(Variable.Name).ValueRef
+    //         : Constant.Visit(visitor, context, builder, module);
+    // }
 
     public override T Visit<T>(ExpressionVisitor<T> visit)
     {

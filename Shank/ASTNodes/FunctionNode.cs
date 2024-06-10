@@ -649,15 +649,15 @@ public class FunctionNode : CallableNode
         context.AddFunction(Name, function);
     }
 
-    public override LLVMValueRef Visit(
-        LLVMVisitor visitor,
-        Context context,
-        LLVMBuilderRef builder,
-        LLVMModuleRef module
-    )
-    {
-        return visitor.Visit(this);
-    }
+    // public override LLVMValueRef Visit(
+    //     LLVMVisitor visitor,
+    //     Context context,
+    //     LLVMBuilderRef builder,
+    //     LLVMModuleRef module
+    // )
+    // {
+    //     return visitor.Visit(this);
+    // }
 
     public override void Visit(StatementVisitor visit)
     {

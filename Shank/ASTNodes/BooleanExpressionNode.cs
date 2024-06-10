@@ -17,15 +17,15 @@ public class BooleanExpressionNode : ASTNode
     public ASTNode Left { get; init; }
     public ASTNode Right { get; init; }
 
-    public override LLVMValueRef Visit(
-        LLVMVisitor visitor,
-        Context context,
-        LLVMBuilderRef builder,
-        LLVMModuleRef module
-    )
-    {
-        return visitor.Visit(this);
-    }
+    // public override LLVMValueRef Visit(
+    //     LLVMVisitor visitor,
+    //     Context context,
+    //     LLVMBuilderRef builder,
+    //     LLVMModuleRef module
+    // )
+    // {
+    //     return visitor.Visit(this);
+    // }
 
     public override T Visit<T>(ExpressionVisitor<T> visit)
     {

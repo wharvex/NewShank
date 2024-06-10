@@ -15,7 +15,7 @@ variables n : integer
 variables ss: string
      n:= 40
      ss := "f"
-
+ 
 define varf(var foo: integer)
     foo := 5
     

@@ -21,12 +21,12 @@ public abstract class ASTNode
     }
 
     // public abstract LLVMValueRef Accept(LLVMBuilderRef builder, LLVMModuleRef module);
-    public abstract LLVMValueRef Visit(
-        LLVMVisitor visitor,
-        Context context,
-        LLVMBuilderRef builder,
-        LLVMModuleRef module
-    );
+    // public abstract LLVMValueRef Visit(
+    //     LLVMVisitor visitor,
+    //     Context context,
+    //     LLVMBuilderRef builder,
+    //     LLVMModuleRef module
+    // );
 
     public abstract T Visit<T>(ExpressionVisitor<T> visit);
 

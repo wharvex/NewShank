@@ -145,25 +145,25 @@ public class VariableNode : StatementNode
         return b.ToString();
     }
 
-    public override LLVMValueRef Visit(
-        LLVMVisitor visitor,
-        Context context,
-        LLVMBuilderRef builder,
-        LLVMModuleRef module
-    )
-    {
-        var name = GetNameSafe();
-        // TODO: only alloca when !isConstant
-
-        LLVMValueRef v = builder.BuildAlloca(
-            // isVar is false, because we are already creating it using alloca which makes it var
-            context.GetLLVMTypeFromShankType(Type) ?? throw new Exception("null type"),
-            name
-        );
-        var variable = context.NewVariable(Type);
-        context.AddVariable(name, variable(v, !IsConstant), false);
-        return v;
-    }
+    // public override LLVMValueRef Visit(
+    //     LLVMVisitor visitor,
+    //     Context context,
+    //     LLVMBuilderRef builder,
+    //     LLVMModuleRef module
+    // )
+    // {
+    //     var name = GetNameSafe();
+    //     // TODO: only alloca when !isConstant
+    //
+    //     LLVMValueRef v = builder.BuildAlloca(
+    //         // isVar is false, because we are already creating it using alloca which makes it var
+    //         context.GetLLVMTypeFromShankType(Type) ?? throw new Exception("null type"),
+    //         name
+    //     );
+    //     var variable = context.NewVariable(Type);
+    //     context.AddVariable(name, variable(v, !IsConstant), false);
+    //     return v;
+    // }
 
     public void VisitProto(VisitPrototype visitPrototype)
     {
