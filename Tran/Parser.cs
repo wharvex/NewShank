@@ -230,8 +230,7 @@ public class Parser
     {
         throw new NotImplementedException();
     }
-
-    //TODO: finish implementing ParseIf()
+    
     private ASTNode? ParseIf()
     {
         if (handler.MatchAndRemove(TokenType.IF) != null)
@@ -264,6 +263,44 @@ public class Parser
             );
         }
         return null;
+    }
+    private LinkedList<ASTNode> ParseBuiltInFunctionNode()
+    {
+        LinkedList<ASTNode> expressions = new LinkedList<ASTNode>();
+        if (handler.MatchAndRemove(TokenType.CONSOLE) != null)
+        {
+            if (handler.MatchAndRemove(TokenType.PERIOD) != null)
+            {
+                if (handler.MatchAndRemove(TokenType.PRINT) != null)
+                {
+                    if (handler.MatchAndRemove(TokenType.OPENPARENTHESIS) != null)
+                    {
+                        do
+                        {
+                            expressions.AddLast(ParseExpression());
+                        } while (handler.MatchAndRemove(TokenType.COMMA) != null);
+
+                        if (handler.MatchAndRemove(TokenType.CLOSEDPARENTHESIS) == null)
+                        {
+                            throw new Exception("In ParseBuiltInFunctionNode method, Expected a closing parenthesis");
+                        }
+                    }
+                    else
+                    {
+                        throw new Exception("In ParseBuiltInFunctionNode method, Expected an opening parenthesis");
+                    }
+                }
+                else
+                {
+                    throw new Exception("In ParseBuiltInFunctionNode method, Expected 'print' after 'console.'");
+                }
+            }
+            else
+            {
+                throw new Exception("In ParseBuiltInFunctionNode method, Expected a period after 'console'");
+            }
+        }
+        return expressions;
     }
 
     //TODO: finish implementing ParseBlock()
