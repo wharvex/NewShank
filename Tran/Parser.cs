@@ -245,12 +245,7 @@ public class Parser
                 if (nextIf != null)
                 {
                     // Return the 'IF' node with 'ELSE IF' or 'ELSE'
-                    return new IfNode(
-                        condition
-                            ?? throw new InvalidOperationException("In ParseIf, condition is null"),
-                        block,
-                        nextIf
-                    );
+                    return new IfNode(condition ?? throw new InvalidOperationException("In ParseIf, condition is null"), block, nextIf);
                 }
                 // Return the 'IF' node with 'ELSE'
                 return new IfNode(condition, block, ParseBlock());
