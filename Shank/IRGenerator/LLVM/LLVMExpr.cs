@@ -36,6 +36,15 @@ public class LLVMExpr(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
     public override LLVMValueRef Accept(VariableUsageNode node)
     {
         LLVMValue value = context.GetVariable(node.Name);
+        if (node.Extension != null)
+        {
+            var a = builder.BuildGEP2(
+                value.TypeRef,
+                value.ValueRef,
+                new[] { node.Extension.Visit(new LLVMExpr(context, builder, module)) }
+            );
+            return builder.BuildLoad2(value.TypeRef, a);
+        }
         return builder.BuildLoad2(value.TypeRef, value.ValueRef);
     }
 
