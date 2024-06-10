@@ -510,37 +510,37 @@ public class Parser
         return new IntNode(int.Parse(token.GetValue()));
     }
 
-    public static VariableNode.DataType GetDataTypeFromConstantNodeType(ASTNode constantNode) =>
+    public static Type GetDataTypeFromConstantNodeType(ASTNode constantNode) =>
         constantNode switch
         {
-            IntNode => VariableNode.DataType.Integer,
-            StringNode => VariableNode.DataType.String,
-            CharNode => VariableNode.DataType.Character,
-            FloatNode => VariableNode.DataType.Real,
-            BooleanExpressionNode or BoolNode => VariableNode.DataType.Boolean,
+            IntNode => new IntegerType(),
+            StringNode => new StringType(),
+            CharNode => new CharacterType(),
+            FloatNode => new RealType(),
+            BooleanExpressionNode or BoolNode => new BooleanType(),
             _
                 => throw new InvalidOperationException(
                     "Bad constant node type for converting to data type."
                 )
         };
 
-    private static VariableNode.DataType GetDataTypeFromTokenType(TokenType tt) =>
+    private static Type GetDataTypeFromTokenType(TokenType tt) =>
         tt switch
         {
-            TokenType.NUMBER => VariableNode.DataType.Real,
-            TokenType.BOOLEAN => VariableNode.DataType.Boolean,
-            TokenType.CHARACTER => VariableNode.DataType.Character,
-            TokenType.STRING => VariableNode.DataType.String,
+            TokenType.NUMBER => new RealType(),
+            TokenType.BOOLEAN => new BooleanType(),
+            TokenType.CHARACTER => new CharacterType(),
+            TokenType.STRING => new StringType(),
             _ => throw new InvalidOperationException("Bad TokenType for conversion into DataType"),
         };
 
-    private TypeUsage GetTypeUsageFromToken(Token t) =>
+    private Type GetTypeUsageFromToken(Token t) =>
         t.GetTokenType() switch
         {
-            TokenType.NUMBER => new TypeUsage(VariableNode.DataType.Real),
-            TokenType.BOOLEAN => new TypeUsage(VariableNode.DataType.Boolean),
-            TokenType.CHARACTER => new TypeUsage(VariableNode.DataType.Character),
-            TokenType.STRING => new TypeUsage(VariableNode.DataType.String),
+            TokenType.NUMBER => new RealType(),
+            TokenType.BOOLEAN => new BooleanType(),
+            TokenType.CHARACTER => new CharacterType(),
+            TokenType.STRING => new StringType(),
             _
                 => throw new NotImplementedException(
                     "Bad TokenType for generating a TypeUsage: " + t.GetTokenType()

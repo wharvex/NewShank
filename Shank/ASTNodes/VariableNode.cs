@@ -12,20 +12,20 @@ public class VariableNode : StatementNode
     public string? Name { get; set; }
     public string? ModuleName { get; set; }
 
-    public enum DataType
-    {
-        Real,
-        Integer,
-        String,
-        Character,
-        Boolean,
-        Array,
-        Record,
-        Enum,
-        Reference,
-        Unknown
-    };
-
+    // public enum DataType
+    // {
+    //     Real,
+    //     Integer,
+    //     String,
+    //     Character,
+    //     Boolean,
+    //     Array,
+    //     Record,
+    //     Enum,
+    //     Reference,
+    //     Unknown
+    // };
+    //
     public enum UnknownTypeResolver
     {
         Record,
@@ -43,16 +43,17 @@ public class VariableNode : StatementNode
         ConstantsLine
     };
 
-    public DataType Type { get; set; }
+    // public DataType Type { get; set; }
+    public Type Type { get; set; }
 
-    public LLVMTypeRef GetLLVMType(Context context, DataType type) =>
+    public LLVMTypeRef GetLLVMType(Context context, Type type) =>
         context.GetLLVMTypeFromShankType(type, false)
-        ?? throw new Exception($"Type {Type} doesnt exist");
+        ?? throw new Exception($"Type {type} doesnt exist");
 
     // If Type is Array, then ArrayType is the type of its elements, or else it is null.
-    public DataType? ArrayType { get; set; }
+    // public DataType? ArrayType { get; set; }
 
-    public TypeUsage? ArrayTypeEnhanced { get; set; }
+    // public TypeUsage? ArrayTypeEnhanced { get; set; }
 
     /// <summary>
     /// If this variable was declared with an Identifier as its type_unit, then UnknownType is the
@@ -60,58 +61,39 @@ public class VariableNode : StatementNode
     /// If this variable was not declared with an Identifier as its type_unit, then UnknownType
     /// should be null.
     /// </summary>
-    public string? UnknownType { get; set; }
+    // public string? UnknownType { get; set; }
 
-    public List<TypeUsage>? GenericTypeArgs { get; set; }
+    // public List<TypeUsage>? GenericTypeArgs { get; set; }
 
     public bool IsConstant { get; set; }
     public ASTNode? InitialValue { get; set; }
-    public ASTNode? From { get; set; }
-    public ASTNode? To { get; set; }
+
+    // public ASTNode? From { get; set; }
+    // public ASTNode? To { get; set; }
 
     public string GetNameSafe() =>
         Name ?? throw new InvalidOperationException("Expected Name to not be null");
 
-    public DataType GetArrayTypeSafe()
-    {
-        return ArrayType
-            ?? throw new InvalidOperationException("Expected ArrayType to not be null.");
-    }
+    // public DataType GetArrayTypeSafe()
+    // {
+    //     return ArrayType
+    //         ?? throw new InvalidOperationException("Expected ArrayType to not be null.");
+    // }
 
-    public string GetUnknownTypeSafe()
-    {
-        return UnknownType
-            ?? throw new InvalidOperationException(
-                "Expected " + nameof(UnknownType) + " to not be null."
-            );
-    }
+    // public string GetUnknownTypeSafe()
+    // {
+    //     return UnknownType
+    //         ?? throw new InvalidOperationException(
+    //             "Expected " + nameof(UnknownType) + " to not be null."
+    //         );
+    // }
 
     public string GetModuleNameSafe() => ModuleName ?? "default";
 
-    public string ToStringForOverloadExt() =>
-        "_"
-        + (IsConstant ? "" : "VAR_")
-        + (Type == DataType.Unknown ? GetUnknownTypeSafe() : Type.ToString().ToUpper());
+    public string ToStringForOverloadExt() => "_" + (IsConstant ? "" : "VAR_") + Type;
 
-    public UnknownTypeResolver ResolveUnknownType(ModuleNode parentModule)
-    {
-        if (
-            parentModule.getEnums().ContainsKey(GetUnknownTypeSafe())
-            && parentModule.Records.ContainsKey(GetUnknownTypeSafe())
-        )
-        {
-            return UnknownTypeResolver.Multiple;
-        }
+    // TODO implemnted in unkown type
 
-        if (parentModule.getEnums().ContainsKey(GetUnknownTypeSafe()))
-        {
-            return UnknownTypeResolver.Enum;
-        }
-
-        return parentModule.Records.ContainsKey(GetUnknownTypeSafe())
-            ? UnknownTypeResolver.Record
-            : UnknownTypeResolver.None;
-    }
 
     /// <summary>
     /// Get this VariableNode's type based on what Extension the VariableReferenceNode that
@@ -120,23 +102,22 @@ public class VariableNode : StatementNode
     /// <param name="parentModule"></param>
     /// <param name="vrn">The VariableReferenceNode that points to this VariableNode</param>
     /// <returns></returns>
-    public DataType GetSpecificType(ModuleNode parentModule, VariableUsageNode vrn) =>
+    public Type GetSpecificType(ModuleNode parentModule, VariableUsageNode vrn) =>
         vrn.ExtensionType switch
         {
-            VariableUsageNode.VrnExtType.ArrayIndex => GetArrayTypeSafe(),
+            // TODO: make exttype more expressive/type constrained
+            VariableUsageNode.VrnExtType.ArrayIndex
+                => ((ArrayType)Type).Inner,
             VariableUsageNode.VrnExtType.RecordMember
-                => GetRecordMemberType(
-                    vrn.GetRecordMemberReferenceSafe().Name,
-                    parentModule.Records
-                ),
+                => ((RecordType)Type).Fields[vrn.GetRecordMemberReferenceSafe().Name],
             VariableUsageNode.VrnExtType.None
                 => Type switch
                 {
-                    DataType.Record
+                    RecordType
                         => throw new NotImplementedException(
                             "It is not implemented yet to assign a record variable base to a target."
                         ),
-                    DataType.Array
+                    ArrayType
                         => throw new NotImplementedException(
                             "It is not implemented yet to assign an array variable base to a target."
                         ),
@@ -145,14 +126,14 @@ public class VariableNode : StatementNode
             _ => throw new NotImplementedException("Unknown VrnExtType member.")
         };
 
-    public DataType GetRecordMemberType(string memberName, Dictionary<string, RecordNode> records)
-    {
-        return records[GetUnknownTypeSafe()].GetFromMembersByNameSafe(memberName).Type;
-    }
+    // public DataType GetRecordMemberType(string memberName, Dictionary<string, RecordNode> records)
+    // {
+    //    return records[GetUnknownTypeSafe()].GetFromMembersByNameSafe(memberName).Type;
+    // }
 
     public bool EqualsForOverload(VariableNode vn)
     {
-        return vn.Type == Type && vn.IsConstant == IsConstant;
+        return vn.Type.Equals(Type) && vn.IsConstant == IsConstant;
     }
 
     public override string ToString()
@@ -176,10 +157,10 @@ public class VariableNode : StatementNode
 
         LLVMValueRef v = builder.BuildAlloca(
             // isVar is false, because we are already creating it using alloca which makes it var
-            context.GetLLVMTypeFromShankType(Type, UnknownType) ?? throw new Exception("null type"),
+            context.GetLLVMTypeFromShankType(Type) ?? throw new Exception("null type"),
             name
         );
-        var variable = context.NewVariable(Type, UnknownType);
+        var variable = context.NewVariable(Type);
         context.AddVariable(name, variable(v, !IsConstant), false);
         return v;
     }

@@ -7,36 +7,44 @@ namespace Shank.ASTNodes;
 
 public class RecordMemberNode : StatementNode
 {
+    public RecordMemberNode(string name, Type newType)
+    {
+        Name = name;
+        NewType = newType;
+    }
+
     public string Name { get; init; }
 
-    public VariableNode.DataType Type { get; set; }
+    // public VariableNode.DataType Type { get; set; }
 
-    public string? UnknownType { get; init; }
+    // public string? UnknownType { get; init; }
+
+    public Type NewType { get; set; }
     public ASTNode? From { get; set; }
     public ASTNode? To { get; set; }
 
-    public string GetUnknownTypeSafe() =>
-        UnknownType ?? throw new InvalidOperationException("Expected UnknownType to not be null.");
+    // public string GetUnknownTypeSafe() =>
+    //  UnknownType ?? throw new InvalidOperationException("Expected UnknownType to not be null.");
 
-    public RecordMemberNode(string name, VariableNode.DataType type)
-    {
-        Name = name;
-        Type = type;
-    }
+    // public RecordMemberNode(string name, VariableNode.DataType type)
+    // {
+    //     Name = name;
+    //     Type = type;
+    // }
 
-    public RecordMemberNode(string name, string unknownType)
-    {
-        Name = name;
-        Type = VariableNode.DataType.Unknown;
-        UnknownType = unknownType;
-    }
+    // public RecordMemberNode(string name, string unknownType)
+    // {
+    //     Name = name;
+    //     Type = VariableNode.DataType.Unknown;
+    //     UnknownType = unknownType;
+    // }
 
-    public RecordMemberNode(string name, string dataType, string unknownType)
-    {
-        Name = name;
-        Type = VariableNode.DataType.Reference;
-        UnknownType = unknownType;
-    }
+    // public RecordMemberNode(string name, string dataType, string unknownType)
+    // {
+    //     Name = name;
+    //     Type = VariableNode.DataType.Reference;
+    //     UnknownType = unknownType;
+    // }
 
     //public VariableNode.DataType GetTypeResolveUnknown(ModuleNode module)
     //{

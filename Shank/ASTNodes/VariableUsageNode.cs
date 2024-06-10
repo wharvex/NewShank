@@ -1,5 +1,4 @@
 using LLVMSharp.Interop;
-using Shank.ASTNodes;
 using Shank.ExprVisitors;
 using Shank.IRGenerator;
 
@@ -82,7 +81,8 @@ public class VariableUsageNode : ASTNode
         return ret;
     }
 
-    public VariableNode.DataType GetSpecificType(
+    // asumptions already analized
+    public Type GetSpecificType(
         Dictionary<string, RecordNode> records,
         Dictionary<string, ASTNode> imports,
         Dictionary<string, VariableNode> variables,
@@ -92,11 +92,8 @@ public class VariableUsageNode : ASTNode
         var recordsAndImports = SemanticAnalysis.GetRecordsAndImports(records, imports);
         return variables[name].Type switch
         {
-            VariableNode.DataType.Record
-                => ((RecordNode)recordsAndImports[name])
-                    .GetFromMembersByNameSafe(GetRecordMemberReferenceSafe().Name)
-                    .Type,
-            VariableNode.DataType.Array => variables[name].GetArrayTypeSafe(),
+            RecordType r => r,
+            ArrayType a => a.Inner,
             _ => variables[name].Type
         };
     }

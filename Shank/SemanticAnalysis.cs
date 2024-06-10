@@ -94,12 +94,6 @@ public class SemanticAnalysis
             if (s is AssignmentNode an)
             {
                 if (variables.TryGetValue(an.Target.Name, out var targetDeclaration))
-                {
-                    var targetTypeNull = GetTargetTypeForAssignmentCheck(
-                        targetDeclaration,
-                        an.Target,
-                        parentModule
-                    );
                     if (targetDeclaration.IsConstant)
                     {
                         throw new SemanticErrorException(
@@ -108,27 +102,9 @@ public class SemanticAnalysis
                         );
                     }
 
-                    //GetTargetTypeForAssignmentCheck can now maybe return null, we catch it here
-                    if (targetTypeNull == null)
-                        throw new Exception("Couldn't find target type");
-                    VariableNode.DataType targetType = (VariableNode.DataType)targetTypeNull;
+                var targetType = GetTypeOfExpression(an.Target, variables);
 
-                    CheckNode(
-                        targetType,
-                        an.Expression,
-                        variables,
-                        parentModule,
-                        targetDeclaration
-                    );
-
-                    CheckRange(an, variables, targetDeclaration, parentModule);
-                }
-                else
-                {
-                    throw new InvalidOperationException(
-                        "Unrecognized variable name " + an.Target.Name
-                    );
-                }
+                CheckAssignment(an.Target.Name, targetType, an.Expression, variables);
             }
             else if (s is FunctionCallNode fn)
             {
@@ -186,23 +162,64 @@ public class SemanticAnalysis
             }
             else if (s is RepeatNode repNode)
             {
-                CheckComparison(repNode.Expression, variables, parentModule);
+                GetTypeOfExpression(repNode.Expression, variables);
             }
             else if (s is WhileNode whileNode)
             {
-                CheckComparison(whileNode.Expression, variables, parentModule);
+                GetTypeOfExpression(whileNode.Expression, variables);
             }
             else if (s is IfNode ifNode)
             {
-                CheckComparison(ifNode.Expression, variables, parentModule);
+                GetTypeOfExpression(ifNode.Expression, variables);
+                var nextNode = ifNode.NextIfNode;
+                while (nextNode is not null and not ElseNode)
+                {
+                    GetTypeOfExpression(nextNode.Expression, variables);
+                    nextNode = nextNode.NextIfNode;
+                }
             }
         }
+    }
+
+    private static Dictionary<string, Type> CheckAssignment(
+        String targetName,
+        Type targetType,
+        ASTNode expression,
+        Dictionary<string, VariableNode> variables
+    )
+    {
+        CheckRange(targetName, targetType, expression, variables);
+
+        if (
+            targetType is EnumType e
+            && expression is VariableUsageNode v
+            && e.Variants.Contains(v.Name)
+        )
+        {
+            if (v.ExtensionType != VariableUsageNode.VrnExtType.None)
+            {
+                throw new SemanticErrorException($"ambiguous variable name {v.Name}", expression);
+            }
+        }
+        else
+        {
+            var expressionType = GetTypeOfExpression(expression, variables);
+            if (!targetType.Equals(expressionType))
+            {
+                throw new SemanticErrorException(
+                    $"Type mismatch cannot assign to {targetName}: {targetType} {expression}: {expressionType}",
+                    expression
+                );
+            }
+        }
+
+        return [];
     }
 
     // This is why something like type usage/IType is useful, because when we just return the datatype
     // for instiation we do lose type information, such as what type of record, or enum, what is the inner type of the array?
     // and IType is the best because it only stores whats neccesary for a givern type
-    private static Dictionary<string, VariableNode.DataType> CheckFunctionCall(
+    private static Dictionary<string, Type> CheckFunctionCall(
         List<ParameterNode> param,
         Dictionary<string, VariableNode> variables,
         FunctionNode fn,
@@ -220,15 +237,13 @@ public class SemanticAnalysis
                     arguement.Variable == null
                         ? arguement.Constant
                         : variables[arguement.Variable.Name];
-                // assumption ranges are already checked to be only on types that allow them
-                CheckParameterRange(param, arguement, variables, fn);
                 CheckParameterMutability(param, arguement, variables, functionCallNode);
                 return TypeCheckAndInstiateGenericParameter(param, arguement, variables, fn);
             })
             .ToDictionary();
     }
 
-    public static IEnumerable<(String, VariableNode.DataType)> TypeCheckAndInstiateGenericParameter(
+    public static Dictionary<string, Type> TypeCheckAndInstiateGenericParameter(
         VariableNode param,
         ParameterNode argument,
         Dictionary<string, VariableNode> variables,
@@ -237,7 +252,12 @@ public class SemanticAnalysis
     {
         // check that the arguement passed in has the right type for its parameter
         // and also if the parameter has any generics try to instiate them
-        return [];
+        return CheckAssignment(
+            param.Name!,
+            param.Type,
+            argument.Variable ?? argument.Constant!,
+            variables
+        );
     }
 
     // assumptions if the arguement is a variable it assumed to be there already from previous check in check function call
@@ -282,130 +302,53 @@ public class SemanticAnalysis
         }
     }
 
-    private static void CheckParameterRange(
-        VariableNode param,
-        ParameterNode argument,
-        Dictionary<string, VariableNode> variables,
-        FunctionNode fn
-    )
-    {
-        if (argument.Variable is not null)
-        {
-            var vrn = argument.Variable;
-            var from = variables[vrn.Name].From;
-            var to = variables[vrn.Name].To;
-            var targetFrom = param.From;
-            var targetTo = param.To;
-            if (from is null || targetFrom is null)
-                return;
-            if (from is IntNode)
-            {
-                if (
-                    ((IntNode)from).Value < ((IntNode)targetFrom).Value
-                    || ((IntNode)to).Value > ((IntNode)targetTo).Value
-                )
-                    throw new Exception($"Mismatched range in a call to {fn.Name}");
-            }
-            else
-            {
-                if (
-                    ((FloatNode)from).Value < ((FloatNode)targetFrom).Value
-                    || ((FloatNode)to).Value < ((FloatNode)targetFrom).Value
-                )
-                    throw new Exception($"Mismatched range in a call to {fn.Name}");
-            }
-        }
-        else
-        {
-            var actualFrom = GetMaxRange(argument.Constant, variables);
-            var actualTo = GetMinRange(argument.Constant, variables);
-            var targetFrom = param.From;
-            var targetTo = param.To;
-            if (targetFrom is null)
-                return;
-            if (targetFrom is IntNode)
-            {
-                if (
-                    ((IntNode)targetFrom).Value > actualFrom
-                    || ((IntNode)targetTo).Value < actualTo
-                )
-                    throw new Exception($"Mismatched range in a call to {fn.Name}");
-            }
-            else
-            {
-                if (
-                    ((FloatNode)targetFrom).Value < actualFrom
-                    || ((FloatNode)targetTo).Value < actualTo
-                )
-                    throw new Exception($"Mismatched range in a call to {fn.Name}");
-            }
-        }
-    }
-
     private static void CheckRange(
-        AssignmentNode an,
-        Dictionary<string, VariableNode> variablesLookup,
-        VariableNode targetDefinition,
-        ModuleNode parentModule
+        String? variable,
+        Type targetType,
+        ASTNode expression,
+        Dictionary<string, VariableNode> variablesLookup
     )
     {
-        if (an.Expression is StringNode s)
-        {
+        // TODO: traverse record type if necesary
+        // if (an.Expression is StringNode s)
+        /*{
             try
             {
-                var from = (IntNode)variablesLookup[an.Target.Name].From;
-                var to = (IntNode)variablesLookup[an.Target.Name].To;
-                if (from is null || to is null)
-                    return;
-                if (from.Value != 0)
-                    throw new Exception("Strings must have a range starting at 0.");
-                if (s.Value.Length < from.Value || s.Value.Length > to.Value)
+                var type = (StringType)variablesLookup[an.Target.Name].NewType;
+                var from = type.Range.From;
+                var to = type.Range.To;
+                if (s.Value.Length < from || s.Value.Length > to)
                     throw new Exception(
                         $"The variable {an.Target.Name} can only be a length from {from.ToString()} to {to.ToString()}."
                     );
             }
             catch (InvalidCastException e)
             {
-                throw new Exception("String types can only be assigned a range of two integers.");
+                
+                throw new Exception("String types can only be assigned a range of two integers.", e);
             }
-        }
-        else
+        }*/
+        // else
         {
-            try
+            // try
             {
-                if (variablesLookup[an.Target.Name].Type is VariableNode.DataType.Real)
+                if (targetType is RangeType i) // all other i range type are bounded by integers
                 {
-                    var from = (FloatNode)variablesLookup[an.Target.Name].From;
-                    var to = (FloatNode)variablesLookup[an.Target.Name].To;
-                    if (from is null || to is null)
-                        return;
-                    float upper = GetMaxRange(an.Expression, variablesLookup);
-                    float lower = GetMinRange(an.Expression, variablesLookup);
+                    var from = i.Range.From;
+                    var to = i.Range.To;
+                    int upper = (int)GetMaxRange(expression, variablesLookup);
+                    int lower = (int)GetMinRange(expression, variablesLookup);
 
-                    if (lower < from.Value || upper > to.Value)
+                    if (lower < from || upper > to)
                         throw new Exception(
-                            $"The variable {an.Target.Name} can only be assigned expressions that won't overstep its range."
-                        );
-                }
-                else
-                {
-                    var from = (IntNode)variablesLookup[an.Target.Name].From;
-                    var to = (IntNode)variablesLookup[an.Target.Name].To;
-                    if (from is null || to is null)
-                        return;
-                    int upper = (int)GetMaxRange(an.Expression, variablesLookup);
-                    int lower = (int)GetMinRange(an.Expression, variablesLookup);
-
-                    if (lower < from.Value || upper > to.Value)
-                        throw new Exception(
-                            $"The variable {an.Target.Name} can only be assigned expressions that wont overstep its range."
+                            $"The variable {variable!} can only be assigned expressions that wont overstep its range."
                         );
                 }
             }
-            catch (InvalidCastException e)
+            /*catch (InvalidCastException e)
             {
                 throw new Exception("Incorrect type of range.");
-            }
+            }*/
         }
     }
 
@@ -436,17 +379,10 @@ public class SemanticAnalysis
             return s.Value.Length;
         if (node is VariableUsageNode vrn)
         {
-            if (variables[vrn.Name].To is null || variables[vrn.Name].From is null)
-                throw new Exception(
-                    "Ranged variables can only be assigned variables with a range."
-                );
             var dataType = variables[vrn.Name].Type;
-            if (dataType is VariableNode.DataType.Integer)
-                return ((IntNode)variables[vrn.Name].To).Value;
-            else if (dataType is VariableNode.DataType.Real)
-                return ((FloatNode)variables[vrn.Name].To).Value;
-            else if (dataType is VariableNode.DataType.String)
-                return ((StringNode)variables[vrn.Name].To).Value.Length;
+            if (dataType is RangeType t)
+                return t.Range.To;
+            throw new Exception("Ranged variables can only be assigned variables with a range.");
         }
         throw new Exception(
             "Unrecognized node type on line "
@@ -482,153 +418,159 @@ public class SemanticAnalysis
             return s.Value.Length;
         if (node is VariableUsageNode vrn)
         {
-            if (variables[vrn.Name].To is null || variables[vrn.Name].From is null)
-                throw new Exception(
-                    "Ranged variables can only be assigned variables with a range."
-                );
             var dataType = variables[vrn.Name].Type;
-            if (dataType is VariableNode.DataType.Integer)
-                return ((IntNode)variables[vrn.Name].To).Value;
-            else if (dataType is VariableNode.DataType.Real)
-                return ((FloatNode)variables[vrn.Name].To).Value;
-            else if (dataType is VariableNode.DataType.String)
-                return ((StringNode)variables[vrn.Name].To).Value.Length;
+            if (dataType is RangeType t)
+                return t.Range.From;
+            throw new Exception("Ranged variables can only be assigned variables with a range.");
         }
 
         throw new Exception("Unrecognized node type in math expression while checking range");
     }
 
-    private static void CheckComparison(
-        BooleanExpressionNode? ben,
-        Dictionary<string, VariableNode> variables,
-        ModuleNode parentModule
+    private static Type GetTypeOfExpression(
+        ASTNode expression,
+        Dictionary<string, VariableNode> variables
     )
     {
-        if (ben == null)
-            return;
-        if (ben.Left is IntNode)
+        return expression switch
         {
-            if (ben.Right is not IntNode)
-                throw new Exception("Can only compare integers to other integers.");
-        }
-        else if (ben.Left is FloatNode)
-        {
-            if (ben.Right is not FloatNode)
-                throw new Exception("Can only compare floats to other floats.");
-        }
-        else if (ben.Left is VariableUsageNode vrn)
-        {
-            VariableNode variable;
+            IntNode intNode => new IntegerType(),
+            BooleanExpressionNode booleanExpressionNode
+                => GetTypeOfBooleanExpression(booleanExpressionNode, variables),
+            CharNode charNode => new CharacterType(),
+            FloatNode floatNode => new CharacterType(),
+            MathOpNode mathOpNode => GetTypeOfMathOp(mathOpNode, variables),
+            StringNode stringNode => new StringType(),
+            VariableUsageNode variableReferenceNode
+                => GetTypeOfVariableUsage(variableReferenceNode, variables),
+            _ => throw new ArgumentOutOfRangeException(expression.ToString())
+        };
 
-            //checking whether the left or right side of the equation is the variable
-            //this allows for the value of an enum to be on either side
-            if (variables.ContainsKey(vrn.Name))
-                variable = variables[vrn.Name];
-            else
-                // TODO: This will produce an InvalidCastException if ben.Right is not a VRN.
-                variable = variables[((VariableUsageNode)ben.Right).Name];
-            switch (variable.Type)
+        Type GetTypeOfBooleanExpression(
+            BooleanExpressionNode booleanExpressionNode,
+            Dictionary<string, VariableNode> variableNodes
+        )
+        {
+            // TODO: are all things of the same type comparable
+            var leftType = GetTypeOfExpression(booleanExpressionNode.Left, variables);
+            if (
+                leftType is EnumType e
+                && booleanExpressionNode.Right is VariableUsageNode v
+                && e.Variants.Contains(v.Name)
+            )
             {
-                case VariableNode.DataType.Integer:
-                    if (
-                        ben.Right is not IntNode
-                        || (
-                            ben.Right is VariableUsageNode vrn2
-                            && variables[vrn2.Name].Type != VariableNode.DataType.Integer
-                        )
-                    )
-                        throw new Exception(
-                            "Integers can only be compared to integers or integer variables."
-                        );
-                    break;
-                case VariableNode.DataType.Real:
-                    if (
-                        ben.Right is not FloatNode
-                        || (
-                            ben.Right is VariableUsageNode vrn3
-                            && variables[vrn3.Name].Type != VariableNode.DataType.Real
-                        )
-                    )
-                        throw new Exception(
-                            "Floats can only be compared to floats or float variables."
-                        );
-                    break;
-                case VariableNode.DataType.Enum:
-                    Dictionary<string, EnumNode> enums;
-                    if (parentModule.getEnums().ContainsKey(variable.UnknownType))
-                        enums = parentModule.getEnums();
-                    else
-                        enums = Modules[
-                            ((EnumNode)parentModule.Imported[variable.UnknownType]).ParentModuleName
-                        ].getEnums();
-                    if (
-                        !enums[variable.UnknownType].EnumElements.Contains(
-                            ((VariableUsageNode)ben.Right).Name
-                        )
-                    )
-                    {
-                        if ((variables.ContainsKey(((VariableUsageNode)ben.Right).Name)))
-                        {
-                            if (
-                                (
-                                    variables[((VariableUsageNode)ben.Right).Name].UnknownType
-                                    != variable.UnknownType
-                                )
-                            )
-                                throw new Exception(
-                                    "Enums can only be compared to enums or enum variables of the same type."
-                                );
-                            break;
-                        }
+                if (v.ExtensionType != VariableUsageNode.VrnExtType.None)
+                {
+                    throw new SemanticErrorException(
+                        $"ambiguous variable name {v.Name}",
+                        expression
+                    );
+                }
 
-                        throw new Exception(
-                            "Enums can only be compared to enums or enum variables of the same type."
-                        );
-                    }
-
-                    break;
+                return new BooleanType();
             }
+            var rightType = GetTypeOfExpression(booleanExpressionNode.Right, variables);
+            return leftType.Equals(rightType)
+                ? new BooleanType()
+                : throw new SemanticErrorException(
+                    $"could not compare expressions of different types {leftType} to {rightType}",
+                    booleanExpressionNode
+                );
+        }
+
+        Type GetTypeOfMathOp(MathOpNode mathOpNode, Dictionary<string, VariableNode> variableNodes)
+        {
+            var lhs = GetTypeOfExpression(mathOpNode.Left, variables);
+            var rhs = GetTypeOfExpression(mathOpNode.Right, variables);
+            // TODO: preserver ranges
+            return (lhs, rhs) switch
+            {
+                (StringType or CharacterType, StringType or CharacterType)
+                    => mathOpNode.Op == MathOpNode.MathOpType.Plus
+                        ? new StringType()
+                        : throw new SemanticErrorException(
+                            $"cannot {mathOpNode.Op} two strings",
+                            mathOpNode
+                        ),
+                (RealType, RealType) => lhs,
+                (IntegerType, IntegerType) => lhs,
+                (
+                    StringType
+                        or CharacterType
+                        or IntegerType
+                        or RealType,
+                    RealType
+                        or StringType
+                        or CharacterType
+                        or IntegerType
+                )
+                    => throw new SemanticErrorException(
+                        $"{lhs} and {rhs} are not the same so you cannot perform math operations on them",
+                        mathOpNode
+                    ),
+                (StringType or CharacterType or IntegerType or RealType, _)
+                    => throw new SemanticErrorException(
+                        $"the right hand side of this math expression is not able to be used in math expression",
+                        mathOpNode
+                    ),
+                (_, StringType or CharacterType or IntegerType or RealType)
+                    => throw new SemanticErrorException(
+                        $"the left hand side of this math expression is not able to be used in math expression",
+                        mathOpNode
+                    ),
+                _
+                    => throw new SemanticErrorException(
+                        "the expression used in this math expression are not valid in math expressions",
+                        mathOpNode
+                    )
+            };
+        }
+
+        Type GetTypeOfVariableUsage(
+            VariableUsageNode variableReferenceNode,
+            Dictionary<string, VariableNode> variableNodes
+        )
+        {
+            var variable =
+                variables.GetValueOrDefault(variableReferenceNode.Name)
+                ?? throw new SemanticErrorException(
+                    $"Variable {variableReferenceNode.Name} not found",
+                    variableReferenceNode
+                );
+            return (variableReferenceNode.ExtensionType, NewType: variable.Type) switch
+            {
+                (ExtensionType: VariableUsageNode.VrnExtType.None, _) => variable.Type,
+                (ExtensionType: VariableUsageNode.VrnExtType.RecordMember, NewType: RecordType r)
+                    => GetTypeRecursive(r, variableReferenceNode) ?? variable.Type,
+                (
+                    ExtensionType: VariableUsageNode.VrnExtType.RecordMember,
+                    NewType: ReferenceType
+                    (RecordType r)
+                )
+                    => GetTypeRecursive(r, variableReferenceNode) ?? variable.Type,
+                (ExtensionType: VariableUsageNode.VrnExtType.ArrayIndex, NewType: ArrayType a)
+                    => GetTypeOfExpression(variableReferenceNode.Extension!, variables)
+                    is IntegerType
+                        ? a.Inner
+                        : throw new SemanticErrorException(
+                            "Array indexer does not resolve to a number",
+                            variableReferenceNode
+                        ),
+                (ExtensionType: VariableUsageNode.VrnExtType.ArrayIndex, _)
+                    => throw new SemanticErrorException(
+                        "Invalid array index, tried to index into non array",
+                        variableReferenceNode
+                    ),
+                (ExtensionType: VariableUsageNode.VrnExtType.RecordMember, NewType: { } t)
+                    => throw new SemanticErrorException(
+                        $"Invalid member access, tried to access non record {t}",
+                        variableReferenceNode
+                    ),
+            };
         }
     }
 
-    //may return null as GetRecordTypeRecursive can sometimes return null, although it should never reach here
-    private static VariableNode.DataType? GetTargetTypeForAssignmentCheck(
-        VariableNode targetDefinition,
-        VariableUsageNode targetUsage,
-        ModuleNode parentModule
-    ) =>
-        targetDefinition.Type switch
-        {
-            VariableNode.DataType.Array
-                => targetUsage.ExtensionType == VariableUsageNode.VrnExtType.None
-                    ? throw new NotImplementedException(
-                        "It is not implemented yet to assign to the base of an array variable."
-                    )
-                    : targetDefinition.GetArrayTypeSafe(),
-            VariableNode.DataType.Record
-                => GetRecordTypeRecursive(
-                    parentModule,
-                    (RecordNode)
-                        GetRecordsAndImports(parentModule.Records, parentModule.Imported)[
-                            targetDefinition.GetUnknownTypeSafe()
-                        ],
-                    targetUsage
-                ),
-            VariableNode.DataType.Reference
-                => GetRecordTypeRecursive(
-                    parentModule,
-                    (RecordNode)
-                        GetRecordsAndImports(parentModule.Records, parentModule.Imported)[
-                            targetDefinition.GetUnknownTypeSafe()
-                        ],
-                    targetUsage
-                ),
-
-            VariableNode.DataType.Unknown => throw new InvalidOperationException("hi"),
-            _ => targetDefinition.Type
-        };
-
-    private static VariableNode.DataType GetSpecificRecordType(
+    /*private static IType GetSpecificRecordType(
         ModuleNode parentModule,
         VariableNode targetDefinition,
         VariableUsageNode targetUsage
@@ -640,7 +582,7 @@ public class SemanticAnalysis
                 ]
         )
             .GetFromMembersByNameSafe(targetUsage.GetRecordMemberReferenceSafe().Name)
-            .Type;
+            .NewType;*/
 
     //can return null as we may need to step backwards once recursive loop
     //this is if there is a nested record or reference, in which case the type that we want to return to be checked
@@ -648,24 +590,27 @@ public class SemanticAnalysis
     //if we checked for an extension when the target should be one of these types, an error is thrown, so if there is no extension
     //on the variable reference node, we return null to the previous recursive pass, which returns either VariableNode.DataType.Record
     //or Reference depending on what the previous loop found
-    private static VariableNode.DataType? GetRecordTypeRecursive(
-        ModuleNode parentModule,
-        RecordNode targetDefinition,
+    private static Type? GetTypeRecursive(
+        // ModuleNode parentModule,
+        RecordType targetDefinition,
         VariableUsageNode targetUsage
     )
     {
         if (targetUsage.Extension is null)
             return null;
-        VariableNode.DataType vndt = targetDefinition
-            .GetFromMembersByNameSafe(targetUsage.GetRecordMemberReferenceSafe().Name)
-            .Type;
-        if (
-            vndt != VariableNode.DataType.Record
-            && vndt != VariableNode.DataType.Reference
-            && vndt != VariableNode.DataType.Unknown
-        )
-            return vndt;
-        else
+        var vndt = targetDefinition.Fields[targetUsage.GetRecordMemberReferenceSafe().Name];
+
+        var innerVndt = vndt switch
+        {
+            RecordType r => r,
+            ReferenceType(RecordType r1) => r1,
+            _ => null
+        };
+        return innerVndt is not null
+            ? GetTypeRecursive(innerVndt, (VariableUsageNode)targetUsage.GetExtensionSafe()) ?? vndt
+            : vndt;
+
+        /*else
             return GetRecordTypeRecursive(
                     parentModule,
                     (RecordNode)
@@ -676,8 +621,8 @@ public class SemanticAnalysis
                                 )
                                 .GetUnknownTypeSafe()
                         ],
-                    (VariableUsageNode)targetUsage.GetExtensionSafe()
-                ) ?? vndt;
+                    (VariableReferenceNode)targetUsage.GetExtensionSafe()
+                */
     }
 
     public static Dictionary<string, ASTNode> GetRecordsAndImports(
@@ -730,135 +675,6 @@ public class SemanticAnalysis
         );
     }
 
-    private static void CheckNode(
-        VariableNode.DataType targetType,
-        ASTNode anExpression,
-        IReadOnlyDictionary<string, VariableNode> variables,
-        ModuleNode parentModule,
-        VariableNode target
-    )
-    {
-        switch (anExpression)
-        {
-            case BooleanExpressionNode booleanExpressionNode:
-                if (targetType != VariableNode.DataType.Boolean)
-                    throw new Exception(
-                        "Boolean expressions have to be assigned to boolean variables"
-                    );
-                break;
-            case BoolNode boolNode:
-                if (targetType != VariableNode.DataType.Boolean)
-                    throw new Exception(
-                        "true and false must be assigned to boolean variables; found "
-                            + boolNode.Value
-                            + " assigned to "
-                            + targetType
-                    );
-                break;
-            case CharNode charNode:
-                if (
-                    targetType != VariableNode.DataType.Character
-                    && targetType != VariableNode.DataType.String
-                )
-                    throw new Exception("Characters have to be assigned to character variables");
-                break;
-            case FloatNode floatNode:
-                if (targetType != VariableNode.DataType.Real)
-                    throw new Exception("Real numbers have to be assigned to real variables");
-                break;
-            case IntNode intNode:
-                if (targetType != VariableNode.DataType.Integer)
-                    throw new Exception(
-                        "Integer numbers have to be assigned to integer variables. Found "
-                            + targetType
-                            + " "
-                            + intNode.Value
-                    );
-                break;
-            case MathOpNode mathOpNode:
-                CheckNode(targetType, mathOpNode.Left, variables, parentModule, target);
-                CheckNode(targetType, mathOpNode.Right, variables, parentModule, target);
-                break;
-            case StringNode stringNode:
-                if (
-                    targetType != VariableNode.DataType.Character
-                    && targetType != VariableNode.DataType.String
-                )
-                    throw new Exception("strings have to be assigned to string variables");
-                break;
-            case VariableUsageNode vrn:
-                if (targetType == VariableNode.DataType.Enum)
-                {
-                    EnumNode? enumDefinition = null;
-                    foreach (var e in parentModule.getEnums())
-                    {
-                        foreach (var v in variables)
-                        {
-                            if (v.Value.InitialValue is null)
-                                continue;
-                            if (
-                                v.Value.IsConstant
-                                && e.Value.EnumElements.Contains(v.Value.InitialValue.ToString())
-                            )
-                            {
-                                enumDefinition = e.Value;
-                                break;
-                            }
-                        }
-
-                        if (e.Value.EnumElements.Contains(vrn.Name))
-                        {
-                            enumDefinition = e.Value;
-                            break;
-                        }
-                    }
-
-                    foreach (var e in parentModule.Imported)
-                    {
-                        if (e.Value is not EnumNode)
-                            continue;
-                        var Enum = (EnumNode)e.Value;
-                        if (Enum.EnumElements.Contains(vrn.Name))
-                        {
-                            enumDefinition = Enum;
-                            break;
-                        }
-                    }
-
-                    if (enumDefinition == null)
-                        throw new Exception(
-                            $"Could not find the definition for an enum containing the element {vrn.Name}."
-                        );
-                    if (
-                        enumDefinition.Type != target.UnknownType
-                        && (
-                            target.Type != VariableNode.DataType.Record
-                            && target.Type != VariableNode.DataType.Reference
-                        )
-                    )
-                        throw new Exception(
-                            $"Cannot assign an enum of type {enumDefinition.Type} to the enum element {target.UnknownType}."
-                        );
-                }
-                else
-                {
-                    var vn = variables[vrn.Name];
-                    if (vn.GetSpecificType(parentModule, vrn) != targetType)
-                        throw new Exception(
-                            vrn.Name
-                                + " is a "
-                                + variables[vrn.Name].Type
-                                + " and can't be assigned to a "
-                                + targetType
-                        );
-                }
-
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(anExpression));
-        }
-    }
-
     // Only used by ShankUnitTests project.
     public static void CheckModules()
     {
@@ -867,6 +683,7 @@ public class SemanticAnalysis
         HandleExports();
         HandleImports();
         handleUnknownTypes();
+        AssignNestedTypes();
         handleTests();
         foreach (KeyValuePair<string, ModuleNode> module in Modules)
         {
@@ -932,6 +749,7 @@ public class SemanticAnalysis
         StartModule = pn.GetStartModuleSafe();
         HandleExports();
         HandleImports();
+        AssignNestedTypes();
         handleUnknownTypes();
         handleTests();
         foreach (KeyValuePair<string, ModuleNode> module in Modules)
@@ -1117,103 +935,110 @@ public class SemanticAnalysis
                 KeyValuePair<string, CallableNode> function in currentModule.Value.getFunctions()
             )
             {
+                CheckVariables(
+                    currentModule.Value.GlobalVariables.Values.ToList(),
+                    currentModule.Value,
+                    []
+                );
                 if (function.Value is BuiltInFunctionNode)
                 {
                     continue;
                 }
 
                 FunctionNode currentFunction = (FunctionNode)function.Value;
-                foreach (VariableNode variable in currentFunction.LocalVariables)
+                CheckVariables(
+                    currentFunction.LocalVariables,
+                    currentModule.Value,
+                    currentFunction.GenericTypeParameterNames ?? []
+                );
+                var generics = currentFunction.GenericTypeParameterNames ?? [];
+                foreach (var variable in currentFunction.ParameterVariables)
                 {
-                    var enumsAndImports = GetEnumsAndImports(
-                        currentModule.Value.getEnums(),
-                        currentModule.Value.Imported
-                    );
-                    var recordsAndImports = GetRecordsAndImports(
-                        currentModule.Value.Records,
-                        currentModule.Value.Imported
-                    );
-                    if (variable.Type == VariableNode.DataType.Unknown)
+                    variable.Type = variable.Type switch
                     {
-                        if (
-                            variable.UnknownType != null
-                            && enumsAndImports.ContainsKey(variable.UnknownType)
-                            && enumsAndImports[variable.UnknownType] is EnumNode
-                        )
-                        {
-                            variable.Type = VariableNode.DataType.Enum;
-                        }
-                        else if (
-                            variable.UnknownType != null
-                            && recordsAndImports.ContainsKey(variable.UnknownType)
-                            && recordsAndImports[variable.UnknownType] is RecordNode
-                        )
-                        {
-                            variable.Type = VariableNode.DataType.Record;
-                            var allRecords = GetRecordsAndImports(
-                                currentModule.Value.Records,
-                                currentModule.Value.Imported
-                            );
-                            var targetRecord = (RecordNode)allRecords[variable.UnknownType];
-                            AssignNestedRecordTypes(targetRecord.Members, currentModule.Value);
-                        }
-                        else
-                            throw new Exception(
-                                "Could not find a definition for the unknown type "
-                                    + variable.UnknownType
-                            );
-                    }
+                        UnknownType u => ResolveType(u, currentModule.Value, generics),
+                        ReferenceType(UnknownType u)
+                            => new ReferenceType(ResolveType(u, currentModule.Value, generics)),
+                        { } type => type
+                    };
                 }
 
-                foreach (var statement in currentFunction.Statements)
-                {
-                    if (statement is not AssignmentNode)
+                // foreach (var statement in currentFunction.Statements)
+                /*{
+                    if (statement is AssignmentNode assignment)
                     {
-                        continue;
-                    }
 
-                    var assignment = (AssignmentNode)statement;
-                    foreach (var variable in currentFunction.LocalVariables)
-                    {
-                        if (variable.Type == VariableNode.DataType.Enum)
+                        if (currentFunction.LocalVariables.Concat(currentFunction.ParameterVariables).FirstOrDefault(node =>
+                               GetTypeRecursive(node.NewType, assignment.Target) is EnumType e && assignment.Target.Name == node.Name) is not null)
                         {
-                            if (assignment.Target.Name == variable.Name)
-                            {
-                                assignment.Target.ExtensionType = VariableUsageNode.VrnExtType.Enum;
-                            }
+                            // how do we know all types in all modules that the current module we are using depends on are resolved
+                            assignment.Target.ExtensionType = ASTNode.VrnExtType.Enum;
                         }
                     }
-                }
+                }*/
             }
         }
     }
 
-    public static void AssignNestedRecordTypes(
-        List<StatementNode> statements,
-        ModuleNode parentModule
+    private static void CheckVariables(
+        List<VariableNode> variables,
+        ModuleNode currentModule,
+        List<String> generics
     )
     {
-        foreach (var statement in statements)
+        foreach (var variable in variables)
         {
-            var rmn = (RecordMemberNode)statement;
-            if (rmn.UnknownType == null)
-                continue;
-
-            if (
-                parentModule.Records.ContainsKey(rmn.UnknownType)
-                || (
-                    parentModule.Imported.ContainsKey(rmn.UnknownType)
-                    && parentModule.Imported[rmn.UnknownType] is RecordNode
-                )
-            )
+            // if its a constant then it cannot refer to another constant/variable so the only case for variable is its an emum cohnstant
+            // might need  similiar logic for defaulat values of functions, and weird enum comparissons i.e. red = bar, where red is an enum constant
+            // because currently we do assume lhs determine type
+            if (variable is { IsConstant: true, InitialValue: { } init })
             {
-                rmn.Type = VariableNode.DataType.Record;
+                // from the parsers pov we should make an enum node, b/c this can't be any random varialbe
+                if (init is StringNode n)
+                {
+                    foreach (
+                        var enumDefinition in currentModule.Enums.Values.Concat(
+                            currentModule.Imported.Values
+                        )
+                    )
+                    {
+                        if (enumDefinition is EnumNode e)
+                        {
+                            if (e.NewType.Variants.Contains(n.Value))
+                            {
+                                variable.Type = e.NewType;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (variable.Type is not EnumType)
+                    {
+                        variable.Type = new StringType();
+                    }
+                }
+                else
+                {
+                    variable.Type = GetTypeOfExpression(init, []);
+                }
             }
             else
             {
-                rmn.Type = VariableNode.DataType.Enum;
+                variable.Type = variable.Type switch
+                {
+                    UnknownType u => ResolveType(u, currentModule, generics),
+                    ReferenceType(UnknownType u)
+                        => new ReferenceType(ResolveType(u, currentModule, generics)),
+                    { } type => type
+                };
             }
         }
+    }
+
+    private static bool Lookup<K, U, V>(Dictionary<K, V> dictionary, K key, ref U result)
+        where U : class?
+    {
+        return dictionary.TryGetValue(key, out var value) && (value is U v && (result = v) == v);
     }
 
     public static void Experimental()
@@ -1227,6 +1052,49 @@ public class SemanticAnalysis
             string.Join("\n", moduleAnythings.Select((n, i) => i + "\n" + n)),
             "getChildNodes"
         );
+    }
+
+    public static void AssignNestedTypes()
+    {
+        Dictionary<(string, string), RecordNode> resolvedRecords = new();
+        foreach (var module in Modules.Values)
+        {
+            foreach (var record in module.Records.Values)
+            {
+                record.NewType.Fields = record
+                    .NewType.Fields.Select(field =>
+                    {
+                        var unknown = field.Value switch
+                        {
+                            UnknownType u => ResolveType(u, module, record.NewType.Generics),
+                            ReferenceType(UnknownType u)
+                                => new ReferenceType(
+                                    ResolveType(u, module, record.NewType.Generics)
+                                ),
+                            _ => field.Value
+                        };
+                        return KeyValuePair.Create(field.Key, unknown);
+                    })
+                    .ToDictionary();
+            }
+        }
+    }
+
+    private static Type ResolveType(UnknownType member, ModuleNode module, List<string> generics)
+    {
+        var resolveType =
+            module.Records.GetValueOrDefault(member.TypeName)?.NewType
+            ?? (Type?)module.Enums.GetValueOrDefault(member.TypeName)?.NewType
+            ?? (
+                generics.Contains(member.TypeName)
+                    ? member
+                    : throw new SemanticErrorException($"Unbound type {member}", module)
+            );
+        if (resolveType is EnumType && member.TypeParameters.Count != 0)
+        {
+            throw new SemanticErrorException($"Enums do not have generic types", module);
+        }
+        return resolveType;
     }
 
     public static void reset()

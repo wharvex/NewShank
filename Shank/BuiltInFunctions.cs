@@ -22,13 +22,13 @@ public class BuiltInFunctions
                     new VariableNode()
                     {
                         Name = "value",
-                        Type = VariableNode.DataType.Real,
+                        Type = new RealType(),
                         IsConstant = true
                     },
                     new VariableNode()
                     {
                         Name = "result",
-                        Type = VariableNode.DataType.Real,
+                        Type = new RealType(),
                         IsConstant = false
                     },
                 },
@@ -42,7 +42,7 @@ public class BuiltInFunctions
                     new VariableNode()
                     {
                         Name = "result",
-                        Type = VariableNode.DataType.Integer,
+                        Type = new IntegerType(),
                         IsConstant = false
                     },
                 },
@@ -56,13 +56,13 @@ public class BuiltInFunctions
                     new VariableNode()
                     {
                         Name = "value",
-                        Type = VariableNode.DataType.Integer,
+                        Type = new IntegerType(),
                         IsConstant = true
                     },
                     new VariableNode()
                     {
                         Name = "result",
-                        Type = VariableNode.DataType.Real,
+                        Type = new RealType(),
                         IsConstant = false
                     },
                 },
@@ -76,13 +76,13 @@ public class BuiltInFunctions
                     new VariableNode()
                     {
                         Name = "value",
-                        Type = VariableNode.DataType.Real,
+                        Type = new RealType(),
                         IsConstant = true
                     },
                     new VariableNode()
                     {
                         Name = "result",
-                        Type = VariableNode.DataType.Integer,
+                        Type = new IntegerType(),
                         IsConstant = false
                     },
                 },
@@ -96,19 +96,19 @@ public class BuiltInFunctions
                     new VariableNode()
                     {
                         Name = "value",
-                        Type = VariableNode.DataType.String,
+                        Type = new StringType(),
                         IsConstant = true
                     },
                     new VariableNode()
                     {
                         Name = "amount",
-                        Type = VariableNode.DataType.Integer,
+                        Type = new IntegerType(),
                         IsConstant = true
                     },
                     new VariableNode()
                     {
                         Name = "result",
-                        Type = VariableNode.DataType.String,
+                        Type = new StringType(),
                         IsConstant = false
                     },
                 },
@@ -122,19 +122,19 @@ public class BuiltInFunctions
                     new VariableNode()
                     {
                         Name = "value",
-                        Type = VariableNode.DataType.String,
+                        Type = new StringType(),
                         IsConstant = true
                     },
                     new VariableNode()
                     {
                         Name = "amount",
-                        Type = VariableNode.DataType.Integer,
+                        Type = new IntegerType(),
                         IsConstant = true
                     },
                     new VariableNode()
                     {
                         Name = "result",
-                        Type = VariableNode.DataType.String,
+                        Type = new StringType(),
                         IsConstant = false
                     },
                 },
@@ -148,25 +148,25 @@ public class BuiltInFunctions
                     new VariableNode()
                     {
                         Name = "value",
-                        Type = VariableNode.DataType.String,
+                        Type = new StringType(),
                         IsConstant = true
                     },
                     new VariableNode()
                     {
                         Name = "index",
-                        Type = VariableNode.DataType.Integer,
+                        Type = new IntegerType(),
                         IsConstant = true
                     },
                     new VariableNode()
                     {
                         Name = "amount",
-                        Type = VariableNode.DataType.Integer,
+                        Type = new IntegerType(),
                         IsConstant = true
                     },
                     new VariableNode()
                     {
                         Name = "result",
-                        Type = VariableNode.DataType.String,
+                        Type = new StringType(),
                         IsConstant = false
                     },
                 },
@@ -180,13 +180,13 @@ public class BuiltInFunctions
                     new VariableNode()
                     {
                         Name = "actualValue",
-                        Type = VariableNode.DataType.Integer,
+                        Type = new IntegerType(),
                         IsConstant = true
                     },
                     new VariableNode()
                     {
                         Name = "targetValue",
-                        Type = VariableNode.DataType.Integer,
+                        Type = new IntegerType(),
                         IsConstant = true
                     }
                 },
@@ -200,7 +200,7 @@ public class BuiltInFunctions
                     new VariableNode()
                     {
                         Name = "refersTo",
-                        Type = VariableNode.DataType.Reference,
+                        Type = new ReferenceType(),
                         IsConstant = false
                     }
                 },
@@ -214,7 +214,7 @@ public class BuiltInFunctions
                     new VariableNode()
                     {
                         Name = "refersTo",
-                        Type = VariableNode.DataType.Reference,
+                        Type = new ReferenceType(),
                         IsConstant = false
                     }
                 },
@@ -228,13 +228,13 @@ public class BuiltInFunctions
                     new VariableNode()
                     {
                         Name = "refersTo",
-                        Type = VariableNode.DataType.Reference,
+                        Type = new ReferenceType(),
                         IsConstant = true
                     },
                     new VariableNode()
                     {
                         Name = "value",
-                        Type = VariableNode.DataType.Boolean,
+                        Type = new BooleanType(),
                         IsConstant = false
                     }
                 },
@@ -248,13 +248,13 @@ public class BuiltInFunctions
                     new VariableNode()
                     {
                         Name = "refersTo",
-                        Type = VariableNode.DataType.Reference,
+                        Type = new ReferenceType(),
                         IsConstant = true
                     },
                     new VariableNode()
                     {
                         Name = "value",
-                        Type = VariableNode.DataType.Integer,
+                        Type = new IntegerType(),
                         IsConstant = false
                     }
                 },
@@ -458,7 +458,7 @@ public class BuiltInFunctions
     public static void AllocateMemory(List<InterpreterDataType> parameters)
     {
         if (parameters[0] is ReferenceDataType rdt)
-            rdt.Record = new RecordDataType(rdt.RecordType.Members2);
+            rdt.Record = new RecordDataType(rdt.RecordType.NewType.Fields);
         else
             throw new Exception("Can only allocate memory for record pointers.");
     }
@@ -506,25 +506,25 @@ public class BuiltInFunctions
             var rm = recordMember.Value;
             switch (rm)
             {
-                case VariableNode.DataType.Integer:
+                case IntegerType:
                     size += sizeof(int);
                     break;
-                case VariableNode.DataType.Real:
+                case RealType:
                     size += sizeof(float);
                     break;
-                case VariableNode.DataType.String:
+                case StringType:
                     size += ((string)rdt.Value[recordMember.Key]).Length * 2;
                     break;
-                case VariableNode.DataType.Character:
+                case CharacterType:
                     size += sizeof(char);
                     break;
-                case VariableNode.DataType.Boolean:
+                case BooleanType:
                     size += 1;
                     break;
-                case VariableNode.DataType.Record:
+                case RecordType:
                     //size += recursiveRecordSize(rmn.);
                     break;
-                case VariableNode.DataType.Reference:
+                case ReferenceType:
                     //size += recursiveRecordSize(recordMember);
                     break;
             }

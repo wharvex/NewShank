@@ -274,10 +274,7 @@ public class LLVMVisitor : Visitor<LLVMValueRef>
         {
             var llvmParam = function.GetParam((uint)index);
             var name = param.GetNameSafe();
-            var parameter = _context.NewVariable(param.Type, param.UnknownType)(
-                llvmParam,
-                !param.IsConstant
-            );
+            var parameter = _context.NewVariable(param.Type)(llvmParam, !param.IsConstant);
 
             _context.AddVariable(name, parameter, false);
         }

@@ -1,0 +1,104 @@
+broken means it is broken due to the refactor
+
+## Interpreter
+- [x] Arrays
+   - [x] sum
+      - [x] arraySum.shank
+   - [x] test
+       - [x] test.shank
+- [x] Builtins
+   - [x] Write
+       - [x] writeTest.shank
+- [x] Enums
+   - [x] enumsTest.shank
+- [ ] Expressions
+   - [ ] expressionsTest.shank - incorrect syntax
+- [ ] FunctionTemplate
+   - [ ] funcTemplateTest.shank - incorrect syntax
+- [ ] Generics
+   - [ ] complex
+      - [ ] genericsTest.shank - no "type checking" for generics
+   - [ ] simple
+       - [ ] functions1
+          - [ ] genericsTest.shank - old syntax
+       - [x] functions2
+          - [x] genericsTest.shank
+       - [ ] records
+          - [ ] genericsTest.shank - no "type checking" for generics
+       - [ ] records2
+           - [ ] genericRecordsTest.shank - no "type checking" for generics
+- [x] Globals
+   - [x] globalsTest.shank
+- [x] Invalid
+   - [x] InvalidAssignment.shank
+   - [x] InvalidAssignmentWithConstants.shank
+   - [x] InvalidVarArguement.shank
+   - [x] TypeMismatch.shank
+   - [x] VarMismatch.shank
+- [x] Minimal
+   - [x] Old
+      - [x] main.shank
+   - [x] PrintInt
+      - [x] Shank
+          - [x] main.shank
+   - [x] PrintStr
+       - [x] Shank
+           - [x] main.shank
+- [ ] ModuleTest1
+   - [ ] ModuleTest1_1.shank - fails before refactor
+   - [ ] ModuleTest1_2.shank - fails because this module is not set up properly
+   - [ ] ModuleTest1_3.shank - fails because this module is not set up properly
+   - [ ] ModuleTest1_4.shank - fails because this module is not set up properly
+- [x] ModuleTest11
+   - [x] ModuleTest1_1.shank
+   - [x] ModuleTest1_2.shank
+   - [x] ModuleTest1_3.shank
+   - [x] ModuleTest1_4.shank
+- [x] ModuleTest2
+   - [x] ModuleTest2_1.shank
+   - [x] ModuleTest2_2.shank
+   - [x] ModuleTest2_3.shank
+- [x] ModuleTest3
+   - [x] ModuleTest1_1.shank
+   - [x] ModuleTest2_1.shank
+   - [x] ModuleTest2_2.shank
+   - [x] ModuleTest2_3.shank
+- [x] Negative
+   - [x] negativesTest.shank
+- [x] OldShankFiles
+   - [x] arraySum.shank
+   - [x] catalan.shank
+   - [x] collatz.shank
+   - [x] digitSum.shank - improved now work
+   - [x] factorial.shank
+   - [x] fibonacci.shank
+   - [x] FizzBuzz.shank
+   - [x] GCD.shank
+   - [x] harmonic.shank
+   - [x] Pascals.shank
+   - [x] perfect.shank - improved now work
+   - [x] sampleTest1.shank - improved now work
+   - [x] sampleTest2.shank - improved now work
+- [x] Overloads
+   - [x] overloadsTest.shank
+- [ ] Records
+   - [ ] complex
+      - [ ] recordTest.shank - old syntax
+   - [x] nested
+      - [x] nestedRecords.shank
+   - [x] simple
+       - [x] recordTest.shank
+- [x] String
+   - [x] string.shank
+- [x] TestLlvmTheoAndMendel
+   - [x] TestLLVM.shank
+- [x] UnitTestTests1
+   - [x] simpleTest.shank
+- [x] Var
+   - [x] varTest.shank
+- [ ] VarsSetBeforeUse
+    - [ ] varsSetBeforeUseTest.shank - should this be an error currently in master its not
+ 
+Broken from before is generics and comparisons
+
+## Compiler
