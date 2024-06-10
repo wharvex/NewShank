@@ -23,7 +23,7 @@ public static class ContentsCollectors
             BooleanExpressionNode be => [be.Left, be.Right],
             BuiltInFunctionNode bf => [],
             CharNode ch => [],
-            IfNode i => [i.Expression, ..i.Children, i.NextIfNode, ..i.ElseBlock],
+            IfNode i => [i.Expression, ..i.Children, i.NextIfNode],
             FunctionNode f => [..f.Statements, ..f.LocalVariables],
             _ => throw new UnreachableException()
         };
