@@ -48,15 +48,15 @@ public static class IrGeneratorByNode
 
     private static LLVMTypeRef CreateTypeRefFromShankType(
         LLVMContextRef llvmContext,
-        VariableNode.DataType dataType
+        Type dataType
     ) =>
         dataType switch
         {
-            VariableNode.DataType.Integer => llvmContext.Int64Type,
-            VariableNode.DataType.Real => llvmContext.DoubleType,
-            VariableNode.DataType.String => LLVMTypeRef.CreatePointer(llvmContext.Int8Type, 0),
-            VariableNode.DataType.Boolean => llvmContext.Int1Type,
-            VariableNode.DataType.Character => llvmContext.Int8Type,
+            IntegerType => llvmContext.Int64Type,
+            RealType => llvmContext.DoubleType,
+            StringType => LLVMTypeRef.CreatePointer(llvmContext.Int8Type, 0),
+            BooleanType => llvmContext.Int1Type,
+            CharacterType => llvmContext.Int8Type,
             _ => throw new NotImplementedException()
         };
 }

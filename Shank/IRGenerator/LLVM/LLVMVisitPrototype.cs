@@ -12,7 +12,7 @@ public class LLVMVisitPrototype(Context context, LLVMBuilderRef builder, LLVMMod
         var fnRetTy = module.Context.Int32Type;
         var args = node.ParameterVariables.Select(
             s =>
-                context.GetLLVMTypeFromShankType(s.Type, !s.IsConstant, s.UnknownType)
+                context.GetLLVMTypeFromShankType(s.Type)
                 ?? throw new CompilerException($"type of parameter {s.Name} is not found", s.Line)
         );
         var arguementMutability = node.ParameterVariables.Select(p => !p.IsConstant);
@@ -44,10 +44,10 @@ public class LLVMVisitPrototype(Context context, LLVMBuilderRef builder, LLVMMod
 
     public override void Accept(RecordNode node)
     {
-        var args = node.Members2.Select(
+        var args = node.NewType.Fields.Select(
             s =>
-                context.GetLLVMTypeFromShankType(s.Type, !s.IsConstant, s.UnknownType)
-                ?? throw new CompilerException($"type of parameter {s.Name} is not found", s.Line)
+                context.GetLLVMTypeFromShankType(s.Value)
+                ?? throw new CompilerException($"type of parameter {s.Key} is not found", node.Line)
         );
         var a = LLVMTypeRef.CreateStruct(args.ToArray(), false);
         context.CurrentModule.CustomTypes.Add(node.Name, a);
@@ -59,7 +59,7 @@ public class LLVMVisitPrototype(Context context, LLVMBuilderRef builder, LLVMMod
             context.GetLLVMTypeFromShankType(node.Type) ?? throw new Exception("null type"),
             node.GetNameSafe()
         );
-        var variable = context.NewVariable(node.Type, node.UnknownType);
+        var variable = context.NewVariable(node.Type);
         context.AddVariable(node.GetNameSafe(), variable(a, !node.IsConstant), true);
     }
 }

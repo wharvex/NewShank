@@ -17,7 +17,9 @@ public class LLVMFunction
         TypeOf = type;
     }
 
-    protected LLVMFunction() { }
+    protected LLVMFunction()
+    {
+    }
 
     public LLVMLinkage Linkage
     {
@@ -187,51 +189,52 @@ public class Context
     /// <param name="unknownType"></param>
     /// <returns></returns>
     public LLVMTypeRef? GetLLVMTypeFromShankType(
-        VariableNode.DataType dataType,
-        string? unknownType = null
+        Type dataType
     )
     {
         return dataType switch
         {
-            VariableNode.DataType.Integer => LLVMTypeRef.Int64,
-            VariableNode.DataType.Real => LLVMTypeRef.Double,
-            VariableNode.DataType.String => StringType,
-            VariableNode.DataType.Boolean => LLVMTypeRef.Int1,
-            VariableNode.DataType.Character => LLVMTypeRef.Int8,
-            VariableNode.DataType.Enum => LLVMTypeRef.Int32,
+            IntegerType => LLVMTypeRef.Int64,
+            RealType => LLVMTypeRef.Double,
+            RecordType recordType => throw new NotImplementedException(),
+            Shank.StringType => StringType,
+            BooleanType => LLVMTypeRef.Int1,
+            CharacterType => LLVMTypeRef.Int8,
+            EnumType e=> LLVMTypeRef.Int32,
             // if it's a custom type we look it up in the context
-            VariableNode.DataType.Reference when unknownType != null
-                => LLVMTypeRef.CreatePointer(CurrentModule.CustomTypes[unknownType], 0),
-            VariableNode.DataType.Array => LLVMTypeRef.Void,
-            _ when unknownType != null => CurrentModule.CustomTypes[unknownType],
-            _ => null
+            ReferenceType r
+                => LLVMTypeRef.CreatePointer((LLVMTypeRef)GetLLVMTypeFromShankType(r.Inner), 0),
+            ArrayType a => LLVMTypeRef.CreatePointer(
+                LLVMTypeRef.CreateStruct([(LLVMTypeRef)GetLLVMTypeFromShankType(a.Inner), LLVMTypeRef.Int32], false),
+                0),
+            UnknownType t => CurrentModule.CustomTypes[t.TypeName], // TODO: instiate type parameters if needed
         };
     }
 
     // given a shank type this gives back the correct constructor for the CDT (compiler date type)
     public Func<LLVMValueRef, bool, LLVMValue>? NewVariable(
-        VariableNode.DataType dataType,
-        string? unknownType = null
+        Type type
     )
     {
-        (Func<LLVMValueRef, bool, LLVMTypeRef, LLVMValue>, LLVMTypeRef)? type = dataType switch
+        (Func<LLVMValueRef, bool, LLVMTypeRef, LLVMValue>, LLVMTypeRef)? typeConstructor = type switch
         {
-            VariableNode.DataType.Integer => (LLVMInteger.New, LLVMTypeRef.Int64),
-            VariableNode.DataType.Real => (LLVMReal.New, LLVMTypeRef.Double),
-            VariableNode.DataType.String => (LLVMString.New, StringType),
-            VariableNode.DataType.Boolean => (LLVMBoolean.New, LLVMTypeRef.Int1),
-            VariableNode.DataType.Character => (LLVMCharacter.New, LLVMTypeRef.Int8),
+            IntegerType => (LLVMInteger.New, LLVMTypeRef.Int64),
+            RealType => (LLVMReal.New, LLVMTypeRef.Double),
+            RecordType recordType => throw new NotImplementedException(),
+            Shank.StringType => (LLVMString.New, LLVMStringType: StringType),
+            UnknownType unknownType => throw new NotImplementedException(),
+            BooleanType => (LLVMBoolean.New, LLVMTypeRef.Int1),
+            CharacterType => (LLVMCharacter.New, LLVMTypeRef.Int8),
+            EnumType enumType => throw new NotImplementedException(),
             // if it's a custom type we look it up in the context
-            VariableNode.DataType.Reference when unknownType != null
+            ReferenceType
                 => null,
-            VariableNode.DataType.Array => null,
-            _ when unknownType != null => null,
-            _ => null
+            ArrayType => null,
         };
 
-        return type == null
+        return typeConstructor == null
             ? null
-            : (value, mutable) => type.Value.Item1(value, mutable, type.Value.Item2);
+            : (value, mutable) => typeConstructor.Value.Item1(value, mutable, typeConstructor.Value.Item2);
     }
 
     /// <summary>
@@ -241,12 +244,11 @@ public class Context
     /// <param name="unknownType"></param>
     /// <returns></returns>
     public LLVMTypeRef? GetLLVMTypeFromShankType(
-        VariableNode.DataType dataType,
-        bool isVar,
-        string? unknownType = null
+        Type type,
+        bool isVar
     )
     {
-        var llvmTypeFromShankType = GetLLVMTypeFromShankType(dataType, unknownType);
+        var llvmTypeFromShankType = GetLLVMTypeFromShankType(type);
         return isVar
             ? LLVMTypeRef.CreatePointer((LLVMTypeRef)llvmTypeFromShankType, 0)
             : llvmTypeFromShankType;

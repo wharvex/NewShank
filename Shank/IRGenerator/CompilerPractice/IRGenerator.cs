@@ -86,6 +86,7 @@ public class IrGenerator
         {
             HelloWorld(printfFunc, "hello invalid");
         }
+
         LlvmBuilder.BuildRetVoid();
 
         OutputHelper.DebugPrintTxt(
@@ -308,8 +309,8 @@ public class IrGenerator
             _
                 => throw new NotImplementedException(
                     "Creating an LLVM function for Shank-builtin `"
-                        + builtin.Name
-                        + "' not supported yet."
+                    + builtin.Name
+                    + "' not supported yet."
                 )
         };
 
@@ -330,14 +331,14 @@ public class IrGenerator
             .Select(vn => GetLlvmTypeFromShankType(vn.Type))
             .FirstOrDefault(LlvmContext.VoidType);
 
-    private LLVMTypeRef GetLlvmTypeFromShankType(VariableNode.DataType dataType) =>
-        dataType switch
+    private LLVMTypeRef GetLlvmTypeFromShankType(Type type) =>
+        type switch
         {
-            VariableNode.DataType.Integer => LlvmContext.Int64Type,
-            VariableNode.DataType.Real => LlvmContext.DoubleType,
-            VariableNode.DataType.String => LLVMTypeRef.CreatePointer(LlvmContext.Int8Type, 0),
-            VariableNode.DataType.Boolean => LlvmContext.Int1Type,
-            VariableNode.DataType.Character => LlvmContext.Int8Type,
+            IntegerType => LlvmContext.Int64Type,
+            RealType => LlvmContext.DoubleType,
+            StringType => LLVMTypeRef.CreatePointer(LlvmContext.Int8Type, 0),
+            BooleanType => LlvmContext.Int1Type,
+            CharacterType => LlvmContext.Int8Type,
             _ => throw new NotImplementedException()
         };
 }

@@ -42,7 +42,7 @@ public class LLVMStatement(Context context, LLVMBuilderRef builder, LLVMModuleRe
             var llvmParam = function.GetParam((uint)index);
             var name = param.GetNameSafe();
             LLVMValueRef paramAllocation = builder.BuildAlloca(llvmParam.TypeOf, name);
-            var parameter = context.NewVariable(param.Type, param.UnknownType)(
+            var parameter = context.NewVariable(param.Type)(
                 paramAllocation, //a
                 !param.IsConstant
             );
@@ -188,11 +188,11 @@ public class LLVMStatement(Context context, LLVMBuilderRef builder, LLVMModuleRe
 
         LLVMValueRef v = builder.BuildAlloca(
             // isVar is false, because we are already creating it using alloca which makes it var
-            context.GetLLVMTypeFromShankType(node.Type, node.UnknownType)
+            context.GetLLVMTypeFromShankType(node.Type)
                 ?? throw new Exception("null type"),
             name
         );
-        var variable = context.NewVariable(node.Type, node.UnknownType);
+        var variable = context.NewVariable(node.Type);
         context.AddVariable(name, variable(v, !node.IsConstant), false);
     }
 
