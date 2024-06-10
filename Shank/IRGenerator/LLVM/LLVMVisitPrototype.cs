@@ -1,5 +1,6 @@
 using LLVMSharp.Interop;
 using Shank.ASTNodes;
+using Shank.IRGenerator;
 
 namespace Shank.ExprVisitors;
 
@@ -30,7 +31,7 @@ public class LLVMVisitPrototype(Context context, LLVMBuilderRef builder, LLVMMod
             llvmParam.Name = name;
         }
 
-        context.addFunction(node.Name, function);
+        context.AddFunction(node.Name, function);
     }
 
     public override void Accept(ModuleNode node)
@@ -38,6 +39,7 @@ public class LLVMVisitPrototype(Context context, LLVMBuilderRef builder, LLVMMod
         context.SetCurrentModule(node.Name);
         node.Records.Values.ToList().ForEach(f => f.VisitProto(this));
         node.GetFunctionsAsList().ForEach(f => f.VisitProto(this));
+        node.GlobalVariables.Values.ToList().ForEach(f => f.VisitProto(this));
     }
 
     public override void Accept(RecordNode node)
@@ -49,5 +51,15 @@ public class LLVMVisitPrototype(Context context, LLVMBuilderRef builder, LLVMMod
         );
         var a = LLVMTypeRef.CreateStruct(args.ToArray(), false);
         context.CurrentModule.CustomTypes.Add(node.Name, a);
+    }
+
+    public override void Accept(VariableNode node)
+    {
+        var a = module.AddGlobal(
+            context.GetLLVMTypeFromShankType(node.Type) ?? throw new Exception("null type"),
+            node.GetNameSafe()
+        );
+        var variable = context.NewVariable(node.Type);
+        context.AddVariable(node.GetNameSafe(), variable(a, !node.IsConstant), true);
     }
 }

@@ -1,6 +1,7 @@
 using LLVMSharp.Interop;
 using Shank.ASTNodes;
 using Shank.ExprVisitors;
+using Shank.IRGenerator;
 
 namespace Shank.ASTNodes;
 
@@ -404,7 +405,7 @@ public class ModuleNode : StatementNode
                 // TODO: type imports
                 if (shankModule.Functions.TryGetValue(import, out var function))
                 {
-                    context.addFunction(import, function);
+                    context.AddFunction(import, function);
                 }
             }
         }

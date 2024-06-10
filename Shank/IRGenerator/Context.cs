@@ -1,8 +1,7 @@
 using LLVMSharp.Interop;
 using Shank.ASTNodes;
-using Shank.ExprVisitors;
 
-namespace Shank;
+namespace Shank.IRGenerator;
 
 // a facade around a llvm value ref to make it more type safe and also to be able to get the actual type of the function as opposed to a function pointer type
 // TODO: move all llvm facades to their own file
@@ -213,7 +212,7 @@ public class Context
     }
 
     // given a shank type this gives back the correct constructor for the CDT (compiler date type)
-    public Func<LLVMValueRef, bool, LLVMValue>? newVariable(
+    public Func<LLVMValueRef, bool, LLVMValue>? NewVariable(
         IType type
     )
     {
@@ -261,11 +260,11 @@ public class Context
     /// <param name="name"></param>
     /// <returns></returns>
     /// <exception cref="Exception"></exception>
-    public LLVMValue GetVaraible(string name)
+    public LLVMValue GetVariable(string name)
     {
-        if (CurrentModule.GloabalVariables.TryGetValue(name, out var GlobalVar))
+        if (CurrentModule.GloabalVariables.TryGetValue(name, out var globalVar))
         {
-            return GlobalVar;
+            return globalVar;
         }
         else if (Variables.TryGetValue(name, out var varaible))
         {
@@ -286,7 +285,7 @@ public class Context
     /// <param name="type">Data type the varaible is</param>
     /// <param name="isGlobal">IsGlobal</param>
     /// <exception cref="Exception">if it already exists</exception>
-    public void AddVaraible(string name, LLVMValue value, bool isGlobal)
+    public void AddVariable(string name, LLVMValue value, bool isGlobal)
     {
         if (CurrentModule.GloabalVariables.ContainsKey(name) || Variables.ContainsKey(name))
             throw new Exception("error");
@@ -307,12 +306,12 @@ public class Context
         Variables = new();
     }
 
-    public void addFunction(string name, LLVMShankFunction function)
+    public void AddFunction(string name, LLVMShankFunction function)
     {
         CurrentModule.Functions[name] = function;
     }
 
-    public void addBuiltinFunction(string name, LLVMShankFunction function)
+    public void AddBuiltinFunction(string name, LLVMShankFunction function)
     {
         BuiltinFunctions[name] = function;
     }
