@@ -254,7 +254,7 @@ public class Parser
     //TODO: finish implementing ParseLoop()
     private ASTNode? ParseLoop()
     {
-        throw new NotImplementedException();
+        return null;
     }
 
     //TODO: fix IfNode without changing AST pls (Haneen)
@@ -272,22 +272,16 @@ public class Parser
                 if (nextIf != null)
                 {
                     // Return the 'IF' node with 'ELSE IF' or 'ELSE'
-                    return new IfNode(
-                        condition
-                            ?? throw new InvalidOperationException("In ParseIf, condition is null"),
-                        block,
-                        nextIf
-                    );
+                    return new IfNode(condition ?? throw new InvalidOperationException("In ParseIf, condition is null"),block, nextIf);
                 }
                 // Return the 'IF' node with 'ELSE'
-                return new IfNode(condition, block, ParseBlock());
+                var elseBlock = ParseBlock();
+               // return new IfNode(condition, block, new IfNode(elseBlock));
+               return new IfNode(condition ?? throw new InvalidOperationException("In ParseIf, condition is null"), block, new IfNode(null,elseBlock,null));
             }
             // Return just the 'IF' branch without an 'ELSE'
             return new IfNode(
-                condition ?? throw new InvalidOperationException("In ParseIf, condition is null"),
-                block,
-                new List<StatementNode>()
-            );
+                condition ?? throw new InvalidOperationException("In ParseIf, condition is null"), block, null);
         }
         return null;
     }
