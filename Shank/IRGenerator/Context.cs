@@ -115,14 +115,15 @@ public class LLVMCharacter(LLVMValueRef valueRef, bool isMutable, LLVMTypeRef ty
         new LLVMCharacter(valueRef, isMutable, type);
 }
 
-public class LLVMStruct(LLVMValueRef valueRef, bool isMutable, LLVMStructType typeRef) : LLVMValue(valueRef, isMutable, typeRef.LlvmTypeRef)
+public class LLVMStruct(LLVMValueRef valueRef, bool isMutable, LLVMStructType typeRef)
+    : LLVMValue(valueRef, isMutable, typeRef.LlvmTypeRef)
 {
     public static LLVMValue New(LLVMValueRef valueRef, bool isMutable, LLVMStructType type) =>
         new LLVMStruct(valueRef, isMutable, type);
 
     public int Access(string name)
     {
-        return  typeRef.GetMemberIndex(name);
+        return typeRef.GetMemberIndex(name);
     }
 
     public Type GetTypeOf(string name)
@@ -130,12 +131,15 @@ public class LLVMStruct(LLVMValueRef valueRef, bool isMutable, LLVMStructType ty
         return ((RecordType)typeRef.Type).Fields[name];
     }
 }
+
 public abstract class LLVMType(Type type, LLVMTypeRef llvmtype)
 {
     public Type Type { get; set; } = type;
     public LLVMTypeRef LlvmTypeRef { get; set; } = llvmtype;
 }
-public class LLVMStructType(RecordType type, LLVMTypeRef llvmtype, List<string> members) : LLVMType(type, llvmtype)
+
+public class LLVMStructType(RecordType type, LLVMTypeRef llvmtype, List<string> members)
+    : LLVMType(type, llvmtype)
 {
     public int GetMemberIndex(string member) => members.IndexOf(member);
 }
@@ -276,10 +280,15 @@ public class Context
                     )
             };
 
-        (Func<LLVMValueRef, bool, LLVMTypeRef, LLVMValue>, LLVMTypeRef)? NewRecordValue(RecordType recordType)
+        (Func<LLVMValueRef, bool, LLVMTypeRef, LLVMValue>, LLVMTypeRef)? NewRecordValue(
+            RecordType recordType
+        )
         {
             var type = CurrentModule.CustomTypes[recordType.Name];
-            return ((Value, mutable, _type) => LLVMStruct.New(Value, mutable, (LLVMStructType)type), type.LlvmTypeRef);
+            return (
+                (Value, mutable, _type) => LLVMStruct.New(Value, mutable, (LLVMStructType)type),
+                type.LlvmTypeRef
+            );
         }
 
         return typeConstructor == null
@@ -351,9 +360,11 @@ public class Context
     /// </summary>
     public void ResetLocal() => Variables = new();
 
-    public void AddFunction(string name, LLVMShankFunction function) => CurrentModule.Functions[name] = function;
+    public void AddFunction(string name, LLVMShankFunction function) =>
+        CurrentModule.Functions[name] = function;
 
-    public void AddBuiltinFunction(string name, LLVMShankFunction function) => BuiltinFunctions[name] = function;
+    public void AddBuiltinFunction(string name, LLVMShankFunction function) =>
+        BuiltinFunctions[name] = function;
 
     public LLVMShankFunction? GetFunction(string name) =>
         CurrentModule.Functions.ContainsKey(name)
@@ -362,9 +373,11 @@ public class Context
                 ? function
                 : null;
 
-    public void SetModules(IEnumerable<String> modulesKeys) => Modules = modulesKeys.Select(moduleName => (moduleName, new Module())).ToDictionary();
+    public void SetModules(IEnumerable<String> modulesKeys) =>
+        Modules = modulesKeys.Select(moduleName => (moduleName, new Module())).ToDictionary();
 
     public LLVMType GetCustomType(string nodeName) => CurrentModule.CustomTypes[nodeName];
 
-    public void AddCustomType(string import, LLVMType value) => CurrentModule.CustomTypes[import] = value;
+    public void AddCustomType(string import, LLVMType value) =>
+        CurrentModule.CustomTypes[import] = value;
 }

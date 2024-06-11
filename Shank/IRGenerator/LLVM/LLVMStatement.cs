@@ -110,9 +110,7 @@ public class LLVMStatement(Context context, LLVMBuilderRef builder, LLVMModuleRe
         }
     }
 
-    public override void Accept(EnumNode node)
-    {
-    }
+    public override void Accept(EnumNode node) { }
 
     public override void Accept(ModuleNode node)
     {
@@ -194,9 +192,17 @@ public class LLVMStatement(Context context, LLVMBuilderRef builder, LLVMModuleRe
         var args = node.NewType.Fields.Select(
             s =>
                 // for records (and eventually references) we do not hold the actual type of the record, but rather a pointer to it, because llvm does not like direct recursive types
-                (s.Key, s.Value is RecordType ? LLVMTypeRef.CreatePointer(
-                (LLVMTypeRef)context.GetLLVMTypeFromShankType(s.Value)!, 0)  : (LLVMTypeRef)context.GetLLVMTypeFromShankType(s.Value)!
-        )).ToArray();
+                (
+                    s.Key,
+                    s.Value is RecordType
+                        ? LLVMTypeRef.CreatePointer(
+                            (LLVMTypeRef)context.GetLLVMTypeFromShankType(s.Value)!,
+                            0
+                        )
+                        : (LLVMTypeRef)context.GetLLVMTypeFromShankType(s.Value)!
+                )
+        )
+            .ToArray();
         record.LlvmTypeRef.StructSetBody(args.Select(s => s.Item2).ToArray(), false);
     }
 
