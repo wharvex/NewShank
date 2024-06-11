@@ -17,7 +17,7 @@ public class Parser
         sharedNames = new LinkedList<string>();
     }
 
-    private bool AcceptSeparators()
+    public bool AcceptSeparators()
     {
         bool retVal = false;
         //while (handler.MatchAndRemove(TokenType.SEPARATOR) != null)
@@ -53,7 +53,7 @@ public class Parser
         return program;
     }
 
-    private bool ParseField()
+    public bool ParseField()
     {
         var variable = ParseVariableDeclaration();
         bool hasField = false;
@@ -76,7 +76,7 @@ public class Parser
         return hasField;
     }
 
-    private FunctionNode? ParseProperty(TokenType propertyType, String? variableName)
+    public FunctionNode? ParseProperty(TokenType propertyType, String? variableName)
     {
         if (
             handler.MatchAndRemove(propertyType) != null
@@ -95,7 +95,7 @@ public class Parser
         return null;
     }
 
-    private bool ParseInterface()
+    public bool ParseInterface()
     {
         if (handler.MatchAndRemove(TokenType.INTERFACE) != null)
         {
@@ -112,7 +112,7 @@ public class Parser
         return false;
     }
 
-    private bool ParseClass()
+    public bool ParseClass()
     {
         if (handler.MatchAndRemove(TokenType.CLASS) != null)
         {
@@ -159,7 +159,7 @@ public class Parser
     }
 
     //TODO: double-check the work here
-    private bool ParseFunction()
+    public bool ParseFunction()
     {
         FunctionNode functionNode;
         Token? function;
@@ -199,7 +199,7 @@ public class Parser
         return false;
     }
 
-    private List<VariableNode> ParseArguments()
+    public List<VariableNode> ParseArguments()
     {
         var parameters = new List<VariableNode>();
         var variable = new VariableNode();
@@ -216,7 +216,7 @@ public class Parser
         return parameters;
     }
 
-    private List<ParameterNode> ParseParameters(bool isRetVal)
+    public List<ParameterNode> ParseParameters(bool isRetVal)
     {
         var parameters = new List<ParameterNode>();
         VariableUsageNode variable;
@@ -234,32 +234,32 @@ public class Parser
     }
 
     //TODO: finish implementing ParseVariableReference()
-    private VariableUsageNode ParseVariableReference()
+    public VariableUsageNode ParseVariableReference()
     {
         throw new NotImplementedException();
     }
 
     //TODO: check for other statement types
-    private ASTNode? ParseStatement()
+    public ASTNode? ParseStatement()
     {
         var statement = ParseIf() ?? ParseLoop() ?? ParseReturn() ?? ParseExpression();
         return statement;
     }
 
     //TODO: finish implementing ParseReturn()
-    private ASTNode? ParseReturn()
+    public ASTNode? ParseReturn()
     {
         throw new NotImplementedException();
     }
 
     //TODO: finish implementing ParseLoop()
-    private ASTNode? ParseLoop()
+    public ASTNode? ParseLoop()
     {
         return null;
     }
 
     //TODO: fix IfNode without changing AST pls (Haneen)
-    private ASTNode? ParseIf()
+    public ASTNode? ParseIf()
     {
         if (handler.MatchAndRemove(TokenType.IF) != null)
         {
@@ -300,7 +300,7 @@ public class Parser
         return null;
     }
 
-    private LinkedList<ASTNode> ParseBuiltInFunctionNode()
+    public LinkedList<ASTNode> ParseBuiltInFunctionNode()
     {
         LinkedList<ASTNode> expressions = new LinkedList<ASTNode>();
         if (handler.MatchAndRemove(TokenType.CONSOLE) != null)
@@ -348,7 +348,7 @@ public class Parser
     }
 
     //TODO: finish implementing ParseBlock() - Ben pls
-    private List<StatementNode> ParseBlock()
+    public List<StatementNode> ParseBlock()
     {
         while (true)
         {
@@ -357,7 +357,7 @@ public class Parser
         throw new NotImplementedException();
     }
 
-    private ASTNode? ParseFunctionCall()
+    public ASTNode? ParseFunctionCall()
     {
         AcceptSeparators();
         var functionToken = handler.MatchAndRemove(TokenType.FUNCTION);
@@ -388,7 +388,7 @@ public class Parser
         return functionCallNode;
     }
 
-    private ExpressionNode? ParseExpression()
+    public ExpressionNode? ParseExpression()
     {
         var lt = ParseTerm();
         if (lt == null)
@@ -396,7 +396,7 @@ public class Parser
         return ParseExpressionRhs(lt);
     }
 
-    private ExpressionNode? ParseExpressionRhs(ExpressionNode lt)
+    public ExpressionNode? ParseExpressionRhs(ExpressionNode lt)
     {
         if (handler.MatchAndRemove(TokenType.PLUS) != null)
         {
@@ -504,7 +504,7 @@ public class Parser
         }
     }
 
-    private ExpressionNode? ParseTerm()
+    public ExpressionNode? ParseTerm()
     {
         var lt = ParseFactor();
         if (lt == null)
@@ -512,7 +512,7 @@ public class Parser
         return ParseTermRhs(lt);
     }
 
-    private ExpressionNode? ParseTermRhs(ExpressionNode lt)
+    public ExpressionNode? ParseTermRhs(ExpressionNode lt)
     {
         if (handler.MatchAndRemove(TokenType.MULTIPLY) != null)
         {
@@ -552,7 +552,7 @@ public class Parser
         }
     }
 
-    private ExpressionNode? ParseFactor()
+    public ExpressionNode? ParseFactor()
     {
         if (handler.MatchAndRemove(TokenType.OPENPARENTHESIS) != null)
         {
@@ -589,7 +589,7 @@ public class Parser
                 )
         };
 
-    private static Type GetDataTypeFromTokenType(TokenType tt) =>
+    public static Type GetDataTypeFromTokenType(TokenType tt) =>
         tt switch
         {
             TokenType.NUMBER => new RealType(),
@@ -599,7 +599,7 @@ public class Parser
             _ => throw new InvalidOperationException("Bad TokenType for conversion into DataType"),
         };
 
-    private Type GetTypeUsageFromToken(Token t) =>
+    public Type GetTypeUsageFromToken(Token t) =>
         t.GetTokenType() switch
         {
             TokenType.NUMBER => new RealType(),
@@ -612,7 +612,7 @@ public class Parser
                 )
         };
 
-    private Type Type(VariableNode.DeclarationContext declarationContext)
+    public Type Type(VariableNode.DeclarationContext declarationContext)
     {
         Token? tokenType =
             handler.MatchAndRemove(TokenType.NUMBER)
@@ -627,7 +627,7 @@ public class Parser
         return GetTypeUsageFromToken(tokenType);
     }
 
-    private VariableNode? ParseVariableDeclaration()
+    public VariableNode? ParseVariableDeclaration()
     {
         Token? tokenType =
             handler.MatchAndRemove(TokenType.NUMBER)
