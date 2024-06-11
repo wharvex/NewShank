@@ -23,7 +23,7 @@ public class LLVMStatement(Context context, LLVMBuilderRef builder, LLVMModuleRe
         }
 
         var parameters = node.Parameters.Select(
-            p => p.Visit(new LLVMExpr(context, builder, module))
+            p => p.Accept(new LLVMExpr(context, builder, module))
         );
         builder.BuildCall2(function.TypeOf, function.Function, parameters.ToArray());
     }
@@ -76,7 +76,7 @@ public class LLVMStatement(Context context, LLVMBuilderRef builder, LLVMModuleRe
         var whileDone = context.CurrentFunction.AppendBasicBlock("while.done");
         builder.BuildBr(whileCond);
         builder.PositionAtEnd(whileCond);
-        var condition = node.Expression.Visit(new LLVMExpr(context, builder, module));
+        var condition = node.Expression.Accept(new LLVMExpr(context, builder, module));
         builder.BuildCondBr(condition, whileBody, whileDone);
         builder.PositionAtEnd(whileBody);
         node.Children.ForEach(c => c.Visit(this));
@@ -89,7 +89,7 @@ public class LLVMStatement(Context context, LLVMBuilderRef builder, LLVMModuleRe
         var llvmValue = context.GetVariable(node.Target.Name);
         Console.WriteLine(node.ToString());
 
-        var expr = node.Expression.Visit(new LLVMExpr(context, builder, module));
+        var expr = node.Expression.Accept(new LLVMExpr(context, builder, module));
         if (!llvmValue.IsMutable) // :')
         {
             throw new Exception($"tried to mutate non mutable variable {node.Target.Name}");
@@ -100,7 +100,7 @@ public class LLVMStatement(Context context, LLVMBuilderRef builder, LLVMModuleRe
             var a = builder.BuildGEP2(
                 llvmValue.TypeRef,
                 llvmValue.ValueRef,
-                new[] { node.Target.Extension.Visit(new LLVMExpr(context, builder, module)) }
+                new[] { node.Target.Extension.Accept(new LLVMExpr(context, builder, module)) }
             );
             builder.BuildStore(expr, a);
         }
@@ -152,7 +152,7 @@ public class LLVMStatement(Context context, LLVMBuilderRef builder, LLVMModuleRe
         // and we visit(compile) the IfNode for when the condition is false if needed, followed by a goto to the after branch
         // note we could make this a bit better by checking if next is null and then make the conditional branch to after block in the false cas
         {
-            var condition = node.Expression.Visit(new LLVMExpr(context, builder, module));
+            var condition = node.Expression.Accept(new LLVMExpr(context, builder, module));
             var ifBlock = context.CurrentFunction.AppendBasicBlock("if block");
             var elseBlock = context.CurrentFunction.AppendBasicBlock("else block");
             var afterBlock = context.CurrentFunction.AppendBasicBlock("after if statement");
@@ -181,7 +181,7 @@ public class LLVMStatement(Context context, LLVMBuilderRef builder, LLVMModuleRe
         builder.PositionAtEnd(whileBody);
         node.Children.ForEach(c => c.Visit(this));
         // and then test the condition
-        var condition = node.Expression.Visit(new LLVMExpr(context, builder, module));
+        var condition = node.Expression.Accept(new LLVMExpr(context, builder, module));
         builder.BuildCondBr(condition, whileBody, whileDone);
         builder.PositionAtEnd(whileDone);
     }
@@ -242,9 +242,9 @@ public class LLVMStatement(Context context, LLVMBuilderRef builder, LLVMModuleRe
         // in case we modify them in the loop
 
 
-        var fromValue = node.From.Visit(new LLVMExpr(context, builder, module));
-        var toValue = node.To.Visit(new LLVMExpr(context, builder, module));
-        var currentIterable = node.Variable.Visit(new LLVMExpr(context, builder, module));
+        var fromValue = node.From.Accept(new LLVMExpr(context, builder, module));
+        var toValue = node.To.Accept(new LLVMExpr(context, builder, module));
+        var currentIterable = node.Variable.Accept(new LLVMExpr(context, builder, module));
 
         // right now we assume, from, to, and the variable are all integers
         // in the future we should check and give some error at runtime/compile time if not

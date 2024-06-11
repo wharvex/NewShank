@@ -1168,14 +1168,14 @@ public class Parser
             : new IntNode(int.Parse(num.Value ?? ""));
     }
 
-    public ASTNode? ParseExpressionLine()
+    public ExpressionNode? ParseExpressionLine()
     {
         var retVal = Expression();
         MatchAndRemove(Token.TokenType.EndOfLine);
         return retVal;
     }
 
-    public ASTNode? Expression()
+    public ExpressionNode? Expression()
     {
         var lt = Term();
         if (lt == null)
@@ -1183,7 +1183,7 @@ public class Parser
         return ExpressionRHS(lt);
     }
 
-    public ASTNode? ExpressionRHS(ASTNode lt)
+    public ExpressionNode? ExpressionRHS(ExpressionNode lt)
     {
         if (MatchAndRemove(Token.TokenType.Plus) != null)
         {
@@ -1273,7 +1273,7 @@ public class Parser
         }
     }
 
-    private ASTNode? Term()
+    private ExpressionNode? Term()
     {
         var lt = Factor();
         if (lt == null)
@@ -1281,7 +1281,7 @@ public class Parser
         return TermRHS(lt);
     }
 
-    private ASTNode? TermRHS(ASTNode lt)
+    private ExpressionNode? TermRHS(ExpressionNode lt)
     {
         if (MatchAndRemove(Token.TokenType.Times) != null)
         {
@@ -1313,7 +1313,7 @@ public class Parser
         }
     }
 
-    private ASTNode? Factor()
+    private ExpressionNode? Factor()
     {
         if (MatchAndRemove(Token.TokenType.LeftParen) != null)
         {

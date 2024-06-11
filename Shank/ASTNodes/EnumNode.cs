@@ -6,7 +6,7 @@ using Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 
 namespace Shank.ASTNodes;
 
-public class EnumNode : ASTNode
+public class EnumNode : ExpressionNode
 {
     public string Type { get; set; }
     public EnumType NewType;
@@ -36,7 +36,13 @@ public class EnumNode : ASTNode
     //     // return b
     // }
 
-    public override T Visit<T>(ExpressionVisitor<T> visit)
+
+    public override T Accept<T>(ExpressionVisitor<T> visit)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void Accept<T>(StatementVisitor v)
     {
         throw new NotImplementedException();
     }

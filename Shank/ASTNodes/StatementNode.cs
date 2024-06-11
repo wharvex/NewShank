@@ -21,7 +21,12 @@ public class StatementNode : ASTNode
         return arr;
     }
 
-    public override T Visit<T>(ExpressionVisitor<T> visit)
+    public T Visit<T>(ExpressionVisitor<T> visit)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void Accept<T>(StatementVisitor v)
     {
         throw new NotImplementedException();
     }

@@ -10,7 +10,7 @@ namespace Shank.ASTNodes;
 /// </summary>
 public class AssignmentNode : StatementNode
 {
-    public AssignmentNode(VariableUsageNode target, ASTNode expression)
+    public AssignmentNode(VariableUsageNode target, ExpressionNode expression)
     {
         Target = target;
         Expression = expression;
@@ -24,7 +24,7 @@ public class AssignmentNode : StatementNode
     /// <summary>
     /// The expression assigned to the target variable (RHS of the :=).
     /// </summary>
-    public ASTNode Expression { get; init; }
+    public ExpressionNode Expression { get; init; }
 
     public override object[] returnStatementTokens()
     {
