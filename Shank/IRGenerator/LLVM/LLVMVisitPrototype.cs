@@ -8,10 +8,14 @@ public class LLVMVisitPrototype(Context context, LLVMBuilderRef builder, LLVMMod
     : VisitPrototype
 {
     public void DebugRuntime(string format, LLVMValueRef value)
-       {
-           builder.BuildCall2(context.CFuntions.printf.TypeOf, context.CFuntions.printf.Function,
-               [builder.BuildGlobalStringPtr(format), value]);
-       }
+    {
+        builder.BuildCall2(
+            context.CFuntions.printf.TypeOf,
+            context.CFuntions.printf.Function,
+            [builder.BuildGlobalStringPtr(format), value]
+        );
+    }
+
     public override void Accept(FunctionNode node)
     {
         var fnRetTy = module.Context.Int32Type;

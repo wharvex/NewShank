@@ -27,11 +27,16 @@ public class LLVMStatement(Context context, LLVMBuilderRef builder, LLVMModuleRe
         );
         builder.BuildCall2(function.TypeOf, function.Function, parameters.ToArray());
     }
-public void DebugRuntime(string format, LLVMValueRef value)
-   {
-       builder.BuildCall2(context.CFuntions.printf.TypeOf, context.CFuntions.printf.Function,
-           [builder.BuildGlobalStringPtr(format), value]);
-   }
+
+    public void DebugRuntime(string format, LLVMValueRef value)
+    {
+        builder.BuildCall2(
+            context.CFuntions.printf.TypeOf,
+            context.CFuntions.printf.Function,
+            [builder.BuildGlobalStringPtr(format), value]
+        );
+    }
+
     public override void Accept(FunctionNode node)
     {
         var function = (LLVMFunction)context.GetFunction(node.Name);

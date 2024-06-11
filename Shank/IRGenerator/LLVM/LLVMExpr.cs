@@ -7,11 +7,15 @@ namespace Shank.ExprVisitors;
 public class LLVMExpr(Context context, LLVMBuilderRef builder, LLVMModuleRef module)
     : ExpressionVisitor<LLVMValueRef>
 {
-   public void DebugRuntime(string format, LLVMValueRef value)
-   {
-       builder.BuildCall2(context.CFuntions.printf.TypeOf, context.CFuntions.printf.Function,
-           [builder.BuildGlobalStringPtr(format), value]);
-   }
+    public void DebugRuntime(string format, LLVMValueRef value)
+    {
+        builder.BuildCall2(
+            context.CFuntions.printf.TypeOf,
+            context.CFuntions.printf.Function,
+            [builder.BuildGlobalStringPtr(format), value]
+        );
+    }
+
     private Types _types(LLVMTypeRef typeRef)
     {
         if (
