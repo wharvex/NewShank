@@ -240,7 +240,7 @@ public class Context
                     ),
                     0
                 ),
-            UnknownType t => CurrentModule.CustomTypes[t.TypeName], // TODO: instiate type parameters if needed
+            // UnknownType t => CurrentModule.CustomTypes[t.TypeName], // TODO: instiate type parameters if needed
         };
     }
 
@@ -349,10 +349,6 @@ public class Context
     /// <summary>
     /// resets the Varaible dictionary run at the end of a function
     /// </summary>
-    public void ResetLocal()
-    {
-        Variables = new();
-    }
     public void ResetLocal() => Variables = new();
 
     public void AddFunction(string name, LLVMShankFunction function) => CurrentModule.Functions[name] = function;
