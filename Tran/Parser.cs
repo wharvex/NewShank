@@ -155,11 +155,9 @@ public class Parser
                                 foreach (var entry in record.NewType.Fields)
                                 {
                                     var temp = new List<VariableNode>();
-                                    temp.Add(new VariableNode
-                                    {
-                                        Type = entry.Value,
-                                        Name = entry.Key
-                                    });
+                                    temp.Add(
+                                        new VariableNode { Type = entry.Value, Name = entry.Key }
+                                    );
                                     thisClass.AddToGlobalVariables(temp);
                                 }
                             }
@@ -733,7 +731,7 @@ public class Parser
         {
             return null;
         }
-        
+
         return GetTypeUsageFromToken(tokenType);
     }
 }
