@@ -272,16 +272,29 @@ public class Parser
                 if (nextIf != null)
                 {
                     // Return the 'IF' node with 'ELSE IF' or 'ELSE'
-                    return new IfNode(condition ?? throw new InvalidOperationException("In ParseIf, condition is null"),block, nextIf);
+                    return new IfNode(
+                        condition
+                            ?? throw new InvalidOperationException("In ParseIf, condition is null"),
+                        block,
+                        nextIf
+                    );
                 }
                 // Return the 'IF' node with 'ELSE'
                 var elseBlock = ParseBlock();
-               // return new IfNode(condition, block, new IfNode(elseBlock));
-               return new IfNode(condition ?? throw new InvalidOperationException("In ParseIf, condition is null"), block, new IfNode(null,elseBlock,null));
+                // return new IfNode(condition, block, new IfNode(elseBlock));
+                return new IfNode(
+                    condition
+                        ?? throw new InvalidOperationException("In ParseIf, condition is null"),
+                    block,
+                    new IfNode(null, elseBlock, null)
+                );
             }
             // Return just the 'IF' branch without an 'ELSE'
             return new IfNode(
-                condition ?? throw new InvalidOperationException("In ParseIf, condition is null"), block, null);
+                condition ?? throw new InvalidOperationException("In ParseIf, condition is null"),
+                block,
+                null
+            );
         }
         return null;
     }
