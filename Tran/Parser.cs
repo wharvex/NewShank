@@ -1,5 +1,6 @@
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using Shank.ASTNodes;
 
 namespace Shank.Tran;
@@ -54,6 +55,12 @@ public class Parser
             thisClass.ExportTargetNames = sharedNames;
             thisClass.UpdateExports();
 
+            List<VariableNode> members = new List<VariableNode>();
+            members.AddRange(thisClass.GlobalVariables.Values.ToList());
+            //TODO: how to add functions to the members list for the record?
+            //members.AddRange(thisClass.Functions.Values.ToList());
+            RecordNode? record = new RecordNode(thisClass.Name, thisClass.Name, members, null);
+            thisClass.AddRecord(record);
             throw new Exception("Statement is not a function or field");
         }
 
@@ -119,7 +126,8 @@ public class Parser
         return false;
     }
 
-    public bool ParseClass()
+    //TODO: this needs a lot of work
+    private bool ParseClass()
     {
         if (handler.MatchAndRemove(TokenType.CLASS) != null)
         {
@@ -135,19 +143,27 @@ public class Parser
                         ModuleNode? otherClass = program.GetFromModules(otherName.GetValue());
                         if (otherClass != null)
                         {
-                            foreach (var function in otherClass.Functions)
+                            RecordNode? record = otherClass.Records[otherName.GetValue()];
+                            if (record != null)
                             {
-                                thisClass.addFunction(function.Value);
-                            }
-                            //TODO: Figure out if this is correct/how to get variables from an implemented class
-                            foreach (var variable in otherClass.GlobalVariables)
-                            {
-                                var temp = new List<VariableNode>();
-                                temp.Add(variable.Value);
-                                thisClass.AddToGlobalVariables(temp);
+                                //TODO: not sure how to check how to distinguish a function from the record
+                                //foreach (var function in otherClass.NewType.Fields)
+                                //{
+                                //    thisClass.addFunction(function.);
+                                //}
+                                //TODO: Check with Phipps for correctness
+                                foreach (var entry in record.NewType.Fields)
+                                {
+                                    var temp = new List<VariableNode>();
+                                    temp.Add(new VariableNode
+                                    {
+                                        Type = entry.Value,
+                                        Name = entry.Key
+                                    });
+                                    thisClass.AddToGlobalVariables(temp);
+                                }
                             }
                         }
-
                         throw new Exception(
                             "Could not find class of name: " + otherName.GetValue()
                         );
@@ -692,16 +708,7 @@ public class Parser
 
     public VariableNode? ParseVariableDeclaration()
     {
-        Token? tokenType =
-            handler.MatchAndRemove(TokenType.NUMBER)
-            ?? handler.MatchAndRemove(TokenType.STRING)
-            ?? handler.MatchAndRemove(TokenType.CHARACTER)
-            ?? handler.MatchAndRemove(TokenType.BOOLEAN);
-        if (tokenType == null)
-        {
-            return null;
-        }
-        Type variableType = GetTypeUsageFromToken(tokenType);
+        Type variableType = ParseType();
         Token? nameToken = handler.MatchAndRemove(TokenType.WORD);
         if (nameToken == null)
         {
@@ -713,5 +720,20 @@ public class Parser
             Name = nameToken.GetValue()
         };
         return variableNode;
+    }
+
+    private Type? ParseType()
+    {
+        Token? tokenType =
+            handler.MatchAndRemove(TokenType.NUMBER)
+            ?? handler.MatchAndRemove(TokenType.STRING)
+            ?? handler.MatchAndRemove(TokenType.CHARACTER)
+            ?? handler.MatchAndRemove(TokenType.BOOLEAN);
+        if (tokenType == null)
+        {
+            return null;
+        }
+        
+        return GetTypeUsageFromToken(tokenType);
     }
 }
