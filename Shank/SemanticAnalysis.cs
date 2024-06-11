@@ -379,9 +379,11 @@ public class SemanticAnalysis
             return s.Value.Length;
         if (node is VariableUsageNode vrn)
         {
-            var dataType = variables[vrn.Name].Type;
+            var dataType = GetTypeOfExpression(vrn, variables);
             if (dataType is RangeType t)
+            {
                 return t.Range.To;
+            }
             throw new Exception("Ranged variables can only be assigned variables with a range.");
         }
         throw new Exception(
@@ -418,9 +420,11 @@ public class SemanticAnalysis
             return s.Value.Length;
         if (node is VariableUsageNode vrn)
         {
-            var dataType = variables[vrn.Name].Type;
+            var dataType = GetTypeOfExpression(vrn, variables);
             if (dataType is RangeType t)
+            {
                 return t.Range.From;
+            }
             throw new Exception("Ranged variables can only be assigned variables with a range.");
         }
 
