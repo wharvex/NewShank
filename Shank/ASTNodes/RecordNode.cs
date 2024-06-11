@@ -2,6 +2,7 @@ using LLVMSharp.Interop;
 using Shank.ASTNodes;
 using Shank.ExprVisitors;
 using Shank.IRGenerator;
+using Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 
 namespace Shank.ASTNodes;
 
@@ -60,16 +61,6 @@ public class RecordNode : StatementNode
         return ParentModuleName ?? throw new Exception("Parent module name of RecordNode is null.");
     }
 
-    public override LLVMValueRef Visit(
-        LLVMVisitor visitor,
-        Context context,
-        LLVMBuilderRef builder,
-        LLVMModuleRef module
-    )
-    {
-        throw new NotImplementedException();
-    }
-
     public void VisitProto(VisitPrototype v)
     {
         v.Accept(this);
@@ -81,4 +72,6 @@ public class RecordNode : StatementNode
     }
 
     public override string ToString() => Name;
+
+    public override T Accept<T>(IAstNodeVisitor<T> visitor) => visitor.Visit(this);
 }

@@ -58,8 +58,6 @@ public class Parser
         bool hasField = false;
         if (variable != null)
         {
-            //TODO: Can properties be added to the class as regular functions?
-            //TODO: What should the name of the function be in this case?
             var property = ParseProperty(TokenType.ACCESSOR, variable.Name);
             if (property != null)
             {
@@ -176,7 +174,7 @@ public class Parser
             }
             if (handler.MatchAndRemove(TokenType.OPENPARENTHESIS) != null)
             {
-                functionNode.LocalVariables = ParseParameters();
+                functionNode.LocalVariables = ParseArguments();
                 if (handler.MatchAndRemove(TokenType.CLOSEDPARENTHESIS) == null)
                     throw new Exception("Function declaration missing end parenthesis");
             }
@@ -186,7 +184,12 @@ public class Parser
             }
             if (handler.MatchAndRemove(TokenType.COLON) != null)
             {
-                functionNode.LocalVariables.AddRange(ParseParameters());
+                functionNode.GenericTypeParameterNames ??= new List<string>();
+                //TODO: is this correct? how can we add the retVal to the FunctionNode?
+                foreach (var param in ParseParameters(true))
+                {
+                    functionNode.GenericTypeParameterNames.Add(param.ToString());
+                }
             }
             functionNode.Statements = ParseBlock();
             return true;
@@ -195,7 +198,7 @@ public class Parser
         return false;
     }
 
-    private List<VariableNode> ParseParameters()
+    private List<VariableNode> ParseArguments()
     {
         var parameters = new List<VariableNode>();
         var variable = new VariableNode();
@@ -210,6 +213,29 @@ public class Parser
             throw new Exception("No name provided for variable in parameters");
         } while (handler.MatchAndRemove(TokenType.COMMA) != null);
         return parameters;
+    }
+
+    private List<ParameterNode> ParseParameters(bool isRetVal)
+    {
+        var parameters = new List<ParameterNode>();
+        VariableUsageNode variable;
+        do
+        {
+            AcceptSeparators();
+            if ((variable = ParseVariableReference()) != null)
+            {
+                parameters.Add(new ParameterNode(variable, isRetVal));
+                continue;
+            }
+            throw new Exception("No name provided for variable in parameters");
+        } while (handler.MatchAndRemove(TokenType.COMMA) != null);
+        return parameters;
+    }
+
+    //TODO: finish implementing ParseVariableReference()
+    private VariableUsageNode ParseVariableReference()
+    {
+        throw new NotImplementedException();
     }
 
     //TODO: check for other statement types
@@ -228,9 +254,10 @@ public class Parser
     //TODO: finish implementing ParseLoop()
     private ASTNode? ParseLoop()
     {
-        throw new NotImplementedException();
+        return null;
     }
 
+    //TODO: fix IfNode without changing AST pls (Haneen)
     private ASTNode? ParseIf()
     {
         if (handler.MatchAndRemove(TokenType.IF) != null)
@@ -253,13 +280,20 @@ public class Parser
                     );
                 }
                 // Return the 'IF' node with 'ELSE'
-                return new IfNode(condition, block, ParseBlock());
+                var elseBlock = ParseBlock();
+                // return new IfNode(condition, block, new IfNode(elseBlock));
+                return new IfNode(
+                    condition
+                        ?? throw new InvalidOperationException("In ParseIf, condition is null"),
+                    block,
+                    new IfNode(null, elseBlock, null)
+                );
             }
             // Return just the 'IF' branch without an 'ELSE'
             return new IfNode(
                 condition ?? throw new InvalidOperationException("In ParseIf, condition is null"),
                 block,
-                new List<StatementNode>()
+                null
             );
         }
         return null;
@@ -312,7 +346,7 @@ public class Parser
         return expressions;
     }
 
-    //TODO: finish implementing ParseBlock()
+    //TODO: finish implementing ParseBlock() - Ben pls
     private List<StatementNode> ParseBlock()
     {
         while (true)
@@ -513,7 +547,6 @@ public class Parser
     public static Type GetDataTypeFromConstantNodeType(ASTNode constantNode) =>
         constantNode switch
         {
-            IntNode => new IntegerType(),
             StringNode => new StringType(),
             CharNode => new CharacterType(),
             FloatNode => new RealType(),
@@ -547,9 +580,23 @@ public class Parser
                 )
         };
 
+    private Type Type(VariableNode.DeclarationContext declarationContext)
+    {
+        Token? tokenType =
+            handler.MatchAndRemove(TokenType.NUMBER)
+            ?? handler.MatchAndRemove(TokenType.STRING)
+            ?? handler.MatchAndRemove(TokenType.CHARACTER)
+            ?? handler.MatchAndRemove(TokenType.BOOLEAN);
+        if (tokenType == null)
+        {
+            throw new Exception("Expected start of a type");
+        }
+
+        return GetTypeUsageFromToken(tokenType);
+    }
+
     private VariableNode? ParseVariableDeclaration()
     {
-        var variableName = new VariableNode();
         Token? tokenType =
             handler.MatchAndRemove(TokenType.NUMBER)
             ?? handler.MatchAndRemove(TokenType.STRING)
@@ -559,13 +606,17 @@ public class Parser
         {
             return null;
         }
-        var variableType = GetTypeUsageFromToken(tokenType);
+        Type variableType = GetTypeUsageFromToken(tokenType);
         Token? nameToken = handler.MatchAndRemove(TokenType.WORD);
         if (nameToken == null)
         {
-            throw new Exception("Nothing followed after variable declaration");
+            throw new Exception("Variable declaration missing a name");
         }
-        variableName.Name = nameToken.GetValue();
-        return variableName;
+        VariableNode variableNode = new VariableNode
+        {
+            Type = variableType,
+            Name = nameToken.GetValue()
+        };
+        return variableNode;
     }
 }

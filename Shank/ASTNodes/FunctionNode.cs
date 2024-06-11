@@ -2,6 +2,7 @@ using System.Text;
 using LLVMSharp.Interop;
 using Shank.ExprVisitors;
 using Shank.IRGenerator;
+using Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 
 namespace Shank.ASTNodes;
 
@@ -649,15 +650,15 @@ public class FunctionNode : CallableNode
         context.AddFunction(Name, function);
     }
 
-    public override LLVMValueRef Visit(
-        LLVMVisitor visitor,
-        Context context,
-        LLVMBuilderRef builder,
-        LLVMModuleRef module
-    )
-    {
-        return visitor.Visit(this);
-    }
+    // public override LLVMValueRef Visit(
+    //     LLVMVisitor visitor,
+    //     Context context,
+    //     LLVMBuilderRef builder,
+    //     LLVMModuleRef module
+    // )
+    // {
+    //     return visitor.Visit(this);
+    // }
 
     public override void Visit(StatementVisitor visit)
     {
@@ -672,4 +673,6 @@ public class FunctionNode : CallableNode
     {
         visitPrototype.Accept(this);
     }
+
+    public override T Accept<T>(IAstNodeVisitor<T> visitor) => visitor.Visit(this);
 }

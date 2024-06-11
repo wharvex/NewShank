@@ -62,7 +62,7 @@ public enum TokenType
     OR,
     RETURN,
     ELSE,
-    FUNCTIONSTATEMENT,
+    FUNCTIONBLOCKIDENTIFIER,
     TAB,
     NEWLINE
 }

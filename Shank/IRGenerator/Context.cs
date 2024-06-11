@@ -101,6 +101,13 @@ public class LLVMString(LLVMValueRef valueRef, bool isMutable, LLVMTypeRef typeR
         new LLVMString(valueRef, isMutable, type);
 }
 
+public class LLVMArray(LLVMValueRef valueRef, bool isMutable, LLVMTypeRef typeRef)
+    : LLVMValue(valueRef, isMutable, typeRef)
+{
+    public static LLVMValue New(LLVMValueRef valueRef, bool isMutable, LLVMTypeRef type) =>
+        new LLVMString(valueRef, isMutable, type);
+}
+
 public class LLVMCharacter(LLVMValueRef valueRef, bool isMutable, LLVMTypeRef typeRef)
     : LLVMValue(valueRef, isMutable, typeRef)
 {
@@ -228,7 +235,20 @@ public class Context
                 EnumType enumType => throw new NotImplementedException(),
                 // if it's a custom type we look it up in the context
                 ReferenceType => null,
-                ArrayType => null,
+                ArrayType
+                    => (
+                        LLVMArray.New,
+                        LLVMTypeRef.CreatePointer(
+                            LLVMTypeRef.CreateStruct(
+                                [
+                                    GetLLVMTypeFromShankType(((ArrayType)type).Inner).Value,
+                                    LLVMTypeRef.Int32
+                                ],
+                                false
+                            ),
+                            0
+                        )
+                    )
             };
 
         return typeConstructor == null

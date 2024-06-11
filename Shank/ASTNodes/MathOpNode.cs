@@ -1,6 +1,7 @@
 using LLVMSharp.Interop;
 using Shank.ExprVisitors;
 using Shank.IRGenerator;
+using Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 
 namespace Shank.ASTNodes;
 
@@ -15,15 +16,15 @@ public class MathOpNode(ASTNode left, MathOpNode.MathOpType op, ASTNode right) :
         return $"{Left} {Op} {Right}";
     }
 
-    public override LLVMValueRef Visit(
-        LLVMVisitor visitor,
-        Context context,
-        LLVMBuilderRef builder,
-        LLVMModuleRef module
-    )
-    {
-        return visitor.Visit(this);
-    }
+    // public override LLVMValueRef Visit(
+    //     LLVMVisitor visitor,
+    //     Context context,
+    //     LLVMBuilderRef builder,
+    //     LLVMModuleRef module
+    // )
+    // {
+    //     return visitor.Visit(this);
+    // }
 
     public override T Visit<T>(ExpressionVisitor<T> visit)
     {
@@ -38,4 +39,6 @@ public class MathOpNode(ASTNode left, MathOpNode.MathOpType op, ASTNode right) :
         Divide,
         Modulo
     }
+
+    public override T Accept<T>(IAstNodeVisitor<T> visitor) => visitor.Visit(this);
 }

@@ -2,6 +2,7 @@
 using Shank.ASTNodes;
 using Shank.ExprVisitors;
 using Shank.IRGenerator;
+using Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 
 namespace Shank.ASTNodes;
 
@@ -70,38 +71,30 @@ public class ProgramNode : StatementNode
         };
     }
 
-    public void VisitProgram(
-        LLVMVisitor visitor,
-        Context context,
-        LLVMBuilderRef builder,
-        LLVMModuleRef module
-    )
-    {
-        // add all modules to the context
-        context.setModules(Modules.Keys);
-        foreach (var keyValuePair in Modules)
-        {
-            keyValuePair.Value.VisitPrototype(context, module);
-        }
-
-        foreach (var keyValuePair in Modules)
-        {
-            keyValuePair.Value.VisitStatement(visitor, context, builder, module);
-        }
-    }
-
-    public override LLVMValueRef Visit(
-        LLVMVisitor visitor,
-        Context context,
-        LLVMBuilderRef builder,
-        LLVMModuleRef module
-    )
-    {
-        throw new NotImplementedException();
-    }
+    // public void VisitProgram(
+    //     LLVMVisitor visitor,
+    //     Context context,
+    //     LLVMBuilderRef builder,
+    //     LLVMModuleRef module
+    // )
+    // {
+    //     // add all modules to the context
+    //     context.setModules(Modules.Keys);
+    //     foreach (var keyValuePair in Modules)
+    //     {
+    //         keyValuePair.Value.VisitPrototype(context, module);
+    //     }
+    //
+    //     foreach (var keyValuePair in Modules)
+    //     {
+    //         keyValuePair.Value.VisitStatement(visitor, context, builder, module);
+    //     }
+    // }
 
     public override void Visit(StatementVisitor visit)
     {
         visit.Accept(this);
     }
+
+    public override T Accept<T>(IAstNodeVisitor<T> visitor) => visitor.Visit(this);
 }

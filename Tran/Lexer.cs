@@ -65,7 +65,6 @@ public class Lexer
         twoCharacterHash["-="] = TokenType.MINUSEQUALS;
         twoCharacterHash["&&"] = TokenType.AND;
         twoCharacterHash["||"] = TokenType.OR;
-        twoCharacterHash["\n\t"] = TokenType.FUNCTIONSTATEMENT;
     }
 
     private void OneCharacterHashmap()
@@ -87,8 +86,6 @@ public class Lexer
         oneCharacterHash[","] = TokenType.COMMA;
         oneCharacterHash["."] = TokenType.PERIOD;
         oneCharacterHash["!"] = TokenType.NOT;
-        oneCharacterHash["\n"] = TokenType.NEWLINE;
-        oneCharacterHash["\t"] = TokenType.TAB;
         oneCharacterHash["\""] = TokenType.QUOTE;
     }
 
@@ -107,7 +104,7 @@ public class Lexer
                 stringHandler.GetChar();
                 lineNumber++;
                 characterPosition++;
-                tokens.AddLast((new Token(TokenType.TAB, lineNumber, characterPosition)));
+                tokens.AddLast((new Token(TokenType.SEPARATOR, lineNumber, characterPosition)));
             }
             else if (currentCharacter == '\n')
             {
@@ -120,12 +117,18 @@ public class Lexer
                     lineNumber++;
                     characterPosition++;
                     tokens.AddLast(
-                        (new Token(TokenType.FUNCTIONSTATEMENT, lineNumber, characterPosition))
+                        (
+                            new Token(
+                                TokenType.FUNCTIONBLOCKIDENTIFIER,
+                                lineNumber,
+                                characterPosition
+                            )
+                        )
                     );
                 }
                 else
                 {
-                    tokens.AddLast((new Token(TokenType.NEWLINE, lineNumber, characterPosition)));
+                    tokens.AddLast((new Token(TokenType.SEPARATOR, lineNumber, characterPosition)));
                 }
             }
             else if (currentCharacter == '\r')

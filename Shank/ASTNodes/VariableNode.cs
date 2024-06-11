@@ -3,6 +3,7 @@ using LLVMSharp.Interop;
 using Shank.ASTNodes;
 using Shank.ExprVisitors;
 using Shank.IRGenerator;
+using Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 using Exception = System.Exception;
 
 namespace Shank.ASTNodes;
@@ -145,25 +146,25 @@ public class VariableNode : StatementNode
         return b.ToString();
     }
 
-    public override LLVMValueRef Visit(
-        LLVMVisitor visitor,
-        Context context,
-        LLVMBuilderRef builder,
-        LLVMModuleRef module
-    )
-    {
-        var name = GetNameSafe();
-        // TODO: only alloca when !isConstant
-
-        LLVMValueRef v = builder.BuildAlloca(
-            // isVar is false, because we are already creating it using alloca which makes it var
-            context.GetLLVMTypeFromShankType(Type) ?? throw new Exception("null type"),
-            name
-        );
-        var variable = context.NewVariable(Type);
-        context.AddVariable(name, variable(v, !IsConstant), false);
-        return v;
-    }
+    // public override LLVMValueRef Visit(
+    //     LLVMVisitor visitor,
+    //     Context context,
+    //     LLVMBuilderRef builder,
+    //     LLVMModuleRef module
+    // )
+    // {
+    //     var name = GetNameSafe();
+    //     // TODO: only alloca when !isConstant
+    //
+    //     LLVMValueRef v = builder.BuildAlloca(
+    //         // isVar is false, because we are already creating it using alloca which makes it var
+    //         context.GetLLVMTypeFromShankType(Type) ?? throw new Exception("null type"),
+    //         name
+    //     );
+    //     var variable = context.NewVariable(Type);
+    //     context.AddVariable(name, variable(v, !IsConstant), false);
+    //     return v;
+    // }
 
     public void VisitProto(VisitPrototype visitPrototype)
     {
@@ -174,4 +175,6 @@ public class VariableNode : StatementNode
     {
         visit.Accept(this);
     }
+
+    public override T Accept<T>(IAstNodeVisitor<T> visitor) => visitor.Visit(this);
 }

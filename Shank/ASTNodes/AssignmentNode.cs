@@ -1,6 +1,7 @@
 using LLVMSharp.Interop;
 using Shank.ExprVisitors;
 using Shank.IRGenerator;
+using Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 
 namespace Shank.ASTNodes;
 
@@ -32,21 +33,21 @@ public class AssignmentNode : StatementNode
         return arr;
     }
 
-    public override void VisitStatement(
-        LLVMVisitor visitor,
-        Context context,
-        LLVMBuilderRef builder,
-        LLVMModuleRef module
-    )
-    {
-        // visitor.Visit(this);
-        // var llvmValue = context.GetVaraible(Target.Name);
-        // if (!llvmValue.IsMutable)
-        // {
-        //     throw new Exception($"tried to mutate non mutable variable {Target.Name}");
-        // }
-        // builder.BuildStore(Expression.Visit(visitor, context, builder, module), llvmValue.ValueRef);
-    }
+    // public override void VisitStatement(
+    //     LLVMVisitor visitor,
+    //     Context context,
+    //     LLVMBuilderRef builder,
+    //     LLVMModuleRef module
+    // )
+    // {
+    //     // visitor.Visit(this);
+    //     // var llvmValue = context.GetVaraible(Target.Name);
+    //     // if (!llvmValue.IsMutable)
+    //     // {
+    //     //     throw new Exception($"tried to mutate non mutable variable {Target.Name}");
+    //     // }
+    //     // builder.BuildStore(Expression.Visit(visitor, context, builder, module), llvmValue.ValueRef);
+    // }
 
     public override void Visit(StatementVisitor visit)
     {
@@ -57,4 +58,6 @@ public class AssignmentNode : StatementNode
     {
         return $"{Target} assigned as {Expression}";
     }
+
+    public override T Accept<T>(IAstNodeVisitor<T> visitor) => visitor.Visit(this);
 }
