@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using LLVMSharp.Interop;
 using Shank.ExprVisitors;
 using Shank.IRGenerator;
+using Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 
 namespace Shank.ASTNodes;
 
@@ -29,6 +30,8 @@ public abstract class ASTNode
     // );
 
     public abstract T Visit<T>(ExpressionVisitor<T> visit);
+
+    public abstract T Accept<T>(IAstNodeVisitor<T> visitor);
 
     public List<ASTNode?> GetChildNodes(Func<ASTNode, List<ASTNode?>> contentsCollector) =>
         contentsCollector(this);

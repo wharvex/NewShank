@@ -2,6 +2,7 @@ using LLVMSharp.Interop;
 using Shank.ASTNodes;
 using Shank.ExprVisitors;
 using Shank.IRGenerator;
+using Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 
 namespace Shank.ASTNodes;
 
@@ -39,4 +40,6 @@ public class EnumNode : ASTNode
     {
         throw new NotImplementedException();
     }
+
+    public override T Accept<T>(IAstNodeVisitor<T> visitor) => visitor.Visit(this);
 }

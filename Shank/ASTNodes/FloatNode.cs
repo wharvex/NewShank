@@ -2,6 +2,7 @@ using LLVMSharp.Interop;
 using Shank.ASTNodes;
 using Shank.ExprVisitors;
 using Shank.IRGenerator;
+using Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 
 namespace Shank.ASTNodes;
 
@@ -33,4 +34,6 @@ public class FloatNode : ASTNode
     {
         return visit.Accept(this);
     }
+
+    public override T Accept<T>(IAstNodeVisitor<T> visitor) => visitor.Visit(this);
 }

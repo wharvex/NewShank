@@ -1,4 +1,5 @@
-﻿using Shank.ASTNodes;
+﻿using System.Reflection.Emit;
+using Shank.ASTNodes;
 
 namespace Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 
@@ -10,6 +11,7 @@ public interface IAstNodeVisitor<T>
     T Visit(BuiltInFunctionNode b);
     T Visit(CharNode c);
     T Visit(ElseNode e);
+    T Visit(EmptyNode e);
     T Visit(EnumNode e);
     T Visit(FloatNode f);
     T Visit(ForNode f);

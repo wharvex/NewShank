@@ -1,139 +1,141 @@
-﻿using LLVMSharp.Interop;
-using Shank.ASTNodes;
+﻿using Shank.ASTNodes;
 
 namespace Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 
-public class LlvmFuncRetTypeGettingVisitor(LLVMContextRef llvmContext)
-    : IAstNodeVisitor<LLVMTypeRef>
+public class ChildNodesGettingVisitor : IAstNodeVisitor<List<ASTNode>>
 {
-    public LLVMContextRef LlvmContext { get; init; } = llvmContext;
-
-    public LLVMTypeRef Visit(AssignmentNode a)
+    public List<ASTNode> Visit(AssignmentNode a)
     {
         throw new NotImplementedException();
     }
 
-    public LLVMTypeRef Visit(BooleanExpressionNode b)
+    public List<ASTNode> GVisit<TParam>(TParam n)
+        where TParam : ASTNode
     {
         throw new NotImplementedException();
     }
 
-    public LLVMTypeRef Visit(BoolNode b)
+    public List<ASTNode> Visit(BooleanExpressionNode b)
     {
         throw new NotImplementedException();
     }
 
-    public LLVMTypeRef Visit(BuiltInFunctionNode b)
+    public List<ASTNode> Visit(BoolNode b)
     {
         throw new NotImplementedException();
     }
 
-    public LLVMTypeRef Visit(CharNode c)
+    public List<ASTNode> Visit(BuiltInFunctionNode b)
     {
         throw new NotImplementedException();
     }
 
-    public LLVMTypeRef Visit(ElseNode e)
+    public List<ASTNode> Visit(CharNode c)
     {
         throw new NotImplementedException();
     }
 
-    public LLVMTypeRef Visit(EmptyNode e)
+    public List<ASTNode> Visit(ElseNode e)
     {
         throw new NotImplementedException();
     }
 
-    public LLVMTypeRef Visit(EnumNode e)
+    public List<ASTNode> Visit(EmptyNode e)
     {
         throw new NotImplementedException();
     }
 
-    public LLVMTypeRef Visit(FloatNode f)
+    public List<ASTNode> Visit(EnumNode e)
     {
         throw new NotImplementedException();
     }
 
-    public LLVMTypeRef Visit(ForNode f)
+    public List<ASTNode> Visit(FloatNode f)
     {
         throw new NotImplementedException();
     }
 
-    public LLVMTypeRef Visit(FunctionCallNode f)
+    public List<ASTNode> Visit(ForNode f)
     {
         throw new NotImplementedException();
     }
 
-    public LLVMTypeRef Visit(FunctionNode f)
-    {
-        return LlvmContext.Int32Type;
-    }
-
-    public LLVMTypeRef Visit(IfNode i)
+    public List<ASTNode> Visit(FunctionCallNode f)
     {
         throw new NotImplementedException();
     }
 
-    public LLVMTypeRef Visit(IntNode i)
+    public List<ASTNode> Visit(FunctionNode f)
     {
         throw new NotImplementedException();
     }
 
-    public LLVMTypeRef Visit(MathOpNode m)
+    public List<ASTNode> Visit(IfNode i)
     {
         throw new NotImplementedException();
     }
 
-    public LLVMTypeRef Visit(ModuleNode m)
+    public List<ASTNode> Visit(IntNode i)
     {
         throw new NotImplementedException();
     }
 
-    public LLVMTypeRef Visit(ParameterNode p)
+    public List<ASTNode> Visit(MathOpNode m)
     {
         throw new NotImplementedException();
     }
 
-    public LLVMTypeRef Visit(ProgramNode p)
+    public List<ASTNode> Visit(ModuleNode m)
     {
         throw new NotImplementedException();
     }
 
-    public LLVMTypeRef Visit(RecordNode r)
+    public List<ASTNode> Visit(ParameterNode p)
     {
         throw new NotImplementedException();
     }
 
-    public LLVMTypeRef Visit(RepeatNode r)
+    public List<ASTNode> Visit(ProgramNode p)
     {
         throw new NotImplementedException();
     }
 
-    public LLVMTypeRef Visit(StatementNode s)
+    public List<ASTNode> Visit(RecordNode r)
     {
         throw new NotImplementedException();
     }
 
-    public LLVMTypeRef Visit(StringNode s)
+    public List<ASTNode> Visit(RepeatNode r)
     {
         throw new NotImplementedException();
     }
 
-    public LLVMTypeRef Visit(TestNode t)
+    public List<ASTNode> Visit(StatementNode s)
     {
         throw new NotImplementedException();
     }
 
-    public LLVMTypeRef Visit(VariableNode v)
+    public List<ASTNode> Visit(StringNode s)
     {
         throw new NotImplementedException();
     }
 
-    public LLVMTypeRef Visit(VariableUsageNode v)
+    public List<ASTNode> Visit(TestNode t)
     {
         throw new NotImplementedException();
     }
 
-    public LLVMTypeRef Visit(WhileNode w)
+    public List<ASTNode> Visit(VariableNode v)
+    {
+        throw new NotImplementedException();
+    }
+
+    public List<ASTNode> Visit(VariableUsageNode v)
+    {
+        throw new NotImplementedException();
+    }
+
+    public List<ASTNode> Visit(WhileNode w)
     {
         throw new NotImplementedException();
     }

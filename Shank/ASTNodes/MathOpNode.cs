@@ -1,6 +1,7 @@
 using LLVMSharp.Interop;
 using Shank.ExprVisitors;
 using Shank.IRGenerator;
+using Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 
 namespace Shank.ASTNodes;
 
@@ -38,4 +39,6 @@ public class MathOpNode(ASTNode left, MathOpNode.MathOpType op, ASTNode right) :
         Divide,
         Modulo
     }
+
+    public override T Accept<T>(IAstNodeVisitor<T> visitor) => visitor.Visit(this);
 }
