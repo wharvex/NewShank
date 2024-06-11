@@ -56,57 +56,57 @@ public class IrGenerator
 
     public void GenerateIr()
     {
-        var shankStartModule = AstRoot.GetStartModuleSafe();
-        var shankStartFunc = shankStartModule.GetStartFunctionSafe();
+        //var shankStartModule = AstRoot.GetStartModuleSafe();
+        //var shankStartFunc = shankStartModule.GetStartFunctionSafe();
 
-        // Create `main' (start) and `printf' (write) functions.
-        var mainFunc = CreateFunc(shankStartFunc);
-        var printfFunc = CreateFunc(shankStartModule.GetFromFunctionsByNameSafe("write"));
+        //// Create `main' (start) and `printf' (write) functions.
+        //var mainFunc = CreateFunc(shankStartFunc);
+        //var printfFunc = CreateFunc(shankStartModule.GetFromFunctionsByNameSafe("write"));
 
-        // Experiment
-        LlvmModule.AddFunction("printf", PrintfFuncType);
+        //// Experiment
+        //LlvmModule.AddFunction("printf", PrintfFuncType);
 
-        // Create other functions only if their names appear in ValidFuncs.
-        var otherFuncs = AstRoot
-            .GetStartModuleSafe()
-            .Functions.Where(kvp => ValidFuncs.Contains(kvp.Key))
-            .Select(kvp => CreateFunc(kvp.Value))
-            .ToList();
+        //// Create other functions only if their names appear in ValidFuncs.
+        //var otherFuncs = AstRoot
+        //    .GetStartModuleSafe()
+        //    .Functions.Where(kvp => ValidFuncs.Contains(kvp.Key))
+        //    .Select(kvp => CreateFunc(kvp.Value))
+        //    .ToList();
 
-        // Add statements to `main'.
-        var entryBlock = mainFunc.AppendBasicBlock("entry");
-        LlvmBuilder.PositionAtEnd(entryBlock);
-        if (otherFuncs.Count > 0)
-        {
-            var llvmStatementValueRefs = shankStartFunc
-                .Statements.Select(sn => IrGeneratorByNode.CreateValueRef(this, sn))
-                .ToList();
-        }
-        else
-        {
-            HelloWorld(printfFunc, "hello invalid");
-        }
+        //// Add statements to `main'.
+        //var entryBlock = mainFunc.AppendBasicBlock("entry");
+        //LlvmBuilder.PositionAtEnd(entryBlock);
+        //if (otherFuncs.Count > 0)
+        //{
+        //    var llvmStatementValueRefs = shankStartFunc
+        //        .Statements.Select(sn => IrGeneratorByNode.CreateValueRef(this, sn))
+        //        .ToList();
+        //}
+        //else
+        //{
+        //    HelloWorld(printfFunc, "hello invalid");
+        //}
 
-        LlvmBuilder.BuildRetVoid();
+        //LlvmBuilder.BuildRetVoid();
 
-        OutputHelper.DebugPrintTxt(
-            "aaa: " + LlvmContext.GetConstString("hi", true).Kind,
-            "llvm_stuff"
-        );
-        OutputHelper.DebugPrintTxt(
-            "bbb: " + LlvmBuilder.BuildGlobalStringPtr("hi2" + "\n").Kind,
-            "llvm_stuff",
-            true
-        );
-        var x = LlvmModule.GetNamedFunction("blah");
-        OutputHelper.DebugPrintTxt("blah name length: " + x.Name.Length, "llvm_stuff", true);
-        OutputHelper.DebugPrintTxt("blah is poison: " + x.IsPoison, "llvm_stuff", true);
+        //OutputHelper.DebugPrintTxt(
+        //    "aaa: " + LlvmContext.GetConstString("hi", true).Kind,
+        //    "llvm_stuff"
+        //);
+        //OutputHelper.DebugPrintTxt(
+        //    "bbb: " + LlvmBuilder.BuildGlobalStringPtr("hi2" + "\n").Kind,
+        //    "llvm_stuff",
+        //    true
+        //);
+        //var x = LlvmModule.GetNamedFunction("blah");
+        //OutputHelper.DebugPrintTxt("blah name length: " + x.Name.Length, "llvm_stuff", true);
+        //OutputHelper.DebugPrintTxt("blah is poison: " + x.IsPoison, "llvm_stuff", true);
 
-        // Verify all the functions.
-        mainFunc.VerifyFunction(LLVMVerifierFailureAction.LLVMPrintMessageAction);
+        //// Verify all the functions.
+        //mainFunc.VerifyFunction(LLVMVerifierFailureAction.LLVMPrintMessageAction);
 
-        // Output.
-        LlvmModule.PrintToFile(Path.Combine(OutputHelper.DocPath, "IrOutput.ll"));
+        //// Output.
+        //LlvmModule.PrintToFile(Path.Combine(OutputHelper.DocPath, "IrOutput.ll"));
     }
 
     public void GenerateIrFlatPrintStr(string moduleName)
@@ -262,38 +262,6 @@ public class IrGenerator
     {
         var myStr = LlvmBuilder.BuildGlobalStringPtr(msg + "\n");
         LlvmBuilder.BuildCall2(PrintfFuncType, printfFunc, [myStr]);
-    }
-
-    private LLVMValueRef CreateFunc(CallableNode callableNode)
-    {
-        //LlvmFuncWrapper = callableNode is FunctionNode ? new LlvmFuncWrapper(LLVMTypeRef.CreateFunction( LlvmContext.Int1Type, GetParamTypes(callableNode.ParameterVariables) ), LlvmModule.AddFunction( ((ILlvmTranslatable)callableNode).GetNameForLlvm(), funcType ); )
-
-        LLVMValueRef func;
-
-        // Builtin functions are only CallableNodes.
-        // Non-Builtin (i.e. user-created) functions are CallableNodes and FunctionNodes.
-        if (callableNode is FunctionNode)
-        {
-            var returnType = GetReturnType(callableNode.ParameterVariables);
-            var funcType = LLVMTypeRef.CreateFunction(
-                returnType,
-                GetParamTypes(callableNode.ParameterVariables)
-            );
-
-            func = LlvmModule.AddFunction(
-                ((ILlvmTranslatable)callableNode).GetNameForLlvm(),
-                funcType
-            );
-        }
-        else
-        {
-            (func, _) = CreateBuiltin(callableNode);
-        }
-
-        // Make the function visible externally.
-        func.Linkage = LLVMLinkage.LLVMExternalLinkage;
-
-        return func;
     }
 
     private (LLVMValueRef, bool) CreateBuiltin(CallableNode builtin) =>

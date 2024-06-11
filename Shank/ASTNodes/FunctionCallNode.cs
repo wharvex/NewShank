@@ -7,7 +7,7 @@ using Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 
 namespace Shank.ASTNodes;
 
-public class FunctionCallNode : StatementNode, ILlvmTranslatable
+public class FunctionCallNode : StatementNode
 {
     public string Name { get; set; }
     public int LineNum { get; set; }

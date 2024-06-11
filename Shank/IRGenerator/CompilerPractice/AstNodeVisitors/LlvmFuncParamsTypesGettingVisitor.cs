@@ -70,7 +70,10 @@ public class LlvmFuncParamsTypesGettingVisitor(LLVMContextRef llvmContext)
 
     public LLVMTypeRef[] Visit(FunctionNode f)
     {
-        throw new NotImplementedException();
+        return f.ParameterVariables.Select(
+            v => v.Accept(new LlvmFuncParamTypeGettingVisitor(LlvmContext))
+        )
+            .ToArray();
     }
 
     public LLVMTypeRef[] Visit(IfNode i)

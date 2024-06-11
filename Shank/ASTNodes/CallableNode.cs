@@ -7,7 +7,7 @@ using Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 
 namespace Shank.ASTNodes;
 
-public abstract class CallableNode : ASTNode, ILlvmTranslatable
+public abstract class CallableNode : ASTNode
 {
     public string Name { get; set; }
 
