@@ -87,6 +87,8 @@ public class Lexer
         oneCharacterHash["."] = TokenType.PERIOD;
         oneCharacterHash["!"] = TokenType.NOT;
         oneCharacterHash["\""] = TokenType.QUOTE;
+        oneCharacterHash["\t"] = TokenType.TAB;
+        oneCharacterHash["\n"] = TokenType.NEWLINE;
     }
 
     public LinkedList<Token> Lex()
@@ -98,38 +100,13 @@ public class Lexer
             {
                 stringHandler.GetChar();
                 characterPosition++;
-            }
-            else if (currentCharacter == '\t')
+            } else if (currentCharacter == '\n' && stringHandler.Peek(1) == '\t')
             {
                 stringHandler.GetChar();
-                lineNumber++;
-                characterPosition++;
-                tokens.AddLast((new Token(TokenType.SEPARATOR, lineNumber, characterPosition)));
-            }
-            else if (currentCharacter == '\n')
-            {
                 stringHandler.GetChar();
-                lineNumber++;
-                characterPosition++;
-                if (stringHandler.Peek(0) == '\t')
-                {
-                    stringHandler.GetChar();
-                    lineNumber++;
-                    characterPosition++;
-                    tokens.AddLast(
-                        (
-                            new Token(
-                                TokenType.FUNCTIONBLOCKIDENTIFIER,
-                                lineNumber,
-                                characterPosition
-                            )
-                        )
-                    );
-                }
-                else
-                {
-                    tokens.AddLast((new Token(TokenType.SEPARATOR, lineNumber, characterPosition)));
-                }
+                lineNumber+=2;
+                characterPosition += 2;
+                tokens.AddLast((new Token(TokenType.FUNCTIONBLOCKIDENTIFIER, lineNumber, characterPosition)));
             }
             else if (currentCharacter == '\r')
             {

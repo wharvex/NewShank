@@ -85,8 +85,8 @@ namespace TranUnitTests
                 + " COMMA\n"
                 + " NOT\n"
                 + " QUOTE\n"
-                + " SEPARATOR\n"
-                + " SEPARATOR\n"
+                + " NEWLINE\n"
+                + " TAB\n"
                 + " SEPARATOR\n";
 
             Assert.AreEqual(expectedTokensString, actualTokensString);
@@ -150,8 +150,8 @@ namespace TranUnitTests
                 + " TRUE\n"
                 + " FALSE\n"
                 + " SHARED\n"
-                + " SEPARATOR\n"
-                + " SEPARATOR\n"
+                + " TAB\n"
+                + " NEWLINE\n"
                 + " RETURN\n"
                 + " SEPARATOR\n";
             Assert.AreEqual(expectedTokensString, actualTokensString);
