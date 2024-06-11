@@ -356,7 +356,7 @@ public class Parser
         throw new NotImplementedException();
     }
 
-    private ASTNode? ParseExpression()
+    private ExpressionNode? ParseExpression()
     {
         var lt = ParseTerm();
         if (lt == null)
@@ -364,7 +364,7 @@ public class Parser
         return ParseExpressionRhs(lt);
     }
 
-    private ASTNode? ParseExpressionRhs(ASTNode lt)
+    private ExpressionNode? ParseExpressionRhs(ExpressionNode lt)
     {
         if (handler.MatchAndRemove(TokenType.PLUS) != null)
         {
@@ -472,7 +472,7 @@ public class Parser
         }
     }
 
-    private ASTNode? ParseTerm()
+    private ExpressionNode? ParseTerm()
     {
         var lt = ParseFactor();
         if (lt == null)
@@ -480,7 +480,7 @@ public class Parser
         return ParseTermRhs(lt);
     }
 
-    private ASTNode? ParseTermRhs(ASTNode lt)
+    private ExpressionNode? ParseTermRhs(ExpressionNode lt)
     {
         if (handler.MatchAndRemove(TokenType.MULTIPLY) != null)
         {
@@ -520,7 +520,7 @@ public class Parser
         }
     }
 
-    private ASTNode? ParseFactor()
+    private ExpressionNode? ParseFactor()
     {
         if (handler.MatchAndRemove(TokenType.OPENPARENTHESIS) != null)
         {
