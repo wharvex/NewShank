@@ -100,13 +100,16 @@ public class Lexer
             {
                 stringHandler.GetChar();
                 characterPosition++;
-            } else if (currentCharacter == '\n' && stringHandler.Peek(1) == '\t')
+            }
+            else if (currentCharacter == '\n' && stringHandler.Peek(1) == '\t')
             {
                 stringHandler.GetChar();
                 stringHandler.GetChar();
-                lineNumber+=2;
+                lineNumber += 2;
                 characterPosition += 2;
-                tokens.AddLast((new Token(TokenType.FUNCTIONBLOCKIDENTIFIER, lineNumber, characterPosition)));
+                tokens.AddLast(
+                    (new Token(TokenType.FUNCTIONBLOCKIDENTIFIER, lineNumber, characterPosition))
+                );
             }
             else if (currentCharacter == '\r')
             {
