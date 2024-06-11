@@ -1,3 +1,4 @@
+using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using Shank.ASTNodes;
 
@@ -354,11 +355,32 @@ public class Parser
     //TODO: finish implementing ParseBlock() - Ben pls
     public List<StatementNode> ParseBlock()
     {
-        while (true)
+        ParseStatement(); // TODO: remove this
+        List<StatementNode> blocks = new List<StatementNode>();
+        AcceptSeparators();
+        while (handler.MatchAndRemove(TokenType.FUNCTIONBLOCKIDENTIFIER) != null)
         {
-            ParseStatement();
+            if (handler.MatchAndRemove(TokenType.TAB) != null)
+            {
+                throw new Exception("Invalid indentation from ParseBlock");
+            }
+            AcceptNewline();
+            ASTNode? statement = ParseStatement();
+            AcceptNewline();
+            if (statement != null)
+            {
+                blocks.Add((StatementNode)statement);
+            }
         }
-        throw new NotImplementedException();
+        return blocks;
+    }
+
+    public void AcceptNewline()
+    {
+        while (handler.Peek(0) != null && handler.Peek(0).GetTokenType() == TokenType.NEWLINE)
+        {
+            handler.MatchAndRemove(TokenType.NEWLINE);
+        }
     }
 
     public ASTNode? ParseFunctionCall()
