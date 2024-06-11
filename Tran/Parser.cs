@@ -21,7 +21,13 @@ public class Parser
     {
         bool retVal = false;
         //while (handler.MatchAndRemove(TokenType.SEPARATOR) != null)
-        while ((handler.MatchAndRemove(TokenType.SEPARATOR) ?? handler.MatchAndRemove(TokenType.NEWLINE) ?? handler.MatchAndRemove(TokenType.TAB)) != null)
+        while (
+            (
+                handler.MatchAndRemove(TokenType.SEPARATOR)
+                ?? handler.MatchAndRemove(TokenType.NEWLINE)
+                ?? handler.MatchAndRemove(TokenType.TAB)
+            ) != null
+        )
         {
             retVal = true;
         }
@@ -251,19 +257,19 @@ public class Parser
     {
         throw new NotImplementedException();
     }
-    
+
     public ASTNode? ParseLoop()
     {
         if (handler.MatchAndRemove(TokenType.LOOP) != null)
         {
             var conditionLoop = ParseExpression() as BooleanExpressionNode;
-            
+
             if (conditionLoop == null)
             {
                 throw new Exception("In ParseLoop method, the condition is null");
             }
             var LoopBody = ParseBlock();
-            
+
             if (LoopBody == null)
             {
                 throw new Exception("In ParseLoop method, the LoopBody is null");
@@ -273,7 +279,7 @@ public class Parser
 
         return null;
     }
-    
+
     public ASTNode? ParseIf()
     {
         if (handler.MatchAndRemove(TokenType.IF) != null)
@@ -288,18 +294,29 @@ public class Parser
                 if (nextIf != null)
                 {
                     // Return the 'IF' node with 'ELSE IF' or 'ELSE'
-                    return new IfNode(condition ?? throw new InvalidOperationException("In ParseIf, condition is null"), block, nextIf);
+                    return new IfNode(
+                        condition
+                            ?? throw new InvalidOperationException("In ParseIf, condition is null"),
+                        block,
+                        nextIf
+                    );
                 }
                 // Return the 'IF' node with 'ELSE'
                 var elseBlock = ParseBlock();
                 // return new IfNode(condition, block, new IfNode(elseBlock));
-                return new IfNode(condition ?? throw new InvalidOperationException("In ParseIf, condition is null"), block,
+                return new IfNode(
+                    condition
+                        ?? throw new InvalidOperationException("In ParseIf, condition is null"),
+                    block,
                     new IfNode(null, elseBlock, null)
                 );
             }
             // Return just the 'IF' branch without an 'ELSE'
             return new IfNode(
-                condition ?? throw new InvalidOperationException("In ParseIf, condition is null"), block, null);
+                condition ?? throw new InvalidOperationException("In ParseIf, condition is null"),
+                block,
+                null
+            );
         }
         return null;
     }
@@ -376,14 +393,18 @@ public class Parser
 
         if (handler.MatchAndRemove(TokenType.OPENPARENTHESIS) == null)
         {
-            throw new InvalidOperationException("Missing open parenthesis in function<" + functionName + ">");
+            throw new InvalidOperationException(
+                "Missing open parenthesis in function<" + functionName + ">"
+            );
         }
 
         List<ParameterNode> parameters = ParseParameters(false);
 
         if (handler.MatchAndRemove(TokenType.CLOSEDPARENTHESIS) == null)
         {
-            throw new InvalidOperationException("Missing closing parenthesis in function<" + functionName + ">");
+            throw new InvalidOperationException(
+                "Missing closing parenthesis in function<" + functionName + ">"
+            );
         }
 
         FunctionCallNode functionCallNode = new FunctionCallNode(functionName);
