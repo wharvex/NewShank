@@ -112,7 +112,6 @@ public class LLVMStatement(Context context, LLVMBuilderRef builder, LLVMModuleRe
 
     public override void Accept(EnumNode node)
     {
-        throw new NotImplementedException();
     }
 
     public override void Accept(ModuleNode node)
@@ -129,9 +128,9 @@ public class LLVMStatement(Context context, LLVMBuilderRef builder, LLVMModuleRe
                 {
                     context.AddFunction(import, function);
                 }
-                else if (shankModule.GloabalVariables.TryGetValue(import, out var Var))
+                else if (shankModule.CustomTypes.TryGetValue(import, out var type))
                 {
-                    context.AddVariable(import, Var, true);
+                    context.AddCustomType(import, type);
                 }
             }
         }
@@ -189,16 +188,16 @@ public class LLVMStatement(Context context, LLVMBuilderRef builder, LLVMModuleRe
 
     public override void Accept(RecordNode node)
     {
-        Console.WriteLine("hello world");
-        throw new Exception("error");
-
-        // _builder.BuildAlloca(_context.CurrentModule.CustomTypes[node.Name]);
-        // _builder.BuildStructGEP2(
-        // _context.CurrentModule.CustomTypes[node.Name],
-        // _builder.BuildAlloca(_context.CurrentModule.CustomTypes[node.Name]),
-        // 1
-        // );
-        // _context.CurrentModule.CustomTypes
+        // this cannot be done from the prototype becuase we cannot attach llvm types to Type without putting dependency of llvm for the Types file
+        // also we do not know the order by which types are added to the llvm module
+        var record = context.GetCustomType(node.Name);
+        var args = node.NewType.Fields.Select(
+            s =>
+                // for records (and eventually references) we do not hold the actual type of the record, but rather a pointer to it, because llvm does not like direct recursive types
+                (s.Key, s.Value is RecordType ? LLVMTypeRef.CreatePointer(
+                (LLVMTypeRef)context.GetLLVMTypeFromShankType(s.Value)!, 0)  : (LLVMTypeRef)context.GetLLVMTypeFromShankType(s.Value)!
+        )).ToArray();
+        record.LlvmTypeRef.StructSetBody(args.Select(s => s.Item2).ToArray(), false);
     }
 
     public override void Accept(VariableNode node)
@@ -217,7 +216,7 @@ public class LLVMStatement(Context context, LLVMBuilderRef builder, LLVMModuleRe
 
     public override void Accept(ProgramNode node)
     {
-        context.setModules(node.Modules.Keys);
+        context.SetModules(node.Modules.Keys);
 
         foreach (var keyValuePair in node.Modules)
         {

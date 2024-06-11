@@ -53,13 +53,9 @@ public class LLVMVisitPrototype(Context context, LLVMBuilderRef builder, LLVMMod
 
     public override void Accept(RecordNode node)
     {
-        var args = node.NewType.Fields.Select(
-            s =>
-                context.GetLLVMTypeFromShankType(s.Value)
-                ?? throw new CompilerException($"type of parameter {s.Key} is not found", node.Line)
-        );
-        var a = LLVMTypeRef.CreateStruct(args.ToArray(), false);
-        context.CurrentModule.CustomTypes.Add(node.Name, a);
+        var llvmRecord = module.Context.CreateNamedStruct(node.Name);
+        var record = new LLVMStructType(node.NewType, llvmRecord, node.NewType.Fields.Select(s => s.Key).ToList());
+        context.CurrentModule.CustomTypes.Add(node.Name, record);
     }
 
     public override void Accept(VariableNode node)
