@@ -373,10 +373,7 @@ public class Parser
     private void StatementsBody(List<StatementNode> statements, bool isRecord = false)
     {
         RequiresToken(Token.TokenType.Indent);
-        if (Peek(0)?.Type is Token.TokenType.EndOfLine)
-        {
-            MatchAndRemove(Token.TokenType.EndOfLine);
-        }
+
         Statements(statements, isRecord);
 
         RequiresToken(Token.TokenType.Dedent);

@@ -127,7 +127,7 @@ public class Lexer
         }
     }
 
-    private static void SpacesAndIndents(
+    private void SpacesAndIndents(
         ref int index,
         int lineNumber,
         ref int currentIndentLevel,
@@ -135,17 +135,44 @@ public class Lexer
         List<Token> retVal
     )
     {
-        // Find the first line index that is not a space or a tab.
+        // Initialize a flag to know when we're inside a curly brace block
+        if (Mode == ModeType.Comment)
+            return;
+
         var firstNonSpaceIdx = Enumerable
             .Range(index, line.Length)
-            .Where(i => line[i] != ' ' && line[i] != '\t')
+            .Where(i =>
+            {
+                // If we encounter a '{', we must set the flag to true and skip the character
+                if (line[i] == '{')
+                {
+                    Mode = ModeType.Comment;
+                    return false;
+                }
+
+                // If we encounter a '}', we must set the flag to false and skip the character
+                if (line[i] == '}')
+                {
+                    Mode = ModeType.Start;
+                    return false;
+                }
+
+                // If we're inside a block, we skip the character
+                if (Mode == ModeType.Comment)
+                    return false;
+
+                // Otherwise, we skip spaces and tabs
+                return line[i] != ' ' && line[i] != '\t';
+            })
             .FirstOrDefault(-1);
+
+        // If still in the comment, then this method is done.
+        if (Mode == ModeType.Comment)
+            return;
 
         // If there is no such index, then this method is done.
         if (firstNonSpaceIdx < 0)
-        {
             return;
-        }
 
         // Count the initial spaces in the line.
         var initialSpaces = Enumerable.Range(index, firstNonSpaceIdx).Count(i => line[i] == ' ');
@@ -347,7 +374,6 @@ public class Lexer
                         break;
                     case ModeType.Comment:
                         Mode = ModeType.Start;
-                        index++;
                         break;
                     case ModeType.SingleQuote when character == '\'':
                         ModeChangePrep(retVal, currentBuffer, lineNumber);
