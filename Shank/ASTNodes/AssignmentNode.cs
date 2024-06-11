@@ -1,6 +1,7 @@
 using LLVMSharp.Interop;
 using Shank.ExprVisitors;
 using Shank.IRGenerator;
+using Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 
 namespace Shank.ASTNodes;
 
@@ -9,7 +10,7 @@ namespace Shank.ASTNodes;
 /// </summary>
 public class AssignmentNode : StatementNode
 {
-    public AssignmentNode(VariableUsageNode target, ASTNode expression)
+    public AssignmentNode(VariableUsageNode target, ExpressionNode expression)
     {
         Target = target;
         Expression = expression;
@@ -23,7 +24,7 @@ public class AssignmentNode : StatementNode
     /// <summary>
     /// The expression assigned to the target variable (RHS of the :=).
     /// </summary>
-    public ASTNode Expression { get; init; }
+    public ExpressionNode Expression { get; init; }
 
     public override object[] returnStatementTokens()
     {
@@ -57,4 +58,6 @@ public class AssignmentNode : StatementNode
     {
         return $"{Target} assigned as {Expression}";
     }
+
+    public override T Accept<T>(IAstNodeVisitor<T> visitor) => visitor.Visit(this);
 }

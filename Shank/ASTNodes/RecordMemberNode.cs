@@ -63,8 +63,8 @@ public class RecordMemberNode : StatementNode
     // }
 
 
-    public override T Visit<T>(ExpressionVisitor<T> visit)
-    {
-        throw new NotImplementedException();
-    }
+    // public override T Visit<T>(ExpressionVisitor<T> visit)
+    // {
+    //     throw new NotImplementedException();
+    // }
 }

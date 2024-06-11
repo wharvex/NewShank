@@ -23,9 +23,18 @@ public class LLVMStatement(Context context, LLVMBuilderRef builder, LLVMModuleRe
         }
 
         var parameters = node.Parameters.Select(
-            p => p.Visit(new LLVMExpr(context, builder, module))
+            p => p.Accept(new LLVMExpr(context, builder, module))
         );
         builder.BuildCall2(function.TypeOf, function.Function, parameters.ToArray());
+    }
+
+    public void DebugRuntime(string format, LLVMValueRef value)
+    {
+        builder.BuildCall2(
+            context.CFuntions.printf.TypeOf,
+            context.CFuntions.printf.Function,
+            [builder.BuildGlobalStringPtr(format), value]
+        );
     }
 
     public override void Accept(FunctionNode node)
@@ -67,7 +76,7 @@ public class LLVMStatement(Context context, LLVMBuilderRef builder, LLVMModuleRe
         var whileDone = context.CurrentFunction.AppendBasicBlock("while.done");
         builder.BuildBr(whileCond);
         builder.PositionAtEnd(whileCond);
-        var condition = node.Expression.Visit(new LLVMExpr(context, builder, module));
+        var condition = node.Expression.Accept(new LLVMExpr(context, builder, module));
         builder.BuildCondBr(condition, whileBody, whileDone);
         builder.PositionAtEnd(whileBody);
         node.Children.ForEach(c => c.Visit(this));
@@ -80,7 +89,7 @@ public class LLVMStatement(Context context, LLVMBuilderRef builder, LLVMModuleRe
         var llvmValue = context.GetVariable(node.Target.Name);
         Console.WriteLine(node.ToString());
 
-        var expr = node.Expression.Visit(new LLVMExpr(context, builder, module));
+        var expr = node.Expression.Accept(new LLVMExpr(context, builder, module));
         if (!llvmValue.IsMutable) // :')
         {
             throw new Exception($"tried to mutate non mutable variable {node.Target.Name}");
@@ -91,7 +100,7 @@ public class LLVMStatement(Context context, LLVMBuilderRef builder, LLVMModuleRe
             var a = builder.BuildGEP2(
                 llvmValue.TypeRef,
                 llvmValue.ValueRef,
-                new[] { node.Target.Extension.Visit(new LLVMExpr(context, builder, module)) }
+                new[] { node.Target.Extension.Accept(new LLVMExpr(context, builder, module)) }
             );
             builder.BuildStore(expr, a);
         }
@@ -101,10 +110,7 @@ public class LLVMStatement(Context context, LLVMBuilderRef builder, LLVMModuleRe
         }
     }
 
-    public override void Accept(EnumNode node)
-    {
-        throw new NotImplementedException();
-    }
+    public override void Accept(EnumNode node) { }
 
     public override void Accept(ModuleNode node)
     {
@@ -120,9 +126,9 @@ public class LLVMStatement(Context context, LLVMBuilderRef builder, LLVMModuleRe
                 {
                     context.AddFunction(import, function);
                 }
-                else if (shankModule.GloabalVariables.TryGetValue(import, out var Var))
+                else if (shankModule.CustomTypes.TryGetValue(import, out var type))
                 {
-                    context.AddVariable(import, Var, true);
+                    context.AddCustomType(import, type);
                 }
             }
         }
@@ -144,7 +150,7 @@ public class LLVMStatement(Context context, LLVMBuilderRef builder, LLVMModuleRe
         // and we visit(compile) the IfNode for when the condition is false if needed, followed by a goto to the after branch
         // note we could make this a bit better by checking if next is null and then make the conditional branch to after block in the false cas
         {
-            var condition = node.Expression.Visit(new LLVMExpr(context, builder, module));
+            var condition = node.Expression.Accept(new LLVMExpr(context, builder, module));
             var ifBlock = context.CurrentFunction.AppendBasicBlock("if block");
             var elseBlock = context.CurrentFunction.AppendBasicBlock("else block");
             var afterBlock = context.CurrentFunction.AppendBasicBlock("after if statement");
@@ -173,23 +179,31 @@ public class LLVMStatement(Context context, LLVMBuilderRef builder, LLVMModuleRe
         builder.PositionAtEnd(whileBody);
         node.Children.ForEach(c => c.Visit(this));
         // and then test the condition
-        var condition = node.Expression.Visit(new LLVMExpr(context, builder, module));
+        var condition = node.Expression.Accept(new LLVMExpr(context, builder, module));
         builder.BuildCondBr(condition, whileBody, whileDone);
         builder.PositionAtEnd(whileDone);
     }
 
     public override void Accept(RecordNode node)
     {
-        Console.WriteLine("hello world");
-        throw new Exception("error");
-
-        // _builder.BuildAlloca(_context.CurrentModule.CustomTypes[node.Name]);
-        // _builder.BuildStructGEP2(
-        // _context.CurrentModule.CustomTypes[node.Name],
-        // _builder.BuildAlloca(_context.CurrentModule.CustomTypes[node.Name]),
-        // 1
-        // );
-        // _context.CurrentModule.CustomTypes
+        // this cannot be done from the prototype becuase we cannot attach llvm types to Type without putting dependency of llvm for the Types file
+        // also we do not know the order by which types are added to the llvm module
+        var record = context.GetCustomType(node.Name);
+        var args = node.NewType.Fields.Select(
+            s =>
+                // for records (and eventually references) we do not hold the actual type of the record, but rather a pointer to it, because llvm does not like direct recursive types
+                (
+                    s.Key,
+                    s.Value is RecordType
+                        ? LLVMTypeRef.CreatePointer(
+                            (LLVMTypeRef)context.GetLLVMTypeFromShankType(s.Value)!,
+                            0
+                        )
+                        : (LLVMTypeRef)context.GetLLVMTypeFromShankType(s.Value)!
+                )
+        )
+            .ToArray();
+        record.LlvmTypeRef.StructSetBody(args.Select(s => s.Item2).ToArray(), false);
     }
 
     public override void Accept(VariableNode node)
@@ -208,7 +222,7 @@ public class LLVMStatement(Context context, LLVMBuilderRef builder, LLVMModuleRe
 
     public override void Accept(ProgramNode node)
     {
-        context.setModules(node.Modules.Keys);
+        context.SetModules(node.Modules.Keys);
 
         foreach (var keyValuePair in node.Modules)
         {
@@ -234,9 +248,9 @@ public class LLVMStatement(Context context, LLVMBuilderRef builder, LLVMModuleRe
         // in case we modify them in the loop
 
 
-        var fromValue = node.From.Visit(new LLVMExpr(context, builder, module));
-        var toValue = node.To.Visit(new LLVMExpr(context, builder, module));
-        var currentIterable = node.Variable.Visit(new LLVMExpr(context, builder, module));
+        var fromValue = node.From.Accept(new LLVMExpr(context, builder, module));
+        var toValue = node.To.Accept(new LLVMExpr(context, builder, module));
+        var currentIterable = node.Variable.Accept(new LLVMExpr(context, builder, module));
 
         // right now we assume, from, to, and the variable are all integers
         // in the future we should check and give some error at runtime/compile time if not

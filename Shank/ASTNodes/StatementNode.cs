@@ -2,6 +2,7 @@ using System.Text;
 using LLVMSharp.Interop;
 using Shank.ExprVisitors;
 using Shank.IRGenerator;
+using Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 
 namespace Shank.ASTNodes;
 
@@ -20,10 +21,17 @@ public class StatementNode : ASTNode
         return arr;
     }
 
-    public override T Visit<T>(ExpressionVisitor<T> visit)
+    public T Visit<T>(ExpressionVisitor<T> visit)
     {
         throw new NotImplementedException();
     }
+
+    public override void Accept<T>(StatementVisitor v)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override T Accept<T>(IAstNodeVisitor<T> visitor) => visitor.Visit(this);
 
     public virtual void Visit(StatementVisitor visit) { }
 }

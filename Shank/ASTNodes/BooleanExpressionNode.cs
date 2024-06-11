@@ -1,12 +1,17 @@
 using LLVMSharp.Interop;
 using Shank.ExprVisitors;
 using Shank.IRGenerator;
+using Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 
 namespace Shank.ASTNodes;
 
-public class BooleanExpressionNode : ASTNode
+public class BooleanExpressionNode : ExpressionNode
 {
-    public BooleanExpressionNode(ASTNode left, BooleanExpressionOpType op, ASTNode right)
+    public BooleanExpressionNode(
+        ExpressionNode left,
+        BooleanExpressionOpType op,
+        ExpressionNode right
+    )
     {
         Left = left;
         Op = op;
@@ -14,8 +19,8 @@ public class BooleanExpressionNode : ASTNode
     }
 
     public BooleanExpressionOpType Op { get; init; }
-    public ASTNode Left { get; init; }
-    public ASTNode Right { get; init; }
+    public ExpressionNode Left { get; init; }
+    public ExpressionNode Right { get; init; }
 
     // public override LLVMValueRef Visit(
     //     LLVMVisitor visitor,
@@ -27,10 +32,7 @@ public class BooleanExpressionNode : ASTNode
     //     return visitor.Visit(this);
     // }
 
-    public override T Visit<T>(ExpressionVisitor<T> visit)
-    {
-        return visit.Accept(this);
-    }
+
 
     public override string ToString()
     {
@@ -46,4 +48,8 @@ public class BooleanExpressionNode : ASTNode
         eq,
         ne
     }
+
+    public override T Accept<T>(ExpressionVisitor<T> visit) => visit.Visit(this);
+
+    public override T Accept<T>(IAstNodeVisitor<T> visitor) => visitor.Visit(this);
 }

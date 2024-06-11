@@ -3,6 +3,7 @@ using LLVMSharp.Interop;
 using Shank.ASTNodes;
 using Shank.ExprVisitors;
 using Shank.IRGenerator;
+using Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 using Exception = System.Exception;
 
 namespace Shank.ASTNodes;
@@ -174,4 +175,6 @@ public class VariableNode : StatementNode
     {
         visit.Accept(this);
     }
+
+    public override T Accept<T>(IAstNodeVisitor<T> visitor) => visitor.Visit(this);
 }

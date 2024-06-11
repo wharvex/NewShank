@@ -3,10 +3,11 @@ using LLVMSharp.Interop;
 using Shank.ASTNodes;
 using Shank.ExprVisitors;
 using Shank.IRGenerator;
+using Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 
 namespace Shank.ASTNodes;
 
-public class StringNode : ASTNode
+public class StringNode : ExpressionNode
 {
     public StringNode(string value)
     {
@@ -30,8 +31,7 @@ public class StringNode : ASTNode
     //     return visitor.Visit(this);
     // }
 
-    public override T Visit<T>(ExpressionVisitor<T> visit)
-    {
-        return visit.Accept(this);
-    }
+    public override T Accept<T>(ExpressionVisitor<T> visit) => visit.Visit(this);
+
+    public override T Accept<T>(IAstNodeVisitor<T> visitor) => visitor.Visit(this);
 }

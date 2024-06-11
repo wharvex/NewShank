@@ -184,7 +184,7 @@ public class SemanticAnalysis
     private static Dictionary<string, Type> CheckAssignment(
         String targetName,
         Type targetType,
-        ASTNode expression,
+        ExpressionNode expression,
         Dictionary<string, VariableNode> variables
     )
     {
@@ -232,11 +232,11 @@ public class SemanticAnalysis
             {
                 var param = paramAndArg.First;
                 var arguement = paramAndArg.Second;
-
-                var actualArguement =
-                    arguement.Variable == null
-                        ? arguement.Constant
-                        : variables[arguement.Variable.Name];
+                //
+                // var actualArguement =
+                //     arguement.Variable == null
+                //         ? arguement.Constant
+                //         : variables[arguement.Variable.Name];
                 CheckParameterMutability(param, arguement, variables, functionCallNode);
                 return TypeCheckAndInstiateGenericParameter(param, arguement, variables, fn);
             })
@@ -379,9 +379,11 @@ public class SemanticAnalysis
             return s.Value.Length;
         if (node is VariableUsageNode vrn)
         {
-            var dataType = variables[vrn.Name].Type;
+            var dataType = GetTypeOfExpression(vrn, variables);
             if (dataType is RangeType t)
+            {
                 return t.Range.To;
+            }
             throw new Exception("Ranged variables can only be assigned variables with a range.");
         }
         throw new Exception(
@@ -418,9 +420,11 @@ public class SemanticAnalysis
             return s.Value.Length;
         if (node is VariableUsageNode vrn)
         {
-            var dataType = variables[vrn.Name].Type;
+            var dataType = GetTypeOfExpression(vrn, variables);
             if (dataType is RangeType t)
+            {
                 return t.Range.From;
+            }
             throw new Exception("Ranged variables can only be assigned variables with a range.");
         }
 

@@ -7,6 +7,15 @@ namespace Shank.ExprVisitors;
 public class LLVMVisitPrototype(Context context, LLVMBuilderRef builder, LLVMModuleRef module)
     : VisitPrototype
 {
+    public void DebugRuntime(string format, LLVMValueRef value)
+    {
+        builder.BuildCall2(
+            context.CFuntions.printf.TypeOf,
+            context.CFuntions.printf.Function,
+            [builder.BuildGlobalStringPtr(format), value]
+        );
+    }
+
     public override void Accept(FunctionNode node)
     {
         var fnRetTy = module.Context.Int32Type;
@@ -44,13 +53,13 @@ public class LLVMVisitPrototype(Context context, LLVMBuilderRef builder, LLVMMod
 
     public override void Accept(RecordNode node)
     {
-        var args = node.NewType.Fields.Select(
-            s =>
-                context.GetLLVMTypeFromShankType(s.Value)
-                ?? throw new CompilerException($"type of parameter {s.Key} is not found", node.Line)
+        var llvmRecord = module.Context.CreateNamedStruct(node.Name);
+        var record = new LLVMStructType(
+            node.NewType,
+            llvmRecord,
+            node.NewType.Fields.Select(s => s.Key).ToList()
         );
-        var a = LLVMTypeRef.CreateStruct(args.ToArray(), false);
-        context.CurrentModule.CustomTypes.Add(node.Name, a);
+        context.CurrentModule.CustomTypes.Add(node.Name, record);
     }
 
     public override void Accept(VariableNode node)

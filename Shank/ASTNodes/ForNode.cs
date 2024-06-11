@@ -2,6 +2,7 @@ using LLVMSharp.Interop;
 using Shank.ASTNodes;
 using Shank.ExprVisitors;
 using Shank.IRGenerator;
+using Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 
 namespace Shank.ASTNodes;
 
@@ -9,8 +10,8 @@ public class ForNode : StatementNode
 {
     public ForNode(
         VariableUsageNode variable,
-        ASTNode from,
-        ASTNode to,
+        ExpressionNode from,
+        ExpressionNode to,
         List<StatementNode> children
     )
     {
@@ -21,8 +22,8 @@ public class ForNode : StatementNode
     }
 
     public VariableUsageNode Variable { get; init; }
-    public ASTNode From { get; init; }
-    public ASTNode To { get; init; }
+    public ExpressionNode From { get; init; }
+    public ExpressionNode To { get; init; }
     public List<StatementNode> Children { get; init; }
 
     public override object[] returnStatementTokens()
@@ -80,4 +81,6 @@ public class ForNode : StatementNode
     {
         visit.Accept(this);
     }
+
+    public override T Accept<T>(IAstNodeVisitor<T> visitor) => visitor.Visit(this);
 }

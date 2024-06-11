@@ -1,14 +1,16 @@
 using LLVMSharp.Interop;
 using Shank.ExprVisitors;
 using Shank.IRGenerator;
+using Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 
 namespace Shank.ASTNodes;
 
-public class MathOpNode(ASTNode left, MathOpNode.MathOpType op, ASTNode right) : ASTNode
+public class MathOpNode(ExpressionNode left, MathOpNode.MathOpType op, ExpressionNode right)
+    : ExpressionNode
 {
     public MathOpType Op { get; init; } = op;
-    public ASTNode Left { get; init; } = left;
-    public ASTNode Right { get; init; } = right;
+    public ExpressionNode Left { get; init; } = left;
+    public ExpressionNode Right { get; init; } = right;
 
     public override string ToString()
     {
@@ -25,10 +27,7 @@ public class MathOpNode(ASTNode left, MathOpNode.MathOpType op, ASTNode right) :
     //     return visitor.Visit(this);
     // }
 
-    public override T Visit<T>(ExpressionVisitor<T> visit)
-    {
-        return visit.Accept(this);
-    }
+    public override T Accept<T>(ExpressionVisitor<T> visit) => visit.Visit(this);
 
     public enum MathOpType
     {
@@ -38,4 +37,6 @@ public class MathOpNode(ASTNode left, MathOpNode.MathOpType op, ASTNode right) :
         Divide,
         Modulo
     }
+
+    public override T Accept<T>(IAstNodeVisitor<T> visitor) => visitor.Visit(this);
 }
