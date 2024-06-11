@@ -325,6 +325,21 @@ public class Parser
     public LinkedList<ASTNode> ParseBuiltInFunctionNode()
     {
         LinkedList<ASTNode> expressions = new LinkedList<ASTNode>();
+        
+        if (handler.MatchAndRemove(TokenType.PERIOD) != null)
+        {
+            if (handler.MatchAndRemove(TokenType.TIMES) != null)
+            {
+                if (handler.MatchAndRemove(TokenType.OPENPARENTHESIS) != null)
+                {
+                    if (handler.MatchAndRemove(TokenType.CLOSEDPARENTHESIS) == null)
+                    {
+                        throw new Exception(
+                            "In ParseBuiltInFunctionNode method, Expected a closing parenthesis after .Times( ");
+                    }
+                }
+            }
+        }
         if (handler.MatchAndRemove(TokenType.CONSOLE) != null)
         {
             if (handler.MatchAndRemove(TokenType.PERIOD) != null)

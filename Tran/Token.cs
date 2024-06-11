@@ -64,7 +64,8 @@ public enum TokenType
     ELSE,
     FUNCTIONBLOCKIDENTIFIER,
     TAB,
-    NEWLINE
+    NEWLINE,
+    TIMES
 }
 
 public class Token
