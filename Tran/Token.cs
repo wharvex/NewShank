@@ -99,6 +99,11 @@ public class Token
         return type;
     }
 
+    public int GetTokenLineNumber()
+    {
+        return lineNumber;
+    }
+
     public override string ToString()
     {
         if (value != null)

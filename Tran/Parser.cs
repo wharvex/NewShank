@@ -20,7 +20,8 @@ public class Parser
     private bool AcceptSeparators()
     {
         bool retVal = false;
-        while (handler.MatchAndRemove(TokenType.SEPARATOR) != null)
+        //while (handler.MatchAndRemove(TokenType.SEPARATOR) != null)
+        while ((handler.MatchAndRemove(TokenType.SEPARATOR) ?? handler.MatchAndRemove(TokenType.NEWLINE) ?? handler.MatchAndRemove(TokenType.TAB)) != null)
         {
             retVal = true;
         }
@@ -354,6 +355,37 @@ public class Parser
             ParseStatement();
         }
         throw new NotImplementedException();
+    }
+
+    private ASTNode? ParseFunctionCall()
+    {
+        AcceptSeparators();
+        var functionToken = handler.MatchAndRemove(TokenType.FUNCTION);
+
+        if (functionToken == null)
+        {
+            return null;
+        }
+
+        var functionName = functionToken.GetValue();
+        var functionLineNumber = functionToken.GetTokenLineNumber();
+
+        if (handler.MatchAndRemove(TokenType.OPENPARENTHESIS) == null)
+        {
+            throw new InvalidOperationException("Missing open parenthesis in function<" + functionName + ">");
+        }
+
+        List<ParameterNode> parameters = ParseParameters(false);
+
+        if (handler.MatchAndRemove(TokenType.CLOSEDPARENTHESIS) == null)
+        {
+            throw new InvalidOperationException("Missing closing parenthesis in function<" + functionName + ">");
+        }
+
+        FunctionCallNode functionCallNode = new FunctionCallNode(functionName);
+        functionCallNode.Parameters.AddRange(parameters);
+        functionCallNode.LineNum = functionLineNumber;
+        return functionCallNode;
     }
 
     private ExpressionNode? ParseExpression()
