@@ -2,134 +2,139 @@
 
 namespace Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 
-public class ChildNodesGettingVisitor : IAstNodeVisitor<List<ASTNode>>
+public class LlvmFuncIsVarArgGettingVisitor : IAstNodeVisitor<bool>
 {
-    public List<ASTNode> Visit(AssignmentNode a)
+    public bool Visit(AssignmentNode a)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(BooleanExpressionNode b)
+    public bool Visit(BooleanExpressionNode b)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(BoolNode b)
+    public bool Visit(BoolNode b)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(BuiltInFunctionNode b)
+    public bool Visit(BuiltInFunctionNode b)
+    {
+        return b.Name switch
+        {
+            "write" => true,
+            "read" => true,
+            _ => false
+        };
+    }
+
+    public bool Visit(CharNode c)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(CharNode c)
+    public bool Visit(ElseNode e)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(ElseNode e)
+    public bool Visit(EmptyNode e)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(EmptyNode e)
+    public bool Visit(EnumNode e)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(EnumNode e)
+    public bool Visit(FloatNode f)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(FloatNode f)
+    public bool Visit(ForNode f)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(ForNode f)
+    public bool Visit(FunctionCallNode f)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(FunctionCallNode f)
+    public bool Visit(FunctionNode f)
+    {
+        return false;
+    }
+
+    public bool Visit(IfNode i)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(FunctionNode f)
+    public bool Visit(IntNode i)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(IfNode i)
+    public bool Visit(MathOpNode m)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(IntNode i)
+    public bool Visit(ModuleNode m)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(MathOpNode m)
+    public bool Visit(ParameterNode p)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(ModuleNode m)
+    public bool Visit(ProgramNode p)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(ParameterNode p)
+    public bool Visit(RecordNode r)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(ProgramNode p)
+    public bool Visit(RepeatNode r)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(RecordNode r)
+    public bool Visit(StatementNode s)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(RepeatNode r)
+    public bool Visit(StringNode s)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(StatementNode s)
+    public bool Visit(TestNode t)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(StringNode s)
+    public bool Visit(VariableNode v)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(TestNode t)
+    public bool Visit(VariableUsageNode v)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(VariableNode v)
-    {
-        throw new NotImplementedException();
-    }
-
-    public List<ASTNode> Visit(VariableUsageNode v)
-    {
-        throw new NotImplementedException();
-    }
-
-    public List<ASTNode> Visit(WhileNode w)
+    public bool Visit(WhileNode w)
     {
         throw new NotImplementedException();
     }

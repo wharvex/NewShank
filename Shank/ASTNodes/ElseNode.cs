@@ -1,4 +1,5 @@
 using System.Text;
+using Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 
 namespace Shank.ASTNodes;
 
@@ -17,4 +18,6 @@ public class ElseNode : IfNode
         b.AppendLine(linePrefix + "statements end");
         return b.ToString();
     }
+
+    public override T Accept<T>(IAstNodeVisitor<T> visitor) => visitor.Visit(this);
 }

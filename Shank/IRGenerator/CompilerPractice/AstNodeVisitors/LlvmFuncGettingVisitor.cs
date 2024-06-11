@@ -1,135 +1,138 @@
-﻿using Shank.ASTNodes;
+﻿using LLVMSharp.Interop;
+using Shank.ASTNodes;
 
 namespace Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 
-public class ChildNodesGettingVisitor : IAstNodeVisitor<List<ASTNode>>
+public class LlvmFuncGettingVisitor(LLVMModuleRef llvmModule) : IAstNodeVisitor<LLVMValueRef>
 {
-    public List<ASTNode> Visit(AssignmentNode a)
+    public LLVMModuleRef LlvmModule { get; init; } = llvmModule;
+
+    public LLVMValueRef Visit(AssignmentNode a)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(BooleanExpressionNode b)
+    public LLVMValueRef Visit(BooleanExpressionNode b)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(BoolNode b)
+    public LLVMValueRef Visit(BoolNode b)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(BuiltInFunctionNode b)
+    public LLVMValueRef Visit(BuiltInFunctionNode b)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(CharNode c)
+    public LLVMValueRef Visit(CharNode c)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(ElseNode e)
+    public LLVMValueRef Visit(ElseNode e)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(EmptyNode e)
+    public LLVMValueRef Visit(EmptyNode e)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(EnumNode e)
+    public LLVMValueRef Visit(EnumNode e)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(FloatNode f)
+    public LLVMValueRef Visit(FloatNode f)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(ForNode f)
+    public LLVMValueRef Visit(ForNode f)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(FunctionCallNode f)
+    public LLVMValueRef Visit(FunctionCallNode f)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(FunctionNode f)
+    public LLVMValueRef Visit(FunctionNode f)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(IfNode i)
+    public LLVMValueRef Visit(IfNode i)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(IntNode i)
+    public LLVMValueRef Visit(IntNode i)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(MathOpNode m)
+    public LLVMValueRef Visit(MathOpNode m)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(ModuleNode m)
+    public LLVMValueRef Visit(ModuleNode m)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(ParameterNode p)
+    public LLVMValueRef Visit(ParameterNode p)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(ProgramNode p)
+    public LLVMValueRef Visit(ProgramNode p)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(RecordNode r)
+    public LLVMValueRef Visit(RecordNode r)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(RepeatNode r)
+    public LLVMValueRef Visit(RepeatNode r)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(StatementNode s)
+    public LLVMValueRef Visit(StatementNode s)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(StringNode s)
+    public LLVMValueRef Visit(StringNode s)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(TestNode t)
+    public LLVMValueRef Visit(TestNode t)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(VariableNode v)
+    public LLVMValueRef Visit(VariableNode v)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(VariableUsageNode v)
+    public LLVMValueRef Visit(VariableUsageNode v)
     {
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(WhileNode w)
+    public LLVMValueRef Visit(WhileNode w)
     {
         throw new NotImplementedException();
     }
