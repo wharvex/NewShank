@@ -3,6 +3,7 @@ using LLVMSharp.Interop;
 using Shank.ExprVisitors;
 using Shank.Interfaces;
 using Shank.IRGenerator;
+using Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 
 namespace Shank.ASTNodes;
 
@@ -64,7 +65,7 @@ public abstract class CallableNode : ASTNode, ILlvmTranslatable
     //     LLVMModuleRef module
     // );
 
-    public override T Visit<T>(ExpressionVisitor<T> visit)
+    public T Visit<T>(ExpressionVisitor<T> visit)
     {
         throw new NotImplementedException();
     }
@@ -74,5 +75,15 @@ public abstract class CallableNode : ASTNode, ILlvmTranslatable
     public override string ToString()
     {
         return Name;
+    }
+
+    public override void Accept<T>(StatementVisitor v)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override T Accept<T>(IAstNodeVisitor<T> visitor)
+    {
+        throw new NotImplementedException();
     }
 }

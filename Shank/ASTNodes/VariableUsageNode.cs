@@ -5,7 +5,7 @@ using Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 
 namespace Shank.ASTNodes;
 
-public class VariableUsageNode : ASTNode
+public class VariableUsageNode : ExpressionNode
 {
     public VariableUsageNode(string name)
     {
@@ -14,7 +14,7 @@ public class VariableUsageNode : ASTNode
         ExtensionType = VrnExtType.None;
     }
 
-    public VariableUsageNode(string name, ASTNode extension, VrnExtType extensionType)
+    public VariableUsageNode(string name, ExpressionNode extension, VrnExtType extensionType)
     {
         Name = name;
         Extension = extension;
@@ -30,7 +30,7 @@ public class VariableUsageNode : ASTNode
     /// <summary>
     /// Represents an extension of the base variable reference (e.g. an array subscript or a record member).
     /// </summary>
-    public ASTNode? Extension { get; init; }
+    public ExpressionNode? Extension { get; init; }
 
     public VrnExtType ExtensionType { get; set; }
 
@@ -114,10 +114,6 @@ public class VariableUsageNode : ASTNode
     //     return visitor.Visit(this);
     // }
 
-    public override T Visit<T>(ExpressionVisitor<T> visit)
-    {
-        return visit.Accept(this);
-    }
 
     public enum VrnExtType
     {
@@ -126,6 +122,8 @@ public class VariableUsageNode : ASTNode
         Enum,
         None
     }
+
+    public override T Accept<T>(ExpressionVisitor<T> visit) => visit.Visit(this);
 
     public override T Accept<T>(IAstNodeVisitor<T> visitor) => visitor.Visit(this);
 }

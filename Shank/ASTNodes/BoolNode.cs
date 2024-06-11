@@ -5,7 +5,7 @@ using Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 
 namespace Shank.ASTNodes;
 
-public class BoolNode : ASTNode
+public class BoolNode : ExpressionNode
 {
     public BoolNode(bool value)
     {
@@ -31,10 +31,9 @@ public class BoolNode : ASTNode
     //     return visitor.Visit(this);
     // }
 
-    public override T Visit<T>(ExpressionVisitor<T> visit)
-    {
-        return visit.Accept(this);
-    }
+
+
+    public override T Accept<T>(ExpressionVisitor<T> visit) => visit.Visit(this);
 
     public override T Accept<T>(IAstNodeVisitor<T> visitor) => visitor.Visit(this);
 }

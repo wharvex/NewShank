@@ -29,8 +29,10 @@ public abstract class ASTNode
     //     LLVMModuleRef module
     // );
 
-    public abstract T Visit<T>(ExpressionVisitor<T> visit);
+    // public abstract T Visit<T>(ExpressionVisitor<T> visit);
 
+
+    public abstract void Accept<T>(StatementVisitor v);
     public abstract T Accept<T>(IAstNodeVisitor<T> visitor);
 
     public List<ASTNode?> GetChildNodes(Func<ASTNode, List<ASTNode?>> contentsCollector) =>

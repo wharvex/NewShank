@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using LLVMSharp.Interop;
 using Shank.ExprVisitors;
 using Shank.IRGenerator;
@@ -9,9 +10,9 @@ namespace Shank.ASTNodes;
  * ParameterNodes are the arguments passed to a FunctionCallNode.
  * For the parameters of FunctionNodes, see VariableNode.
  */
-public class ParameterNode : ASTNode
+public class ParameterNode : ExpressionNode
 {
-    public ParameterNode(ASTNode constant)
+    public ParameterNode(ExpressionNode constant)
     {
         IsVariable = false;
         Variable = null;
@@ -30,7 +31,7 @@ public class ParameterNode : ASTNode
         Constant = null;
     }
 
-    public ASTNode? Constant { get; init; }
+    public ExpressionNode? Constant { get; init; }
     public VariableUsageNode? Variable { get; init; }
     public bool IsVariable { get; init; }
 
@@ -175,10 +176,7 @@ public class ParameterNode : ASTNode
     //         : Constant.Visit(visitor, context, builder, module);
     // }
 
-    public override T Visit<T>(ExpressionVisitor<T> visit)
-    {
-        return visit.Accept(this);
-    }
+    public override T Accept<T>(ExpressionVisitor<T> visit) => visit.Visit(this);
 
     public override T Accept<T>(IAstNodeVisitor<T> visitor) => visitor.Visit(this);
 }

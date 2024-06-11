@@ -10,8 +10,8 @@ public class ForNode : StatementNode
 {
     public ForNode(
         VariableUsageNode variable,
-        ASTNode from,
-        ASTNode to,
+        ExpressionNode from,
+        ExpressionNode to,
         List<StatementNode> children
     )
     {
@@ -22,8 +22,8 @@ public class ForNode : StatementNode
     }
 
     public VariableUsageNode Variable { get; init; }
-    public ASTNode From { get; init; }
-    public ASTNode To { get; init; }
+    public ExpressionNode From { get; init; }
+    public ExpressionNode To { get; init; }
     public List<StatementNode> Children { get; init; }
 
     public override object[] returnStatementTokens()

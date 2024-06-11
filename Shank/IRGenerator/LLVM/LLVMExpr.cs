@@ -32,17 +32,17 @@ public class LLVMExpr(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
             throw new Exception("undefined type");
     }
 
-    public override LLVMValueRef Accept(IntNode node)
+    public override LLVMValueRef Visit(IntNode node)
     {
         return LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, (ulong)node.Value);
     }
 
-    public override LLVMValueRef Accept(FloatNode node)
+    public override LLVMValueRef Visit(FloatNode node)
     {
         return LLVMValueRef.CreateConstReal(LLVMTypeRef.Double, node.Value);
     }
 
-    public override LLVMValueRef Accept(VariableUsageNode node)
+    public override LLVMValueRef Visit(VariableUsageNode node)
     {
         LLVMValue value = context.GetVariable(node.Name);
         if (node.Extension != null)
@@ -50,24 +50,24 @@ public class LLVMExpr(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
             var a = builder.BuildGEP2(
                 value.TypeRef,
                 value.ValueRef,
-                new[] { node.Extension.Visit(new LLVMExpr(context, builder, module)) }
+                new[] { node.Extension.Accept(new LLVMExpr(context, builder, module)) }
             );
             return builder.BuildLoad2(value.TypeRef, a);
         }
         return builder.BuildLoad2(value.TypeRef, value.ValueRef);
     }
 
-    public override LLVMValueRef Accept(CharNode node)
+    public override LLVMValueRef Visit(CharNode node)
     {
         return LLVMValueRef.CreateConstInt(module.Context.Int8Type, (ulong)(node.Value));
     }
 
-    public override LLVMValueRef Accept(BoolNode node)
+    public override LLVMValueRef Visit(BoolNode node)
     {
         return LLVMValueRef.CreateConstInt(module.Context.Int1Type, (ulong)(node.GetValueAsInt()));
     }
 
-    public override LLVMValueRef Accept(StringNode node)
+    public override LLVMValueRef Visit(StringNode node)
     {
         // a string in llvm is just length + content
         var stringLength = LLVMValueRef.CreateConstInt(
@@ -101,10 +101,10 @@ public class LLVMExpr(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         return String;
     }
 
-    public override LLVMValueRef Accept(MathOpNode node)
+    public override LLVMValueRef Visit(MathOpNode node)
     {
-        LLVMValueRef L = node.Left.Visit(this);
-        LLVMValueRef R = node.Right.Visit(this);
+        LLVMValueRef L = node.Left.Accept(this);
+        LLVMValueRef R = node.Right.Accept(this);
         if (_types(L.TypeOf) == Types.INTEGER)
         {
             return node.Op switch
@@ -182,10 +182,10 @@ public class LLVMExpr(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         }
     }
 
-    public override LLVMValueRef Accept(BooleanExpressionNode node)
+    public override LLVMValueRef Visit(BooleanExpressionNode node)
     {
-        LLVMValueRef L = node.Left.Visit(this);
-        LLVMValueRef R = node.Right.Visit(this);
+        LLVMValueRef L = node.Left.Accept(this);
+        LLVMValueRef R = node.Right.Accept(this);
 
         if (_types(L.TypeOf) == Types.INTEGER)
         {
@@ -230,15 +230,20 @@ public class LLVMExpr(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         throw new Exception("undefined bool");
     }
 
-    public override LLVMValueRef Accept(RecordNode node)
+    public override LLVMValueRef Visit(RecordNode node)
     {
         throw new NotImplementedException();
     }
 
-    public override LLVMValueRef Accept(ParameterNode node)
+    // public override LLVMValueRef Visit(RecordNode node)
+    // {
+    //     throw new NotImplementedException();
+    // }
+
+    public override LLVMValueRef Visit(ParameterNode node)
     {
         return node.IsVariable
             ? context.GetVariable(node.Variable?.Name).ValueRef
-            : node.Constant.Visit(this);
+            : node.Constant.Accept(this);
     }
 }

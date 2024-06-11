@@ -184,7 +184,7 @@ public class SemanticAnalysis
     private static Dictionary<string, Type> CheckAssignment(
         String targetName,
         Type targetType,
-        ASTNode expression,
+        ExpressionNode expression,
         Dictionary<string, VariableNode> variables
     )
     {
@@ -232,11 +232,11 @@ public class SemanticAnalysis
             {
                 var param = paramAndArg.First;
                 var arguement = paramAndArg.Second;
-
-                var actualArguement =
-                    arguement.Variable == null
-                        ? arguement.Constant
-                        : variables[arguement.Variable.Name];
+                //
+                // var actualArguement =
+                //     arguement.Variable == null
+                //         ? arguement.Constant
+                //         : variables[arguement.Variable.Name];
                 CheckParameterMutability(param, arguement, variables, functionCallNode);
                 return TypeCheckAndInstiateGenericParameter(param, arguement, variables, fn);
             })
