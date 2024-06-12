@@ -7,6 +7,7 @@ using Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 namespace Shank.ASTNodes;
 
 public class EnumNode : ExpressionNode
+//required because interpter class on line 572 (if you chamge it back it has an error
 {
     public string Type { get; set; }
     public EnumType NewType;
