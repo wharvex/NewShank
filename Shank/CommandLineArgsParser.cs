@@ -225,12 +225,15 @@ public class CommandLineArgsParser
                     .GetFunctionsAsList()
                     .ForEach(f => f.ApplyActionToTests(Interpreter.InterpretFunction, module));
 
-                Console.WriteLine(
-                    "[[ Tests from "
-                        + module.Name
-                        + " ]]\n"
-                        + string.Join("\n", Program.UnitTestResults)
-                );
+                //wierdly doesnt work
+
+
+                // Console.WriteLine(
+                //     "[[ Tests from "
+                //         + module.Name
+                //         + " ]]\n"
+                //         + string.Join("\n", Program.UnitTestResults)
+                // );
             });
     }
 

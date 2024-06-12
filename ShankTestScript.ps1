@@ -9,48 +9,42 @@ function st
     $ds = './Shank/dotShank/'
 
     $path_list = "NotAPath", # 0
-    "Interpret ModuleTest2", # 1
-    "Interpret Records/simple", # 2
-    "Interpret Generics/simple/functions2", # 3
-    "Interpret Arrays/sum", # 4
-    "Interpret Records/nested", # 5
-    "Interpret Globals", # 6
-    "Interpret UnitTestTests1 -ut", # 7
-    "Interpret Builtins/Write", # 8
-    "Interpret Enums", # 9
-    "CompilePractice Minimal/PrintInt/Shank --flat PrintInt" # 10
-    #"Interpret OldShankFiles/Pascals.shank"
-    #"Interpret OldShankFiles/GCD.shank"
-    #"Interpret Negative"
-    #"Interpret String"
-    #"CompilePractice Minimal/Old"
-    #"CompilePractice Minimal/PrintStr/Shank --flat PrintStr"
-    #"Expressions"
-    #"Overloads/overloadsTest.shank"
-    #"Generics/complex"
-    #"Generics/simple/records"
+    "ModuleTest2", # 1
+    "Records/simple", # 2
+    "Generics/simple/functions2", # 3
+    "Arrays/sum", # 4
+    "Records/nested", # 5
+    "Globals", # 6
+    "UnitTestTests1 -ut", # 7
+    "Builtins/Write", # 8
+    "Enums", # 9
+    "OldShankFiles/Pascals.shank", # 10
+    "OldShankFiles/GCD.shank", # 11
+    "Negative" # 12
+    #"Expressions",
+    #"Overloads/overloadsTest.shank",
+    #"Generics/complex",
+    #"Generics/simple/records",
 
     $all_runner = {
-        $new_path_list = $path_list[1..$($path_list.Length - 1)]
-        foreach($p in $new_path_list)
+        foreach($p in $path_list[1..$($path_list.Length - 1)])
         {
-            & $generic_runner -args_str $p -i ($new_path_list.IndexOf($p) + 1)
+            & $generic_runner $p
         }
     }
 
     $generic_runner = {
-        param($args_str, $i)
-
+        param($args_str)
+        "`n** Running $($args_str) **`n"
         $args_list = -split $args_str
-        $args_list[1] = "$($ds)$($args_list[1])"
-
-        $progress = if ($i -ne $null) `
-        {"($i of $($path_list.Length - 1))"} `
-        Else {''}
-
-        "`n**** Running The Following Command $($progress)****`n"
-        "dotnet run $($args_list -join ' ') --project $sp`n"
-        dotnet run @args_list --project $sp
+        switch ($args_list.Length)
+        {
+            { $_ -eq 1 } { dotnet run "Interpret" "$($ds)$($args_list[0])" --project $sp }
+            { $_ -eq 2 } { dotnet run "Interpret" "$($ds)$($args_list[0])" $args_list[1] --project $sp }
+            Default {
+                "Bad Args"
+            }
+        }
     }
 
     # invoke a script block based on param
@@ -59,7 +53,7 @@ function st
         { $_ -eq 0 } { & $all_runner }
         { $_ -lt 0 -or $_ -ge $path_list.Length } { "Bad Argument" }
         Default {
-            & $generic_runner $path_list[$_] 
+            & $generic_runner $path_list[$_]
         }
     }
 }

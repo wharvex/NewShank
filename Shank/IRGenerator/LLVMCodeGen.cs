@@ -55,6 +55,7 @@ public class LLVMCodeGen
                 targetMachine.TryEmitToFile(
                     module,
                     "Shank-bin/a.o",
+                    //required because it needs to invoke the linker
                     LLVMCodeGenFileType.LLVMObjectFile,
                     out out_string
                 );
