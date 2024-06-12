@@ -5,7 +5,9 @@ record student
 variables thisIsGlobal : integer { left indented, not in a function }
 
 define start()
-variables goodStudent : student { declaration }
-    goodStudent.gpa := 3.0 
-    thisIsGlobal := 1
+variables arr: array of integer from 1 to 10
+variables n: integer
+    while n < 10
+        n := n + 1
+        
     

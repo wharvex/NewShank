@@ -47,5 +47,7 @@ public class EnumNode : ExpressionNode
         throw new NotImplementedException();
     }
 
+    public override void Accept(Visitor v) => v.Visit(this);
+
     public override T Accept<T>(IAstNodeVisitor<T> visitor) => visitor.Visit(this);
 }

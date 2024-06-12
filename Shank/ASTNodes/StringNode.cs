@@ -30,6 +30,7 @@ public class StringNode : ExpressionNode
     // {
     //     return visitor.Visit(this);
     // }
+    public override void Accept(Visitor v) => v.Visit(this);
 
     public override T Accept<T>(ExpressionVisitor<T> visit) => visit.Visit(this);
 

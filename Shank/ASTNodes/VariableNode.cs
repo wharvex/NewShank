@@ -176,5 +176,7 @@ public class VariableNode : StatementNode
         visit.Accept(this);
     }
 
+    public override void Accept(Visitor v) => v.Visit(this);
+
     public override T Accept<T>(IAstNodeVisitor<T> visitor) => visitor.Visit(this);
 }

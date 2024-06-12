@@ -3,3 +3,4 @@ variables a,b : integer
 variables x : array of integer
     for a from 1 to 10
         b := 3
+    

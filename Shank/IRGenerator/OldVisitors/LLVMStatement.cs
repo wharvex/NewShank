@@ -4,6 +4,13 @@ using Shank.IRGenerator;
 
 namespace Shank.ExprVisitors;
 
+/// <summary>
+/// Depreciated visitor classes
+/// keeping around in case I forgot something or as reference
+/// </summary>
+/// <param name="context"></param>
+/// <param name="builder"></param>
+/// <param name="module"></param>
 public class LLVMStatement(Context context, LLVMBuilderRef builder, LLVMModuleRef module)
     : StatementVisitor
 {
@@ -67,21 +74,6 @@ public class LLVMStatement(Context context, LLVMBuilderRef builder, LLVMModuleRe
         // return 0 to singify ok
         builder.BuildRet(LLVMValueRef.CreateConstInt(module.Context.Int32Type, (ulong)0));
         context.ResetLocal();
-    }
-
-    public override void Accept(WhileNode node)
-    {
-        var whileCond = context.CurrentFunction.AppendBasicBlock("while.cond");
-        var whileBody = context.CurrentFunction.AppendBasicBlock("while.body");
-        var whileDone = context.CurrentFunction.AppendBasicBlock("while.done");
-        builder.BuildBr(whileCond);
-        builder.PositionAtEnd(whileCond);
-        var condition = node.Expression.Accept(new LLVMExpr(context, builder, module));
-        builder.BuildCondBr(condition, whileBody, whileDone);
-        builder.PositionAtEnd(whileBody);
-        node.Children.ForEach(c => c.Visit(this));
-        builder.BuildBr(whileCond);
-        builder.PositionAtEnd(whileDone);
     }
 
     public override void Accept(AssignmentNode node)
@@ -168,6 +160,21 @@ public class LLVMStatement(Context context, LLVMBuilderRef builder, LLVMModuleRe
         {
             node.Children.ForEach(c => c.Visit(this));
         }
+    }
+
+    public override void Accept(WhileNode node)
+    {
+        var whileCond = context.CurrentFunction.AppendBasicBlock("while.cond");
+        var whileBody = context.CurrentFunction.AppendBasicBlock("while.body");
+        var whileDone = context.CurrentFunction.AppendBasicBlock("while.done");
+        builder.BuildBr(whileCond);
+        builder.PositionAtEnd(whileCond);
+        var condition = node.Expression.Accept(new LLVMExpr(context, builder, module));
+        builder.BuildCondBr(condition, whileBody, whileDone);
+        builder.PositionAtEnd(whileBody);
+        node.Children.ForEach(c => c.Visit(this));
+        builder.BuildBr(whileCond);
+        builder.PositionAtEnd(whileDone);
     }
 
     public override void Accept(RepeatNode node)
@@ -264,7 +271,7 @@ public class LLVMStatement(Context context, LLVMBuilderRef builder, LLVMModuleRe
         node.Children.ForEach(c => c.Visit(this));
         builder.BuildBr(forIncremnet);
         builder.PositionAtEnd(forIncremnet);
-        // TODO: increment
+        // TODO: incrementf
         builder.BuildBr(forStart);
         builder.PositionAtEnd(afterFor);
     }

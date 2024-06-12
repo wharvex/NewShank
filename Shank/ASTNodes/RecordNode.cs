@@ -73,5 +73,7 @@ public class RecordNode : StatementNode
 
     public override string ToString() => Name;
 
+    public override void Accept(Visitor v) => v.Visit(this);
+
     public override T Accept<T>(IAstNodeVisitor<T> visitor) => visitor.Visit(this);
 }

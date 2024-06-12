@@ -28,13 +28,8 @@ public class LLVMCodeGen
         // string? directory = Path.GetDirectoryName(compileOptions.OutFile);
 
         var context = new Context(null, new CFuntions(module));
-        programNode.Visit(new LLVMStatement(context, builder, module));
-        // programNode.VisitProgram(
-        //     new LLVMVisitor(context, builder, module),
-        //     context,
-        //     builder,
-        //     module
-        // );
+        programNode.Accept(new LLVMVisitor(context, builder, module));
+
         //outputting directly to an object file
         //https://llvm.org/docs/tutorial/MyFirstLanguageFrontend/LangImpl08.html
         var targetTriple = LLVMTargetRef.DefaultTriple;

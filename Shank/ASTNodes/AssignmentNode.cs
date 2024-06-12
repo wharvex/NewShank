@@ -49,10 +49,7 @@ public class AssignmentNode : StatementNode
     //     // builder.BuildStore(Expression.Visit(visitor, context, builder, module), llvmValue.ValueRef);
     // }
 
-    public override void Visit(StatementVisitor visit)
-    {
-        visit.Accept(this);
-    }
+    public override void Accept(Visitor v) => v.Visit(this);
 
     public override string ToString()
     {

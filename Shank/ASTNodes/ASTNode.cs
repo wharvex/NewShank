@@ -33,6 +33,9 @@ public abstract class ASTNode
 
 
     public abstract void Accept<T>(StatementVisitor v);
+
+    public abstract void Accept(Visitor v);
+
     public abstract T Accept<T>(IAstNodeVisitor<T> visitor);
 
     public List<ASTNode?> GetChildNodes(Func<ASTNode, List<ASTNode?>> contentsCollector) =>

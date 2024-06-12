@@ -4,6 +4,13 @@ using Shank.IRGenerator;
 
 namespace Shank.ExprVisitors;
 
+/// <summary>
+/// Depreciated visitor classes
+/// keeping around in case I forgot something or as reference
+/// </summary>
+/// <param name="context"></param>
+/// <param name="builder"></param>
+/// <param name="module"></param>
 public class LLVMExpr(Context context, LLVMBuilderRef builder, LLVMModuleRef module)
     : ExpressionVisitor<LLVMValueRef>
 {

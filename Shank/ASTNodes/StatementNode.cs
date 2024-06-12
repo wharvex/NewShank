@@ -33,5 +33,7 @@ public class StatementNode : ASTNode
 
     public override T Accept<T>(IAstNodeVisitor<T> visitor) => visitor.Visit(this);
 
+    public override void Accept(Visitor v) => throw new NotImplementedException();
+
     public virtual void Visit(StatementVisitor visit) { }
 }

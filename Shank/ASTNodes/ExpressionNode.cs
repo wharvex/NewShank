@@ -12,6 +12,8 @@ public abstract class ExpressionNode : ASTNode
         throw new NotImplementedException();
     }
 
+    public override void Accept(Visitor v) { }
+
     public override T Accept<T>(IAstNodeVisitor<T> visitor)
     {
         throw new NotImplementedException();
