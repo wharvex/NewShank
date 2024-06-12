@@ -6,7 +6,7 @@ using Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 
 namespace Shank.ASTNodes;
 
-public class ModuleNode : StatementNode
+public class ModuleNode : ASTNode
 {
     public Dictionary<string, EnumNode> Enums { get; init; }
     public string Name { get; set; }
@@ -426,9 +426,14 @@ public class ModuleNode : StatementNode
         visitPrototype.Accept(this);
     }
 
-    public override void Visit(StatementVisitor visit)
+    public void Visit(StatementVisitor visit)
     {
         visit.Accept(this);
+    }
+
+    public override void Accept<T>(StatementVisitor v)
+    {
+        throw new NotImplementedException();
     }
 
     public override void Accept(Visitor v) => v.Visit(this);

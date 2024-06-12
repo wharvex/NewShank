@@ -8,7 +8,7 @@ using Exception = System.Exception;
 
 namespace Shank.ASTNodes;
 
-public class VariableNode : StatementNode
+public class VariableNode : ASTNode
 {
     public string? Name { get; set; }
     public string? ModuleName { get; set; }
@@ -171,9 +171,14 @@ public class VariableNode : StatementNode
         visitPrototype.Accept(this);
     }
 
-    public override void Visit(StatementVisitor visit)
+    public void Visit(StatementVisitor visit)
     {
         visit.Accept(this);
+    }
+
+    public override void Accept<T>(StatementVisitor v)
+    {
+        throw new NotImplementedException();
     }
 
     public override void Accept(Visitor v) => v.Visit(this);

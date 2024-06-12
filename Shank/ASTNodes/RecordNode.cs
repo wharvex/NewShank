@@ -6,7 +6,7 @@ using Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 
 namespace Shank.ASTNodes;
 
-public class RecordNode : StatementNode
+public class RecordNode : ASTNode
 {
     public string Name { get; init; }
 
@@ -66,12 +66,17 @@ public class RecordNode : StatementNode
         v.Accept(this);
     }
 
-    public override void Visit(StatementVisitor visit)
+    public void Visit(StatementVisitor visit)
     {
         visit.Accept(this);
     }
 
     public override string ToString() => Name;
+
+    public override void Accept<T>(StatementVisitor v)
+    {
+        throw new NotImplementedException();
+    }
 
     public override void Accept(Visitor v) => v.Visit(this);
 
