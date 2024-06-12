@@ -399,10 +399,8 @@ public class Parser
         return expressions;
     }
 
-    //TODO: finish implementing ParseBlock() - Ben pls
     public List<StatementNode> ParseBlock()
     {
-        ParseStatement(); // TODO: remove this
         List<StatementNode> blocks = new List<StatementNode>();
         AcceptSeparators();
         while (handler.MatchAndRemove(TokenType.FUNCTIONBLOCKIDENTIFIER) != null)
