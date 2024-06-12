@@ -5,7 +5,7 @@ using Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 
 namespace Shank.ASTNodes;
 
-public class VariableUsageNode : ExpressionNode
+public class VariableUsageNode : VariableUsageExpressionNode
 {
     public VariableUsageNode(string name)
     {

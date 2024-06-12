@@ -7,7 +7,7 @@ public class VariableUsageOpNode(
     ASTNode left,
     ASTNode right,
     VariableUsageOpNode.VariableUsageOpType opType
-) : ExpressionNode
+) : VariableUsageExpressionNode
 {
     public enum VariableUsageOpType
     {

@@ -185,45 +185,12 @@ public class Parser
         return null;
     }
 
-    private VariableUsageNode? GetVariableUsageNodePlain()
+    private VariableUsageExpressionNode? GetVariableUsageExpression()
     {
-        if (MatchAndRemove(Token.TokenType.Identifier) is { } id)
+        var vuNameToken = MatchAndRemove(Token.TokenType.Identifier);
+        if (vuNameToken is null)
         {
-            if (MatchAndRemove(Token.TokenType.LeftBracket) is { })
-            {
-                var exp = Expression();
-                if (exp == null)
-                    throw new SyntaxErrorException(
-                        "Need an expression after the left bracket!",
-                        Peek(0)
-                    );
-                if (MatchAndRemove(Token.TokenType.RightBracket) is null)
-                    throw new SyntaxErrorException(
-                        "Need a right bracket after the expression!",
-                        Peek(0)
-                    );
-                return new VariableUsageNode(
-                    id.GetValueSafe(),
-                    exp,
-                    VariableUsageNode.VrnExtType.ArrayIndex
-                );
-            }
-
-            if (MatchAndRemove(Token.TokenType.Dot) is not null)
-            {
-                VariableUsageNode? varRef = GetVariableUsageNode();
-                if (varRef is null)
-                    throw new SyntaxErrorException(
-                        "Need a record member reference after the dot!",
-                        Peek(0)
-                    );
-                return new VariableUsageNode(
-                    id.GetValueSafe(),
-                    varRef,
-                    VariableUsageNode.VrnExtType.RecordMember
-                );
-            }
-            return new VariableUsageNode(id.GetValueSafe());
+            return null;
         }
 
         return null;
