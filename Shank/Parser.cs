@@ -939,7 +939,7 @@ public class Parser
         Type type
     )
     {
-        var expression = ParseExpressionLine();
+        var expression = Expression();
         if (expression == null)
             throw new SyntaxErrorException(
                 "Found an assignment without a valid right hand side.",
