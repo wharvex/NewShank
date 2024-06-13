@@ -34,6 +34,7 @@ public class Parser
 
     private readonly List<Token> _tokens;
 
+    private bool afterDefault = false;
     public static int Line { get; set; }
     public static string FileName { get; set; }
 
@@ -308,6 +309,8 @@ public class Parser
                 MatchAndRemove(Token.TokenType.Semicolon);
             }
         }
+
+        afterDefault = false;
 
         // Create an extension for the function's name based on its parameters, so overloads don't
         // produce name collisions in the functions dictionary.
@@ -883,6 +886,27 @@ public class Parser
     {
         var type = Type(declarationContext);
 
+        if (MatchAndRemove(Token.TokenType.Equal) == null)
+        {
+            if (!afterDefault)
+                return CreateVariablesBasic(names, isConstant, parentModuleName, type);
+            throw new SyntaxErrorException(
+                "Only default values can be after a default value in a function declaration",
+                Peek(0)
+            );
+        }
+
+        if (declarationContext == VariableNode.DeclarationContext.VariablesLine)
+        {
+            // Creates the variables with their default values added unto them
+            return CreateDefaultVariables(names, isConstant, parentModuleName, type);
+        }
+
+        if (declarationContext == VariableNode.DeclarationContext.FunctionSignature)
+        {
+            afterDefault = true;
+            return CreateDefaultVariables(names, isConstant, parentModuleName, type);
+        }
         return CreateVariablesBasic(names, isConstant, parentModuleName, type);
     }
 
@@ -903,6 +927,37 @@ public class Parser
                         Type = type,
                         Name = n,
                         ModuleName = parentModuleName,
+                    }
+            )
+            .ToList();
+    }
+
+    private List<VariableNode> CreateDefaultVariables(
+        List<string> names,
+        bool isConstant,
+        string parentModuleName,
+        Type type
+    )
+    {
+        var expression = ParseExpressionLine();
+        if (expression == null)
+            throw new SyntaxErrorException(
+                "Found an assignment without a valid right hand side.",
+                Peek(0)
+            );
+
+        // ranges parsed in the type
+        return names
+            .Select(
+                n =>
+                    new VariableNode()
+                    {
+                        IsConstant = isConstant,
+                        Type = type,
+                        Name = n,
+                        ModuleName = parentModuleName,
+                        InitialValue = expression,
+                        IsDefaultValue = true
                     }
             )
             .ToList();

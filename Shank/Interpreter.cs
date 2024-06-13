@@ -38,8 +38,16 @@ public class Interpreter
     {
         Dictionary<string, InterpreterDataType> ret = [];
 
+        int defaultParameterCount = 0;
+        foreach (var parameter in fn.ParameterVariables)
+            if (parameter.IsDefaultValue)
+                defaultParameterCount++;
+
         // Ensure the args count matches the params count.
-        if (parameters.Count != fn.ParameterVariables.Count)
+        if (
+            parameters.Count < fn.ParameterVariables.Count - defaultParameterCount
+            || parameters.Count > fn.ParameterVariables.Count
+        )
         {
             throw new InvalidOperationException(
                 "For function "
@@ -52,10 +60,19 @@ public class Interpreter
             );
         }
 
-        // Populate ret with entries with param name keys and arg IDT values.
-        fn.ParameterVariables.Select((vn, i) => new { i, vn })
-            .ToList()
-            .ForEach(vni => ret.Add(vni.vn.GetNameSafe(), parameters[vni.i]));
+        for (int i = 0; i < fn.ParameterVariables.Count(); i++)
+        {
+            var parameter = fn.ParameterVariables[i];
+            if (parameter.IsDefaultValue)
+            {
+                if (i >= parameters.Count)
+                {
+                    ret.Add(parameter.GetNameSafe(), VariableNodeToActivationRecord(parameter));
+                    continue;
+                }
+            }
+            ret.Add(parameter.GetNameSafe(), parameters[i]);
+        }
 
         // If module was passed in, add its global variables to ret.
         maybeModule

@@ -13,6 +13,8 @@ public class VariableNode : ASTNode
     public string? Name { get; set; }
     public string? ModuleName { get; set; }
 
+    public bool IsDefaultValue { get; set; }
+
     // public enum DataType
     // {
     //     Real,
