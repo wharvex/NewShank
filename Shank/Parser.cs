@@ -116,10 +116,7 @@ public class Parser
 
     private void ConsumeBlankLines()
     {
-        while (MatchAndRemove(Token.TokenType.EndOfLine) is not null)
-        {
-
-        }
+        while (MatchAndRemove(Token.TokenType.EndOfLine) is not null) { }
     }
 
     private void RequiresEndOfLine()
@@ -715,7 +712,7 @@ public class Parser
         }
 
         if (MatchAndRemove(Token.TokenType.Else) != null)
-        { 
+        {
             RequiresEndOfLine();
 
             var body = new List<StatementNode>();
@@ -743,7 +740,6 @@ public class Parser
     {
         if (MatchAndRemove(Token.TokenType.Repeat) == null)
             return null;
-
 
         RequiresEndOfLine();
 
@@ -873,7 +869,6 @@ public class Parser
             retVal.AddRange(nextOnes);
 
             RequiresEndOfLine();
-
         } while (MatchAndRemove(Token.TokenType.Variables) != null);
 
         return retVal;
