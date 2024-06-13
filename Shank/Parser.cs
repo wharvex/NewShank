@@ -1,4 +1,5 @@
-﻿using Shank.ASTNodes;
+﻿using System.Diagnostics;
+using Shank.ASTNodes;
 
 namespace Shank;
 
@@ -140,7 +141,7 @@ public class Parser
         return _tokens[offset];
     }
 
-    private VariableUsagePlainNode? GetVariableUsageNode()
+    private VariableUsagePlainNode? GetVariableUsagePlainNode()
     {
         if (MatchAndRemove(Token.TokenType.Identifier) is { } id)
         {
@@ -166,7 +167,7 @@ public class Parser
 
             if (MatchAndRemove(Token.TokenType.Dot) is not null)
             {
-                VariableUsagePlainNode? varRef = GetVariableUsageNode();
+                VariableUsagePlainNode? varRef = GetVariableUsagePlainNode();
                 if (varRef is null)
                     throw new SyntaxErrorException(
                         "Need a record member reference after the dot!",
@@ -184,12 +185,38 @@ public class Parser
         return null;
     }
 
-    private VariableUsageNodeTemp? GetVariableUsageExpression()
+    private VariableUsageNodeTemp? GetVariableUsageNode()
     {
         var vuNameToken = MatchAndRemove(Token.TokenType.Identifier);
         if (vuNameToken is null)
         {
             return null;
+        }
+
+        var vuOpToken = MatchAndRemoveMultiple(Token.TokenType.LeftBracket, Token.TokenType.Dot);
+
+        return GetVariableUsageOp(vuNameToken, vuOpToken);
+    }
+
+    private VariableUsageNodeTemp? GetVariableUsageOp(Token vuNameToken, Token? vuOpToken)
+    {
+        if (vuOpToken is null)
+        {
+            return new VariableUsagePlainNode(vuNameToken.GetValueSafe());
+        }
+
+        switch (vuOpToken.Type)
+        {
+            case Token.TokenType.LeftBracket:
+                var exp =
+                    Expression() ?? throw new SyntaxErrorException("Expected expression", Peek(0));
+                RequiresToken(Token.TokenType.RightBracket);
+                var next = GetVariableUsageNode();
+                break;
+            case Token.TokenType.Dot:
+
+            default:
+                throw new UnreachableException();
         }
 
         return null;
@@ -656,7 +683,7 @@ public class Parser
         while (ExpectsEndOfLine() == false)
         {
             var isVariable = MatchAndRemove(Token.TokenType.Var) != null;
-            var variable = GetVariableUsageNode();
+            var variable = GetVariableUsagePlainNode();
             if (variable == null)
             {
                 // might be a constant
@@ -766,7 +793,7 @@ public class Parser
     {
         if (MatchAndRemove(Token.TokenType.For) == null)
             return null;
-        var indexVariable = GetVariableUsageNode();
+        var indexVariable = GetVariableUsagePlainNode();
         if (indexVariable == null)
             throw new SyntaxErrorException("Expected a variable in the for statement.", Peek(0));
         if (MatchAndRemove(Token.TokenType.From) == null)
@@ -810,7 +837,7 @@ public class Parser
                 or Token.TokenType.Dot
         )
         {
-            var target = GetVariableUsageNode();
+            var target = GetVariableUsagePlainNode();
             if (target == null)
                 throw new SyntaxErrorException(
                     "Found an assignment without a valid identifier.",
@@ -1395,7 +1422,7 @@ public class Parser
             return exp;
         }
 
-        if (GetVariableUsageNode() is { } variable)
+        if (GetVariableUsagePlainNode() is { } variable)
         {
             return variable;
         }
