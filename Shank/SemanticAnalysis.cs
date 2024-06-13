@@ -544,7 +544,10 @@ public class SemanticAnalysis
             return (variableReferenceNode.ExtensionType, NewType: variable.Type) switch
             {
                 (ExtensionType: VariableUsagePlainNode.VrnExtType.None, _) => variable.Type,
-                (ExtensionType: VariableUsagePlainNode.VrnExtType.RecordMember, NewType: RecordType r)
+                (
+                    ExtensionType: VariableUsagePlainNode.VrnExtType.RecordMember,
+                    NewType: RecordType r
+                )
                     => GetTypeRecursive(r, variableReferenceNode) ?? variable.Type,
                 (
                     ExtensionType: VariableUsagePlainNode.VrnExtType.RecordMember,
@@ -611,7 +614,8 @@ public class SemanticAnalysis
             _ => null
         };
         return innerVndt is not null
-            ? GetTypeRecursive(innerVndt, (VariableUsagePlainNode)targetUsage.GetExtensionSafe()) ?? vndt
+            ? GetTypeRecursive(innerVndt, (VariableUsagePlainNode)targetUsage.GetExtensionSafe())
+                ?? vndt
             : vndt;
 
         /*else
