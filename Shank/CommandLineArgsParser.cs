@@ -79,9 +79,9 @@ public class CompileOptions
 public class InterptOptions
 {
     [Value(index: 0, MetaName = "inputFile", HelpText = "The Shank source file", Required = true)]
-    public IEnumerable<string> InputFile { get; set; }
+    public IEnumerable<string> InputFiles { get; set; }
 
-    [Option('u', "ut", HelpText = "Unit test options", Default = false)]
+    [Option("ut", HelpText = "Unit test options", Default = false)]
     public bool unitTest { get; set; }
 }
 
@@ -147,7 +147,7 @@ public class CommandLineArgsParser
         // GetFiles(options.file).ForEach(ip => ScanAndParse(ip, program));
 
         options
-            .InputFile.ToList()
+            .InputFiles.ToList()
             .ForEach(
                 n =>
                     GetFiles(n) //multiple files
@@ -236,7 +236,7 @@ public class CommandLineArgsParser
 
     private static void It2()
     {
-        // LinkedList<TestResult> UnitTestResults = new LinkedList<TestResult>();
+        LinkedList<TestResult> UnitTestResults = new LinkedList<TestResult>();
         Interpreter
             .GetModulesAsList()
             .ForEach(module =>
@@ -248,12 +248,12 @@ public class CommandLineArgsParser
                 //wierdly doesnt work
 
 
-                // Console.WriteLine(
-                //     "[[ Tests from "
-                //         + module.Name
-                //         + " ]]\n"
-                //         + string.Join("\n", Program.UnitTestResults)
-                // );
+                Console.WriteLine(
+                    "[[ Tests from "
+                        + module.Name
+                        + " ]]\n"
+                        + string.Join("\n", Program.UnitTestResults)
+                );
             });
     }
 

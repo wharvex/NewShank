@@ -15,7 +15,7 @@ function st
     "Interpret Arrays/sum", # 4
     "Interpret Records/nested", # 5
     "Interpret Globals", # 6
-    "Interpret UnitTestTests1 -ut", # 7
+    "Interpret UnitTestTests1 --ut", # 7
     "Interpret Builtins/Write", # 8
     "Interpret Enums", # 9
     "CompilePractice Minimal/PrintInt/Shank --flat PrintInt", # 10
