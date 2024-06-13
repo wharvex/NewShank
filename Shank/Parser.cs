@@ -105,10 +105,11 @@ public class Parser
         // TODO
         // Uncomment this part when we implement the overhaul described in MatchAndRemove. For now,
         // this code would be redundant.
-        //if (ret)
-        //{
-        //    ConsumeBlankLines();
-        //}
+
+        if (ret)
+        {
+            ConsumeBlankLines();
+        }
 
         return ret;
     }
@@ -117,7 +118,7 @@ public class Parser
     {
         while (MatchAndRemove(Token.TokenType.EndOfLine) is not null)
         {
-            //while (MatchAndRemove(Token.TokenType.Indent) is not null) { }
+
         }
     }
 
@@ -652,7 +653,7 @@ public class Parser
             return null;
         var parameters = new List<ParameterNode>();
         int lineNum = name.LineNumber;
-        while (MatchAndRemove(Token.TokenType.EndOfLine) == null)
+        while (ExpectsEndOfLine() == false)
         {
             var isVariable = MatchAndRemove(Token.TokenType.Var) != null;
             var variable = GetVariableUsageNode();
@@ -688,7 +689,9 @@ public class Parser
             throw new SyntaxErrorException("Expected a boolean expression in the if.", Peek(0));
         if (MatchAndRemove(Token.TokenType.Then) == null)
             throw new SyntaxErrorException("Expected a then in the if.", Peek(0));
-        MatchAndRemove(Token.TokenType.EndOfLine);
+
+        RequiresEndOfLine();
+
         var body = new List<StatementNode>();
         StatementsBody(body);
         return new IfNode(boolExp, body, ElseAndElseIf());
@@ -712,8 +715,9 @@ public class Parser
         }
 
         if (MatchAndRemove(Token.TokenType.Else) != null)
-        {
-            MatchAndRemove(Token.TokenType.EndOfLine);
+        { 
+            RequiresEndOfLine();
+
             var body = new List<StatementNode>();
             StatementsBody(body);
             return new ElseNode(body);
@@ -727,7 +731,9 @@ public class Parser
         if (MatchAndRemove(Token.TokenType.While) == null)
             return null;
         var boolExp = BooleanExpression();
-        MatchAndRemove(Token.TokenType.EndOfLine);
+
+        RequiresEndOfLine();
+
         var statements = new List<StatementNode>();
         StatementsBody(statements);
         return new WhileNode(boolExp, statements);
@@ -737,7 +743,10 @@ public class Parser
     {
         if (MatchAndRemove(Token.TokenType.Repeat) == null)
             return null;
-        MatchAndRemove(Token.TokenType.EndOfLine);
+
+
+        RequiresEndOfLine();
+
         var statements = new List<StatementNode>();
         StatementsBody(statements);
         if (MatchAndRemove(Token.TokenType.Until) == null)
@@ -748,7 +757,9 @@ public class Parser
                 "Expected a boolean expression at the end of the repeat.",
                 Peek(0)
             );
-        MatchAndRemove(Token.TokenType.EndOfLine);
+
+        RequiresEndOfLine();
+
         return new RepeatNode(boolExp, statements);
     }
 
@@ -775,7 +786,9 @@ public class Parser
                 "Expected a to expression in the for statement.",
                 Peek(0)
             );
-        MatchAndRemove(Token.TokenType.EndOfLine);
+
+        RequiresEndOfLine();
+
         var statements = new List<StatementNode>();
         StatementsBody(statements);
         return new ForNode(indexVariable, fromExp, toExp, statements);
@@ -839,7 +852,7 @@ public class Parser
             // TODO: We are potentially adding null to retVal here.
             retVal.AddRange(nextOnes);
 
-            MatchAndRemove(Token.TokenType.EndOfLine);
+            RequiresEndOfLine();
         }
 
         return retVal;
@@ -859,7 +872,8 @@ public class Parser
             // TODO: List.AddRange throws an ArgumentNullException if nextOnes is null.
             retVal.AddRange(nextOnes);
 
-            MatchAndRemove(Token.TokenType.EndOfLine);
+            RequiresEndOfLine();
+
         } while (MatchAndRemove(Token.TokenType.Variables) != null);
 
         return retVal;
@@ -1163,7 +1177,7 @@ public class Parser
                     break;
             }
 
-            MatchAndRemove(Token.TokenType.EndOfLine);
+            RequiresEndOfLine();
         }
 
         return retVal;
@@ -1179,7 +1193,7 @@ public class Parser
     public ExpressionNode? ParseExpressionLine()
     {
         var retVal = Expression();
-        MatchAndRemove(Token.TokenType.EndOfLine);
+        RequiresEndOfLine();
         return retVal;
     }
 
@@ -1481,7 +1495,8 @@ public class Parser
         if (MatchAndRemove(Token.TokenType.RightParen) == null)
             throw new SyntaxErrorException("Expected a right paren", Peek(0));
         test.LineNum = Peek(0).LineNumber;
-        MatchAndRemove(Token.TokenType.EndOfLine);
+
+        RequiresEndOfLine();
 
         // Process local variables.
 
