@@ -150,7 +150,7 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
         ); //a
     }
 
-    public override void Visit(VariableUsageNode node)
+    public override void Visit(VariableUsagePlainNode node)
     {
         LLVMValue value = context.GetVariable(node.Name);
         if (node.Extension != null)

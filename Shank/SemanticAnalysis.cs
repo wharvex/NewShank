@@ -192,11 +192,11 @@ public class SemanticAnalysis
 
         if (
             targetType is EnumType e
-            && expression is VariableUsageNode v
+            && expression is VariableUsagePlainNode v
             && e.Variants.Contains(v.Name)
         )
         {
-            if (v.ExtensionType != VariableUsageNode.VrnExtType.None)
+            if (v.ExtensionType != VariableUsagePlainNode.VrnExtType.None)
             {
                 throw new SemanticErrorException($"ambiguous variable name {v.Name}", expression);
             }
@@ -377,7 +377,7 @@ public class SemanticAnalysis
             return f.Value;
         if (node is StringNode s)
             return s.Value.Length;
-        if (node is VariableUsageNode vrn)
+        if (node is VariableUsagePlainNode vrn)
         {
             var dataType = GetTypeOfExpression(vrn, variables);
             if (dataType is RangeType t)
@@ -418,7 +418,7 @@ public class SemanticAnalysis
             return f.Value;
         if (node is StringNode s)
             return s.Value.Length;
-        if (node is VariableUsageNode vrn)
+        if (node is VariableUsagePlainNode vrn)
         {
             var dataType = GetTypeOfExpression(vrn, variables);
             if (dataType is RangeType t)
@@ -445,7 +445,7 @@ public class SemanticAnalysis
             FloatNode floatNode => new CharacterType(),
             MathOpNode mathOpNode => GetTypeOfMathOp(mathOpNode, variables),
             StringNode stringNode => new StringType(),
-            VariableUsageNode variableReferenceNode
+            VariableUsagePlainNode variableReferenceNode
                 => GetTypeOfVariableUsage(variableReferenceNode, variables),
             _ => throw new ArgumentOutOfRangeException(expression.ToString())
         };
@@ -459,11 +459,11 @@ public class SemanticAnalysis
             var leftType = GetTypeOfExpression(booleanExpressionNode.Left, variables);
             if (
                 leftType is EnumType e
-                && booleanExpressionNode.Right is VariableUsageNode v
+                && booleanExpressionNode.Right is VariableUsagePlainNode v
                 && e.Variants.Contains(v.Name)
             )
             {
-                if (v.ExtensionType != VariableUsageNode.VrnExtType.None)
+                if (v.ExtensionType != VariableUsagePlainNode.VrnExtType.None)
                 {
                     throw new SemanticErrorException(
                         $"ambiguous variable name {v.Name}",
@@ -531,7 +531,7 @@ public class SemanticAnalysis
         }
 
         Type GetTypeOfVariableUsage(
-            VariableUsageNode variableReferenceNode,
+            VariableUsagePlainNode variableReferenceNode,
             Dictionary<string, VariableNode> variableNodes
         )
         {
@@ -543,16 +543,16 @@ public class SemanticAnalysis
                 );
             return (variableReferenceNode.ExtensionType, NewType: variable.Type) switch
             {
-                (ExtensionType: VariableUsageNode.VrnExtType.None, _) => variable.Type,
-                (ExtensionType: VariableUsageNode.VrnExtType.RecordMember, NewType: RecordType r)
+                (ExtensionType: VariableUsagePlainNode.VrnExtType.None, _) => variable.Type,
+                (ExtensionType: VariableUsagePlainNode.VrnExtType.RecordMember, NewType: RecordType r)
                     => GetTypeRecursive(r, variableReferenceNode) ?? variable.Type,
                 (
-                    ExtensionType: VariableUsageNode.VrnExtType.RecordMember,
+                    ExtensionType: VariableUsagePlainNode.VrnExtType.RecordMember,
                     NewType: ReferenceType
                     (RecordType r)
                 )
                     => GetTypeRecursive(r, variableReferenceNode) ?? variable.Type,
-                (ExtensionType: VariableUsageNode.VrnExtType.ArrayIndex, NewType: ArrayType a)
+                (ExtensionType: VariableUsagePlainNode.VrnExtType.ArrayIndex, NewType: ArrayType a)
                     => GetTypeOfExpression(variableReferenceNode.Extension!, variables)
                     is IntegerType
                         ? a.Inner
@@ -560,12 +560,12 @@ public class SemanticAnalysis
                             "Array indexer does not resolve to a number",
                             variableReferenceNode
                         ),
-                (ExtensionType: VariableUsageNode.VrnExtType.ArrayIndex, _)
+                (ExtensionType: VariableUsagePlainNode.VrnExtType.ArrayIndex, _)
                     => throw new SemanticErrorException(
                         "Invalid array index, tried to index into non array",
                         variableReferenceNode
                     ),
-                (ExtensionType: VariableUsageNode.VrnExtType.RecordMember, NewType: { } t)
+                (ExtensionType: VariableUsagePlainNode.VrnExtType.RecordMember, NewType: { } t)
                     => throw new SemanticErrorException(
                         $"Invalid member access, tried to access non record {t}",
                         variableReferenceNode
@@ -597,7 +597,7 @@ public class SemanticAnalysis
     private static Type? GetTypeRecursive(
         // ModuleNode parentModule,
         RecordType targetDefinition,
-        VariableUsageNode targetUsage
+        VariableUsagePlainNode targetUsage
     )
     {
         if (targetUsage.Extension is null)
@@ -611,7 +611,7 @@ public class SemanticAnalysis
             _ => null
         };
         return innerVndt is not null
-            ? GetTypeRecursive(innerVndt, (VariableUsageNode)targetUsage.GetExtensionSafe()) ?? vndt
+            ? GetTypeRecursive(innerVndt, (VariableUsagePlainNode)targetUsage.GetExtensionSafe()) ?? vndt
             : vndt;
 
         /*else

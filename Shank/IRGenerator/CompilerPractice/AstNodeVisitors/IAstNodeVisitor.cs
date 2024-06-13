@@ -29,6 +29,6 @@ public interface IAstNodeVisitor<T>
     T Visit(StringNode s);
     T Visit(TestNode t);
     T Visit(VariableNode v);
-    T Visit(VariableUsageNode v);
+    T Visit(VariableUsagePlainNode v);
     T Visit(WhileNode w);
 }

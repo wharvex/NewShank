@@ -103,15 +103,15 @@ public class VariableNode : ASTNode
     /// <param name="parentModule"></param>
     /// <param name="vrn">The VariableReferenceNode that points to this VariableNode</param>
     /// <returns></returns>
-    public Type GetSpecificType(ModuleNode parentModule, VariableUsageNode vrn) =>
+    public Type GetSpecificType(ModuleNode parentModule, VariableUsagePlainNode vrn) =>
         vrn.ExtensionType switch
         {
             // TODO: make exttype more expressive/type constrained
-            VariableUsageNode.VrnExtType.ArrayIndex
+            VariableUsagePlainNode.VrnExtType.ArrayIndex
                 => ((ArrayType)Type).Inner,
-            VariableUsageNode.VrnExtType.RecordMember
+            VariableUsagePlainNode.VrnExtType.RecordMember
                 => ((RecordType)Type).Fields[vrn.GetRecordMemberReferenceSafe().Name],
-            VariableUsageNode.VrnExtType.None
+            VariableUsagePlainNode.VrnExtType.None
                 => Type switch
                 {
                     RecordType

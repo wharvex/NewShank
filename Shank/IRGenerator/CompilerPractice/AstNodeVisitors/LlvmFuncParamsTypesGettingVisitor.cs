@@ -136,7 +136,7 @@ public class LlvmFuncParamsTypesGettingVisitor(LLVMContextRef llvmContext)
         throw new NotImplementedException();
     }
 
-    public LLVMTypeRef[] Visit(VariableUsageNode v)
+    public LLVMTypeRef[] Visit(VariableUsagePlainNode v)
     {
         throw new NotImplementedException();
     }

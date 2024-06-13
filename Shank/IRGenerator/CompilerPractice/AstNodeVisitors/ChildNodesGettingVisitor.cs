@@ -124,7 +124,7 @@ public class ChildNodesGettingVisitor : IAstNodeVisitor<List<ASTNode>>
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(VariableUsageNode v)
+    public List<ASTNode> Visit(VariableUsagePlainNode v)
     {
         throw new NotImplementedException();
     }

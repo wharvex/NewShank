@@ -139,7 +139,7 @@ public class Parser
         return _tokens[offset];
     }
 
-    private VariableUsageNode? GetVariableUsageNode()
+    private VariableUsagePlainNode? GetVariableUsageNode()
     {
         if (MatchAndRemove(Token.TokenType.Identifier) is { } id)
         {
@@ -156,34 +156,34 @@ public class Parser
                         "Need a right bracket after the expression!",
                         Peek(0)
                     );
-                return new VariableUsageNode(
+                return new VariableUsagePlainNode(
                     id.GetValueSafe(),
                     exp,
-                    VariableUsageNode.VrnExtType.ArrayIndex
+                    VariableUsagePlainNode.VrnExtType.ArrayIndex
                 );
             }
 
             if (MatchAndRemove(Token.TokenType.Dot) is not null)
             {
-                VariableUsageNode? varRef = GetVariableUsageNode();
+                VariableUsagePlainNode? varRef = GetVariableUsageNode();
                 if (varRef is null)
                     throw new SyntaxErrorException(
                         "Need a record member reference after the dot!",
                         Peek(0)
                     );
-                return new VariableUsageNode(
+                return new VariableUsagePlainNode(
                     id.GetValueSafe(),
                     varRef,
-                    VariableUsageNode.VrnExtType.RecordMember
+                    VariableUsagePlainNode.VrnExtType.RecordMember
                 );
             }
-            return new VariableUsageNode(id.GetValueSafe());
+            return new VariableUsagePlainNode(id.GetValueSafe());
         }
 
         return null;
     }
 
-    private VariableUsageExpressionNode? GetVariableUsageExpression()
+    private VariableUsageNodeTemp? GetVariableUsageExpression()
     {
         var vuNameToken = MatchAndRemove(Token.TokenType.Identifier);
         if (vuNameToken is null)

@@ -24,7 +24,7 @@ public class ParameterNode : ExpressionNode
      * passed in, meaning it can be changed in the function, and its new value will persist in
      * the caller's scope.
      */
-    public ParameterNode(VariableUsageNode variable, bool isVariable)
+    public ParameterNode(VariableUsagePlainNode variable, bool isVariable)
     {
         IsVariable = isVariable;
         Variable = variable;
@@ -32,10 +32,10 @@ public class ParameterNode : ExpressionNode
     }
 
     public ExpressionNode? Constant { get; init; }
-    public VariableUsageNode? Variable { get; init; }
+    public VariableUsagePlainNode? Variable { get; init; }
     public bool IsVariable { get; init; }
 
-    public VariableUsageNode GetVariableSafe() =>
+    public VariableUsagePlainNode GetVariableSafe() =>
         Variable ?? throw new InvalidOperationException("Expected Variable to not be null");
 
     public ASTNode GetConstantSafe() =>

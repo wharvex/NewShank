@@ -49,7 +49,7 @@ public class LLVMExpr(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         return LLVMValueRef.CreateConstReal(LLVMTypeRef.Double, node.Value);
     }
 
-    public override LLVMValueRef Visit(VariableUsageNode node)
+    public override LLVMValueRef Visit(VariableUsagePlainNode node)
     {
         LLVMValue value = context.GetVariable(node.Name);
         if (node.Extension != null)

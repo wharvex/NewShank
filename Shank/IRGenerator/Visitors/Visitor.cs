@@ -8,7 +8,7 @@ public abstract class Visitor
 
     public abstract void Visit(FloatNode node);
 
-    public abstract void Visit(VariableUsageNode node);
+    public abstract void Visit(VariableUsagePlainNode node);
 
     public abstract void Visit(CharNode node);
 

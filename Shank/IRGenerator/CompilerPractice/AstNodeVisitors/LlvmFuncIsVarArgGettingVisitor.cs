@@ -129,7 +129,7 @@ public class LlvmFuncIsVarArgGettingVisitor : IAstNodeVisitor<bool>
         throw new NotImplementedException();
     }
 
-    public bool Visit(VariableUsageNode v)
+    public bool Visit(VariableUsagePlainNode v)
     {
         throw new NotImplementedException();
     }

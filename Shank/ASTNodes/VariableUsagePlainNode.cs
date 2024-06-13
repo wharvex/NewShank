@@ -5,23 +5,23 @@ using Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 
 namespace Shank.ASTNodes;
 
-public class VariableUsageNode : VariableUsageExpressionNode
+public class VariableUsagePlainNode : VariableUsageNodeTemp
 {
-    public VariableUsageNode(string name)
+    public VariableUsagePlainNode(string name)
     {
         Name = name;
         Extension = null;
         ExtensionType = VrnExtType.None;
     }
 
-    public VariableUsageNode(string name, ExpressionNode extension, VrnExtType extensionType)
+    public VariableUsagePlainNode(string name, ExpressionNode extension, VrnExtType extensionType)
     {
         Name = name;
         Extension = extension;
         ExtensionType = extensionType;
         if (extensionType == VrnExtType.RecordMember)
         {
-            ((VariableUsageNode)Extension).EnclosingVrnName = Name;
+            ((VariableUsagePlainNode)Extension).EnclosingVrnName = Name;
         }
     }
 
@@ -39,8 +39,8 @@ public class VariableUsageNode : VariableUsageExpressionNode
     public ASTNode GetExtensionSafe() =>
         Extension ?? throw new InvalidOperationException("Expected Extension to not be null.");
 
-    public VariableUsageNode GetRecordMemberReferenceSafe() =>
-        GetExtensionSafe() as VariableUsageNode
+    public VariableUsagePlainNode GetRecordMemberReferenceSafe() =>
+        GetExtensionSafe() as VariableUsagePlainNode
         ?? throw new InvalidOperationException("Expected Extension to be a VariableReferenceNode.");
 
     public List<string> GetNestedNamesAsList()
@@ -65,7 +65,7 @@ public class VariableUsageNode : VariableUsageExpressionNode
         var extType = ExtensionType;
         while (extType == VrnExtType.RecordMember && ext is not null)
         {
-            if (ext is VariableUsageNode vrn)
+            if (ext is VariableUsagePlainNode vrn)
             {
                 ret.Add(vrn.Name);
                 ext = vrn.Extension;

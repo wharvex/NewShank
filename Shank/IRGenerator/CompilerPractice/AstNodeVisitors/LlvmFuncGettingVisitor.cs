@@ -127,7 +127,7 @@ public class LlvmFuncGettingVisitor(LLVMModuleRef llvmModule) : IAstNodeVisitor<
         throw new NotImplementedException();
     }
 
-    public LLVMValueRef Visit(VariableUsageNode v)
+    public LLVMValueRef Visit(VariableUsagePlainNode v)
     {
         throw new NotImplementedException();
     }

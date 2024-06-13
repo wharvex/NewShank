@@ -9,7 +9,7 @@ namespace Shank.ASTNodes;
 public class ForNode : StatementNode
 {
     public ForNode(
-        VariableUsageNode variable,
+        VariableUsagePlainNode variable,
         ExpressionNode from,
         ExpressionNode to,
         List<StatementNode> children
@@ -21,7 +21,7 @@ public class ForNode : StatementNode
         Children = children;
     }
 
-    public VariableUsageNode Variable { get; init; }
+    public VariableUsagePlainNode Variable { get; init; }
     public ExpressionNode From { get; init; }
     public ExpressionNode To { get; init; }
     public List<StatementNode> Children { get; init; }

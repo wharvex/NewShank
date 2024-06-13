@@ -3,21 +3,11 @@ using Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 
 namespace Shank.ASTNodes;
 
-public class VariableUsageOpNode(
-    ASTNode left,
-    ASTNode right,
-    VariableUsageOpNode.VariableUsageOpType opType
-) : VariableUsageExpressionNode
+public class VariableUsageIndexNode(VariableUsageNodeTemp left, ExpressionNode right)
+    : VariableUsageNodeTemp
 {
-    public enum VariableUsageOpType
-    {
-        ArrayIndex,
-        MemberAccess
-    }
-
-    public ASTNode Left { get; init; } = left;
-    public ASTNode Right { get; init; } = right;
-    public VariableUsageOpType OpType { get; init; } = opType;
+    public VariableUsageNodeTemp Left { get; init; } = left;
+    public ExpressionNode Right { get; init; } = right;
 
     public override T Accept<T>(ExpressionVisitor<T> visit)
     {

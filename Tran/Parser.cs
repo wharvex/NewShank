@@ -240,7 +240,7 @@ public class Parser
     public List<ParameterNode> ParseParameters(bool isRetVal)
     {
         var parameters = new List<ParameterNode>();
-        VariableUsageNode variable;
+        VariableUsagePlainNode variable;
         do
         {
             AcceptSeparators();
@@ -255,7 +255,7 @@ public class Parser
     }
 
     //TODO: finish implementing ParseVariableReference()
-    public VariableUsageNode ParseVariableReference()
+    public VariableUsagePlainNode ParseVariableReference()
     {
         throw new NotImplementedException();
     }

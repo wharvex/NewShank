@@ -8,7 +8,7 @@ public abstract class ExpressionVisitor<T>
 
     public abstract T Visit(FloatNode node);
 
-    public abstract T Visit(VariableUsageNode node);
+    public abstract T Visit(VariableUsagePlainNode node);
 
     public abstract T Visit(CharNode node);
 
