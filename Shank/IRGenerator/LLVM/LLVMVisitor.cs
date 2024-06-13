@@ -350,7 +350,7 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
 
         var parameters = node.Parameters.Select(p =>
         {
-            p.Accept(new LLVMExpr(context, builder, module));
+            p.Accept(this);
             return expr.Pop();
         });
         builder.BuildCall2(function.TypeOf, function.Function, parameters.ToArray());

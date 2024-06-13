@@ -13,7 +13,7 @@ using Shank.IRGenerator.CompilerPractice;
 public class CompileOptions
 {
     [Value(index: 0, MetaName = "inputFile", HelpText = "The Shank source file", Required = true)]
-    public string InputFile { get; set; }
+    public IEnumerable<string> InputFile { get; set; }
 
     [Option('o', "output", HelpText = "returns an output file", Default = "a")]
     public string OutFile { get; set; }
@@ -79,7 +79,7 @@ public class CompileOptions
 public class InterptOptions
 {
     [Value(index: 0, MetaName = "inputFile", HelpText = "The Shank source file", Required = true)]
-    public string? file { get; set; }
+    public IEnumerable<string> InputFile { get; set; }
 
     [Option('u', "ut", HelpText = "Unit test options", Default = false)]
     public bool unitTest { get; set; }
@@ -120,7 +120,17 @@ public class CommandLineArgsParser
     public void RunCompiler(CompileOptions options, ProgramNode program)
     {
         LLVMCodeGen a = new LLVMCodeGen();
-        GetFiles(options.InputFile).ForEach(ip => ScanAndParse(ip, program));
+        options.InputFile.ToList().ForEach(n => Console.WriteLine(n));
+
+        options
+            .InputFile.ToList()
+            .ForEach(
+                n =>
+                    GetFiles(n) //multiple files
+                        .ForEach(ip => ScanAndParse(ip, program))
+            );
+
+        // GetFiles(options.InputFile).ForEach(ip => ScanAndParse(ip, program));
         program.SetStartModule();
         SemanticAnalysis.CheckModules(program);
 
@@ -132,7 +142,17 @@ public class CommandLineArgsParser
     public void RunInterptrer(InterptOptions options, ProgramNode program)
     {
         // scan and parse :p
-        GetFiles(options.file).ForEach(ip => ScanAndParse(ip, program));
+
+
+        // GetFiles(options.file).ForEach(ip => ScanAndParse(ip, program));
+
+        options
+            .InputFile.ToList()
+            .ForEach(
+                n =>
+                    GetFiles(n) //multiple files
+                        .ForEach(ip => ScanAndParse(ip, program))
+            );
         program.SetStartModule();
         BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
         SemanticAnalysis.CheckModules(program);
