@@ -442,7 +442,7 @@ public class SemanticAnalysis
             BooleanExpressionNode booleanExpressionNode
                 => GetTypeOfBooleanExpression(booleanExpressionNode, variables),
             CharNode charNode => new CharacterType(),
-            FloatNode floatNode => new CharacterType(),
+            FloatNode floatNode => new RealType(),
             MathOpNode mathOpNode => GetTypeOfMathOp(mathOpNode, variables),
             StringNode stringNode => new StringType(),
             VariableUsagePlainNode variableReferenceNode
