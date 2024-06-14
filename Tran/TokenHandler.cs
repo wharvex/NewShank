@@ -31,7 +31,7 @@ public class TokenHandler
     {
         if (tokens.Count <= 0)
             return null;
-        if (tokens.First.Value.GetType().Equals(t))
+        if (tokens.First.Value.GetTokenType() == t)
         {
             return tokens.First.Value;
         }
