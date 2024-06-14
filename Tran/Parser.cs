@@ -125,6 +125,7 @@ public class Parser
 
         return false;
     }
+
     //When checking VarRef check if its within local scope, then check the record if it exists, then check global if shared
     //Class should have a reference to the record of itself containing only variables, use NewType
     //Interfaces should use an enum inside the interface to determine which subtype to use, each implemented subclass should have enum
