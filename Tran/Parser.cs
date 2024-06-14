@@ -125,8 +125,14 @@ public class Parser
 
         return false;
     }
+    //When checking VarRef check if its within local scope, then check the record if it exists, then check global if shared
+    //Class should have a reference to the record of itself containing only variables, use NewType
+    //Interfaces should use an enum inside the interface to determine which subtype to use, each implemented subclass should have enum
+    //Should be a post-processing step, save until the end of parser
 
-    //TODO: this needs a lot of work
+    //Variable Reference: ensure the correct scope is used and uses record if applicable
+    //Class: Should add fields to a record node that is passed to every function to check if variable is in it
+    //Interfaces: contain an enum inside the interface for subtype of class, each class has a type - do later
     private bool ParseClass()
     {
         if (handler.MatchAndRemove(TokenType.CLASS) != null)
@@ -146,11 +152,6 @@ public class Parser
                             RecordNode? record = otherClass.Records[otherName.GetValue()];
                             if (record != null)
                             {
-                                //TODO: not sure how to check how to distinguish a function from the record
-                                //foreach (var function in otherClass.NewType.Fields)
-                                //{
-                                //    thisClass.addFunction(function.);
-                                //}
                                 //TODO: Check with Phipps for correctness
                                 foreach (var entry in record.NewType.Fields)
                                 {
@@ -196,7 +197,7 @@ public class Parser
             }
             if (handler.MatchAndRemove(TokenType.OPENPARENTHESIS) != null)
             {
-                functionNode.LocalVariables = ParseArguments();
+                functionNode.LocalVariables = ParseArguments(false);
                 if (handler.MatchAndRemove(TokenType.CLOSEDPARENTHESIS) == null)
                     throw new Exception("Function declaration missing end parenthesis");
             }
@@ -206,12 +207,7 @@ public class Parser
             }
             if (handler.MatchAndRemove(TokenType.COLON) != null)
             {
-                functionNode.GenericTypeParameterNames ??= new List<string>();
-                //TODO: is this correct? how can we add the retVal to the FunctionNode?
-                foreach (var param in ParseParameters(true))
-                {
-                    functionNode.GenericTypeParameterNames.Add(param.ToString());
-                }
+                functionNode.ParameterVariables.AddRange(ParseArguments(true));
             }
             functionNode.Statements = ParseBlock();
             return true;
@@ -220,7 +216,7 @@ public class Parser
         return false;
     }
 
-    public List<VariableNode> ParseArguments()
+    public List<VariableNode> ParseArguments(bool isConstant)
     {
         var parameters = new List<VariableNode>();
         var variable = new VariableNode();
@@ -229,6 +225,7 @@ public class Parser
             AcceptSeparators();
             if ((variable = ParseVariableDeclaration()) != null)
             {
+                variable.IsConstant = isConstant;
                 parameters.Add(variable);
                 continue;
             }
@@ -237,7 +234,7 @@ public class Parser
         return parameters;
     }
 
-    public List<ParameterNode> ParseParameters(bool isRetVal)
+    public List<ParameterNode> ParseParameters()
     {
         var parameters = new List<ParameterNode>();
         VariableUsagePlainNode variable;
@@ -246,7 +243,7 @@ public class Parser
             AcceptSeparators();
             if ((variable = ParseVariableReference()) != null)
             {
-                parameters.Add(new ParameterNode(variable, isRetVal));
+                parameters.Add(new ParameterNode(variable, false));
                 continue;
             }
             throw new Exception("No name provided for variable in parameters");
@@ -291,7 +288,6 @@ public class Parser
             }
             return new WhileNode(conditionLoop, LoopBody);
         }
-
         return null;
     }
 
@@ -448,7 +444,7 @@ public class Parser
             );
         }
 
-        List<ParameterNode> parameters = ParseParameters(false);
+        List<ParameterNode> parameters = ParseParameters();
 
         if (handler.MatchAndRemove(TokenType.CLOSEDPARENTHESIS) == null)
         {
