@@ -1,0 +1,26 @@
+{ Cd to dir ->  dotnet run Interpret .\Shank\dotShank\Arrays\indexing\checkingStringIndex.shank --project .\Shank\Shank.csproj  }
+{This test shows that if we do not properly set every index we will get an error, should we consider using a default value like: null/""}
+
+define start()
+variables myArray : array from 0 to 15 of string
+    myArray[0] := "hello world index 0"
+    myArray[1] := "hello world index 1"
+
+    {myArray[2] := "hello world index 2" {Remove comment to not have errors:} }
+    
+    myArray[3] := "hello world index 3"
+    myArray[4] := "hello world index 4"
+    myArray[5] := "hello world index 5"
+    myArray[6] := "hello world index 6"
+    myArray[7] := "hello world index 7"
+    myArray[8] := "hello world index 8"
+    myArray[9] := "hello world index 9"
+    myArray[10] := "hello world index 10"
+    
+    
+    write myArray[0]
+    write myArray[1]
+    write myArray[3]
+    write myArray[10]
+
+

@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "Shank": {
+      "commandName": "Project",
+      "commandLineArgs": "Interpret dotShank/Arrays/sum",
+      "workingDirectory": "$(MSBuildProjectDirectory)"
+    }
+  }
+}

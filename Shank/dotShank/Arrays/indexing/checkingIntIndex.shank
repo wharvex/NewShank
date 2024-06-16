@@ -1,0 +1,16 @@
+{ Cd to dir ->  dotnet run Interpret .\Shank\dotShank\Arrays\indexing\checkingIntIndex.shank --project .\Shank\Shank.csproj  }
+{ This test shows that we must have every index filled in an array otherwise we will get an error}
+define start()
+variables myArray : array from 0 to 4 of integer
+    myArray[0] := 0
+    myArray[1] := 1
+    myArray[2] := 2
+    {myArray[3] := 3} {This line is commented out to show that if we do not set every index we will get an error}
+    myArray[4] := 4
+
+    write myArray[0]
+    write myArray[1]
+    write myArray[2]
+    write myArray[3] {A bug consistent with string indexing we need all indexes filled otherwise it will fail}
+    write myArray[4]
+
