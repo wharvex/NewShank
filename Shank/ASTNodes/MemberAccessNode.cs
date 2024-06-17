@@ -3,8 +3,10 @@ using Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 
 namespace Shank.ASTNodes;
 
-public class MemberAccessNode : ASTNode
+public class MemberAccessNode(string name) : ASTNode
 {
+    public string Name { get; init; } = name;
+
     public override void Accept<T>(StatementVisitor v)
     {
         throw new NotImplementedException();

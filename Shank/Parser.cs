@@ -187,40 +187,53 @@ public class Parser
 
     private VariableUsageNodeTemp? GetVariableUsageNode()
     {
-        var vuNameToken = MatchAndRemove(Token.TokenType.Identifier);
-        if (vuNameToken is null)
+        var vupToken = MatchAndRemove(Token.TokenType.Identifier);
+        if (vupToken is null)
         {
             return null;
         }
 
-        var vuOpToken = MatchAndRemoveMultiple(Token.TokenType.LeftBracket, Token.TokenType.Dot);
+        var vupNode = new VariableUsagePlainNode(vupToken.GetValueSafe());
 
-        return GetVariableUsageOp(vuNameToken, vuOpToken);
-    }
-
-    private VariableUsageNodeTemp? GetVariableUsageOp(Token vuNameToken, Token? vuOpToken)
-    {
-        if (vuOpToken is null)
+        var nextToken = MatchAndRemoveMultiple(Token.TokenType.LeftBracket, Token.TokenType.Dot);
+        if (nextToken is null)
         {
-            return new VariableUsagePlainNode(vuNameToken.GetValueSafe());
+            return vupNode;
         }
 
-        switch (vuOpToken.Type)
+        VariableUsageNodeTemp left = vupNode;
+        VariableUsageNodeTemp leftRight;
+
+        while (true)
         {
-            case Token.TokenType.LeftBracket:
-                var exp =
-                    Expression() ?? throw new SyntaxErrorException("Expected expression", Peek(0));
-                RequiresToken(Token.TokenType.RightBracket);
-                var next = GetVariableUsageNode();
-                break;
-            case Token.TokenType.Dot:
+            switch (nextToken.Type)
+            {
+                case Token.TokenType.LeftBracket:
+                    leftRight = new VariableUsageIndexNode(
+                        left,
+                        Expression()
+                            ?? throw new SyntaxErrorException("Expected expression", Peek(0))
+                    );
+                    break;
+                case Token.TokenType.Dot:
+                    leftRight = new VariableUsageMemberNode(left, MemberAccess());
+                    break;
+                default:
+                    throw new UnreachableException();
+            }
 
-            default:
-                throw new UnreachableException();
+            nextToken = MatchAndRemoveMultiple(Token.TokenType.LeftBracket, Token.TokenType.Dot);
+            if (nextToken is null)
+            {
+                return leftRight;
+            }
+
+            left = leftRight;
         }
-
-        return null;
     }
+
+    private MemberAccessNode MemberAccess() =>
+        new MemberAccessNode(RequiresAndReturnsToken(Token.TokenType.Identifier).GetValueSafe());
 
     public ModuleNode Module()
     {
