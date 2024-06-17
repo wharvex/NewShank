@@ -10,16 +10,23 @@ namespace Shank.ASTNodes;
 /// </summary>
 public class AssignmentNode : StatementNode
 {
-    public AssignmentNode(VariableUsagePlainNode target, ExpressionNode expression)
+    public AssignmentNode(
+        VariableUsagePlainNode target,
+        ExpressionNode expression,
+        VariableUsageNodeTemp? newTarget = null
+    )
     {
         Target = target;
         Expression = expression;
+        NewTarget = newTarget ?? new VariableUsagePlainNode("empty");
     }
 
     /// <summary>
     /// The target variable to which the expression is assigned (LHS of the :=).
     /// </summary>
     public VariableUsagePlainNode Target { get; init; }
+
+    public VariableUsageNodeTemp NewTarget { get; init; }
 
     /// <summary>
     /// The expression assigned to the target variable (RHS of the :=).

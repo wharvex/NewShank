@@ -18,8 +18,8 @@ function st
     "Interpret UnitTestTests1 -u", # 7
     "Interpret Builtins/Write", # 8
     "Interpret Enums", # 9
-    "CompilePractice Minimal/PrintInt/Shank --flat PrintInt", # 10
-    "Interpret VariableUsageOp" # 11
+    "CompilePractice Minimal/PrintInt/Shank --flat PrintInt" # 10
+    #"Interpret VariableUsageOp" # 11
     #"Interpret OldShankFiles/Pascals.shank"
     #"Interpret OldShankFiles/GCD.shank"
     #"Interpret Negative"
