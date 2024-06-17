@@ -530,7 +530,8 @@ public class Parser
                 => new CharacterType(CheckRange(true, Range.DefaultCharacter())),
             Token.TokenType.String => new StringType(CheckRange(true, Range.DefaultSmallInteger())),
             Token.TokenType.Array => ArrayType(declarationContext, typeToken),
-            Token.TokenType.RefersTo => new ReferenceType(Type(declarationContext)),
+            // we cannot check unknown type for refersTo being on enum, but if we have refersTo integer we can check that at parse time
+            Token.TokenType.RefersTo => new ReferenceType(Type(declarationContext) is UnknownType u ? u : throw new SyntaxErrorException("attempted to use refersTo (dynamic memory management) on non record type", typeToken)),
             _ => throw new SyntaxErrorException("Unknown type", typeToken)
         };
     }
