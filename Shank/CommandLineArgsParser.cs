@@ -81,7 +81,7 @@ public class InterptOptions
     [Value(index: 0, MetaName = "inputFile", HelpText = "The Shank source file", Required = true)]
     public IEnumerable<string> InputFiles { get; set; }
 
-    [Option("ut", HelpText = "Unit test options", Default = false)]
+    [Option('u', "unit-test", HelpText = "Unit test options", Default = false)]
     public bool unitTest { get; set; }
 }
 

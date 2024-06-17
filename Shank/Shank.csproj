@@ -91,4 +91,8 @@
     <Content Include="bin\Debug\net8.0\win-x64\test.shank" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ClCompile Include="Shank-IR\Test.c" />
+  </ItemGroup>
+
 </Project>
