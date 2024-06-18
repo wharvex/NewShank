@@ -55,9 +55,9 @@ public class LLVMVisitPrototype(Context context, LLVMBuilderRef builder, LLVMMod
     {
         var llvmRecord = module.Context.CreateNamedStruct(node.Name);
         var record = new LLVMStructType(
-            node.NewType,
+            node.Type,
             llvmRecord,
-            node.NewType.Fields.Select(s => s.Key).ToList()
+            node.Type.Fields.Select(s => s.Key).ToList()
         );
         context.CurrentModule.CustomTypes.Add(node.Name, record);
     }

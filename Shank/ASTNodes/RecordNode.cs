@@ -1,44 +1,30 @@
-using LLVMSharp.Interop;
-using Shank.ASTNodes;
 using Shank.ExprVisitors;
-using Shank.IRGenerator;
 using Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 
 namespace Shank.ASTNodes;
 
-public class RecordNode : ASTNode
+public class RecordNode(
+    string name,
+    string moduleName,
+    List<VariableDeclarationNode> members,
+    List<string>? genericTypeParameterNames
+    ) : ASTNode
 {
-    public string Name { get; init; }
+    public string Name => Type.Name;
 
-    // public List<string>? GenericTypeParameterNames { get; init; }
+    public List<string> GenericTypeParameterNames => Type.Generics;
 
-    public RecordType NewType;
-
-    public string ParentModuleName { get; init; }
-
-    // public List<StatementNode> Members { get; init; }
-    // public List<VariableNode> Members2 { get; init; }
-    public bool IsPublic { get; set; }
-
-    public RecordNode(
-        string name,
-        string moduleName,
-        List<VariableDeclarationNode> members,
-        List<string>? genericTypeParameterNames
-    )
-    {
-        Name = name;
-        ParentModuleName = moduleName;
-        NewType = new RecordType(
+    public RecordType Type = new(
             name,
             members.Select(member => (member.Name, NewType: member.Type)).ToDictionary(),
             genericTypeParameterNames ?? []
         );
-        // GenericTypeParameterNames = genericTypeParameterNames;
-        // Members = [];
-        // Members2 = [];
-        IsPublic = false;
-    }
+
+    public string ParentModuleName { get; init; } = moduleName;
+
+    // why not just rely on the list of variable nodes passed into the constructor? because during semantic analysis the underlying type can be changed as we figure out more about
+    public List<VariableDeclarationNode> Members => Type.Fields.Select((field, index) => new VariableDeclarationNode() { Name = field.Key, Type = field.Value, Line = Line + index + 1 }).ToList();
+    public bool IsPublic { get; set; } = false;
 
     public static RecordMemberNode ToMember(StatementNode? sn) =>
         (RecordMemberNode)(

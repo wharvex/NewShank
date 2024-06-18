@@ -1,29 +1,16 @@
-using LLVMSharp.Interop;
-using Shank.ASTNodes;
 using Shank.ExprVisitors;
-using Shank.IRGenerator;
 using Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 
 namespace Shank.ASTNodes;
 
-public class EnumNode : ExpressionNode
+public class EnumNode(string type, string parentModuleName, List<string> enumElements) : ExpressionNode
 //required because interpter class on line 572 (if you chamge it back it has an error
 {
-    public string Type { get; set; }
-    public EnumType NewType;
-
-    public string ParentModuleName { get; set; }
-
-    // public LinkedList<String> EnumElements;
-    public bool IsPublic { get; set; }
-
-    public EnumNode(string type, string parentModuleName, List<string> enumElements)
-    {
-        Type = type;
-        ParentModuleName = parentModuleName;
-        NewType = new EnumType(type, (enumElements));
-        IsPublic = false;
-    }
+    public string TypeName => Type.Name;
+    public EnumType Type = new(type, enumElements);
+    public List<string> EnumElements => Type.Variants;
+    public string ParentModuleName { get; set; } = parentModuleName;
+    public bool IsPublic { get; set; } = false;
 
     // public override LLVMValueRef Visit(
     //     LLVMVisitor visitor,

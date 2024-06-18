@@ -299,7 +299,7 @@ public class ModuleNode : ASTNode
     {
         if (enumNode is not null)
         {
-            Enums.Add(enumNode.Type, enumNode);
+            Enums.Add(enumNode.TypeName, enumNode);
         }
     }
 

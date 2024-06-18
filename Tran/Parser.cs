@@ -154,7 +154,7 @@ public class Parser
                             if (record != null)
                             {
                                 //TODO: Check with Phipps for correctness
-                                foreach (var entry in record.NewType.Fields)
+                                foreach (var entry in record.Type.Fields)
                                 {
                                     var temp = new List<VariableNode>();
                                     temp.Add(

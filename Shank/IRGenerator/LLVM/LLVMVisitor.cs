@@ -303,7 +303,7 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
         // this cannot be done from the prototype becuase we cannot attach llvm types to Type without putting dependency of llvm for the Types file
         // also we do not know the order by which types are added to the llvm module
         var record = context.GetCustomType(node.Name);
-        var args = node.NewType.Fields.Select(
+        var args = node.Type.Fields.Select(
             s =>
                 // for records (and eventually references) we do not hold the actual type of the record, but rather a pointer to it, because llvm does not like direct recursive types
                 (
