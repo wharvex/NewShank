@@ -39,6 +39,7 @@ public class Parser
     public static int Line { get; set; }
     public static string FileName { get; set; }
 
+<<<<<<< Updated upstream
     /// <summary>
     ///    Method <c>MatchAndRemove</c> removes I token if the TokenType matches
     ///    the parameter's type
@@ -46,6 +47,15 @@ public class Parser
     /// <param name="t"></param>
     /// <returns>Token's value otherwise null</returns>
     ///
+=======
+   /// <summary>
+   ///    Method <c>MatchAndRemove</c> removes I token if the TokenType matches
+   ///    the parameter's type
+   /// </summary>
+   /// <param name="t">TokenType passed in</param>
+   /// <returns>Token's value otherwise null</returns>
+   /// 
+>>>>>>> Stashed changes
     private Token? MatchAndRemove(Token.TokenType t)
     {
         // If there are no Tokens left, return null.
@@ -89,9 +99,15 @@ public class Parser
 
     /// <summary>
     ///     Method <c>MatchAndRemoveMultiple</c> removes multiple tokens if the TokenType
+<<<<<<< Updated upstream
     ///     mataches the array of parameters passed in
     /// </summary>
     /// <param name="ts"></param>
+=======
+    ///     mataches the array of parameters passed in  
+    /// </summary> 
+    /// <param name="ts">List of TokenTypes</param>
+>>>>>>> Stashed changes
     /// <returns>Values of the tokens removeed otherwise null</returns>
 
     private Token? MatchAndRemoveMultiple(params Token.TokenType[] ts)
@@ -111,7 +127,7 @@ public class Parser
     ///     and returns the value. If the offset passed in is beyond the end of the file,
     ///     the function may return null.
     /// </summary>
-    /// <param name="offset"></param>
+    /// <param name="offset">Number of characters you are peeking ahead</param>
     /// <returns>Token value or else null</returns>
 
     private Token? Peek(int offset)
@@ -124,9 +140,9 @@ public class Parser
     ///     and returns the value fetched from <e>Peek</e>. If it returns null, an exception is thrown.
     ///     See Peek documentation for null cases.
     /// </summary>
-    /// <param name="offset"></param>
-    /// <returns>Token value otherwise thrown exception</returns>
-    /// <exception cref="SyntaxErrorException"></exception>
+    /// <param name="offset">Number of characters you are peeking ahead</param>
+    /// <returns>Token value</returns>
+    /// <exception cref="SyntaxErrorException">If the offset is at or past the end of the file</exception>
 
     private Token PeekSafe(int offset) =>
         Peek(offset) ?? throw new SyntaxErrorException("Unexpected EOF", null);
@@ -166,7 +182,7 @@ public class Parser
     ///     Method <c>RequiresEndOfLine</c> checks the return value of <c>RequiresEndOfLine</c>.
     ///     If not present an exception is thrown.
     /// </summary>
-    /// <exception cref="SyntaxErrorException"></exception>
+    /// <exception cref="SyntaxErrorException">An EndOfLine token is not encountered</exception>
 
     private void RequiresEndOfLine()
     {
@@ -177,13 +193,38 @@ public class Parser
     }
 
     /// <summary>
+<<<<<<< Updated upstream
     ///     Method <c>GetVariableUsageNode</c>
+=======
+    ///     Method <c>GetVariableUsagePlainNode</c> parses a variable usage according to the 
+    ///     following syntax example: 
+    ///     
+    ///             IDENTIFIER[expression]
+    ///             
+    ///                 or
+    ///                 
+    ///             IDENTIFIER.reference
+>>>>>>> Stashed changes
     /// </summary>
-    /// <returns></returns>
-    /// <exception cref="SyntaxErrorException"></exception>
+    /// <returns>new VariableUsagePlainNode otherwise exception</returns>
+    /// <exception cref="SyntaxErrorException">
+    ///     <list type="bullet">
+    ///         <item>
+    ///             <description>Need an expression after the left bracket!</description>
+    ///         </item>
+    ///         <item>
+    ///             <description>Need a right bracket after the expression!</description>
+    ///         </item>
+    ///         <item>
+    ///             <description>Need a record member reference after the dot!</description>
+    ///         </item>
+    ///     </list>
+    /// </exception>
 
     private VariableUsagePlainNode? GetVariableUsagePlainNode()
     {
+
+        //array index indentifier case
         if (MatchAndRemove(Token.TokenType.Identifier) is { } id)
         {
             if (MatchAndRemove(Token.TokenType.LeftBracket) is not null)
@@ -195,11 +236,13 @@ public class Parser
                         "Need an expression after the left bracket!",
                         Peek(0)
                     );
+
                 if (MatchAndRemove(Token.TokenType.RightBracket) is null)
                     throw new SyntaxErrorException(
                         "Need a right bracket after the expression!",
                         Peek(0)
                     );
+
                 return new VariableUsagePlainNode(
                     id.GetValueSafe(),
                     exp,
@@ -207,49 +250,79 @@ public class Parser
                 );
             }
 
+            //record member case
             if (MatchAndRemove(Token.TokenType.Dot) is not null)
             {
                 VariableUsagePlainNode? varRef = GetVariableUsagePlainNode();
+
                 if (varRef is null)
                     throw new SyntaxErrorException(
                         "Need a record member reference after the dot!",
                         Peek(0)
                     );
+
                 return new VariableUsagePlainNode(
                     id.GetValueSafe(),
                     varRef,
                     VariableUsagePlainNode.VrnExtType.RecordMember
                 );
             }
+            
+            //return the variable name as is 
             return new VariableUsagePlainNode(id.GetValueSafe());
         }
 
         return null;
     }
 
+
+    /// <summary>
+    ///    Method <c>GetVariableUsageNode</c> parses nested variable usages according to the 
+    ///     following syntax example: 
+    ///     
+    ///             IDENTIFIER[expression][expression]...
+    ///             
+    ///                 or
+    ///                 
+    ///             IDENTIFIER.reference.reference...
+    /// </summary>
+    /// <returns>VariableUsageTempNode or VariableUsageIndexNode or VariableUsageMemberNode else exception</returns>
+    /// <exception cref="SyntaxErrorException">Expression is not present in an array index</exception>
+    /// <exception cref="UnreachableException">if neither an index or member is encountered (should never be reached)</exception>
     private VariableUsageNodeTemp? GetVariableUsageNode()
     {
+        //get the identifier
         var vupToken = MatchAndRemove(Token.TokenType.Identifier);
+
+        //return null if not found 
         if (vupToken is null)
         {
             return null;
         }
 
+        //get the first plain variable usage 
         var vupNode = new VariableUsagePlainNode(vupToken.GetValueSafe());
 
+        //remove either a left bracket or a dot
         var nextToken = MatchAndRemoveMultiple(Token.TokenType.LeftBracket, Token.TokenType.Dot);
+
+        //returns the plain node if their is no more tokens
         if (nextToken is null)
         {
             return vupNode;
         }
-
+        
+        //store our plain node for now
         VariableUsageNodeTemp left = vupNode;
+
+        //store our complete node once we get it 
         VariableUsageNodeTemp leftRight;
 
         while (true)
         {
             switch (nextToken.Type)
             {
+                //if variable is array accessor
                 case Token.TokenType.LeftBracket:
                     leftRight = new VariableUsageIndexNode(
                         left,
@@ -257,19 +330,25 @@ public class Parser
                             ?? throw new SyntaxErrorException("Expected expression", Peek(0))
                     );
                     break;
+                //if variable uses a member record
                 case Token.TokenType.Dot:
                     leftRight = new VariableUsageMemberNode(left, MemberAccess());
                     break;
+                //hopefully we don't get here 
                 default:
                     throw new UnreachableException();
             }
 
+            //check again for another array accessor or member record
             nextToken = MatchAndRemoveMultiple(Token.TokenType.LeftBracket, Token.TokenType.Dot);
+
+            //just return what we have if nothing is present 
             if (nextToken is null)
             {
                 return leftRight;
             }
 
+            //else make the new left what we currently have and start the while loop over
             left = leftRight;
         }
     }
