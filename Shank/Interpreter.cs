@@ -307,7 +307,7 @@ public class Interpreter
     {
         if (an.Target.GetExtensionSafe() is VariableUsagePlainNode vrn)
         {
-            var t = rdt.MemberTypes[vrn.Name];
+            var t = rdt.GetMemberType(vrn.Name);
             rdt.Value[vrn.Name] = t switch
             {
                 BooleanType => ResolveBool(an.Expression, variables),
@@ -315,8 +315,8 @@ public class Interpreter
                 RealType => ResolveFloat(an.Expression, variables),
                 IntegerType => ResolveInt(an.Expression, variables),
                 CharacterType => ResolveChar(an.Expression, variables),
-                RecordType => ResolveRecord(an.Expression, variables),
-                ReferenceType => ResolveReference(an.Expression, variables),
+                InstantiatedType => ResolveRecord(an.Expression, variables),
+                ReferenceType  => ResolveReference(an.Expression, variables),
                 EnumType => ResolveEnum(an.Expression, variables),
 
                 _
@@ -677,7 +677,7 @@ public class Interpreter
         {
             var rmVrn = pnVrn.GetRecordMemberReferenceSafe();
             paramsList.Add(
-                rdt.MemberTypes[rmVrn.Name] switch
+                rdt.GetMemberType(rmVrn.Name) switch
                 {
                     CharacterType => new CharDataType(rdt.GetValueCharacter(rmVrn.Name)),
                     BooleanType => new BooleanDataType(rdt.GetValueBoolean(rmVrn.Name)),
@@ -773,13 +773,13 @@ public class Interpreter
                 return new ArrayDataType(a.Inner);
             }
             // TODO: merge record type and record node into one
-            case RecordType r:
+            case InstantiatedType r:
             {
                 _ = (
-                    parentModule.Records.TryGetValue(r.Name, out var record)
-                    || Lookup(parentModule.Imported, r.Name, ref record)
+                    parentModule.Records.TryGetValue(r.Inner.Name, out var record)
+                    || Lookup(parentModule.Imported, r.Inner.Name, ref record)
                 );
-                return new RecordDataType(record!.NewType.Fields);
+                return new RecordDataType(r);
             }
             case EnumType e:
             {
@@ -790,11 +790,11 @@ public class Interpreter
                 return new EnumDataType(enumNode!);
             }
 
-            case ReferenceType(RecordType r):
+            case ReferenceType(InstantiatedType r):
             {
                 _ = (
-                    parentModule.Records.TryGetValue(r.Name, out var record)
-                    || Lookup(parentModule.Imported, r.Name, ref record)
+                    parentModule.Records.TryGetValue(r.Inner.Name, out var record)
+                    || Lookup(parentModule.Imported, r.Inner.Name, ref record)
                 );
                 return new ReferenceDataType(record!);
             }

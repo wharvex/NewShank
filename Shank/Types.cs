@@ -134,8 +134,8 @@ public class RecordType(string name, Dictionary<string, Type> fields, List<strin
     public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;
     internal Type? GetMember(string name, Dictionary<string, Type> instantiatedGenerics)
     {
-        var member = fields.GetValueOrDefault(Name);
-        return member.Instantiate(instantiatedGenerics);
+        var member = Fields.GetValueOrDefault(name);
+        return member?.Instantiate(instantiatedGenerics);
 
     }
 } // records need to keep the types of their members along with any generics they declare
@@ -192,12 +192,18 @@ public readonly record struct UnknownType(string TypeName, List<Type> TypeParame
     }
 }
 
+// Only used in semantic analysis and later
+// represents a generic type, since we don't use UnknownType is semantic analysis
+// also generics cannot have type parameters
 public record struct GenericType(string Name) : Type
 {
     public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => instantiatedGenerics.GetValueOrDefault(Name, this);
 }
 
-// constraints: inner can only be record type or generic type
+// Only used in semantic analysis and later
+// what is this and why do we need it?
+// record types define the structure of the record, but each time you use the record in your code (in a variable declaration, parameter, or even another record)
+// you give and generics that may be defined new types (these could another generic, a record, float, ...)
 public record struct InstantiatedType(RecordType Inner, Dictionary<string, Type> InstantiatedGenerics) : Type
 {
     public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => new InstantiatedType(Inner, InstantiatedGenerics.Select(tpair => (tpair.Key, tpair.Value.Instantiate(instantiatedGenerics))).ToDictionary());

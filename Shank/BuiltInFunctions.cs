@@ -458,7 +458,7 @@ public class BuiltInFunctions
     public static void AllocateMemory(List<InterpreterDataType> parameters)
     {
         if (parameters[0] is ReferenceDataType rdt)
-            rdt.Record = new RecordDataType(rdt.RecordType.NewType.Fields);
+            rdt.Record = new RecordDataType(rdt.Record);
         else
             throw new Exception("Can only allocate memory for record pointers.");
     }
@@ -501,7 +501,7 @@ public class BuiltInFunctions
     private static int recursiveRecordSize(RecordDataType rdt)
     {
         int size = 0;
-        foreach (var recordMember in rdt.MemberTypes)
+        foreach (var recordMember in rdt.getMemberTypes())
         {
             var rm = recordMember.Value;
             switch (rm)

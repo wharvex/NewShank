@@ -256,34 +256,38 @@ public class RecordDataType : InterpreterDataType
 {
     public Dictionary<string, object> Value { get; init; } = [];
 
-    public Dictionary<string, Type> MemberTypes { get; init; } = [];
+    // public Dictionary<string, Type> MemberTypes { get; init; } = [];
+    public InstantiatedType MemberTypes;
 
-    public RecordDataType(Dictionary<String, Type> members)
+    public Dictionary<string, Type> getMemberTypes() => MemberTypes.Inner.Fields.Select(field =>
+        (field.Key, field.Value.Instantiate(MemberTypes.InstantiatedGenerics))).ToDictionary();
+
+    public RecordDataType(InstantiatedType members)
     {
         MemberTypes = members;
     }
 
-    public RecordDataType(List<StatementNode> members)
-    {
-        members.ForEach(s =>
-        {
-            if (s is RecordMemberNode rmn)
-            {
-                MemberTypes[rmn.Name] = rmn.NewType;
-            }
-            else
-            {
-                throw new InvalidOperationException(
-                    "A RecordDataType must be initialized with a List of RecordMemberNode."
-                );
-            }
-        });
-    }
+    // public RecordDataType(List<StatementNode> members)
+    // {
+    //     members.ForEach(s =>
+    //     {
+    //         if (s is RecordMemberNode rmn)
+    //         {
+    //             MemberTypes[rmn.Name] = rmn.NewType;
+    //         }
+    //         else
+    //         {
+    //             throw new InvalidOperationException(
+    //                 "A RecordDataType must be initialized with a List of RecordMemberNode."
+    //             );
+    //         }
+    //     });
+    // }
 
-    public RecordDataType(List<VariableNode> members)
-    {
-        members.ForEach(vn => MemberTypes[vn.GetNameSafe()] = vn.Type);
-    }
+    // public RecordDataType(List<VariableNode> members)
+    // {
+    //     members.ForEach(vn => MemberTypes.Inner.GetMember(vn.GetNameSafe()) = vn.Type);
+    // }
 
     public RecordDataType(RecordDataType rdt)
     {
@@ -342,4 +346,9 @@ public class RecordDataType : InterpreterDataType
     }
 
     public override void FromString(string input) { }
+
+    public Type GetMemberType(string rmVrnName)
+    {
+        return MemberTypes.Inner.GetMember(rmVrnName, MemberTypes.InstantiatedGenerics);
+    }
 }

@@ -546,13 +546,13 @@ public class SemanticAnalysis
                 (ExtensionType: VariableUsagePlainNode.VrnExtType.None, _) => variable.Type,
                 (
                     ExtensionType: VariableUsagePlainNode.VrnExtType.RecordMember,
-                    NewType: RecordType r
+                    NewType: InstantiatedType r
                 )
                     => GetTypeRecursive(r, variableReferenceNode) ?? variable.Type,
                 (
                     ExtensionType: VariableUsagePlainNode.VrnExtType.RecordMember,
                     NewType: ReferenceType
-                    (RecordType r)
+                    (InstantiatedType r)
                 )
                     => GetTypeRecursive(r, variableReferenceNode) ?? variable.Type,
                 (ExtensionType: VariableUsagePlainNode.VrnExtType.ArrayIndex, NewType: ArrayType a)
@@ -597,27 +597,27 @@ public class SemanticAnalysis
     //if we checked for an extension when the target should be one of these types, an error is thrown, so if there is no extension
     //on the variable reference node, we return null to the previous recursive pass, which returns either VariableNode.DataType.Record
     //or Reference depending on what the previous loop found
-    // private static Type? GetTypeRecursive(
-    //     // ModuleNode parentModule,
-    //     RecordType targetDefinition,
-    //     VariableUsagePlainNode targetUsage
-    // )
-    // {
-    //     if (targetUsage.Extension is null)
-    //         return null;
-    //     var vndt = targetDefinition.Fields[targetUsage.GetRecordMemberReferenceSafe().Name];
-    //
-    //     var innerVndt = vndt switch
-    //     {
-    //         RecordType r => r,
-    //         ReferenceType(RecordType r1) => r1,
-    //         _ => null
-    //     };
-    //     return innerVndt is not null
-    //         ? GetTypeRecursive(innerVndt, (VariableUsagePlainNode)targetUsage.GetExtensionSafe())
-    //             ?? vndt
-    //         : vndt;
-    //
+    private static Type? GetTypeRecursive(
+        // ModuleNode parentModule,
+        InstantiatedType targetDefinition,
+        VariableUsagePlainNode targetUsage
+    )
+    {
+        if (targetUsage.Extension is null)
+            return null;
+        var vndt = targetDefinition.Inner.GetMember(targetUsage.GetRecordMemberReferenceSafe().Name, targetDefinition.InstantiatedGenerics)!;
+    
+        InstantiatedType? innerVndt = vndt switch
+        {
+            InstantiatedType r => r,
+            ReferenceType(InstantiatedType r1) => r1,
+            _ => null
+        };
+        return innerVndt is {} v
+            ? GetTypeRecursive(v, (VariableUsagePlainNode)targetUsage.GetExtensionSafe())
+                ?? vndt
+            : vndt;
+    
     //     /*else
     //         return GetRecordTypeRecursive(
     //                 parentModule,
@@ -631,7 +631,7 @@ public class SemanticAnalysis
     //                     ],
     //                 (VariableReferenceNode)targetUsage.GetExtensionSafe()
     //             */
-    // }
+    }
 
     public static Dictionary<string, ASTNode> GetRecordsAndImports(
         Dictionary<string, RecordNode> records,
