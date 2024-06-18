@@ -9,7 +9,7 @@ using Shank;
 using Shank.ASTNodes;
 using Shank.IRGenerator.CompilerPractice;
 
-[Verb("Compile", isDefault: false)]
+[Verb("Compile", isDefault: false, HelpText = "Runs the shank compiler")]
 public class CompileOptions
 {
     [Value(index: 0, MetaName = "inputFile", HelpText = "The Shank source file", Required = true)]
@@ -75,7 +75,7 @@ public class CompileOptions
     public string LinkedPath { get; set; }
 }
 
-[Verb("Interpret", isDefault: false)]
+[Verb("Interpret", isDefault: false, HelpText = "runs the shank interpreter")]
 public class InterptOptions
 {
     [Value(index: 0, MetaName = "inputFile", HelpText = "The Shank source file", Required = true)]
@@ -88,7 +88,7 @@ public class InterptOptions
     public bool VuOpTest { get; set; }
 }
 
-[Verb("CompilePractice", isDefault: false)]
+[Verb("CompilePractice", isDefault: false, HelpText = "dev use only")]
 public class CompilePracticeOptions
 {
     [Value(index: 0, MetaName = "inputFile", HelpText = "The Shank source file")]
@@ -117,7 +117,7 @@ public class CommandLineArgsParser
             .WithParsed<CompileOptions>(options => RunCompiler(options, program))
             .WithParsed<InterptOptions>(options => RunInterptrer(options, program))
             .WithParsed<CompilePracticeOptions>(options => RunCompilePractice(options, program))
-            .WithNotParsed(errors => throw new Exception(errors.ToString()));
+            .WithNotParsed(errors => Console.WriteLine($"error with running Shank"));
     }
 
     public void RunCompiler(CompileOptions options, ProgramNode program)
