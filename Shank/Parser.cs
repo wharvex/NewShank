@@ -39,14 +39,13 @@ public class Parser
     public static int Line { get; set; }
     public static string FileName { get; set; }
 
-
-   /// <summary>
-   ///    Method <c>MatchAndRemove</c> removes I token if the TokenType matches
-   ///    the parameter's type
-   /// </summary>
-   /// <param name="t">TokenType passed in</param>
-   /// <returns>Token's value otherwise null</returns>
-   /// 
+    /// <summary>
+    ///    Method <c>MatchAndRemove</c> removes I token if the TokenType matches
+    ///    the parameter's type
+    /// </summary>
+    /// <param name="t">TokenType passed in</param>
+    /// <returns>Token's value otherwise null</returns>
+    ///
 
     private Token? MatchAndRemove(Token.TokenType t)
     {
@@ -91,8 +90,8 @@ public class Parser
 
     /// <summary>
     ///     Method <c>MatchAndRemoveMultiple</c> removes multiple tokens if the TokenType
-    ///     matches the array of parameters passed in  
-    /// </summary> 
+    ///     matches the array of parameters passed in
+    /// </summary>
     /// <param name="ts">List of TokenTypes</param>
     /// <returns>Values of the tokens removeed otherwise null</returns>
 
@@ -179,13 +178,13 @@ public class Parser
     }
 
     /// <summary>
-    ///     Method <c>GetVariableUsagePlainNode</c> parses a variable usage according to the 
-    ///     following syntax example: 
-    ///     
+    ///     Method <c>GetVariableUsagePlainNode</c> parses a variable usage according to the
+    ///     following syntax example:
+    ///
     ///             IDENTIFIER[expression]
-    ///             
+    ///
     ///                 or
-    ///                 
+    ///
     ///             IDENTIFIER.reference
     /// </summary>
     /// <returns>new VariableUsagePlainNode otherwise exception</returns>
@@ -205,7 +204,6 @@ public class Parser
 
     private VariableUsagePlainNode? GetVariableUsagePlainNode()
     {
-
         //array index indentifier case
         if (MatchAndRemove(Token.TokenType.Identifier) is { } id)
         {
@@ -249,23 +247,22 @@ public class Parser
                     VariableUsagePlainNode.VrnExtType.RecordMember
                 );
             }
-            
-            //return the variable name as is 
+
+            //return the variable name as is
             return new VariableUsagePlainNode(id.GetValueSafe());
         }
 
         return null;
     }
 
-
     /// <summary>
-    ///    Method <c>GetVariableUsageNode</c> parses nested variable usages according to the 
-    ///     following syntax example: 
-    ///     
+    ///    Method <c>GetVariableUsageNode</c> parses nested variable usages according to the
+    ///     following syntax example:
+    ///
     ///             IDENTIFIER[expression][expression]...
-    ///             
+    ///
     ///                 or
-    ///                 
+    ///
     ///             IDENTIFIER.reference.reference...
     /// </summary>
     /// <returns>VariableUsageTempNode or VariableUsageIndexNode or VariableUsageMemberNode else exception</returns>
@@ -276,13 +273,13 @@ public class Parser
         //get the identifier
         var vupToken = MatchAndRemove(Token.TokenType.Identifier);
 
-        //return null if not found 
+        //return null if not found
         if (vupToken is null)
         {
             return null;
         }
 
-        //get the first plain variable usage 
+        //get the first plain variable usage
         var vupNode = new VariableUsagePlainNode(vupToken.GetValueSafe());
 
         //remove either a left bracket or a dot
@@ -293,11 +290,11 @@ public class Parser
         {
             return vupNode;
         }
-        
+
         //store our plain node for now
         VariableUsageNodeTemp left = vupNode;
 
-        //store our complete node once we get it 
+        //store our complete node once we get it
         VariableUsageNodeTemp leftRight;
 
         while (true)
@@ -316,7 +313,7 @@ public class Parser
                 case Token.TokenType.Dot:
                     leftRight = new VariableUsageMemberNode(left, MemberAccess());
                     break;
-                //hopefully we don't get here 
+                //hopefully we don't get here
                 default:
                     throw new UnreachableException();
             }
@@ -324,7 +321,7 @@ public class Parser
             //check again for another array accessor or member record
             nextToken = MatchAndRemoveMultiple(Token.TokenType.LeftBracket, Token.TokenType.Dot);
 
-            //just return what we have if nothing is present 
+            //just return what we have if nothing is present
             if (nextToken is null)
             {
                 return leftRight;
