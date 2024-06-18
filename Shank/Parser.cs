@@ -39,13 +39,13 @@ public class Parser
     public static int Line { get; set; }
     public static string FileName { get; set; }
 
-   /// <summary>
-   ///    Method <c>MatchAndRemove</c> removes I token if the TokenType matches
-   ///    the parameter's type
-   /// </summary>
-   /// <param name="t"></param>
-   /// <returns>Token's value otherwise null</returns>
-   /// 
+    /// <summary>
+    ///    Method <c>MatchAndRemove</c> removes I token if the TokenType matches
+    ///    the parameter's type
+    /// </summary>
+    /// <param name="t"></param>
+    /// <returns>Token's value otherwise null</returns>
+    ///
     private Token? MatchAndRemove(Token.TokenType t)
     {
         // If there are no Tokens left, return null.
@@ -89,8 +89,8 @@ public class Parser
 
     /// <summary>
     ///     Method <c>MatchAndRemoveMultiple</c> removes multiple tokens if the TokenType
-    ///     mataches the array of parameters passed in  
-    /// </summary> 
+    ///     mataches the array of parameters passed in
+    /// </summary>
     /// <param name="ts"></param>
     /// <returns>Values of the tokens removeed otherwise null</returns>
 
@@ -121,7 +121,7 @@ public class Parser
 
     /// <summary>
     ///     Method <c>PeekSafe</c> reads the value of the next value with <e>n</e> offset
-    ///     and returns the value fetched from <e>Peek</e>. If it returns null, an exception is thrown. 
+    ///     and returns the value fetched from <e>Peek</e>. If it returns null, an exception is thrown.
     ///     See Peek documentation for null cases.
     /// </summary>
     /// <param name="offset"></param>
@@ -132,7 +132,7 @@ public class Parser
         Peek(offset) ?? throw new SyntaxErrorException("Unexpected EOF", null);
 
     /// <summary>
-    ///     Method <c>ExpectsEndOfLine</c> reads attempts to match the next token to EndOfLine. 
+    ///     Method <c>ExpectsEndOfLine</c> reads attempts to match the next token to EndOfLine.
     ///     If found, the Token is returned and removed from our list. If not null is returned.
     /// </summary>
     /// <returns>Token value otherwise null</returns>
@@ -163,8 +163,8 @@ public class Parser
     }
 
     /// <summary>
-    ///     Method <c>RequiresEndOfLine</c> checks the return value of <c>RequiresEndOfLine</c>. 
-    ///     If not present an exception is thrown. 
+    ///     Method <c>RequiresEndOfLine</c> checks the return value of <c>RequiresEndOfLine</c>.
+    ///     If not present an exception is thrown.
     /// </summary>
     /// <exception cref="SyntaxErrorException"></exception>
 
@@ -177,7 +177,7 @@ public class Parser
     }
 
     /// <summary>
-    ///     Method <c>GetVariableUsageNode</c> 
+    ///     Method <c>GetVariableUsageNode</c>
     /// </summary>
     /// <returns></returns>
     /// <exception cref="SyntaxErrorException"></exception>
