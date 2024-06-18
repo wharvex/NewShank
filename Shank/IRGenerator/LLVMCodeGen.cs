@@ -34,7 +34,7 @@ public class LLVMCodeGen
         //https://llvm.org/docs/tutorial/MyFirstLanguageFrontend/LangImpl08.html
         var targetTriple = LLVMTargetRef.DefaultTriple;
         var target = LLVMTargetRef.GetTargetFromTriple(targetTriple);
-        var cpu = "generic";
+        var cpu = compileOptions.TargetCPU;
         var features = "";
         var opt = compileOptions.OptLevel;
         var targetMachine = target.CreateTargetMachine(
