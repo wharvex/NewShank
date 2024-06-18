@@ -39,6 +39,13 @@ public class Parser
     public static int Line { get; set; }
     public static string FileName { get; set; }
 
+   /// <summary>
+   ///    Method <c>MatchAndRemove</c> removes I token if the TokenType matches
+   ///    the parameter's type
+   /// </summary>
+   /// <param name="t"></param>
+   /// <returns>Token's value otherwise null</returns>
+   /// 
     private Token? MatchAndRemove(Token.TokenType t)
     {
         // If there are no Tokens left, return null.
@@ -80,6 +87,13 @@ public class Parser
         return retVal;
     }
 
+    /// <summary>
+    ///     Method <c>MatchAndRemoveMultiple</c> removes multiple tokens if the TokenType
+    ///     mataches the array of parameters passed in  
+    /// </summary> 
+    /// <param name="ts"></param>
+    /// <returns>Values of the tokens removeed otherwise null</returns>
+
     private Token? MatchAndRemoveMultiple(params Token.TokenType[] ts)
     {
         Token? ret = null;
@@ -92,14 +106,36 @@ public class Parser
         return ret;
     }
 
+    /// <summary>
+    ///     Method <c>Peek</c> reads the value of the next value with <e>n</e> offset
+    ///     and returns the value. If the offset passed in is beyond the end of the file,
+    ///     the function may return null.
+    /// </summary>
+    /// <param name="offset"></param>
+    /// <returns>Token value or else null</returns>
+
     private Token? Peek(int offset)
     {
         return _tokens.Count > offset ? _tokens[offset] : null;
     }
 
+    /// <summary>
+    ///     Method <c>PeekSafe</c> reads the value of the next value with <e>n</e> offset
+    ///     and returns the value fetched from <e>Peek</e>. If it returns null, an exception is thrown. 
+    ///     See Peek documentation for null cases.
+    /// </summary>
+    /// <param name="offset"></param>
+    /// <returns>Token value otherwise thrown exception</returns>
+    /// <exception cref="SyntaxErrorException"></exception>
+
     private Token PeekSafe(int offset) =>
         Peek(offset) ?? throw new SyntaxErrorException("Unexpected EOF", null);
 
+    /// <summary>
+    ///     Method <c>ExpectsEndOfLine</c> reads attempts to match the next token to EndOfLine. 
+    ///     If found, the Token is returned and removed from our list. If not null is returned.
+    /// </summary>
+    /// <returns>Token value otherwise null</returns>
     private bool ExpectsEndOfLine()
     {
         var ret = MatchAndRemove(Token.TokenType.EndOfLine) is not null;
@@ -116,10 +152,21 @@ public class Parser
         return ret;
     }
 
+    /// <summary>
+    ///     Method <c>ConsumeBlankLines</c> removes the next token repeatedly until its type
+    ///     no longer matches EndOfLine
+    /// </summary>
+
     private void ConsumeBlankLines()
     {
         while (MatchAndRemove(Token.TokenType.EndOfLine) is not null) { }
     }
+
+    /// <summary>
+    ///     Method <c>RequiresEndOfLine</c> checks the return value of <c>RequiresEndOfLine</c>. 
+    ///     If not present an exception is thrown. 
+    /// </summary>
+    /// <exception cref="SyntaxErrorException"></exception>
 
     private void RequiresEndOfLine()
     {
@@ -129,25 +176,20 @@ public class Parser
         }
     }
 
-    private void checkTokenListSize(int offset)
-    {
-        if (_tokens.Count < offset)
-            throw new Exception($"Out of bounds, cannot peek {offset} tokens ahead.");
-    }
-
-    private Token PeekAndCheck(int offset)
-    {
-        checkTokenListSize(offset);
-        return _tokens[offset];
-    }
+    /// <summary>
+    ///     Method <c>GetVariableUsageNode</c> 
+    /// </summary>
+    /// <returns></returns>
+    /// <exception cref="SyntaxErrorException"></exception>
 
     private VariableUsagePlainNode? GetVariableUsagePlainNode()
     {
         if (MatchAndRemove(Token.TokenType.Identifier) is { } id)
         {
-            if (MatchAndRemove(Token.TokenType.LeftBracket) is { })
+            if (MatchAndRemove(Token.TokenType.LeftBracket) is not null)
             {
                 var exp = Expression();
+
                 if (exp == null)
                     throw new SyntaxErrorException(
                         "Need an expression after the left bracket!",
