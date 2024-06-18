@@ -66,6 +66,7 @@ public static class LLVMAddFunctionExtension
 /// </summary>
 public abstract class LLVMValue(LLVMValueRef valueRef, bool isMutable, LLVMTypeRef typeRef)
 {
+    // public VariableDeclarationNode Node { get; set; } = node;
     public LLVMValueRef ValueRef { get; } = valueRef;
 
     // the type of the value, does not include any pointers, you can know if its needs a pointer by looking at the isMutable field
@@ -329,7 +330,7 @@ public class Context
         }
         else
         {
-            throw new Exception("undefined varname");
+            throw new Exception($"undefined varname {name}");
         }
     }
 

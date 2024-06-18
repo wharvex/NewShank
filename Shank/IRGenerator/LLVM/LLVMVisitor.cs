@@ -153,15 +153,17 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
     public override void Visit(VariableUsagePlainNode node)
     {
         LLVMValue value = context.GetVariable(node.Name);
-        if (node.Extension != null)
+        if (
+            node.ExtensionType == VariableUsagePlainNode.VrnExtType.ArrayIndex
+            || node.ExtensionType == VariableUsagePlainNode.VrnExtType.RecordMember
+        )
         {
-            var a = builder.BuildGEP2(
-                value.TypeRef,
-                value.ValueRef,
-                new[] { node.Extension.Accept(new LLVMExpr(context, builder, module)) }
-            );
+            node.Extension?.Accept(this);
+            var a = builder.BuildGEP2(value.TypeRef, value.ValueRef, new[] { expr.Pop() });
             expr.Push(builder.BuildLoad2(value.TypeRef, a));
         }
+        // else if (node.ExtensionType == VariableUsagePlainNode.VrnExtType.RecordMember)
+
         expr.Push(builder.BuildLoad2(value.TypeRef, value.ValueRef));
     }
 
@@ -323,7 +325,9 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
     public override void Visit(ParameterNode node)
     {
         if (node.IsVariable)
-            expr.Push(context.GetVariable(node.Variable?.Name).ValueRef);
+        {
+            var vars = context.GetVariable(node.Variable?.Name);
+        }
         else
         {
             node.Constant.Accept(this);
@@ -416,9 +420,12 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
             throw new Exception($"tried to mutate non mutable variable {node.Target.Name}");
         }
 
-        if (node.Target.Extension != null)
+        if (
+            node.Target.ExtensionType == VariableUsagePlainNode.VrnExtType.ArrayIndex
+            || node.Target.ExtensionType == VariableUsagePlainNode.VrnExtType.RecordMember
+        )
         {
-            node.Target.Extension.Accept(this);
+            node.Target.Extension?.Accept(this);
             var a = builder.BuildGEP2(llvmValue.TypeRef, llvmValue.ValueRef, new[] { expr.Pop() });
             builder.BuildStore(expression, a);
         }
