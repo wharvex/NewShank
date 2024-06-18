@@ -100,11 +100,7 @@ public class Parser
                 true
             );
             property.Statements = ParseBlock();
-            var retVal = new VariableDeclarationNode
-            {
-                IsConstant = true,
-                Name = "value"
-            };
+            var retVal = new VariableDeclarationNode { IsConstant = true, Name = "value" };
             property.ParameterVariables.Add(retVal);
             return property;
         }
