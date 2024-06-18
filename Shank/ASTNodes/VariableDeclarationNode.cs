@@ -37,7 +37,6 @@ public class VariableDeclarationNode : ASTNode
         context.GetLLVMTypeFromShankType(type, false)
         ?? throw new Exception($"Type {type} doesnt exist");
 
-
     public bool IsConstant { get; set; }
     public ASTNode? InitialValue { get; set; }
 
@@ -47,8 +46,6 @@ public class VariableDeclarationNode : ASTNode
     public string GetModuleNameSafe() => ModuleName ?? "default";
 
     public string ToStringForOverloadExt() => "_" + (IsConstant ? "" : "VAR_") + Type;
-
-
 
     /// <summary>
     /// Get this VariableNode's type based on what Extension the VariableReferenceNode that
