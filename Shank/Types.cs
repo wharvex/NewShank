@@ -9,7 +9,6 @@ public interface Type // our marker interface anything that implements is known 
     Type Instantiate(Dictionary<string, Type> instantiatedGenerics);
 }
 
-
 public record struct Range // the type that represents a type range in shank (from .. to ..), as ranges on types are part of the types
 (float From, float To)
 {
@@ -55,7 +54,9 @@ public record struct StringType(Range Range) : RangeType
     {
         return true; // we do range checking seperatly as we do not know which is the one with more important range
     }
+
     public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;
+
     public override readonly int GetHashCode()
     {
         return 0;
@@ -71,7 +72,9 @@ public record struct RealType(Range Range) : RangeType
     {
         return true; // we do range checking seperatly as we do not know which is the one with more important range
     }
+
     public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;
+
     public override readonly int GetHashCode()
     {
         return 0;
@@ -87,7 +90,9 @@ public record struct IntegerType(Range Range) : RangeType
     {
         return true; // we do range checking seperatly as we do not know which is the one with more important range
     }
+
     public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;
+
     public override readonly int GetHashCode()
     {
         return 0;
@@ -130,13 +135,14 @@ public class RecordType(string name, Dictionary<string, Type> fields, List<strin
     public Dictionary<string, Type> Fields { get; set; } = fields;
 
     public string Name { get; } = name;
+
     // we don't instantiate records directly, rather we do that indirectly from InstantiatedType
     public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;
+
     internal Type? GetMember(string name, Dictionary<string, Type> instantiatedGenerics)
     {
         var member = Fields.GetValueOrDefault(name);
         return member?.Instantiate(instantiatedGenerics);
-
     }
 
     public override string ToString()
@@ -156,7 +162,10 @@ public record struct ArrayType(Type Inner, Range Range) : RangeType // arrays ha
     {
         return Inner.GetHashCode();
     }
-    public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => new ArrayType(Inner.Instantiate(instantiatedGenerics));
+
+    public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) =>
+        new ArrayType(Inner.Instantiate(instantiatedGenerics));
+
     public ArrayType(Type inner)
         : this(inner, Range.DefaultSmallInteger()) { }
 }
@@ -202,21 +211,31 @@ public readonly record struct UnknownType(string TypeName, List<Type> TypeParame
 // also generics cannot have type parameters
 public record struct GenericType(string Name) : Type
 {
-    public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => instantiatedGenerics.GetValueOrDefault(Name, this);
+    public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) =>
+        instantiatedGenerics.GetValueOrDefault(Name, this);
 }
 
 // Only used in semantic analysis and later
 // what is this and why do we need it?
 // record types define the structure of the record, but each time you use the record in your code (in a variable declaration, parameter, or even another record)
 // you give and generics that may be defined new types (these could another generic, a record, float, ...)
-public record struct InstantiatedType(RecordType Inner, Dictionary<string, Type> InstantiatedGenerics) : Type
+public record struct InstantiatedType(
+    RecordType Inner,
+    Dictionary<string, Type> InstantiatedGenerics
+) : Type
 {
-    public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => new InstantiatedType(Inner, InstantiatedGenerics.Select(tpair => (tpair.Key, tpair.Value.Instantiate(instantiatedGenerics))).ToDictionary());
+    public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) =>
+        new InstantiatedType(
+            Inner,
+            InstantiatedGenerics
+                .Select(tpair => (tpair.Key, tpair.Value.Instantiate(instantiatedGenerics)))
+                .ToDictionary()
+        );
 
     public bool Equals(InstantiatedType other) =>
         Inner.Equals(other.Inner) && InstantiatedGenerics.SequenceEqual(other.InstantiatedGenerics);
 
-    public readonly override int GetHashCode()
+    public override readonly int GetHashCode()
     {
         return HashCode.Combine(Inner, InstantiatedGenerics);
     }
@@ -228,6 +247,7 @@ public record struct InstantiatedType(RecordType Inner, Dictionary<string, Type>
         return $"{Inner}<{String.Join(",", InstantiatedGenerics.Select(tpair => $"{tpair.Key}: {tpair.Value}"))}>";
     }
 }
+
 public record struct ReferenceType(Type Inner) : Type
 {
     public Type Instantiate(Dictionary<string, Type> instantiatedGenerics)
@@ -237,8 +257,9 @@ public record struct ReferenceType(Type Inner) : Type
             instantiate is InstantiatedType or GenericType
                 ? instantiate
                 : throw new SemanticErrorException(
-                    $"tried to use refersTo (dynamic memory management) on a non record type ", null)
+                    $"tried to use refersTo (dynamic memory management) on a non record type ",
+                    null
+                )
         );
     }
 }
-

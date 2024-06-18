@@ -614,32 +614,34 @@ public class SemanticAnalysis
     {
         if (targetUsage.Extension is null)
             return null;
-        var vndt = targetDefinition.Inner.GetMember(targetUsage.GetRecordMemberReferenceSafe().Name, targetDefinition.InstantiatedGenerics)!;
-    
+        var vndt = targetDefinition.Inner.GetMember(
+            targetUsage.GetRecordMemberReferenceSafe().Name,
+            targetDefinition.InstantiatedGenerics
+        )!;
+
         InstantiatedType? innerVndt = vndt switch
         {
             InstantiatedType r => r,
             ReferenceType(InstantiatedType r1) => r1,
             _ => null
         };
-        return innerVndt is {} v
-            ? GetTypeRecursive(v, (VariableUsagePlainNode)targetUsage.GetExtensionSafe())
-                ?? vndt
+        return innerVndt is { } v
+            ? GetTypeRecursive(v, (VariableUsagePlainNode)targetUsage.GetExtensionSafe()) ?? vndt
             : vndt;
-    
-    //     /*else
-    //         return GetRecordTypeRecursive(
-    //                 parentModule,
-    //                 (RecordNode)
-    //                     GetRecordsAndImports(parentModule.Records, parentModule.Imported)[
-    //                         targetDefinition
-    //                             .GetFromMembersByNameSafe(
-    //                                 ((VariableUsageNode)targetUsage.GetExtensionSafe()).Name
-    //                             )
-    //                             .GetUnknownTypeSafe()
-    //                     ],
-    //                 (VariableReferenceNode)targetUsage.GetExtensionSafe()
-    //             */
+
+        //     /*else
+        //         return GetRecordTypeRecursive(
+        //                 parentModule,
+        //                 (RecordNode)
+        //                     GetRecordsAndImports(parentModule.Records, parentModule.Imported)[
+        //                         targetDefinition
+        //                             .GetFromMembersByNameSafe(
+        //                                 ((VariableUsageNode)targetUsage.GetExtensionSafe()).Name
+        //                             )
+        //                             .GetUnknownTypeSafe()
+        //                     ],
+        //                 (VariableReferenceNode)targetUsage.GetExtensionSafe()
+        //             */
     }
 
     public static Dictionary<string, ASTNode> GetRecordsAndImports(
@@ -1069,7 +1071,10 @@ public class SemanticAnalysis
                 record.NewType.Fields = record
                     .NewType.Fields.Select(field =>
                     {
-                        return KeyValuePair.Create(field.Key, ResolveType(field.Value, module, record.NewType.Generics));
+                        return KeyValuePair.Create(
+                            field.Key,
+                            ResolveType(field.Value, module, record.NewType.Generics)
+                        );
                     })
                     .ToDictionary();
             }
@@ -1081,22 +1086,24 @@ public class SemanticAnalysis
         return member switch
         {
             UnknownType u => ResolveType(u, module, generics),
-            ReferenceType(UnknownType u)
-                => handleReferenceType(u),
+            ReferenceType(UnknownType u) => handleReferenceType(u),
             _ => member
         };
 
         Type handleReferenceType(UnknownType type)
         {
-
             var resolvedType = ResolveType(type, module, generics);
             if (resolvedType is not (RecordType or InstantiatedType or GenericType))
             {
-                throw new SemanticErrorException($"tried to use refersTo (dynamic memory management) on a non record type {resolvedType}", module);
+                throw new SemanticErrorException(
+                    $"tried to use refersTo (dynamic memory management) on a non record type {resolvedType}",
+                    module
+                );
             }
             return new ReferenceType(resolvedType);
         }
     }
+
     private static Type ResolveType(UnknownType member, ModuleNode module, List<string> generics)
     {
         var resolveType =
@@ -1104,7 +1111,12 @@ public class SemanticAnalysis
             ?? (Type?)module.Enums.GetValueOrDefault(member.TypeName)?.NewType
             ?? (
                 generics.Contains(member.TypeName)
-                    ? member.TypeParameters.Count != 0 ? throw new SemanticErrorException($"generics type cannot have generics on it", module) : new GenericType(member.TypeName)
+                    ? member.TypeParameters.Count != 0
+                        ? throw new SemanticErrorException(
+                            $"generics type cannot have generics on it",
+                            module
+                        )
+                        : new GenericType(member.TypeName)
                     : throw new SemanticErrorException($"Unbound type {member}", module)
             );
         if (resolveType is EnumType && member.TypeParameters.Count != 0)
@@ -1115,9 +1127,16 @@ public class SemanticAnalysis
         {
             if (record.Generics.Count != member.TypeParameters.Count)
             {
-                throw new SemanticErrorException($"not proper amount of types for generics {record.Generics}", module);
+                throw new SemanticErrorException(
+                    $"not proper amount of types for generics {record.Generics}",
+                    module
+                );
             }
-            var instantiatedGenerics = record.Generics.Zip(member.TypeParameters.Select(type => ResolveType(type, module, generics))).ToDictionary();
+            var instantiatedGenerics = record
+                .Generics.Zip(
+                    member.TypeParameters.Select(type => ResolveType(type, module, generics))
+                )
+                .ToDictionary();
             resolveType = new InstantiatedType(record, instantiatedGenerics);
         }
         return resolveType;

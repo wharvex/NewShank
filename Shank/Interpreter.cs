@@ -316,7 +316,7 @@ public class Interpreter
                 IntegerType => ResolveInt(an.Expression, variables),
                 CharacterType => ResolveChar(an.Expression, variables),
                 InstantiatedType => ResolveRecord(an.Expression, variables),
-                ReferenceType  => ResolveReference(an.Expression, variables),
+                ReferenceType => ResolveReference(an.Expression, variables),
                 EnumType => ResolveEnum(an.Expression, variables),
 
                 _

@@ -259,8 +259,12 @@ public class RecordDataType : InterpreterDataType
     // public Dictionary<string, Type> MemberTypes { get; init; } = [];
     public InstantiatedType MemberTypes;
 
-    public Dictionary<string, Type> getMemberTypes() => MemberTypes.Inner.Fields.Select(field =>
-        (field.Key, field.Value.Instantiate(MemberTypes.InstantiatedGenerics))).ToDictionary();
+    public Dictionary<string, Type> getMemberTypes() =>
+        MemberTypes
+            .Inner.Fields.Select(
+                field => (field.Key, field.Value.Instantiate(MemberTypes.InstantiatedGenerics))
+            )
+            .ToDictionary();
 
     public RecordDataType(InstantiatedType members)
     {
