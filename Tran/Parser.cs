@@ -55,7 +55,7 @@ public class Parser
             thisClass.ExportTargetNames = sharedNames;
             thisClass.UpdateExports();
 
-            List<VariableNode> members = new List<VariableNode>();
+            List<VariableDeclarationNode> members = new List<VariableDeclarationNode>();
             members.AddRange(thisClass.GlobalVariables.Values.ToList());
             //TODO: how to add functions to the members list for the record?
             //members.AddRange(thisClass.Functions.Values.ToList());
@@ -156,9 +156,9 @@ public class Parser
                                 //TODO: Check with Phipps for correctness
                                 foreach (var entry in record.Type.Fields)
                                 {
-                                    var temp = new List<VariableNode>();
+                                    var temp = new List<VariableDeclarationNode>();
                                     temp.Add(
-                                        new VariableNode { Type = entry.Value, Name = entry.Key }
+                                        new VariableDeclarationNode { Type = entry.Value, Name = entry.Key }
                                     );
                                     thisClass.AddToGlobalVariables(temp);
                                 }
@@ -217,10 +217,10 @@ public class Parser
         return false;
     }
 
-    public List<VariableNode> ParseArguments(bool isConstant)
+    public List<VariableDeclarationNode> ParseArguments(bool isConstant)
     {
-        var parameters = new List<VariableNode>();
-        var variable = new VariableNode();
+        var parameters = new List<VariableDeclarationNode>();
+        var variable = new VariableDeclarationNode();
         do
         {
             AcceptSeparators();
@@ -684,7 +684,7 @@ public class Parser
                 )
         };
 
-    public Type Type(VariableNode.DeclarationContext declarationContext)
+    public Type Type(VariableDeclarationNode.DeclarationContext declarationContext)
     {
         Token? tokenType =
             handler.MatchAndRemove(TokenType.NUMBER)
@@ -699,7 +699,7 @@ public class Parser
         return GetTypeUsageFromToken(tokenType);
     }
 
-    public VariableNode? ParseVariableDeclaration()
+    public VariableDeclarationNode? ParseVariableDeclaration()
     {
         Type variableType = ParseType();
         Token? nameToken = handler.MatchAndRemove(TokenType.WORD);
@@ -707,7 +707,7 @@ public class Parser
         {
             throw new Exception("Variable declaration missing a name");
         }
-        VariableNode variableNode = new VariableNode
+        VariableDeclarationNode variableNode = new VariableDeclarationNode
         {
             Type = variableType,
             Name = nameToken.GetValue()
