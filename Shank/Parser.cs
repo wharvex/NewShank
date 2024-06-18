@@ -28,9 +28,12 @@ public class Parser
         Token.TokenType.Test
     ];
 
-    public Parser(List<Token> tokens)
+    public InterptOptions? InterpreterOptions { get; set; }
+
+    public Parser(List<Token> tokens, InterptOptions? options = null)
     {
         _tokens = tokens;
+        InterpreterOptions = options;
     }
 
     private readonly List<Token> _tokens;
@@ -308,6 +311,7 @@ public class Parser
                         Expression()
                             ?? throw new SyntaxErrorException("Expected expression", Peek(0))
                     );
+                    RequiresToken(Token.TokenType.RightBracket);
                     break;
                 //if variable uses a member record
                 case Token.TokenType.Dot:
@@ -582,7 +586,15 @@ public class Parser
         //     MatchAndRemove(Token.TokenType.EndOfLine);
         // }
 
-        return Assignment()
+        if (InterpreterOptions is not null)
+        {
+            OutputHelper.DebugPrintTxt(InterpreterOptions.VuOpTest.ToString(), "vuop");
+        }
+        return (
+                InterpreterOptions is not null && InterpreterOptions.VuOpTest
+                    ? NewAssignment()
+                    : Assignment()
+            )
             ?? While()
             ?? Repeat()
             ?? For()
@@ -952,6 +964,37 @@ public class Parser
 
     private StatementNode? Assignment()
     {
+        if (
+            Peek(1)?.Type
+            is Token.TokenType.Assignment
+                or Token.TokenType.LeftBracket
+                or Token.TokenType.Dot
+        )
+        {
+            var target = GetVariableUsagePlainNode();
+            if (target == null)
+                throw new SyntaxErrorException(
+                    "Found an assignment without a valid identifier.",
+                    Peek(0)
+                );
+            MatchAndRemove(Token.TokenType.Assignment);
+            var expression = ParseExpressionLine();
+            if (expression == null)
+                throw new SyntaxErrorException(
+                    "Found an assignment without a valid right hand side.",
+                    Peek(0)
+                );
+            return new AssignmentNode(target, expression);
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    private StatementNode? NewAssignment()
+    {
+        OutputHelper.DebugPrintTxt("hello from new assignment", "vuop", true);
         if (
             Peek(1)?.Type
             is Token.TokenType.Assignment
