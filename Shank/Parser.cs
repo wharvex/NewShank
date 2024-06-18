@@ -39,15 +39,7 @@ public class Parser
     public static int Line { get; set; }
     public static string FileName { get; set; }
 
-<<<<<<< Updated upstream
-    /// <summary>
-    ///    Method <c>MatchAndRemove</c> removes I token if the TokenType matches
-    ///    the parameter's type
-    /// </summary>
-    /// <param name="t"></param>
-    /// <returns>Token's value otherwise null</returns>
-    ///
-=======
+
    /// <summary>
    ///    Method <c>MatchAndRemove</c> removes I token if the TokenType matches
    ///    the parameter's type
@@ -55,7 +47,7 @@ public class Parser
    /// <param name="t">TokenType passed in</param>
    /// <returns>Token's value otherwise null</returns>
    /// 
->>>>>>> Stashed changes
+
     private Token? MatchAndRemove(Token.TokenType t)
     {
         // If there are no Tokens left, return null.
@@ -99,15 +91,9 @@ public class Parser
 
     /// <summary>
     ///     Method <c>MatchAndRemoveMultiple</c> removes multiple tokens if the TokenType
-<<<<<<< Updated upstream
-    ///     mataches the array of parameters passed in
-    /// </summary>
-    /// <param name="ts"></param>
-=======
-    ///     mataches the array of parameters passed in  
+    ///     matches the array of parameters passed in  
     /// </summary> 
     /// <param name="ts">List of TokenTypes</param>
->>>>>>> Stashed changes
     /// <returns>Values of the tokens removeed otherwise null</returns>
 
     private Token? MatchAndRemoveMultiple(params Token.TokenType[] ts)
@@ -193,9 +179,6 @@ public class Parser
     }
 
     /// <summary>
-<<<<<<< Updated upstream
-    ///     Method <c>GetVariableUsageNode</c>
-=======
     ///     Method <c>GetVariableUsagePlainNode</c> parses a variable usage according to the 
     ///     following syntax example: 
     ///     
@@ -204,7 +187,6 @@ public class Parser
     ///                 or
     ///                 
     ///             IDENTIFIER.reference
->>>>>>> Stashed changes
     /// </summary>
     /// <returns>new VariableUsagePlainNode otherwise exception</returns>
     /// <exception cref="SyntaxErrorException">
