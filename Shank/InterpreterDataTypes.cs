@@ -153,7 +153,7 @@ public class EnumDataType : InterpreterDataType
 
 public class ReferenceDataType : InterpreterDataType
 {
-    public ReferenceDataType(RecordNode rn)
+    public ReferenceDataType(InstantiatedType rn)
     {
         Record = null;
         RecordType = rn;
@@ -165,7 +165,7 @@ public class ReferenceDataType : InterpreterDataType
         Record = rdt.Record;
     }
 
-    public RecordNode RecordType { get; init; }
+    public InstantiatedType RecordType { get; init; }
     public RecordDataType? Record { get; set; }
 
     public override void FromString(string input) { }

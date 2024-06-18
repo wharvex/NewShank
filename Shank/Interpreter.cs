@@ -796,7 +796,7 @@ public class Interpreter
                     parentModule.Records.TryGetValue(r.Inner.Name, out var record)
                     || Lookup(parentModule.Imported, r.Inner.Name, ref record)
                 );
-                return new ReferenceDataType(record!);
+                return new ReferenceDataType(r!);
             }
             default:
                 throw new Exception($"Unknown local variable type");

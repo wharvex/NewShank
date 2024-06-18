@@ -138,6 +138,11 @@ public class RecordType(string name, Dictionary<string, Type> fields, List<strin
         return member?.Instantiate(instantiatedGenerics);
 
     }
+
+    public override string ToString()
+    {
+        return Name;
+    }
 } // records need to keep the types of their members along with any generics they declare
 
 public record struct ArrayType(Type Inner, Range Range) : RangeType // arrays have only one inner type
@@ -208,6 +213,14 @@ public record struct InstantiatedType(RecordType Inner, Dictionary<string, Type>
 {
     public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => new InstantiatedType(Inner, InstantiatedGenerics.Select(tpair => (tpair.Key, tpair.Value.Instantiate(instantiatedGenerics))).ToDictionary());
 
+    public bool Equals(InstantiatedType other) =>
+        Inner.Equals(other.Inner) && InstantiatedGenerics.SequenceEqual(other.InstantiatedGenerics);
+
+    public readonly override int GetHashCode()
+    {
+        return HashCode.Combine(Inner, InstantiatedGenerics);
+    }
+
     Type? GetMember(string name) => Inner.GetMember(name, InstantiatedGenerics);
 
     public override string ToString()
@@ -217,6 +230,15 @@ public record struct InstantiatedType(RecordType Inner, Dictionary<string, Type>
 }
 public record struct ReferenceType(Type Inner) : Type
 {
-    public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => new ReferenceType(Inner.Instantiate(instantiatedGenerics));
+    public Type Instantiate(Dictionary<string, Type> instantiatedGenerics)
+    {
+        var instantiate = Inner.Instantiate(instantiatedGenerics);
+        return new ReferenceType(
+            instantiate is InstantiatedType or GenericType
+                ? instantiate
+                : throw new SemanticErrorException(
+                    $"tried to use refersTo (dynamic memory management) on a non record type ", null)
+        );
+    }
 }
 

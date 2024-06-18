@@ -1081,9 +1081,9 @@ public class SemanticAnalysis
         {
 
             var resolvedType = ResolveType(type, module, generics);
-            if (resolvedType is not RecordType or InstantiatedType)
+            if (resolvedType is not (RecordType or InstantiatedType or GenericType))
             {
-                throw new SemanticErrorException($"tried to use refersTo (dynamic memory management) on a non record type", module);
+                throw new SemanticErrorException($"tried to use refersTo (dynamic memory management) on a non record type {resolvedType}", module);
             }
             return new ReferenceType(resolvedType);
         }
