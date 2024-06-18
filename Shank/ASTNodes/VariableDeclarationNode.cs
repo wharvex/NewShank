@@ -1,6 +1,5 @@
 using System.Text;
 using LLVMSharp.Interop;
-using Shank.ASTNodes;
 using Shank.ExprVisitors;
 using Shank.IRGenerator;
 using Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
@@ -15,20 +14,6 @@ public class VariableDeclarationNode : ASTNode
 
     public bool IsDefaultValue { get; set; }
 
-    // public enum DataType
-    // {
-    //     Real,
-    //     Integer,
-    //     String,
-    //     Character,
-    //     Boolean,
-    //     Array,
-    //     Record,
-    //     Enum,
-    //     Reference,
-    //     Unknown
-    // };
-    //
     public enum UnknownTypeResolver
     {
         Record,
@@ -46,57 +31,21 @@ public class VariableDeclarationNode : ASTNode
         ConstantsLine
     };
 
-    // public DataType Type { get; set; }
     public Type Type { get; set; }
 
     public LLVMTypeRef GetLLVMType(Context context, Type type) =>
         context.GetLLVMTypeFromShankType(type, false)
         ?? throw new Exception($"Type {type} doesnt exist");
 
-    // If Type is Array, then ArrayType is the type of its elements, or else it is null.
-    // public DataType? ArrayType { get; set; }
-
-    // public TypeUsage? ArrayTypeEnhanced { get; set; }
-
-    /// <summary>
-    /// If this variable was declared with an Identifier as its type_unit, then UnknownType is the
-    /// Value of that Identifier.
-    /// If this variable was not declared with an Identifier as its type_unit, then UnknownType
-    /// should be null.
-    /// </summary>
-    // public string? UnknownType { get; set; }
-
-    // public List<TypeUsage>? GenericTypeArgs { get; set; }
-
     public bool IsConstant { get; set; }
     public ASTNode? InitialValue { get; set; }
-
-    // public ASTNode? From { get; set; }
-    // public ASTNode? To { get; set; }
 
     public string GetNameSafe() =>
         Name ?? throw new InvalidOperationException("Expected Name to not be null");
 
-    // public DataType GetArrayTypeSafe()
-    // {
-    //     return ArrayType
-    //         ?? throw new InvalidOperationException("Expected ArrayType to not be null.");
-    // }
-
-    // public string GetUnknownTypeSafe()
-    // {
-    //     return UnknownType
-    //         ?? throw new InvalidOperationException(
-    //             "Expected " + nameof(UnknownType) + " to not be null."
-    //         );
-    // }
-
     public string GetModuleNameSafe() => ModuleName ?? "default";
 
     public string ToStringForOverloadExt() => "_" + (IsConstant ? "" : "VAR_") + Type;
-
-    // TODO implemnted in unkown type
-
 
     /// <summary>
     /// Get this VariableNode's type based on what Extension the VariableReferenceNode that

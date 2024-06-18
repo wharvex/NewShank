@@ -1017,9 +1017,9 @@ public class SemanticAnalysis
                     {
                         if (enumDefinition is EnumNode e)
                         {
-                            if (e.NewType.Variants.Contains(n.Value))
+                            if (e.Type.Variants.Contains(n.Value))
                             {
-                                variable.Type = e.NewType;
+                                variable.Type = e.Type;
                                 break;
                             }
                         }
@@ -1068,12 +1068,12 @@ public class SemanticAnalysis
         {
             foreach (var record in module.Records.Values)
             {
-                record.NewType.Fields = record
-                    .NewType.Fields.Select(field =>
+                record.Type.Fields = record
+                    .Type.Fields.Select(field =>
                     {
                         return KeyValuePair.Create(
                             field.Key,
-                            ResolveType(field.Value, module, record.NewType.Generics)
+                            ResolveType(field.Value, module, record.Type.Generics)
                         );
                     })
                     .ToDictionary();
@@ -1107,8 +1107,8 @@ public class SemanticAnalysis
     private static Type ResolveType(UnknownType member, ModuleNode module, List<string> generics)
     {
         var resolveType =
-            module.Records.GetValueOrDefault(member.TypeName)?.NewType
-            ?? (Type?)module.Enums.GetValueOrDefault(member.TypeName)?.NewType
+            module.Records.GetValueOrDefault(member.TypeName)?.Type
+            ?? (Type?)module.Enums.GetValueOrDefault(member.TypeName)?.Type
             ?? (
                 generics.Contains(member.TypeName)
                     ? member.TypeParameters.Count != 0

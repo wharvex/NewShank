@@ -1,11 +1,13 @@
-using LLVMSharp;
 using Shank.ASTNodes;
 
 namespace Shank;
 
 // ReSharper disable once InconsistentNaming
+#pragma warning disable IDE1006 // Naming Styles
 public interface Type // our marker interface anything that implements is known to represent a shank type
+#pragma warning restore IDE1006 // Naming Styles
 {
+    // when have a list of generic types and what typees replace them we need a function that does the replacement
     Type Instantiate(Dictionary<string, Type> instantiatedGenerics);
 }
 
@@ -36,7 +38,9 @@ public record struct Range // the type that represents a type range in shank (fr
 }
 
 // ReSharper disable once InconsistentNaming
+#pragma warning disable IDE1006 // Naming Styles
 public interface RangeType : Type // this is a bit more specific than a plain IType in that besides for being a type it must also be able to use type limits (the range from before)
+#pragma warning restore IDE1006 // Naming Styles
 {
     // TODO: ranges should not be part of type equality as its not this range == the other range
     // its more this range in that range, so we do it seperatly
@@ -45,17 +49,17 @@ public interface RangeType : Type // this is a bit more specific than a plain IT
 
 public struct BooleanType : Type
 {
-    public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;
+    public readonly Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;
 }
 
 public record struct StringType(Range Range) : RangeType
 {
-    public bool Equals(StringType other)
+    public readonly bool Equals(StringType other)
     {
         return true; // we do range checking seperatly as we do not know which is the one with more important range
     }
 
-    public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;
+    public readonly Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;
 
     public override readonly int GetHashCode()
     {
@@ -68,12 +72,12 @@ public record struct StringType(Range Range) : RangeType
 
 public record struct RealType(Range Range) : RangeType
 {
-    public bool Equals(RealType other)
+    public readonly bool Equals(RealType other)
     {
         return true; // we do range checking seperatly as we do not know which is the one with more important range
     }
 
-    public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;
+    public readonly Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;
 
     public override readonly int GetHashCode()
     {
@@ -86,12 +90,12 @@ public record struct RealType(Range Range) : RangeType
 
 public record struct IntegerType(Range Range) : RangeType
 {
-    public bool Equals(IntegerType other)
+    public readonly bool Equals(IntegerType other)
     {
         return true; // we do range checking seperatly as we do not know which is the one with more important range
     }
 
-    public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;
+    public readonly Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;
 
     public override readonly int GetHashCode()
     {
@@ -104,7 +108,7 @@ public record struct IntegerType(Range Range) : RangeType
 
 public record struct CharacterType(Range Range) : RangeType
 {
-    public bool Equals(CharacterType other)
+    public readonly bool Equals(CharacterType other)
     {
         return true; // we do range checking seperatly as we do not know which is the one with more important range
     }
@@ -114,7 +118,7 @@ public record struct CharacterType(Range Range) : RangeType
         return 0;
     }
 
-    public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;
+    public readonly Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;
 
     public CharacterType()
         : this(Range.DefaultCharacter()) { }
@@ -153,7 +157,7 @@ public class RecordType(string name, Dictionary<string, Type> fields, List<strin
 
 public record struct ArrayType(Type Inner, Range Range) : RangeType // arrays have only one inner type
 {
-    public bool Equals(ArrayType other)
+    public readonly bool Equals(ArrayType other)
     {
         return other.Inner.Equals(Inner);
     }
@@ -163,7 +167,7 @@ public record struct ArrayType(Type Inner, Range Range) : RangeType // arrays ha
         return Inner.GetHashCode();
     }
 
-    public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) =>
+    public readonly Type Instantiate(Dictionary<string, Type> instantiatedGenerics) =>
         new ArrayType(Inner.Instantiate(instantiatedGenerics));
 
     public ArrayType(Type inner)
@@ -211,7 +215,7 @@ public readonly record struct UnknownType(string TypeName, List<Type> TypeParame
 // also generics cannot have type parameters
 public record struct GenericType(string Name) : Type
 {
-    public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) =>
+    public readonly Type Instantiate(Dictionary<string, Type> instantiatedGenerics) =>
         instantiatedGenerics.GetValueOrDefault(Name, this);
 }
 
@@ -224,7 +228,7 @@ public record struct InstantiatedType(
     Dictionary<string, Type> InstantiatedGenerics
 ) : Type
 {
-    public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) =>
+    public readonly Type Instantiate(Dictionary<string, Type> instantiatedGenerics) =>
         new InstantiatedType(
             Inner,
             InstantiatedGenerics
@@ -232,7 +236,7 @@ public record struct InstantiatedType(
                 .ToDictionary()
         );
 
-    public bool Equals(InstantiatedType other) =>
+    public readonly bool Equals(InstantiatedType other) =>
         Inner.Equals(other.Inner) && InstantiatedGenerics.SequenceEqual(other.InstantiatedGenerics);
 
     public override readonly int GetHashCode()
@@ -240,9 +244,9 @@ public record struct InstantiatedType(
         return HashCode.Combine(Inner, InstantiatedGenerics);
     }
 
-    Type? GetMember(string name) => Inner.GetMember(name, InstantiatedGenerics);
+    readonly Type? GetMember(string name) => Inner.GetMember(name, InstantiatedGenerics);
 
-    public override string ToString()
+    public override readonly string ToString()
     {
         return $"{Inner}<{String.Join(",", InstantiatedGenerics.Select(tpair => $"{tpair.Key}: {tpair.Value}"))}>";
     }
@@ -250,7 +254,7 @@ public record struct InstantiatedType(
 
 public record struct ReferenceType(Type Inner) : Type
 {
-    public Type Instantiate(Dictionary<string, Type> instantiatedGenerics)
+    public readonly Type Instantiate(Dictionary<string, Type> instantiatedGenerics)
     {
         var instantiate = Inner.Instantiate(instantiatedGenerics);
         return new ReferenceType(

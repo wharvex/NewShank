@@ -165,8 +165,9 @@ public class CommandLineArgsParser
             );
         program.SetStartModule();
         BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
+        OutputHelper.DebugPrintAst(program, "pre-SA");
         SemanticAnalysis.CheckModules(program);
-        OutputHelper.DebugPrintAst(program);
+        OutputHelper.DebugPrintAst(program, "post-SA");
         Interpreter.Modules = program.Modules;
         Interpreter.StartModule = program.GetStartModuleSafe();
         if (!options.unitTest)

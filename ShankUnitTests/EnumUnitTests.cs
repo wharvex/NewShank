@@ -39,7 +39,7 @@ namespace ShankUnitTests
             Assert.IsNotNull(module);
             Assert.AreEqual(1, module.getEnums().Count());
             Assert.IsTrue(module.getEnums().ContainsKey("colors"));
-            Assert.AreEqual(1, module.getEnums()["colors"].NewType.Variants.Count);
+            Assert.AreEqual(1, module.getEnums()["colors"].Type.Variants.Count);
         }
 
         [TestMethod]
@@ -56,7 +56,7 @@ namespace ShankUnitTests
             Assert.IsNotNull(module);
             Assert.AreEqual(1, module.getEnums().Count());
             Assert.IsTrue(module.getEnums().ContainsKey("colors"));
-            Assert.AreEqual(3, module.getEnums()["colors"].NewType.Variants.Count);
+            Assert.AreEqual(3, module.getEnums()["colors"].Type.Variants.Count);
         }
 
         [TestMethod]
@@ -73,7 +73,7 @@ namespace ShankUnitTests
             Assert.IsNotNull(module);
             Assert.AreEqual(1, module.getEnums().Count());
             Assert.IsTrue(module.getEnums().ContainsKey("colors"));
-            Assert.AreEqual(3, module.getEnums()["colors"].NewType.Variants.Count);
+            Assert.AreEqual(3, module.getEnums()["colors"].Type.Variants.Count);
         }
 
         //checking if the line "e := red" would be parsed without throwing an error

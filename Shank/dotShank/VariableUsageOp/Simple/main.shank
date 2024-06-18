@@ -1,3 +1,4 @@
 define start()
 variables a : integer
     a := 1
+    write "hello VariableUsageOp Simple"

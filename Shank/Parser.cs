@@ -34,6 +34,10 @@ public class Parser
     {
         _tokens = tokens;
         InterpreterOptions = options;
+        if (InterpreterOptions is not null && InterpreterOptions.VuOpTest)
+        {
+            OutputHelper.DebugPrintTxt("starting vuop test debug output", "vuop");
+        }
     }
 
     private readonly List<Token> _tokens;
@@ -589,10 +593,6 @@ public class Parser
         //     MatchAndRemove(Token.TokenType.EndOfLine);
         // }
 
-        if (InterpreterOptions is not null)
-        {
-            OutputHelper.DebugPrintTxt(InterpreterOptions.VuOpTest.ToString(), "vuop");
-        }
         return (
                 InterpreterOptions is not null && InterpreterOptions.VuOpTest
                     ? NewAssignment()
@@ -1004,32 +1004,46 @@ public class Parser
     private StatementNode? NewAssignment()
     {
         OutputHelper.DebugPrintTxt("hello from new assignment", "vuop", true);
-        if (
-            Peek(1)?.Type
-            is Token.TokenType.Assignment
-                or Token.TokenType.LeftBracket
-                or Token.TokenType.Dot
-        )
-        {
-            var target = GetVariableUsagePlainNode();
-            if (target == null)
-                throw new SyntaxErrorException(
-                    "Found an assignment without a valid identifier.",
-                    Peek(0)
-                );
-            MatchAndRemove(Token.TokenType.Assignment);
-            var expression = ParseExpressionLine();
-            if (expression == null)
-                throw new SyntaxErrorException(
-                    "Found an assignment without a valid right hand side.",
-                    Peek(0)
-                );
-            return new AssignmentNode(target, expression);
-        }
-        else
+        OutputHelper.DebugPrintTxt(
+            "Assignment token found on line "
+                + Line
+                + ": "
+                + FindBeforeEol(Token.TokenType.Assignment),
+            "vuop",
+            true
+        );
+        if (!FindBeforeEol(Token.TokenType.Assignment))
         {
             return null;
         }
+
+        var target =
+            GetVariableUsageNode()
+            ?? throw new SyntaxErrorException("Expected variable usage", Peek(0));
+
+        RequiresToken(Token.TokenType.Assignment);
+
+        var expression =
+            ParseExpressionLine() ?? throw new SyntaxErrorException("Expected expression", Peek(0));
+
+        return new AssignmentNode(new VariableUsagePlainNode("empty"), expression, target);
+    }
+
+    private bool FindBeforeEol(Token.TokenType tokenType)
+    {
+        var i = 0;
+        var next = Peek(i);
+        while (next is not null && next.Type != Token.TokenType.EndOfLine)
+        {
+            if (next.Type == tokenType)
+            {
+                return true;
+            }
+
+            next = Peek(++i);
+        }
+
+        return false;
     }
 
     /// <summary>

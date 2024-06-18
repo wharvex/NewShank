@@ -939,7 +939,7 @@ public class Interpreter
 
     private static bool EnumLessThan(EnumDataType left, EnumDataType right)
     {
-        var enumElements = left.Type.NewType.Variants.ToArray();
+        var enumElements = left.Type.Type.Variants.ToArray();
         int leftIndex = 0,
             rightIndex = 0;
         for (int i = 0; i < enumElements.Length; i++)
@@ -954,7 +954,7 @@ public class Interpreter
 
     private static bool EnumLessThan(EnumDataType left, string right)
     {
-        var enumElements = left.Type.NewType.Variants.ToArray();
+        var enumElements = left.Type.Type.Variants.ToArray();
         int leftIndex = 0,
             rightIndex = 0;
         for (int i = 0; i < enumElements.Length; i++)
