@@ -13,7 +13,7 @@ public class ModuleNode : ASTNode
     public Dictionary<string, CallableNode> Functions { get; init; }
     public Dictionary<string, List<CallableNode>> Functions2 { get; } = []; //not finished for overloaded functions
     public Dictionary<string, RecordNode> Records { get; init; }
-    public Dictionary<string, VariableNode> GlobalVariables { get; } = [];
+    public Dictionary<string, VariableDeclarationNode> GlobalVariables { get; } = [];
 
     public Dictionary<string, ASTNode> Exported { get; set; }
     public Dictionary<string, ASTNode> Imported { get; set; }
@@ -67,7 +67,7 @@ public class ModuleNode : ASTNode
 
     public CallableNode? GetFromFunctionsByCall(
         FunctionCallNode givenCall,
-        Dictionary<string, VariableNode> variablesInScope
+        Dictionary<string, VariableDeclarationNode> variablesInScope
     )
     {
         if (Functions2.TryGetValue(givenCall.Name, out var foundFns))
@@ -97,7 +97,7 @@ public class ModuleNode : ASTNode
         return Functions.ContainsKey(name);
     }
 
-    public void AddToGlobalVariables(List<VariableNode> variables)
+    public void AddToGlobalVariables(List<VariableDeclarationNode> variables)
     {
         variables.ForEach(v =>
         {

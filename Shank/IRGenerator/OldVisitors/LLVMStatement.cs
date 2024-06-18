@@ -213,7 +213,7 @@ public class LLVMStatement(Context context, LLVMBuilderRef builder, LLVMModuleRe
         record.LlvmTypeRef.StructSetBody(args.Select(s => s.Item2).ToArray(), false);
     }
 
-    public override void Accept(VariableNode node)
+    public override void Accept(VariableDeclarationNode node)
     {
         var name = node.GetNameSafe();
         // TODO: only alloca when !isConstant

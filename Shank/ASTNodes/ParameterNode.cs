@@ -46,7 +46,7 @@ public class ParameterNode : ExpressionNode
     public string ToStringForOverload(
         Dictionary<string, ASTNode> imports,
         Dictionary<string, RecordNode> records,
-        Dictionary<string, VariableNode> variables
+        Dictionary<string, VariableDeclarationNode> variables
     ) =>
         "_"
         + (IsVariable ? "VAR_" : "")
@@ -104,8 +104,8 @@ public class ParameterNode : ExpressionNode
     }
 
     public bool EqualsWrtTypeAndVar(
-        VariableNode givenVariable,
-        Dictionary<string, VariableNode> variablesInScope
+        VariableDeclarationNode givenVariable,
+        Dictionary<string, VariableDeclarationNode> variablesInScope
     )
     {
         return ValueIsStoredInVariable()
@@ -113,12 +113,12 @@ public class ParameterNode : ExpressionNode
             : ConstantTypeEquals(givenVariable);
     }
 
-    public bool VarStatusEquals(VariableNode givenVariable)
+    public bool VarStatusEquals(VariableDeclarationNode givenVariable)
     {
         return IsVariable != givenVariable.IsConstant;
     }
 
-    public bool ConstantTypeEquals(VariableNode givenVariable)
+    public bool ConstantTypeEquals(VariableDeclarationNode givenVariable)
     {
         return givenVariable.Type.Equals(GetConstantType());
     }
@@ -129,16 +129,16 @@ public class ParameterNode : ExpressionNode
     }
 
     public bool VariableTypeEquals(
-        VariableNode givenVariable,
-        Dictionary<string, VariableNode> variablesInScope
+        VariableDeclarationNode givenVariable,
+        Dictionary<string, VariableDeclarationNode> variablesInScope
     )
     {
         // Check if the types are unequal.
         return (givenVariable.Type.Equals(GetVariableType(variablesInScope)));
     }
 
-    public VariableNode GetVariableDeclarationSafe(
-        Dictionary<string, VariableNode> variablesInScope
+    public VariableDeclarationNode GetVariableDeclarationSafe(
+        Dictionary<string, VariableDeclarationNode> variablesInScope
     )
     {
         if (variablesInScope.TryGetValue(GetVariableSafe().Name, out var varDec))
@@ -149,7 +149,7 @@ public class ParameterNode : ExpressionNode
         throw new InvalidOperationException("Could not find given variable in scope");
     }
 
-    public Type GetVariableType(Dictionary<string, VariableNode> variablesInScope)
+    public Type GetVariableType(Dictionary<string, VariableDeclarationNode> variablesInScope)
     {
         return GetVariableDeclarationSafe(variablesInScope).Type;
     }

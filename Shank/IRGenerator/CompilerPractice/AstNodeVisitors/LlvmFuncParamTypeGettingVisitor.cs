@@ -124,7 +124,7 @@ public class LlvmFuncParamTypeGettingVisitor(LLVMContextRef llvmContext)
         throw new NotImplementedException();
     }
 
-    public LLVMTypeRef Visit(VariableNode v)
+    public LLVMTypeRef Visit(VariableDeclarationNode v)
     {
         return v.Type switch
         {

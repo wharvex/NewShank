@@ -12,20 +12,20 @@ public class BuiltInFunctions
         // the students to do in Java.
         var retVal = new List<BuiltInFunctionNode>
         {
-            MakeNode("write", new VariableNode[] { }, Write, true),
-            MakeNode("read", new VariableNode[] { }, Read, true),
-            MakeNode("writeToTest", new VariableNode[] { }, WriteToTest, true),
+            MakeNode("write", new VariableDeclarationNode[] { }, Write, true),
+            MakeNode("read", new VariableDeclarationNode[] { }, Read, true),
+            MakeNode("writeToTest", new VariableDeclarationNode[] { }, WriteToTest, true),
             MakeNode(
                 "squareRoot",
-                new VariableNode[]
+                new VariableDeclarationNode[]
                 {
-                    new VariableNode()
+                    new VariableDeclarationNode()
                     {
                         Name = "value",
                         Type = new RealType(),
                         IsConstant = true
                     },
-                    new VariableNode()
+                    new VariableDeclarationNode()
                     {
                         Name = "result",
                         Type = new RealType(),
@@ -37,9 +37,9 @@ public class BuiltInFunctions
             ),
             MakeNode(
                 "getRandom",
-                new VariableNode[]
+                new VariableDeclarationNode[]
                 {
-                    new VariableNode()
+                    new VariableDeclarationNode()
                     {
                         Name = "result",
                         Type = new IntegerType(),
@@ -51,15 +51,15 @@ public class BuiltInFunctions
             ),
             MakeNode(
                 "integerToReal",
-                new VariableNode[]
+                new VariableDeclarationNode[]
                 {
-                    new VariableNode()
+                    new VariableDeclarationNode()
                     {
                         Name = "value",
                         Type = new IntegerType(),
                         IsConstant = true
                     },
-                    new VariableNode()
+                    new VariableDeclarationNode()
                     {
                         Name = "result",
                         Type = new RealType(),
@@ -71,15 +71,15 @@ public class BuiltInFunctions
             ),
             MakeNode(
                 "realToInteger",
-                new VariableNode[]
+                new VariableDeclarationNode[]
                 {
-                    new VariableNode()
+                    new VariableDeclarationNode()
                     {
                         Name = "value",
                         Type = new RealType(),
                         IsConstant = true
                     },
-                    new VariableNode()
+                    new VariableDeclarationNode()
                     {
                         Name = "result",
                         Type = new IntegerType(),
@@ -91,21 +91,21 @@ public class BuiltInFunctions
             ),
             MakeNode(
                 "left",
-                new VariableNode[]
+                new VariableDeclarationNode[]
                 {
-                    new VariableNode()
+                    new VariableDeclarationNode()
                     {
                         Name = "value",
                         Type = new StringType(),
                         IsConstant = true
                     },
-                    new VariableNode()
+                    new VariableDeclarationNode()
                     {
                         Name = "amount",
                         Type = new IntegerType(),
                         IsConstant = true
                     },
-                    new VariableNode()
+                    new VariableDeclarationNode()
                     {
                         Name = "result",
                         Type = new StringType(),
@@ -117,21 +117,21 @@ public class BuiltInFunctions
             ),
             MakeNode(
                 "right",
-                new VariableNode[]
+                new VariableDeclarationNode[]
                 {
-                    new VariableNode()
+                    new VariableDeclarationNode()
                     {
                         Name = "value",
                         Type = new StringType(),
                         IsConstant = true
                     },
-                    new VariableNode()
+                    new VariableDeclarationNode()
                     {
                         Name = "amount",
                         Type = new IntegerType(),
                         IsConstant = true
                     },
-                    new VariableNode()
+                    new VariableDeclarationNode()
                     {
                         Name = "result",
                         Type = new StringType(),
@@ -143,27 +143,27 @@ public class BuiltInFunctions
             ),
             MakeNode(
                 "substring",
-                new VariableNode[]
+                new VariableDeclarationNode[]
                 {
-                    new VariableNode()
+                    new VariableDeclarationNode()
                     {
                         Name = "value",
                         Type = new StringType(),
                         IsConstant = true
                     },
-                    new VariableNode()
+                    new VariableDeclarationNode()
                     {
                         Name = "index",
                         Type = new IntegerType(),
                         IsConstant = true
                     },
-                    new VariableNode()
+                    new VariableDeclarationNode()
                     {
                         Name = "amount",
                         Type = new IntegerType(),
                         IsConstant = true
                     },
-                    new VariableNode()
+                    new VariableDeclarationNode()
                     {
                         Name = "result",
                         Type = new StringType(),
@@ -175,15 +175,15 @@ public class BuiltInFunctions
             ),
             MakeNode(
                 "assertIsEqual",
-                new VariableNode[]
+                new VariableDeclarationNode[]
                 {
-                    new VariableNode()
+                    new VariableDeclarationNode()
                     {
                         Name = "actualValue",
                         Type = new IntegerType(),
                         IsConstant = true
                     },
-                    new VariableNode()
+                    new VariableDeclarationNode()
                     {
                         Name = "targetValue",
                         Type = new IntegerType(),
@@ -195,9 +195,9 @@ public class BuiltInFunctions
             ),
             MakeNode(
                 "allocateMemory",
-                new VariableNode[]
+                new VariableDeclarationNode[]
                 {
-                    new VariableNode()
+                    new VariableDeclarationNode()
                     {
                         Name = "refersTo",
                         Type = new ReferenceType(),
@@ -209,9 +209,9 @@ public class BuiltInFunctions
             ),
             MakeNode(
                 "freeMemory",
-                new VariableNode[]
+                new VariableDeclarationNode[]
                 {
-                    new VariableNode()
+                    new VariableDeclarationNode()
                     {
                         Name = "refersTo",
                         Type = new ReferenceType(),
@@ -223,15 +223,15 @@ public class BuiltInFunctions
             ),
             MakeNode(
                 "isSet",
-                new VariableNode[]
+                new VariableDeclarationNode[]
                 {
-                    new VariableNode()
+                    new VariableDeclarationNode()
                     {
                         Name = "refersTo",
                         Type = new ReferenceType(),
                         IsConstant = true
                     },
-                    new VariableNode()
+                    new VariableDeclarationNode()
                     {
                         Name = "value",
                         Type = new BooleanType(),
@@ -243,15 +243,15 @@ public class BuiltInFunctions
             ),
             MakeNode(
                 "size",
-                new VariableNode[]
+                new VariableDeclarationNode[]
                 {
-                    new VariableNode()
+                    new VariableDeclarationNode()
                     {
                         Name = "refersTo",
                         Type = new ReferenceType(),
                         IsConstant = true
                     },
-                    new VariableNode()
+                    new VariableDeclarationNode()
                     {
                         Name = "value",
                         Type = new IntegerType(),
@@ -272,7 +272,7 @@ public class BuiltInFunctions
     public static BuiltInFunctionNode MakeNode(
         //string namePrefix,
         string name,
-        VariableNode[] parameters,
+        VariableDeclarationNode[] parameters,
         BuiltInFunctionNode.BuiltInCall call,
         bool isVariadic = false
     )

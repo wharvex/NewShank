@@ -48,12 +48,12 @@ public class SemanticAnalysis
             });
     }
 
-    private static Dictionary<string, VariableNode> GetLocalAndGlobalVariables(
+    private static Dictionary<string, VariableDeclarationNode> GetLocalAndGlobalVariables(
         ModuleNode module,
-        List<VariableNode> localVariables
+        List<VariableDeclarationNode> localVariables
     )
     {
-        var ret = new Dictionary<string, VariableNode>(module.GlobalVariables);
+        var ret = new Dictionary<string, VariableDeclarationNode>(module.GlobalVariables);
         localVariables.ForEach(v =>
         {
             if (!ret.TryAdd(v.GetNameSafe(), v))
@@ -68,7 +68,7 @@ public class SemanticAnalysis
 
     private static void CheckBlock(
         List<StatementNode> statements,
-        Dictionary<string, VariableNode> variables,
+        Dictionary<string, VariableDeclarationNode> variables,
         Dictionary<string, bool> variablesSet,
         ModuleNode parentModule
     )
@@ -185,7 +185,7 @@ public class SemanticAnalysis
         String targetName,
         Type targetType,
         ExpressionNode expression,
-        Dictionary<string, VariableNode> variables
+        Dictionary<string, VariableDeclarationNode> variables
     )
     {
         CheckRange(targetName, targetType, expression, variables);
@@ -221,7 +221,7 @@ public class SemanticAnalysis
     // and IType is the best because it only stores whats neccesary for a givern type
     private static Dictionary<string, Type> CheckFunctionCall(
         List<ParameterNode> param,
-        Dictionary<string, VariableNode> variables,
+        Dictionary<string, VariableDeclarationNode> variables,
         FunctionNode fn,
         FunctionCallNode functionCallNode
     )
@@ -244,9 +244,9 @@ public class SemanticAnalysis
     }
 
     public static Dictionary<string, Type> TypeCheckAndInstiateGenericParameter(
-        VariableNode param,
+        VariableDeclarationNode param,
         ParameterNode argument,
-        Dictionary<string, VariableNode> variables,
+        Dictionary<string, VariableDeclarationNode> variables,
         FunctionNode fn
     )
     {
@@ -262,16 +262,16 @@ public class SemanticAnalysis
 
     // assumptions if the arguement is a variable it assumed to be there already from previous check in check function call
     private static void CheckParameterMutability(
-        VariableNode param,
+        VariableDeclarationNode param,
         ParameterNode argument,
-        Dictionary<string, VariableNode> variables,
+        Dictionary<string, VariableDeclarationNode> variables,
         FunctionCallNode fn
     )
     {
         // check that the arguement passed in has the right type of mutablility for its parameter
         if (argument.IsVariable)
         {
-            VariableNode? lookedUpArguement = variables.GetValueOrDefault(
+            VariableDeclarationNode? lookedUpArguement = variables.GetValueOrDefault(
                 (
                     argument.Variable
                     ?? throw new SemanticErrorException(
@@ -306,7 +306,7 @@ public class SemanticAnalysis
         String? variable,
         Type targetType,
         ASTNode expression,
-        Dictionary<string, VariableNode> variablesLookup
+        Dictionary<string, VariableDeclarationNode> variablesLookup
     )
     {
         // TODO: traverse record type if necesary
@@ -352,7 +352,10 @@ public class SemanticAnalysis
         }
     }
 
-    private static float GetMaxRange(ASTNode node, Dictionary<string, VariableNode> variables)
+    private static float GetMaxRange(
+        ASTNode node,
+        Dictionary<string, VariableDeclarationNode> variables
+    )
     {
         if (node is MathOpNode mon)
         {
@@ -393,7 +396,10 @@ public class SemanticAnalysis
         );
     }
 
-    private static float GetMinRange(ASTNode node, Dictionary<string, VariableNode> variables)
+    private static float GetMinRange(
+        ASTNode node,
+        Dictionary<string, VariableDeclarationNode> variables
+    )
     {
         if (node is MathOpNode mon)
         {
@@ -433,7 +439,7 @@ public class SemanticAnalysis
 
     private static Type GetTypeOfExpression(
         ASTNode expression,
-        Dictionary<string, VariableNode> variables
+        Dictionary<string, VariableDeclarationNode> variables
     )
     {
         return expression switch
@@ -452,7 +458,7 @@ public class SemanticAnalysis
 
         Type GetTypeOfBooleanExpression(
             BooleanExpressionNode booleanExpressionNode,
-            Dictionary<string, VariableNode> variableNodes
+            Dictionary<string, VariableDeclarationNode> variableNodes
         )
         {
             // TODO: are all things of the same type comparable
@@ -482,7 +488,10 @@ public class SemanticAnalysis
                 );
         }
 
-        Type GetTypeOfMathOp(MathOpNode mathOpNode, Dictionary<string, VariableNode> variableNodes)
+        Type GetTypeOfMathOp(
+            MathOpNode mathOpNode,
+            Dictionary<string, VariableDeclarationNode> variableNodes
+        )
         {
             var lhs = GetTypeOfExpression(mathOpNode.Left, variables);
             var rhs = GetTypeOfExpression(mathOpNode.Right, variables);
@@ -532,7 +541,7 @@ public class SemanticAnalysis
 
         Type GetTypeOfVariableUsage(
             VariableUsagePlainNode variableReferenceNode,
-            Dictionary<string, VariableNode> variableNodes
+            Dictionary<string, VariableDeclarationNode> variableNodes
         )
         {
             var variable =
@@ -989,7 +998,7 @@ public class SemanticAnalysis
     }
 
     private static void CheckVariables(
-        List<VariableNode> variables,
+        List<VariableDeclarationNode> variables,
         ModuleNode currentModule,
         List<String> generics
     )

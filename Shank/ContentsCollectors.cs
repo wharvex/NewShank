@@ -72,7 +72,7 @@ public static class ContentsCollectors
         {
             ModuleNode m => m.Name,
             CallableNode c => c.Name,
-            VariableNode v => v.Name,
+            VariableDeclarationNode v => v.Name,
             _ => throw new UnreachableException()
         };
     }

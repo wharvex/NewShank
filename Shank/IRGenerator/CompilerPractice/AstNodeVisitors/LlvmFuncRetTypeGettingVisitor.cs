@@ -123,7 +123,7 @@ public class LlvmFuncRetTypeGettingVisitor(LLVMContextRef llvmContext)
         throw new NotImplementedException();
     }
 
-    public LLVMTypeRef Visit(VariableNode v)
+    public LLVMTypeRef Visit(VariableDeclarationNode v)
     {
         throw new NotImplementedException();
     }

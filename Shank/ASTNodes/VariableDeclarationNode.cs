@@ -8,7 +8,7 @@ using Exception = System.Exception;
 
 namespace Shank.ASTNodes;
 
-public class VariableNode : ASTNode
+public class VariableDeclarationNode : ASTNode
 {
     public string? Name { get; set; }
     public string? ModuleName { get; set; }
@@ -134,7 +134,7 @@ public class VariableNode : ASTNode
     //    return records[GetUnknownTypeSafe()].GetFromMembersByNameSafe(memberName).Type;
     // }
 
-    public bool EqualsForOverload(VariableNode vn)
+    public bool EqualsForOverload(VariableDeclarationNode vn)
     {
         return vn.Type.Equals(Type) && vn.IsConstant == IsConstant;
     }

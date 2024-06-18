@@ -445,7 +445,10 @@ public class Parser
         var done = false;
         while (!done)
         {
-            var vars = GetVariables(moduleName, VariableNode.DeclarationContext.FunctionSignature);
+            var vars = GetVariables(
+                moduleName,
+                VariableDeclarationNode.DeclarationContext.FunctionSignature
+            );
             done = vars == null;
             if (vars != null)
             {
@@ -518,12 +521,12 @@ public class Parser
         StatementsBody(function.Statements);
     }
 
-    private List<VariableNode> BodyRecord(string parentModule)
+    private List<VariableDeclarationNode> BodyRecord(string parentModule)
     {
         //StatementsBody(record.Members, true);
         List<ASTNode> bodyContents = [];
         Body(bodyContents, parentModule, GetVariablesRecord);
-        return bodyContents.Cast<VariableNode>().ToList();
+        return bodyContents.Cast<VariableDeclarationNode>().ToList();
     }
 
     private void StatementsBody(List<StatementNode> statements, bool isRecord = false)
@@ -617,7 +620,7 @@ public class Parser
         }
 
         RequiresToken(Token.TokenType.Colon);
-        var type = Type(VariableNode.DeclarationContext.RecordDeclaration);
+        var type = Type(VariableDeclarationNode.DeclarationContext.RecordDeclaration);
 
         RequiresEndOfLine();
         return new RecordMemberNode(nameToken.GetValueSafe(), type);
@@ -639,7 +642,7 @@ public class Parser
         };
 
     // assumptions you want to parse a type
-    private Type Type(VariableNode.DeclarationContext declarationContext)
+    private Type Type(VariableDeclarationNode.DeclarationContext declarationContext)
     {
         var typeToken =
             MatchAndRemoveMultiple(_shankTokenTypesPlusIdentifier)
@@ -674,7 +677,10 @@ public class Parser
         yield return generator();
     }
 
-    private Type CustomType(VariableNode.DeclarationContext declarationContext, Token typeToken)
+    private Type CustomType(
+        VariableDeclarationNode.DeclarationContext declarationContext,
+        Token typeToken
+    )
     {
         // see if there are type parameters
         var token = Peek(0);
@@ -739,12 +745,15 @@ public class Parser
     }
 
     private ArrayType ArrayType(
-        VariableNode.DeclarationContext declarationContext,
+        VariableDeclarationNode.DeclarationContext declarationContext,
         Token? arrayToken
     )
     {
         var range = CheckRangeInner(false, Range.DefaultSmallInteger());
-        if (range is null && declarationContext == VariableNode.DeclarationContext.VariablesLine)
+        if (
+            range is null
+            && declarationContext == VariableDeclarationNode.DeclarationContext.VariablesLine
+        )
         {
             throw new SyntaxErrorException(
                 "Array in variables declared without a size",
@@ -1029,15 +1038,15 @@ public class Parser
     /// </summary>
     /// <param name="parentModule"></param>
     /// <returns></returns>
-    private List<VariableNode> ProcessVariables(string parentModule)
+    private List<VariableDeclarationNode> ProcessVariables(string parentModule)
     {
-        var retVal = new List<VariableNode>();
+        var retVal = new List<VariableDeclarationNode>();
 
         while (MatchAndRemove(Token.TokenType.Variables) != null)
         {
             var nextOnes = GetVariables(
                 parentModule,
-                VariableNode.DeclarationContext.VariablesLine
+                VariableDeclarationNode.DeclarationContext.VariablesLine
             );
 
             // TODO: We are potentially adding null to retVal here.
@@ -1049,15 +1058,15 @@ public class Parser
         return retVal;
     }
 
-    private List<VariableNode> ProcessVariablesDoWhile(string parentModule)
+    private List<VariableDeclarationNode> ProcessVariablesDoWhile(string parentModule)
     {
-        var retVal = new List<VariableNode>();
+        var retVal = new List<VariableDeclarationNode>();
 
         do
         {
             var nextOnes = GetVariables(
                 parentModule,
-                VariableNode.DeclarationContext.VariablesLine
+                VariableDeclarationNode.DeclarationContext.VariablesLine
             );
 
             // TODO: List.AddRange throws an ArgumentNullException if nextOnes is null.
@@ -1069,11 +1078,11 @@ public class Parser
         return retVal;
     }
 
-    private List<VariableNode> CreateVariables(
+    private List<VariableDeclarationNode> CreateVariables(
         List<string> names,
         bool isConstant,
         string parentModuleName,
-        VariableNode.DeclarationContext declarationContext
+        VariableDeclarationNode.DeclarationContext declarationContext
     )
     {
         var type = Type(declarationContext);
@@ -1088,13 +1097,13 @@ public class Parser
             );
         }
 
-        if (declarationContext == VariableNode.DeclarationContext.VariablesLine)
+        if (declarationContext == VariableDeclarationNode.DeclarationContext.VariablesLine)
         {
             // Creates the variables with their default values added unto them
             return CreateDefaultVariables(names, isConstant, parentModuleName, type);
         }
 
-        if (declarationContext == VariableNode.DeclarationContext.FunctionSignature)
+        if (declarationContext == VariableDeclarationNode.DeclarationContext.FunctionSignature)
         {
             afterDefault = true;
             return CreateDefaultVariables(names, isConstant, parentModuleName, type);
@@ -1102,7 +1111,7 @@ public class Parser
         return CreateVariablesBasic(names, isConstant, parentModuleName, type);
     }
 
-    private List<VariableNode> CreateVariablesBasic(
+    private List<VariableDeclarationNode> CreateVariablesBasic(
         List<string> names,
         bool isConstant,
         string parentModuleName,
@@ -1113,7 +1122,7 @@ public class Parser
         return names
             .Select(
                 n =>
-                    new VariableNode()
+                    new VariableDeclarationNode()
                     {
                         IsConstant = isConstant,
                         Type = type,
@@ -1124,7 +1133,7 @@ public class Parser
             .ToList();
     }
 
-    private List<VariableNode> CreateDefaultVariables(
+    private List<VariableDeclarationNode> CreateDefaultVariables(
         List<string> names,
         bool isConstant,
         string parentModuleName,
@@ -1142,7 +1151,7 @@ public class Parser
         return names
             .Select(
                 n =>
-                    new VariableNode()
+                    new VariableDeclarationNode()
                     {
                         IsConstant = isConstant,
                         Type = type,
@@ -1171,38 +1180,38 @@ public class Parser
         };
 
     private static bool GetMutability(
-        VariableNode.DeclarationContext declarationContext,
+        VariableDeclarationNode.DeclarationContext declarationContext,
         bool hasVar,
         Token? varToken
     ) =>
         declarationContext switch
         {
-            VariableNode.DeclarationContext.RecordDeclaration when hasVar
+            VariableDeclarationNode.DeclarationContext.RecordDeclaration when hasVar
                 => throw new SyntaxErrorException(
                     "Keyword `var' not allowed in a record declaration.",
                     varToken
                 ),
-            VariableNode.DeclarationContext.RecordDeclaration => false,
-            VariableNode.DeclarationContext.EnumDeclaration when hasVar
+            VariableDeclarationNode.DeclarationContext.RecordDeclaration => false,
+            VariableDeclarationNode.DeclarationContext.EnumDeclaration when hasVar
                 => throw new SyntaxErrorException(
                     "Keyword `var' not allowed in an enum declaration.",
                     varToken
                 ),
-            VariableNode.DeclarationContext.EnumDeclaration => false,
-            VariableNode.DeclarationContext.FunctionSignature when hasVar => false,
-            VariableNode.DeclarationContext.FunctionSignature when !hasVar => true,
-            VariableNode.DeclarationContext.VariablesLine when hasVar
+            VariableDeclarationNode.DeclarationContext.EnumDeclaration => false,
+            VariableDeclarationNode.DeclarationContext.FunctionSignature when hasVar => false,
+            VariableDeclarationNode.DeclarationContext.FunctionSignature when !hasVar => true,
+            VariableDeclarationNode.DeclarationContext.VariablesLine when hasVar
                 => throw new SyntaxErrorException(
                     "Keyword `var' not allowed in a variables line.",
                     varToken
                 ),
-            VariableNode.DeclarationContext.VariablesLine => false,
-            VariableNode.DeclarationContext.ConstantsLine when hasVar
+            VariableDeclarationNode.DeclarationContext.VariablesLine => false,
+            VariableDeclarationNode.DeclarationContext.ConstantsLine when hasVar
                 => throw new SyntaxErrorException(
                     "Keyword `var' not allowed in a constants line.",
                     varToken
                 ),
-            VariableNode.DeclarationContext.ConstantsLine => true,
+            VariableDeclarationNode.DeclarationContext.ConstantsLine => true,
             _
                 => throw new NotImplementedException(
                     "Invalid variable declaration context `"
@@ -1211,9 +1220,9 @@ public class Parser
                 )
         };
 
-    private List<VariableNode>? GetVariables(
+    private List<VariableDeclarationNode>? GetVariables(
         string parentModuleName,
-        VariableNode.DeclarationContext declarationContext
+        VariableDeclarationNode.DeclarationContext declarationContext
     )
     {
         var varToken = MatchAndRemove(Token.TokenType.Var);
@@ -1240,7 +1249,10 @@ public class Parser
     private void GetVariablesRecord(List<ASTNode> vars, string parentModuleName)
     {
         var newVars =
-            GetVariables(parentModuleName, VariableNode.DeclarationContext.RecordDeclaration)
+            GetVariables(
+                parentModuleName,
+                VariableDeclarationNode.DeclarationContext.RecordDeclaration
+            )
             ?? throw new SyntaxErrorException(
                 "A record declaration needs at least one constituent member.",
                 Peek(0)
@@ -1252,7 +1264,7 @@ public class Parser
             vars.AddRange(newVars);
             newVars = GetVariables(
                 parentModuleName,
-                VariableNode.DeclarationContext.RecordDeclaration
+                VariableDeclarationNode.DeclarationContext.RecordDeclaration
             );
         } while (newVars is not null);
     }
@@ -1317,9 +1329,9 @@ public class Parser
         return (fromNode, toNode);
     }
 
-    private List<VariableNode> ProcessConstants(string? parentModuleName)
+    private List<VariableDeclarationNode> ProcessConstants(string? parentModuleName)
     {
-        var retVal = new List<VariableNode>();
+        var retVal = new List<VariableDeclarationNode>();
         while (MatchAndRemove(Token.TokenType.Constants) != null)
         {
             while (true)
@@ -1335,7 +1347,7 @@ public class Parser
                     var node = ProcessNumericConstant(num);
                     retVal.Add(
                         node is FloatNode
-                            ? new VariableNode()
+                            ? new VariableDeclarationNode()
                             {
                                 InitialValue = node,
                                 Type = new RealType(),
@@ -1343,7 +1355,7 @@ public class Parser
                                 Name = name.Value ?? "",
                                 ModuleName = parentModuleName
                             }
-                            : new VariableNode()
+                            : new VariableDeclarationNode()
                             {
                                 InitialValue = node,
                                 Type = new IntegerType(),
@@ -1359,7 +1371,7 @@ public class Parser
                     if (chr != null)
                     {
                         retVal.Add(
-                            new VariableNode()
+                            new VariableDeclarationNode()
                             {
                                 InitialValue = new CharNode((chr?.Value ?? " ")[0]),
                                 Type = new CharacterType(),
@@ -1375,7 +1387,7 @@ public class Parser
                         if (str != null)
                         {
                             retVal.Add(
-                                new VariableNode()
+                                new VariableDeclarationNode()
                                 {
                                     InitialValue = new StringNode(str?.Value ?? ""),
                                     Type = new StringType(),
@@ -1394,7 +1406,7 @@ public class Parser
                                 if (paren == null)
                                 {
                                     retVal.Add(
-                                        new VariableNode()
+                                        new VariableDeclarationNode()
                                         {
                                             InitialValue = new StringNode(enm.Value),
                                             Type = new UnknownType(enm.Value),
@@ -1724,7 +1736,7 @@ public class Parser
         {
             var vars = GetVariables(
                 parentModuleName,
-                VariableNode.DeclarationContext.FunctionSignature
+                VariableDeclarationNode.DeclarationContext.FunctionSignature
             );
             done = vars == null;
             if (vars != null)

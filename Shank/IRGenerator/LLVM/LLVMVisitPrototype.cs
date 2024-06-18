@@ -62,7 +62,7 @@ public class LLVMVisitPrototype(Context context, LLVMBuilderRef builder, LLVMMod
         context.CurrentModule.CustomTypes.Add(node.Name, record);
     }
 
-    public override void Accept(VariableNode node)
+    public override void Accept(VariableDeclarationNode node)
     {
         var a = module.AddGlobal(
             context.GetLLVMTypeFromShankType(node.Type) ?? throw new Exception("null type"),

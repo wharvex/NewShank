@@ -280,7 +280,7 @@ public class RecordDataType : InterpreterDataType
         });
     }
 
-    public RecordDataType(List<VariableNode> members)
+    public RecordDataType(List<VariableDeclarationNode> members)
     {
         members.ForEach(vn => MemberTypes[vn.GetNameSafe()] = vn.Type);
     }

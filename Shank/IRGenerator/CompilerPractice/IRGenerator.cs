@@ -282,7 +282,7 @@ public class IrGenerator
                 )
         };
 
-    private LLVMTypeRef[] GetParamTypes(IEnumerable<VariableNode> varNodes) =>
+    private LLVMTypeRef[] GetParamTypes(IEnumerable<VariableDeclarationNode> varNodes) =>
         varNodes.Select(vn => GetLlvmTypeFromShankType(vn.Type)).ToArray();
 
     /// <summary>
@@ -294,7 +294,7 @@ public class IrGenerator
     /// </summary>
     /// <param name="vns"></param>
     /// <returns></returns>
-    private LLVMTypeRef GetReturnType(IEnumerable<VariableNode> vns) =>
+    private LLVMTypeRef GetReturnType(IEnumerable<VariableDeclarationNode> vns) =>
         vns.Where(vn => !vn.IsConstant)
             .Select(vn => GetLlvmTypeFromShankType(vn.Type))
             .FirstOrDefault(LlvmContext.VoidType);

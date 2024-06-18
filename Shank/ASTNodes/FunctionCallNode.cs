@@ -25,7 +25,7 @@ public class FunctionCallNode : StatementNode
 
     public bool EqualsWrtNameAndParams(
         CallableNode givenFunction,
-        Dictionary<string, VariableNode> variablesInScope
+        Dictionary<string, VariableDeclarationNode> variablesInScope
     )
     {
         // If the names don't match, it's not a match.

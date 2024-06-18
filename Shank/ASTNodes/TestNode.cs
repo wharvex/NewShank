@@ -6,7 +6,7 @@ namespace Shank.ASTNodes;
 public class TestNode : FunctionNode
 {
     public string targetFunctionName;
-    public List<VariableNode> testingFunctionParameters = new();
+    public List<VariableDeclarationNode> testingFunctionParameters = new();
 
     public TestNode(string name, string targetFnName)
         : base(name)
