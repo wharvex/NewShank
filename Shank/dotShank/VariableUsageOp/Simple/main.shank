@@ -1,0 +1,3 @@
+define start()
+variables a : integer
+    a := 1

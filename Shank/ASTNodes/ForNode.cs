@@ -12,16 +12,19 @@ public class ForNode : StatementNode
         VariableUsagePlainNode variable,
         ExpressionNode from,
         ExpressionNode to,
-        List<StatementNode> children
+        List<StatementNode> children,
+        VariableUsageNodeTemp? newVariable = null
     )
     {
         Variable = variable;
         From = from;
         To = to;
         Children = children;
+        NewVariable = newVariable ?? new VariableUsagePlainNode("empty");
     }
 
     public VariableUsagePlainNode Variable { get; init; }
+    public VariableUsageNodeTemp NewVariable { get; init; }
     public ExpressionNode From { get; init; }
     public ExpressionNode To { get; init; }
     public List<StatementNode> Children { get; init; }

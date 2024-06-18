@@ -31,7 +31,7 @@ public abstract class Visitor
     public abstract void Visit(ModuleNode node);
     public abstract void Visit(IfNode node); //
     public abstract void Visit(RepeatNode node); //
-    public abstract void Visit(VariableNode node); //
+    public abstract void Visit(VariableDeclarationNode node); //
     public abstract void Visit(ProgramNode node); //
     public abstract void Visit(ForNode node); //
 }

@@ -86,7 +86,7 @@ public class VariableUsagePlainNode : VariableUsageNodeTemp
     public Type GetSpecificType(
         Dictionary<string, RecordNode> records,
         Dictionary<string, ASTNode> imports,
-        Dictionary<string, VariableNode> variables,
+        Dictionary<string, VariableDeclarationNode> variables,
         string name
     )
     {

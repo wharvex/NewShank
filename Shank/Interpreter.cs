@@ -753,7 +753,7 @@ public class Interpreter
     }
 
     // assumptions: already type checked/resolved all custom types
-    private static InterpreterDataType VariableNodeToActivationRecord(VariableNode vn)
+    private static InterpreterDataType VariableNodeToActivationRecord(VariableDeclarationNode vn)
     {
         var parentModule = Modules[vn.GetModuleNameSafe()];
         switch (vn.Type)

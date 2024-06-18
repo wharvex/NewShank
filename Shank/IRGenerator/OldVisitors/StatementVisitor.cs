@@ -15,7 +15,7 @@ public abstract class StatementVisitor
     public abstract void Accept(IfNode node); //
     public abstract void Accept(RepeatNode node); //
     public abstract void Accept(RecordNode node); //
-    public abstract void Accept(VariableNode node); //
+    public abstract void Accept(VariableDeclarationNode node); //
     public abstract void Accept(ProgramNode node); //
     public abstract void Accept(ForNode node); //
 

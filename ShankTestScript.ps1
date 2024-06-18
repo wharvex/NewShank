@@ -15,11 +15,11 @@ function st
     "Interpret Arrays/sum", # 4
     "Interpret Records/nested", # 5
     "Interpret Globals", # 6
-    "Interpret UnitTestTests1 --ut", # 7
+    "Interpret UnitTestTests1 -u", # 7
     "Interpret Builtins/Write", # 8
     "Interpret Enums", # 9
     "CompilePractice Minimal/PrintInt/Shank --flat PrintInt", # 10
-    "Interpret VariableUsageOp" # 11
+    "Interpret VariableUsageOp/Simple --vuop-test" # 11
     #"Interpret OldShankFiles/Pascals.shank"
     #"Interpret OldShankFiles/GCD.shank"
     #"Interpret Negative"

@@ -23,7 +23,7 @@ public class RecordNode : ASTNode
     public RecordNode(
         string name,
         string moduleName,
-        List<VariableNode> members,
+        List<VariableDeclarationNode> members,
         List<string>? genericTypeParameterNames
     )
     {

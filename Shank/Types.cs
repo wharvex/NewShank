@@ -176,24 +176,24 @@ public readonly record struct UnknownType(string TypeName, List<Type> TypeParame
 
     public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;
 
-    public VariableNode.UnknownTypeResolver ResolveUnknownType(ModuleNode parentModule)
+    public VariableDeclarationNode.UnknownTypeResolver ResolveUnknownType(ModuleNode parentModule)
     {
         if (
             parentModule.getEnums().ContainsKey(TypeName)
             && parentModule.Records.ContainsKey(TypeName)
         )
         {
-            return VariableNode.UnknownTypeResolver.Multiple;
+            return VariableDeclarationNode.UnknownTypeResolver.Multiple;
         }
 
         if (parentModule.getEnums().ContainsKey(TypeName))
         {
-            return VariableNode.UnknownTypeResolver.Enum;
+            return VariableDeclarationNode.UnknownTypeResolver.Enum;
         }
 
         return parentModule.Records.ContainsKey(TypeName)
-            ? VariableNode.UnknownTypeResolver.Record
-            : VariableNode.UnknownTypeResolver.None;
+            ? VariableDeclarationNode.UnknownTypeResolver.Record
+            : VariableDeclarationNode.UnknownTypeResolver.None;
     }
 }
 

@@ -513,7 +513,7 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
         builder.PositionAtEnd(whileDone);
     }
 
-    public override void Visit(VariableNode node)
+    public override void Visit(VariableDeclarationNode node)
     {
         var name = node.GetNameSafe();
         // TODO: only alloca when !isConstant

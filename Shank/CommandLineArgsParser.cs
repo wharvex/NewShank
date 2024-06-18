@@ -81,8 +81,11 @@ public class InterptOptions
     [Value(index: 0, MetaName = "inputFile", HelpText = "The Shank source file", Required = true)]
     public IEnumerable<string> InputFiles { get; set; }
 
-    [Option("ut", HelpText = "Unit test options", Default = false)]
+    [Option('u', "unit-test", HelpText = "Unit test options", Default = false)]
     public bool unitTest { get; set; }
+
+    [Option('v', "vuop-test", HelpText = "Variable Usage Operation Test", Default = false)]
+    public bool VuOpTest { get; set; }
 }
 
 [Verb("CompilePractice", isDefault: false)]
@@ -151,12 +154,12 @@ public class CommandLineArgsParser
             .ForEach(
                 n =>
                     GetFiles(n) //multiple files
-                        .ForEach(ip => ScanAndParse(ip, program))
+                        .ForEach(ip => ScanAndParse(ip, program, options))
             );
         program.SetStartModule();
         BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
         SemanticAnalysis.CheckModules(program);
-
+        OutputHelper.DebugPrintAst(program);
         Interpreter.Modules = program.Modules;
         Interpreter.StartModule = program.GetStartModuleSafe();
         if (!options.unitTest)
@@ -215,7 +218,7 @@ public class CommandLineArgsParser
         );
     }
 
-    private void ScanAndParse(string inPath, ProgramNode program)
+    private void ScanAndParse(string inPath, ProgramNode program, InterptOptions? options = null)
     {
         List<Token> tokens = [];
         var lexer = new Lexer();
@@ -224,7 +227,7 @@ public class CommandLineArgsParser
         var lines = File.ReadAllLines(inPath);
         tokens.AddRange(lexer.Lex(lines));
 
-        var parser = new Shank.Parser(tokens);
+        var parser = new Shank.Parser(tokens, options);
 
         // Parse the tokens and turn them into an AST.
         while (tokens.Count > 0)

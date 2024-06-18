@@ -36,7 +36,7 @@ public class FunctionNode : CallableNode
     //DEPRECIATED
     public string OverloadNameExt { get; set; } = "";
 
-    public List<VariableNode> LocalVariables { get; set; } = [];
+    public List<VariableDeclarationNode> LocalVariables { get; set; } = [];
     public string FunctionName;
     public List<StatementNode> Statements { get; set; } = [];
 
@@ -52,7 +52,7 @@ public class FunctionNode : CallableNode
         Tests.ToList().ForEach(testKvp => action(testKvp.Value, [], module));
     }
 
-    public VariableNode GetVariableNodeByName(string searchName)
+    public VariableDeclarationNode GetVariableNodeByName(string searchName)
     {
         return LocalVariables
                 .Concat(ParameterVariables)

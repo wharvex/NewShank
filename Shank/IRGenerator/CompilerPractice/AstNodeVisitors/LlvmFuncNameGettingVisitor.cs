@@ -125,7 +125,7 @@ public class LlvmFuncNameGettingVisitor : IAstNodeVisitor<string>
         throw new NotImplementedException();
     }
 
-    public string Visit(VariableNode v)
+    public string Visit(VariableDeclarationNode v)
     {
         throw new NotImplementedException();
     }

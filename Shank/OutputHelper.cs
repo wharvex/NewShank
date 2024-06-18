@@ -1,4 +1,8 @@
-﻿namespace Shank;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Shank.ASTNodes;
+
+namespace Shank;
 
 /// <summary>
 /// If you're using Windows, these output files should save to something like:
@@ -10,6 +14,17 @@ public class OutputHelper
 {
     public static string DocPath { get; } =
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+
+    public static void DebugPrintAst(ProgramNode program)
+    {
+        var jSets = new JsonSerializerSettings
+        {
+            ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+            Converters = [new StringEnumConverter()],
+            Formatting = Formatting.Indented
+        };
+        DebugPrintJson(JsonConvert.SerializeObject(program, jSets), "ast2");
+    }
 
     public static void DebugPrintJson(string output, string suffix)
     {

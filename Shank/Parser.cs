@@ -28,9 +28,12 @@ public class Parser
         Token.TokenType.Test
     ];
 
-    public Parser(List<Token> tokens)
+    public InterptOptions? InterpreterOptions { get; set; }
+
+    public Parser(List<Token> tokens, InterptOptions? options = null)
     {
         _tokens = tokens;
+        InterpreterOptions = options;
     }
 
     private readonly List<Token> _tokens;
@@ -38,6 +41,14 @@ public class Parser
     private bool afterDefault = false;
     public static int Line { get; set; }
     public static string FileName { get; set; }
+
+    /// <summary>
+    ///    Method <c>MatchAndRemove</c> removes I token if the TokenType matches
+    ///    the parameter's type
+    /// </summary>
+    /// <param name="t">TokenType passed in</param>
+    /// <returns>Token's value otherwise null</returns>
+    ///
 
     private Token? MatchAndRemove(Token.TokenType t)
     {
@@ -80,6 +91,13 @@ public class Parser
         return retVal;
     }
 
+    /// <summary>
+    ///     Method <c>MatchAndRemoveMultiple</c> removes multiple tokens if the TokenType
+    ///     matches the array of parameters passed in
+    /// </summary>
+    /// <param name="ts">List of TokenTypes</param>
+    /// <returns>Values of the tokens removeed otherwise null</returns>
+
     private Token? MatchAndRemoveMultiple(params Token.TokenType[] ts)
     {
         Token? ret = null;
@@ -92,14 +110,36 @@ public class Parser
         return ret;
     }
 
+    /// <summary>
+    ///     Method <c>Peek</c> reads the value of the next value with <e>n</e> offset
+    ///     and returns the value. If the offset passed in is beyond the end of the file,
+    ///     the function may return null.
+    /// </summary>
+    /// <param name="offset">Number of characters you are peeking ahead</param>
+    /// <returns>Token value or else null</returns>
+
     private Token? Peek(int offset)
     {
         return _tokens.Count > offset ? _tokens[offset] : null;
     }
 
+    /// <summary>
+    ///     Method <c>PeekSafe</c> reads the value of the next value with <e>n</e> offset
+    ///     and returns the value fetched from <e>Peek</e>. If it returns null, an exception is thrown.
+    ///     See Peek documentation for null cases.
+    /// </summary>
+    /// <param name="offset">Number of characters you are peeking ahead</param>
+    /// <returns>Token value</returns>
+    /// <exception cref="SyntaxErrorException">If the offset is at or past the end of the file</exception>
+
     private Token PeekSafe(int offset) =>
         Peek(offset) ?? throw new SyntaxErrorException("Unexpected EOF", null);
 
+    /// <summary>
+    ///     Method <c>ExpectsEndOfLine</c> reads attempts to match the next token to EndOfLine.
+    ///     If found, the Token is returned and removed from our list. If not null is returned.
+    /// </summary>
+    /// <returns>Token value otherwise null</returns>
     private bool ExpectsEndOfLine()
     {
         var ret = MatchAndRemove(Token.TokenType.EndOfLine) is not null;
@@ -116,10 +156,21 @@ public class Parser
         return ret;
     }
 
+    /// <summary>
+    ///     Method <c>ConsumeBlankLines</c> removes the next token repeatedly until its type
+    ///     no longer matches EndOfLine
+    /// </summary>
+
     private void ConsumeBlankLines()
     {
         while (MatchAndRemove(Token.TokenType.EndOfLine) is not null) { }
     }
+
+    /// <summary>
+    ///     Method <c>RequiresEndOfLine</c> checks the return value of <c>RequiresEndOfLine</c>.
+    ///     If not present an exception is thrown.
+    /// </summary>
+    /// <exception cref="SyntaxErrorException">An EndOfLine token is not encountered</exception>
 
     private void RequiresEndOfLine()
     {
@@ -129,35 +180,52 @@ public class Parser
         }
     }
 
-    private void checkTokenListSize(int offset)
-    {
-        if (_tokens.Count < offset)
-            throw new Exception($"Out of bounds, cannot peek {offset} tokens ahead.");
-    }
-
-    private Token PeekAndCheck(int offset)
-    {
-        checkTokenListSize(offset);
-        return _tokens[offset];
-    }
+    /// <summary>
+    ///     Method <c>GetVariableUsagePlainNode</c> parses a variable usage according to the
+    ///     following syntax example:
+    ///
+    ///             IDENTIFIER[expression]
+    ///
+    ///                 or
+    ///
+    ///             IDENTIFIER.reference
+    /// </summary>
+    /// <returns>new VariableUsagePlainNode otherwise exception</returns>
+    /// <exception cref="SyntaxErrorException">
+    ///     <list type="bullet">
+    ///         <item>
+    ///             <description>Need an expression after the left bracket!</description>
+    ///         </item>
+    ///         <item>
+    ///             <description>Need a right bracket after the expression!</description>
+    ///         </item>
+    ///         <item>
+    ///             <description>Need a record member reference after the dot!</description>
+    ///         </item>
+    ///     </list>
+    /// </exception>
 
     private VariableUsagePlainNode? GetVariableUsagePlainNode()
     {
+        //array index indentifier case
         if (MatchAndRemove(Token.TokenType.Identifier) is { } id)
         {
-            if (MatchAndRemove(Token.TokenType.LeftBracket) is { })
+            if (MatchAndRemove(Token.TokenType.LeftBracket) is not null)
             {
                 var exp = Expression();
+
                 if (exp == null)
                     throw new SyntaxErrorException(
                         "Need an expression after the left bracket!",
                         Peek(0)
                     );
+
                 if (MatchAndRemove(Token.TokenType.RightBracket) is null)
                     throw new SyntaxErrorException(
                         "Need a right bracket after the expression!",
                         Peek(0)
                     );
+
                 return new VariableUsagePlainNode(
                     id.GetValueSafe(),
                     exp,
@@ -165,69 +233,105 @@ public class Parser
                 );
             }
 
+            //record member case
             if (MatchAndRemove(Token.TokenType.Dot) is not null)
             {
                 VariableUsagePlainNode? varRef = GetVariableUsagePlainNode();
+
                 if (varRef is null)
                     throw new SyntaxErrorException(
                         "Need a record member reference after the dot!",
                         Peek(0)
                     );
+
                 return new VariableUsagePlainNode(
                     id.GetValueSafe(),
                     varRef,
                     VariableUsagePlainNode.VrnExtType.RecordMember
                 );
             }
+
+            //return the variable name as is
             return new VariableUsagePlainNode(id.GetValueSafe());
         }
 
         return null;
     }
 
+    /// <summary>
+    ///    Method <c>GetVariableUsageNode</c> parses nested variable usages according to the
+    ///     following syntax example:
+    ///
+    ///             IDENTIFIER[expression][expression]...
+    ///
+    ///                 or
+    ///
+    ///             IDENTIFIER.reference.reference...
+    /// </summary>
+    /// <returns>VariableUsageTempNode or VariableUsageIndexNode or VariableUsageMemberNode else exception</returns>
+    /// <exception cref="SyntaxErrorException">Expression is not present in an array index</exception>
+    /// <exception cref="UnreachableException">if neither an index or member is encountered (should never be reached)</exception>
     private VariableUsageNodeTemp? GetVariableUsageNode()
     {
+        //get the identifier
         var vupToken = MatchAndRemove(Token.TokenType.Identifier);
+
+        //return null if not found
         if (vupToken is null)
         {
             return null;
         }
 
+        //get the first plain variable usage
         var vupNode = new VariableUsagePlainNode(vupToken.GetValueSafe());
 
+        //remove either a left bracket or a dot
         var nextToken = MatchAndRemoveMultiple(Token.TokenType.LeftBracket, Token.TokenType.Dot);
+
+        //returns the plain node if their is no more tokens
         if (nextToken is null)
         {
             return vupNode;
         }
 
+        //store our plain node for now
         VariableUsageNodeTemp left = vupNode;
+
+        //store our complete node once we get it
         VariableUsageNodeTemp leftRight;
 
         while (true)
         {
             switch (nextToken.Type)
             {
+                //if variable is array accessor
                 case Token.TokenType.LeftBracket:
                     leftRight = new VariableUsageIndexNode(
                         left,
                         Expression()
                             ?? throw new SyntaxErrorException("Expected expression", Peek(0))
                     );
+                    RequiresToken(Token.TokenType.RightBracket);
                     break;
+                //if variable uses a member record
                 case Token.TokenType.Dot:
                     leftRight = new VariableUsageMemberNode(left, MemberAccess());
                     break;
+                //hopefully we don't get here
                 default:
                     throw new UnreachableException();
             }
 
+            //check again for another array accessor or member record
             nextToken = MatchAndRemoveMultiple(Token.TokenType.LeftBracket, Token.TokenType.Dot);
+
+            //just return what we have if nothing is present
             if (nextToken is null)
             {
                 return leftRight;
             }
 
+            //else make the new left what we currently have and start the while loop over
             left = leftRight;
         }
     }
@@ -341,7 +445,10 @@ public class Parser
         var done = false;
         while (!done)
         {
-            var vars = GetVariables(moduleName, VariableNode.DeclarationContext.FunctionSignature);
+            var vars = GetVariables(
+                moduleName,
+                VariableDeclarationNode.DeclarationContext.FunctionSignature
+            );
             done = vars == null;
             if (vars != null)
             {
@@ -414,12 +521,12 @@ public class Parser
         StatementsBody(function.Statements);
     }
 
-    private List<VariableNode> BodyRecord(string parentModule)
+    private List<VariableDeclarationNode> BodyRecord(string parentModule)
     {
         //StatementsBody(record.Members, true);
         List<ASTNode> bodyContents = [];
         Body(bodyContents, parentModule, GetVariablesRecord);
-        return bodyContents.Cast<VariableNode>().ToList();
+        return bodyContents.Cast<VariableDeclarationNode>().ToList();
     }
 
     private void StatementsBody(List<StatementNode> statements, bool isRecord = false)
@@ -482,7 +589,15 @@ public class Parser
         //     MatchAndRemove(Token.TokenType.EndOfLine);
         // }
 
-        return Assignment()
+        if (InterpreterOptions is not null)
+        {
+            OutputHelper.DebugPrintTxt(InterpreterOptions.VuOpTest.ToString(), "vuop");
+        }
+        return (
+                InterpreterOptions is not null && InterpreterOptions.VuOpTest
+                    ? NewAssignment()
+                    : Assignment()
+            )
             ?? While()
             ?? Repeat()
             ?? For()
@@ -505,7 +620,7 @@ public class Parser
         }
 
         RequiresToken(Token.TokenType.Colon);
-        var type = Type(VariableNode.DeclarationContext.RecordDeclaration);
+        var type = Type(VariableDeclarationNode.DeclarationContext.RecordDeclaration);
 
         RequiresEndOfLine();
         return new RecordMemberNode(nameToken.GetValueSafe(), type);
@@ -527,7 +642,7 @@ public class Parser
         };
 
     // assumptions you want to parse a type
-    private Type Type(VariableNode.DeclarationContext declarationContext)
+    private Type Type(VariableDeclarationNode.DeclarationContext declarationContext)
     {
         var typeToken =
             MatchAndRemoveMultiple(_shankTokenTypesPlusIdentifier)
@@ -562,7 +677,10 @@ public class Parser
         yield return generator();
     }
 
-    private Type CustomType(VariableNode.DeclarationContext declarationContext, Token typeToken)
+    private Type CustomType(
+        VariableDeclarationNode.DeclarationContext declarationContext,
+        Token typeToken
+    )
     {
         // see if there are type parameters
         var token = Peek(0);
@@ -627,12 +745,15 @@ public class Parser
     }
 
     private ArrayType ArrayType(
-        VariableNode.DeclarationContext declarationContext,
+        VariableDeclarationNode.DeclarationContext declarationContext,
         Token? arrayToken
     )
     {
         var range = CheckRangeInner(false, Range.DefaultSmallInteger());
-        if (range is null && declarationContext == VariableNode.DeclarationContext.VariablesLine)
+        if (
+            range is null
+            && declarationContext == VariableDeclarationNode.DeclarationContext.VariablesLine
+        )
         {
             throw new SyntaxErrorException(
                 "Array in variables declared without a size",
@@ -880,21 +1001,52 @@ public class Parser
         }
     }
 
+    private StatementNode? NewAssignment()
+    {
+        OutputHelper.DebugPrintTxt("hello from new assignment", "vuop", true);
+        if (
+            Peek(1)?.Type
+            is Token.TokenType.Assignment
+                or Token.TokenType.LeftBracket
+                or Token.TokenType.Dot
+        )
+        {
+            var target = GetVariableUsagePlainNode();
+            if (target == null)
+                throw new SyntaxErrorException(
+                    "Found an assignment without a valid identifier.",
+                    Peek(0)
+                );
+            MatchAndRemove(Token.TokenType.Assignment);
+            var expression = ParseExpressionLine();
+            if (expression == null)
+                throw new SyntaxErrorException(
+                    "Found an assignment without a valid right hand side.",
+                    Peek(0)
+                );
+            return new AssignmentNode(target, expression);
+        }
+        else
+        {
+            return null;
+        }
+    }
+
     /// <summary>
     /// Process an arbitrary number of consecutive variables declaration lines (i.e. lines that
     /// start with the 'variables' keyword).
     /// </summary>
     /// <param name="parentModule"></param>
     /// <returns></returns>
-    private List<VariableNode> ProcessVariables(string parentModule)
+    private List<VariableDeclarationNode> ProcessVariables(string parentModule)
     {
-        var retVal = new List<VariableNode>();
+        var retVal = new List<VariableDeclarationNode>();
 
         while (MatchAndRemove(Token.TokenType.Variables) != null)
         {
             var nextOnes = GetVariables(
                 parentModule,
-                VariableNode.DeclarationContext.VariablesLine
+                VariableDeclarationNode.DeclarationContext.VariablesLine
             );
 
             // TODO: We are potentially adding null to retVal here.
@@ -906,15 +1058,15 @@ public class Parser
         return retVal;
     }
 
-    private List<VariableNode> ProcessVariablesDoWhile(string parentModule)
+    private List<VariableDeclarationNode> ProcessVariablesDoWhile(string parentModule)
     {
-        var retVal = new List<VariableNode>();
+        var retVal = new List<VariableDeclarationNode>();
 
         do
         {
             var nextOnes = GetVariables(
                 parentModule,
-                VariableNode.DeclarationContext.VariablesLine
+                VariableDeclarationNode.DeclarationContext.VariablesLine
             );
 
             // TODO: List.AddRange throws an ArgumentNullException if nextOnes is null.
@@ -926,11 +1078,11 @@ public class Parser
         return retVal;
     }
 
-    private List<VariableNode> CreateVariables(
+    private List<VariableDeclarationNode> CreateVariables(
         List<string> names,
         bool isConstant,
         string parentModuleName,
-        VariableNode.DeclarationContext declarationContext
+        VariableDeclarationNode.DeclarationContext declarationContext
     )
     {
         var type = Type(declarationContext);
@@ -945,13 +1097,13 @@ public class Parser
             );
         }
 
-        if (declarationContext == VariableNode.DeclarationContext.VariablesLine)
+        if (declarationContext == VariableDeclarationNode.DeclarationContext.VariablesLine)
         {
             // Creates the variables with their default values added unto them
             return CreateDefaultVariables(names, isConstant, parentModuleName, type);
         }
 
-        if (declarationContext == VariableNode.DeclarationContext.FunctionSignature)
+        if (declarationContext == VariableDeclarationNode.DeclarationContext.FunctionSignature)
         {
             afterDefault = true;
             return CreateDefaultVariables(names, isConstant, parentModuleName, type);
@@ -959,7 +1111,7 @@ public class Parser
         return CreateVariablesBasic(names, isConstant, parentModuleName, type);
     }
 
-    private List<VariableNode> CreateVariablesBasic(
+    private List<VariableDeclarationNode> CreateVariablesBasic(
         List<string> names,
         bool isConstant,
         string parentModuleName,
@@ -970,7 +1122,7 @@ public class Parser
         return names
             .Select(
                 n =>
-                    new VariableNode()
+                    new VariableDeclarationNode()
                     {
                         IsConstant = isConstant,
                         Type = type,
@@ -981,7 +1133,7 @@ public class Parser
             .ToList();
     }
 
-    private List<VariableNode> CreateDefaultVariables(
+    private List<VariableDeclarationNode> CreateDefaultVariables(
         List<string> names,
         bool isConstant,
         string parentModuleName,
@@ -999,7 +1151,7 @@ public class Parser
         return names
             .Select(
                 n =>
-                    new VariableNode()
+                    new VariableDeclarationNode()
                     {
                         IsConstant = isConstant,
                         Type = type,
@@ -1028,38 +1180,38 @@ public class Parser
         };
 
     private static bool GetMutability(
-        VariableNode.DeclarationContext declarationContext,
+        VariableDeclarationNode.DeclarationContext declarationContext,
         bool hasVar,
         Token? varToken
     ) =>
         declarationContext switch
         {
-            VariableNode.DeclarationContext.RecordDeclaration when hasVar
+            VariableDeclarationNode.DeclarationContext.RecordDeclaration when hasVar
                 => throw new SyntaxErrorException(
                     "Keyword `var' not allowed in a record declaration.",
                     varToken
                 ),
-            VariableNode.DeclarationContext.RecordDeclaration => false,
-            VariableNode.DeclarationContext.EnumDeclaration when hasVar
+            VariableDeclarationNode.DeclarationContext.RecordDeclaration => false,
+            VariableDeclarationNode.DeclarationContext.EnumDeclaration when hasVar
                 => throw new SyntaxErrorException(
                     "Keyword `var' not allowed in an enum declaration.",
                     varToken
                 ),
-            VariableNode.DeclarationContext.EnumDeclaration => false,
-            VariableNode.DeclarationContext.FunctionSignature when hasVar => false,
-            VariableNode.DeclarationContext.FunctionSignature when !hasVar => true,
-            VariableNode.DeclarationContext.VariablesLine when hasVar
+            VariableDeclarationNode.DeclarationContext.EnumDeclaration => false,
+            VariableDeclarationNode.DeclarationContext.FunctionSignature when hasVar => false,
+            VariableDeclarationNode.DeclarationContext.FunctionSignature when !hasVar => true,
+            VariableDeclarationNode.DeclarationContext.VariablesLine when hasVar
                 => throw new SyntaxErrorException(
                     "Keyword `var' not allowed in a variables line.",
                     varToken
                 ),
-            VariableNode.DeclarationContext.VariablesLine => false,
-            VariableNode.DeclarationContext.ConstantsLine when hasVar
+            VariableDeclarationNode.DeclarationContext.VariablesLine => false,
+            VariableDeclarationNode.DeclarationContext.ConstantsLine when hasVar
                 => throw new SyntaxErrorException(
                     "Keyword `var' not allowed in a constants line.",
                     varToken
                 ),
-            VariableNode.DeclarationContext.ConstantsLine => true,
+            VariableDeclarationNode.DeclarationContext.ConstantsLine => true,
             _
                 => throw new NotImplementedException(
                     "Invalid variable declaration context `"
@@ -1068,9 +1220,9 @@ public class Parser
                 )
         };
 
-    private List<VariableNode>? GetVariables(
+    private List<VariableDeclarationNode>? GetVariables(
         string parentModuleName,
-        VariableNode.DeclarationContext declarationContext
+        VariableDeclarationNode.DeclarationContext declarationContext
     )
     {
         var varToken = MatchAndRemove(Token.TokenType.Var);
@@ -1097,7 +1249,10 @@ public class Parser
     private void GetVariablesRecord(List<ASTNode> vars, string parentModuleName)
     {
         var newVars =
-            GetVariables(parentModuleName, VariableNode.DeclarationContext.RecordDeclaration)
+            GetVariables(
+                parentModuleName,
+                VariableDeclarationNode.DeclarationContext.RecordDeclaration
+            )
             ?? throw new SyntaxErrorException(
                 "A record declaration needs at least one constituent member.",
                 Peek(0)
@@ -1109,7 +1264,7 @@ public class Parser
             vars.AddRange(newVars);
             newVars = GetVariables(
                 parentModuleName,
-                VariableNode.DeclarationContext.RecordDeclaration
+                VariableDeclarationNode.DeclarationContext.RecordDeclaration
             );
         } while (newVars is not null);
     }
@@ -1174,9 +1329,9 @@ public class Parser
         return (fromNode, toNode);
     }
 
-    private List<VariableNode> ProcessConstants(string? parentModuleName)
+    private List<VariableDeclarationNode> ProcessConstants(string? parentModuleName)
     {
-        var retVal = new List<VariableNode>();
+        var retVal = new List<VariableDeclarationNode>();
         while (MatchAndRemove(Token.TokenType.Constants) != null)
         {
             while (true)
@@ -1192,7 +1347,7 @@ public class Parser
                     var node = ProcessNumericConstant(num);
                     retVal.Add(
                         node is FloatNode
-                            ? new VariableNode()
+                            ? new VariableDeclarationNode()
                             {
                                 InitialValue = node,
                                 Type = new RealType(),
@@ -1200,7 +1355,7 @@ public class Parser
                                 Name = name.Value ?? "",
                                 ModuleName = parentModuleName
                             }
-                            : new VariableNode()
+                            : new VariableDeclarationNode()
                             {
                                 InitialValue = node,
                                 Type = new IntegerType(),
@@ -1216,7 +1371,7 @@ public class Parser
                     if (chr != null)
                     {
                         retVal.Add(
-                            new VariableNode()
+                            new VariableDeclarationNode()
                             {
                                 InitialValue = new CharNode((chr?.Value ?? " ")[0]),
                                 Type = new CharacterType(),
@@ -1232,7 +1387,7 @@ public class Parser
                         if (str != null)
                         {
                             retVal.Add(
-                                new VariableNode()
+                                new VariableDeclarationNode()
                                 {
                                     InitialValue = new StringNode(str?.Value ?? ""),
                                     Type = new StringType(),
@@ -1251,7 +1406,7 @@ public class Parser
                                 if (paren == null)
                                 {
                                     retVal.Add(
-                                        new VariableNode()
+                                        new VariableDeclarationNode()
                                         {
                                             InitialValue = new StringNode(enm.Value),
                                             Type = new UnknownType(enm.Value),
@@ -1581,7 +1736,7 @@ public class Parser
         {
             var vars = GetVariables(
                 parentModuleName,
-                VariableNode.DeclarationContext.FunctionSignature
+                VariableDeclarationNode.DeclarationContext.FunctionSignature
             );
             done = vars == null;
             if (vars != null)
