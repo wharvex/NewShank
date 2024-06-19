@@ -1,8 +1,8 @@
-﻿using System.Text;
-using Shank.ASTNodes;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
+using System.Text;
 using Optional;
 using Optional.Linq;
+using Shank.ASTNodes;
 
 namespace Shank;
 
@@ -241,13 +241,22 @@ public class SemanticAnalysis
                 //         ? arguement.Constant
                 //         : variables[arguement.Variable.Name];
                 CheckParameterMutability(param, arguement, variables, functionCallNode);
-                IEnumerable<(string, Type)> typeCheckAndInstiateGenericParameter = TypeCheckAndInstiateGenericParameter(param, arguement, variables, fn);
+                IEnumerable<(string, Type)> typeCheckAndInstiateGenericParameter =
+                    TypeCheckAndInstiateGenericParameter(param, arguement, variables, fn);
                 return typeCheckAndInstiateGenericParameter;
             });
-        
-         return       selectMany.GroupBy(pair => pair.Item1).Distinct()
-                    .FirstOrDefault(group => group.Count() > 1) is  {} bad ? throw new SemanticErrorException($"generic {bad.Key} cannot match {string.Join(" and ", bad.Select(ty => ty.Item2) )}",functionCallNode) :
-         selectMany.ToDictionary();
+
+        return
+            selectMany
+                .GroupBy(pair => pair.Item1)
+                .Distinct()
+                .FirstOrDefault(group => group.Count() > 1)
+                is { } bad
+            ? throw new SemanticErrorException(
+                $"generic {bad.Key} cannot match {string.Join(" and ", bad.Select(ty => ty.Item2))}",
+                functionCallNode
+            )
+            : selectMany.ToDictionary();
     }
 
     public static IEnumerable<(string, Type)> TypeCheckAndInstiateGenericParameter(
@@ -279,25 +288,36 @@ public class SemanticAnalysis
         return !param.Type.Equals(expressionType)
             ?
             // infer instantiated type
-            MatchTypes(param.Type, expressionType).ValueOr(() =>
-                throw new SemanticErrorException(
-                    $"Type mismatch cannot pass to {param.Name!}: {param.Type} {expression}: {expressionType}",
-                    expression
-                ))
+            MatchTypes(param.Type, expressionType)
+                .ValueOr(
+                    () =>
+                        throw new SemanticErrorException(
+                            $"Type mismatch cannot pass to {param.Name!}: {param.Type} {expression}: {expressionType}",
+                            expression
+                        )
+                )
             : [];
 
-        Option< IEnumerable<(string, Type)>> MatchTypes(Type paramType, Type type) =>
+        Option<IEnumerable<(string, Type)>> MatchTypes(Type paramType, Type type) =>
             (paramType, type) switch
             {
-                (GenericType g, _) => Option.Some( Enumerable.Repeat((g.Name, type), 1)),
-                (InstantiatedType param, InstantiatedType arg) when arg.Inner.Equals(param.Inner) => MatchTypesInstantiated(param, arg),
-                (ReferenceType (InstantiatedType param), ReferenceType (InstantiatedType arg)) when arg.Inner.Equals(param.Inner) => MatchTypesInstantiated(param, arg),
-                ({ } a, { } b) => Option.Some(Enumerable.Empty<(string, Type)>()).Where(_ =>!a.Equals(b))
+                (GenericType g, _) => Option.Some(Enumerable.Repeat((g.Name, type), 1)),
+                (InstantiatedType param, InstantiatedType arg) when arg.Inner.Equals(param.Inner)
+                    => MatchTypesInstantiated(param, arg),
+                (ReferenceType(InstantiatedType param), ReferenceType(InstantiatedType arg))
+                    when arg.Inner.Equals(param.Inner)
+                    => MatchTypesInstantiated(param, arg),
+                ({ } a, { } b)
+                    => Option.Some(Enumerable.Empty<(string, Type)>()).Where(_ => !a.Equals(b))
             };
-        Option< IEnumerable<(string, Type)>> MatchTypesInstantiated(InstantiatedType paramType, InstantiatedType type) =>
-            paramType.InstantiatedGenerics.Values.Zip(type.InstantiatedGenerics.Values)
-                .Select(( pair) => MatchTypes(pair.Item1, pair.Item2)).Aggregate((first, second) => first.FlatMap(f => second.Map(f.Union)));
-
+        Option<IEnumerable<(string, Type)>> MatchTypesInstantiated(
+            InstantiatedType paramType,
+            InstantiatedType type
+        ) =>
+            paramType
+                .InstantiatedGenerics.Values.Zip(type.InstantiatedGenerics.Values)
+                .Select((pair) => MatchTypes(pair.Item1, pair.Item2))
+                .Aggregate((first, second) => first.FlatMap(f => second.Map(f.Union)));
     }
 
     // assumptions if the arguement is a variable it assumed to be there already from previous check in check function call
