@@ -61,7 +61,7 @@ public record struct StringType(Range Range) : RangeType
 
     public readonly Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;
 
-    public readonly override int GetHashCode()
+    public override readonly int GetHashCode()
     {
         return 0;
     }
@@ -79,7 +79,7 @@ public record struct RealType(Range Range) : RangeType
 
     public readonly Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;
 
-    public readonly override int GetHashCode()
+    public override readonly int GetHashCode()
     {
         return 0;
     }
@@ -97,7 +97,7 @@ public record struct IntegerType(Range Range) : RangeType
 
     public readonly Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;
 
-    public readonly override int GetHashCode()
+    public override readonly int GetHashCode()
     {
         return 0;
     }
@@ -113,7 +113,7 @@ public record struct CharacterType(Range Range) : RangeType
         return true; // we do range checking seperatly as we do not know which is the one with more important range
     }
 
-    public readonly override int GetHashCode()
+    public override readonly int GetHashCode()
     {
         return 0;
     }
@@ -162,7 +162,7 @@ public record struct ArrayType(Type Inner, Range Range) : RangeType // arrays ha
         return other.Inner.Equals(Inner);
     }
 
-    public readonly override int GetHashCode()
+    public override readonly int GetHashCode()
     {
         return Inner.GetHashCode();
     }
@@ -239,14 +239,14 @@ public record struct InstantiatedType(
     public readonly bool Equals(InstantiatedType other) =>
         Inner.Equals(other.Inner) && InstantiatedGenerics.SequenceEqual(other.InstantiatedGenerics);
 
-    public readonly override int GetHashCode()
+    public override readonly int GetHashCode()
     {
         return HashCode.Combine(Inner, InstantiatedGenerics);
     }
 
     public readonly Type? GetMember(string name) => Inner.GetMember(name, InstantiatedGenerics);
 
-    public readonly override string ToString()
+    public override readonly string ToString()
     {
         return $"{Inner}<{string.Join(",", InstantiatedGenerics.Select(tpair => $"{tpair.Key}: {tpair.Value}"))}>";
     }

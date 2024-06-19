@@ -656,7 +656,8 @@ public class Parser
             Token.TokenType.Boolean => new BooleanType(),
             Token.TokenType.Character
                 => new CharacterType(CheckRange(false, Range.DefaultCharacter())),
-            Token.TokenType.String => new StringType(CheckRange(false, Range.DefaultSmallInteger())),
+            Token.TokenType.String
+                => new StringType(CheckRange(false, Range.DefaultSmallInteger())),
             Token.TokenType.Array => ArrayType(declarationContext, typeToken),
             // we cannot check unknown type for refersTo being on enum, but if we have refersTo integer we can check that at parse time
             Token.TokenType.RefersTo
