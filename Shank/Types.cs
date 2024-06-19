@@ -61,7 +61,7 @@ public record struct StringType(Range Range) : RangeType
 
     public readonly Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;
 
-    public override readonly int GetHashCode()
+    public readonly override int GetHashCode()
     {
         return 0;
     }
@@ -79,7 +79,7 @@ public record struct RealType(Range Range) : RangeType
 
     public readonly Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;
 
-    public override readonly int GetHashCode()
+    public readonly override int GetHashCode()
     {
         return 0;
     }
@@ -97,7 +97,7 @@ public record struct IntegerType(Range Range) : RangeType
 
     public readonly Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;
 
-    public override readonly int GetHashCode()
+    public readonly override int GetHashCode()
     {
         return 0;
     }
@@ -113,7 +113,7 @@ public record struct CharacterType(Range Range) : RangeType
         return true; // we do range checking seperatly as we do not know which is the one with more important range
     }
 
-    public override readonly int GetHashCode()
+    public readonly override int GetHashCode()
     {
         return 0;
     }
@@ -162,16 +162,16 @@ public record struct ArrayType(Type Inner, Range Range) : RangeType // arrays ha
         return other.Inner.Equals(Inner);
     }
 
-    public override readonly int GetHashCode()
+    public readonly override int GetHashCode()
     {
         return Inner.GetHashCode();
     }
 
     public readonly Type Instantiate(Dictionary<string, Type> instantiatedGenerics) =>
-        new ArrayType(Inner.Instantiate(instantiatedGenerics));
+        new ArrayType(Inner.Instantiate(instantiatedGenerics), Range);
 
-    public ArrayType(Type inner)
-        : this(inner, Range.DefaultSmallInteger()) { }
+    public ArrayType(Type inner, Range? range)
+        : this(inner, range ?? Range.DefaultSmallInteger()) { }
 }
 
 public readonly record struct UnknownType(string TypeName, List<Type> TypeParameters) : Type // unknown types are those types that we have not found their proper definition during semantic analysis yet
@@ -239,16 +239,16 @@ public record struct InstantiatedType(
     public readonly bool Equals(InstantiatedType other) =>
         Inner.Equals(other.Inner) && InstantiatedGenerics.SequenceEqual(other.InstantiatedGenerics);
 
-    public override readonly int GetHashCode()
+    public readonly override int GetHashCode()
     {
         return HashCode.Combine(Inner, InstantiatedGenerics);
     }
 
-    readonly Type? GetMember(string name) => Inner.GetMember(name, InstantiatedGenerics);
+    public readonly Type? GetMember(string name) => Inner.GetMember(name, InstantiatedGenerics);
 
-    public override readonly string ToString()
+    public readonly override string ToString()
     {
-        return $"{Inner}<{String.Join(",", InstantiatedGenerics.Select(tpair => $"{tpair.Key}: {tpair.Value}"))}>";
+        return $"{Inner}<{string.Join(",", InstantiatedGenerics.Select(tpair => $"{tpair.Key}: {tpair.Value}"))}>";
     }
 }
 

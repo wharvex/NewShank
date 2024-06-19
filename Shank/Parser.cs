@@ -652,11 +652,11 @@ public class Parser
         {
             Token.TokenType.Real => new RealType(CheckRange(true, Range.DefaultFloat())),
             Token.TokenType.Identifier => CustomType(declarationContext, typeToken),
-            Token.TokenType.Integer => new IntegerType(CheckRange(true, Range.DefaultInteger())),
+            Token.TokenType.Integer => new IntegerType(CheckRange(false, Range.DefaultInteger())),
             Token.TokenType.Boolean => new BooleanType(),
             Token.TokenType.Character
-                => new CharacterType(CheckRange(true, Range.DefaultCharacter())),
-            Token.TokenType.String => new StringType(CheckRange(true, Range.DefaultSmallInteger())),
+                => new CharacterType(CheckRange(false, Range.DefaultCharacter())),
+            Token.TokenType.String => new StringType(CheckRange(false, Range.DefaultSmallInteger())),
             Token.TokenType.Array => ArrayType(declarationContext, typeToken),
             // we cannot check unknown type for refersTo being on enum, but if we have refersTo integer we can check that at parse time
             Token.TokenType.RefersTo
@@ -765,7 +765,7 @@ public class Parser
             MatchAndRemove(Token.TokenType.Of)
             ?? throw new SyntaxErrorException("Array declared without type missing of", arrayToken);
 
-        return new ArrayType(Type(declarationContext));
+        return new ArrayType(Type(declarationContext), range);
     }
 
     private Range CheckRange(bool isFloat, Range defaultRange)
@@ -791,7 +791,7 @@ public class Parser
         var toNode = ProcessNumericConstant(
             toToken ?? throw new SyntaxErrorException("Expected a number", Peek(0))
         );
-        if (!isFloat && fromNode is FloatNode || toNode is FloatNode)
+        if (!isFloat && (fromNode is FloatNode || toNode is FloatNode))
         {
             throw new SyntaxErrorException("Expected integer type limits found float ones", null);
         }
