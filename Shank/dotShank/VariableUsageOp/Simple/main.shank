@@ -1,4 +1,2 @@
 define start()
-variables a : integer
-    a := 1
-    write "hello VariableUsageOp Simple"
+    a[1].b[2] := 1

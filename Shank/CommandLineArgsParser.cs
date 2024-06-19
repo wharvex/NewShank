@@ -164,8 +164,8 @@ public class CommandLineArgsParser
                         .ForEach(ip => ScanAndParse(ip, program, options))
             );
         program.SetStartModule();
-        BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
         OutputHelper.DebugPrintAst(program, "pre-SA");
+        BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
         SemanticAnalysis.CheckModules(program);
         OutputHelper.DebugPrintAst(program, "post-SA");
         Interpreter.Modules = program.Modules;

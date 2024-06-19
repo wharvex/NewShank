@@ -226,8 +226,11 @@ public class Lexer
             or (>= '0' and <= '9') when Mode == ModeType.Name:
                 currentBuffer.Append(character);
                 break;
-            case (>= '0' and <= '9' or '.') when (Mode is ModeType.Start or ModeType.Number):
+            case (>= '0' and <= '9') when (Mode is ModeType.Start or ModeType.Number):
                 Mode = ModeType.Number;
+                currentBuffer.Append(character);
+                break;
+            case ('.') when (Mode is ModeType.Number):
                 currentBuffer.Append(character);
                 break;
             case '-'
@@ -240,7 +243,7 @@ public class Lexer
                     )
                 );
                 break;
-            case '.' when Mode is ModeType.Name:
+            case '.':
                 ModeChangePrep(retVal, currentBuffer, lineNumber);
                 retVal.Add(new Token(Token.TokenType.Dot, lineNumber));
                 break;
