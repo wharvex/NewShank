@@ -1,5 +1,8 @@
 ﻿using System.Text;
 using Shank.ASTNodes;
+using System.Linq.Expressions;
+using Optional;
+using Optional.Linq;
 
 namespace Shank;
 
@@ -227,7 +230,7 @@ public class SemanticAnalysis
     )
     {
         // TODO: overloads and default parameters might have different arrity
-        return fn.ParameterVariables.Zip(param)
+        var selectMany = fn.ParameterVariables.Zip(param)
             .SelectMany(paramAndArg =>
             {
                 var param = paramAndArg.First;
@@ -238,12 +241,16 @@ public class SemanticAnalysis
                 //         ? arguement.Constant
                 //         : variables[arguement.Variable.Name];
                 CheckParameterMutability(param, arguement, variables, functionCallNode);
-                return TypeCheckAndInstiateGenericParameter(param, arguement, variables, fn);
-            })
-            .ToDictionary();
+                IEnumerable<(string, Type)> typeCheckAndInstiateGenericParameter = TypeCheckAndInstiateGenericParameter(param, arguement, variables, fn);
+                return typeCheckAndInstiateGenericParameter;
+            });
+        
+         return       selectMany.GroupBy(pair => pair.Item1).Distinct()
+                    .FirstOrDefault(group => group.Count() > 1) is  {} bad ? throw new SemanticErrorException($"generic {bad.Key} cannot match {string.Join(" and ", bad.Select(ty => ty.Item2) )}",functionCallNode) :
+         selectMany.ToDictionary();
     }
 
-    public static Dictionary<string, Type> TypeCheckAndInstiateGenericParameter(
+    public static IEnumerable<(string, Type)> TypeCheckAndInstiateGenericParameter(
         VariableDeclarationNode param,
         ParameterNode argument,
         Dictionary<string, VariableDeclarationNode> variables,
@@ -252,12 +259,45 @@ public class SemanticAnalysis
     {
         // check that the arguement passed in has the right type for its parameter
         // and also if the parameter has any generics try to instiate them
-        return CheckAssignment(
-            param.Name!,
-            param.Type,
-            argument.Variable ?? argument.Constant!,
-            variables
-        );
+        ExpressionNode expression = argument.Variable ?? argument.Constant!;
+        CheckRange(param.Name!, param.Type, expression, variables);
+
+        if (
+            param.Type is EnumType e
+            && expression is VariableUsagePlainNode v
+            && e.Variants.Contains(v.Name)
+        )
+        {
+            if (v.ExtensionType != VariableUsagePlainNode.VrnExtType.None)
+            {
+                throw new SemanticErrorException($"ambiguous variable name {v.Name}", expression);
+            }
+            return [];
+        }
+
+        var expressionType = GetTypeOfExpression(expression, variables);
+        return !param.Type.Equals(expressionType)
+            ?
+            // infer instantiated type
+            MatchTypes(param.Type, expressionType).ValueOr(() =>
+                throw new SemanticErrorException(
+                    $"Type mismatch cannot pass to {param.Name!}: {param.Type} {expression}: {expressionType}",
+                    expression
+                ))
+            : [];
+
+        Option< IEnumerable<(string, Type)>> MatchTypes(Type paramType, Type type) =>
+            (paramType, type) switch
+            {
+                (GenericType g, _) => Option.Some( Enumerable.Repeat((g.Name, type), 1)),
+                (InstantiatedType param, InstantiatedType arg) when arg.Inner.Equals(param.Inner) => MatchTypesInstantiated(param, arg),
+                (ReferenceType (InstantiatedType param), ReferenceType (InstantiatedType arg)) when arg.Inner.Equals(param.Inner) => MatchTypesInstantiated(param, arg),
+                ({ } a, { } b) => Option.Some(Enumerable.Empty<(string, Type)>()).Where(_ =>!a.Equals(b))
+            };
+        Option< IEnumerable<(string, Type)>> MatchTypesInstantiated(InstantiatedType paramType, InstantiatedType type) =>
+            paramType.InstantiatedGenerics.Values.Zip(type.InstantiatedGenerics.Values)
+                .Select(( pair) => MatchTypes(pair.Item1, pair.Item2)).Aggregate((first, second) => first.FlatMap(f => second.Map(f.Union)));
+
     }
 
     // assumptions if the arguement is a variable it assumed to be there already from previous check in check function call
