@@ -73,6 +73,13 @@ public class CompileOptions
 
     [Option('L', "LinkPath", Default = "/", HelpText = "for a link path")]
     public string LinkedPath { get; set; }
+
+    [Option(
+        "target",
+        Default = "generic",
+        HelpText = "target cpu (run clang -print-supported-cpus to see list"
+    )]
+    public string TargetCPU { get; set; }
 }
 
 [Verb("Interpret", isDefault: false, HelpText = "runs the shank interpreter")]
@@ -158,8 +165,9 @@ public class CommandLineArgsParser
             );
         program.SetStartModule();
         BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
+        OutputHelper.DebugPrintAst(program, "pre-SA");
         SemanticAnalysis.CheckModules(program);
-        OutputHelper.DebugPrintAst(program);
+        OutputHelper.DebugPrintAst(program, "post-SA");
         Interpreter.Modules = program.Modules;
         Interpreter.StartModule = program.GetStartModuleSafe();
         if (!options.unitTest)

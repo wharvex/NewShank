@@ -15,7 +15,7 @@ public class OutputHelper
     public static string DocPath { get; } =
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
 
-    public static void DebugPrintAst(ProgramNode program)
+    public static void DebugPrintAst(ProgramNode program, string postSuffix)
     {
         var jSets = new JsonSerializerSettings
         {
@@ -23,7 +23,7 @@ public class OutputHelper
             Converters = [new StringEnumConverter()],
             Formatting = Formatting.Indented
         };
-        DebugPrintJson(JsonConvert.SerializeObject(program, jSets), "ast2");
+        DebugPrintJson(JsonConvert.SerializeObject(program, jSets), "ast_" + postSuffix);
     }
 
     public static void DebugPrintJson(string output, string suffix)

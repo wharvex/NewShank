@@ -11,15 +11,15 @@ function st
     $path_list = "NotAPath", # 0
     "Interpret ModuleTest2", # 1
     "Interpret Records/simple", # 2
-    "Interpret Generics/simple/functions2", # 3
+    "Interpret VariableUsageOp/Simple --vuop-test", # 3
     "Interpret Arrays/sum", # 4
     "Interpret Records/nested", # 5
     "Interpret Globals", # 6
     "Interpret UnitTestTests1 -u", # 7
     "Interpret Builtins/Write", # 8
     "Interpret Enums", # 9
-    "CompilePractice Minimal/PrintInt/Shank --flat PrintInt", # 10
-    "Interpret VariableUsageOp/Simple --vuop-test" # 11
+    "CompilePractice Minimal/PrintInt/Shank --flat PrintInt" # 10
+    #"Interpret Generics/simple/functions2" ** revisit this to debug **
     #"Interpret OldShankFiles/Pascals.shank"
     #"Interpret OldShankFiles/GCD.shank"
     #"Interpret Negative"
@@ -49,7 +49,7 @@ function st
         {"($i of $($path_list.Length - 1))"} `
         Else {''}
 
-        "`n**** Running The Following Command $($progress)****`n"
+        "`n**** Running The Following Command $($progress) ****`n"
         "dotnet run $($args_list -join ' ') --project $sp`n"
         dotnet run @args_list --project $sp
     }
