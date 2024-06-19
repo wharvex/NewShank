@@ -1134,16 +1134,7 @@ public class Parser
     {
         // ranges parsed in the type
         return names
-            .Select(
-                n =>
-                    new VariableDeclarationNode()
-                    {
-                        IsConstant = isConstant,
-                        Type = type,
-                        Name = n,
-                        ModuleName = parentModuleName,
-                    }
-            )
+            .Select(n => new VariableDeclarationNode(isConstant, type, n, parentModuleName))
             .ToList();
     }
 

@@ -1,0 +1,3 @@
+define start()
+variables foo : real from 0.0 to 9.9
+    write "hello RealRange"

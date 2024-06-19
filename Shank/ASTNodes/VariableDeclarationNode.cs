@@ -31,7 +31,21 @@ public class VariableDeclarationNode : ASTNode
         ConstantsLine
     };
 
+    // Added to allow type name to appear in AST JSON. See Wiki Gen Disc "Type Name AST JSON".
+    public string? TypeName { get; set; }
     public Type Type { get; set; }
+
+    // We need this parameterless constructor to ensure all the VDN object initializers still work.
+    public VariableDeclarationNode() { }
+
+    public VariableDeclarationNode(bool isConstant, Type type, string name, string moduleName)
+    {
+        IsConstant = isConstant;
+        Type = type;
+        Name = name;
+        ModuleName = moduleName;
+        TypeName = type.GetType().Name;
+    }
 
     public LLVMTypeRef GetLLVMType(Context context, Type type) =>
         context.GetLLVMTypeFromShankType(type, false)
