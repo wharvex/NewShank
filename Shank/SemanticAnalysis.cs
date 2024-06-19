@@ -244,12 +244,11 @@ public class SemanticAnalysis
                 IEnumerable<(string, Type)> typeCheckAndInstiateGenericParameter =
                     TypeCheckAndInstiateGenericParameter(param, arguement, variables, fn);
                 return typeCheckAndInstiateGenericParameter;
-            }).Distinct();
+            })
+            .Distinct();
 
         return
-            selectMany
-                .GroupBy(pair => pair.Item1)
-                .FirstOrDefault(group => group.Count() > 1)
+            selectMany.GroupBy(pair => pair.Item1).FirstOrDefault(group => group.Count() > 1)
                 is { } bad
             ? throw new SemanticErrorException(
                 $"generic {bad.Key} cannot match {string.Join(" and ", bad.Select(ty => ty.Item2))}",
