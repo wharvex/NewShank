@@ -12,6 +12,12 @@ public class Interpreter
 
     public static ModuleNode? StartModule { get; set; }
     public static StringBuilder testOutput = new StringBuilder();
+    private static InterptOptions? _interpreterOptions;
+    public static InterptOptions InterpreterOptions
+    {
+        get => _interpreterOptions ?? throw new InvalidOperationException();
+        set => _interpreterOptions = value;
+    }
 
     public static Dictionary<string, ModuleNode> GetModulesSafe() =>
         Modules ?? throw new InvalidOperationException("Expected Modules to not be null.");
@@ -142,7 +148,14 @@ public class Interpreter
             }
         }
         // Interpret instructions
-        InterpretBlock(fn.Statements, variables, fn);
+        if (InterpreterOptions.VuOpTest)
+        {
+            NewInterpretBlock(fn.Statements, variables, fn);
+        }
+        else
+        {
+            InterpretBlock(fn.Statements, variables, fn);
+        }
     }
 
     /// <summary>
@@ -203,8 +216,112 @@ public class Interpreter
         {
             if (stmt is AssignmentNode an)
             {
-                // target is the left side of the assignment statement
                 var target = variables[an.Target.Name];
+                switch (target)
+                {
+                    case IntDataType it:
+                        it.Value = ResolveInt(an.Expression, variables);
+                        break;
+                    case ArrayDataType at:
+                        AssignToArray(at, an, variables);
+                        break;
+                    case FloatDataType ft:
+                        ft.Value = ResolveFloat(an.Expression, variables);
+                        break;
+                    case StringDataType st:
+                        st.Value = ResolveString(an.Expression, variables);
+                        break;
+                    case CharDataType ct:
+                        ct.Value = ResolveChar(an.Expression, variables);
+                        break;
+                    case BooleanDataType bt:
+                        bt.Value = ResolveBool(an.Expression, variables);
+                        break;
+                    case RecordDataType rt:
+                        AssignToRecord(rt, an, variables);
+                        break;
+                    case EnumDataType et:
+                        et.Value = ResolveEnum((EnumDataType)target, an.Expression, variables);
+                        break;
+                    case ReferenceDataType rt:
+                        if (rt.Record == null)
+                            throw new Exception(
+                                $"{an.Target.Name} must be allocated before it can be addressed."
+                            );
+                        AssignToRecord(rt.Record, an, variables);
+                        break;
+                    default:
+                        throw new Exception("Unknown type in assignment");
+                }
+            }
+            else if (stmt is FunctionCallNode fc)
+            {
+                ProcessFunctionCall(variables, fc, callingFunction);
+            }
+            else if (stmt is IfNode ic)
+            {
+                var theIc = ic;
+                while (theIc?.Expression != null)
+                {
+                    if (
+                        theIc.Expression != null
+                        && ResolveBool(theIc.Expression, variables)
+                        && theIc?.Children != null
+                    )
+                    {
+                        InterpretBlock(theIc.Children, variables, callingFunction);
+                        theIc = null;
+                    }
+                    else
+                        theIc = theIc?.NextIfNode;
+                }
+
+                if (theIc?.Children != null)
+                    InterpretBlock(theIc.Children, variables, callingFunction);
+            }
+            else if (stmt is WhileNode wn)
+            {
+                while (ResolveBool(wn.Expression, variables))
+                {
+                    InterpretBlock(wn.Children, variables, callingFunction);
+                }
+            }
+            else if (stmt is RepeatNode rn)
+            {
+                do
+                {
+                    InterpretBlock(rn.Children, variables, callingFunction);
+                } while (!ResolveBool(rn.Expression, variables));
+            }
+            else if (stmt is ForNode fn)
+            {
+                var target = variables[fn.Variable.Name];
+                if (target is not IntDataType index)
+                    throw new Exception(
+                        $"For loop has a non-integer index called {fn.Variable.Name}. This is not allowed."
+                    );
+                var start = ResolveInt(fn.From, variables);
+                var end = ResolveInt(fn.To, variables);
+                for (var i = start; i < end; i++)
+                {
+                    index.Value = i;
+                    InterpretBlock(fn.Children, variables, callingFunction);
+                }
+            }
+        }
+    }
+
+    private static void NewInterpretBlock(
+        List<StatementNode> fnStatements,
+        Dictionary<string, InterpreterDataType> variables,
+        CallableNode callingFunction
+    )
+    {
+        foreach (var stmt in fnStatements)
+        {
+            if (stmt is AssignmentNode an)
+            {
+                var target = variables[an.NewTarget.GetPlain().Name];
                 switch (target)
                 {
                     case IntDataType it:

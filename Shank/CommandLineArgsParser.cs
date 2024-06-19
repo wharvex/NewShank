@@ -169,6 +169,7 @@ public class CommandLineArgsParser
         SemanticAnalysis.InterpreterOptions = options;
         SemanticAnalysis.CheckModules(program);
         OutputHelper.DebugPrintAst(program, "post-SA");
+        Interpreter.InterpreterOptions = options;
         Interpreter.Modules = program.Modules;
         Interpreter.StartModule = program.GetStartModuleSafe();
         if (!options.unitTest)
