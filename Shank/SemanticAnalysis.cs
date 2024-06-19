@@ -244,12 +244,11 @@ public class SemanticAnalysis
                 IEnumerable<(string, Type)> typeCheckAndInstiateGenericParameter =
                     TypeCheckAndInstiateGenericParameter(param, arguement, variables, fn);
                 return typeCheckAndInstiateGenericParameter;
-            });
+            }).Distinct();
 
         return
             selectMany
                 .GroupBy(pair => pair.Item1)
-                .Distinct()
                 .FirstOrDefault(group => group.Count() > 1)
                 is { } bad
             ? throw new SemanticErrorException(
