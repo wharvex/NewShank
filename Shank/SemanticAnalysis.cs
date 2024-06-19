@@ -11,6 +11,12 @@ public class SemanticAnalysis
     public static ProgramNode? AstRoot { get; set; }
     public static Dictionary<string, ModuleNode>? Modules { get; set; }
     public static ModuleNode? StartModule { get; set; }
+    private static InterptOptions? _interpreterOptions;
+    public static InterptOptions InterpreterOptions
+    {
+        get => _interpreterOptions ?? throw new InvalidOperationException();
+        set => _interpreterOptions = value;
+    }
 
     private static ProgramNode GetAstRootSafe() =>
         AstRoot ?? throw new InvalidOperationException("Expected AstRoot to not be null");
@@ -105,7 +111,10 @@ public class SemanticAnalysis
                         );
                     }
 
-                var targetType = GetTypeOfExpression(an.Target, variables);
+                var targetType = GetTypeOfExpression(
+                    InterpreterOptions.VuOpTest ? an.NewTarget : an.Target,
+                    variables
+                );
 
                 CheckAssignment(an.Target.Name, targetType, an.Expression, variables);
             }
@@ -510,7 +519,9 @@ public class SemanticAnalysis
             MathOpNode mathOpNode => GetTypeOfMathOp(mathOpNode, variables),
             StringNode stringNode => new StringType(),
             VariableUsagePlainNode variableReferenceNode
-                => GetTypeOfVariableUsage(variableReferenceNode, variables),
+                => InterpreterOptions.VuOpTest
+                    ? NewGetTypeOfVariableUsage(variableReferenceNode, variables)
+                    : GetTypeOfVariableUsage(variableReferenceNode, variables),
             _ => throw new ArgumentOutOfRangeException(expression.ToString())
         };
 
@@ -641,6 +652,18 @@ public class SemanticAnalysis
                         variableReferenceNode
                     ),
             };
+        }
+
+        Type NewGetTypeOfVariableUsage(
+            VariableUsageNodeTemp vun,
+            Dictionary<string, VariableDeclarationNode> vdnByName
+        )
+        {
+            var vunPlainName = vun.GetPlain().Name;
+            var vdn =
+                vdnByName.GetValueOrDefault(vunPlainName)
+                ?? throw new SemanticErrorException($"Variable {vunPlainName} not found", vun);
+            return vdn.Type;
         }
     }
 

@@ -1,3 +1,4 @@
 define start()
-variables a : real from 0.0 to 1.1
-    students[47].courses[33].longName := "Ancient History"
+variables a : integer
+    a := 33
+    write "hello vuop"
