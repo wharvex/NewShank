@@ -308,6 +308,11 @@ public class ModuleNode : ASTNode
         ExportTargetNames.AddLast(name);
     }
 
+    /// <summary>
+    ///     Method <c>addExportNames</c> takes a list of exports and adds it to our ModuleNode
+    /// </summary>
+    /// <param name="names">List of export names</param>
+
     public void addExportNames(LinkedList<string> names)
     {
         foreach (var name in names)

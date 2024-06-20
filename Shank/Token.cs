@@ -90,6 +90,22 @@ public class Token
     public string? Value { get; init; }
     public int LineNumber { get; init; }
 
+    /// <summary>
+    ///     Method <c>GetValueSafe</c> returns a token value only if it is an identifier, number, character content, or string content
+    ///     and if a value is present
+    /// </summary>
+    /// <returns>Token value as a String</returns>
+    /// <exception cref="InvalidOperationException">
+    /// <list type="bullet">
+    ///     <item> 
+    ///         <description>The tokens type does not meet the criteria above</description>
+    ///     </item>
+    ///     <item> 
+    ///         <description>A value is not present (is null)</description>
+    ///     </item>
+    /// </list>
+    /// </exception>
+    
     public string GetValueSafe()
     {
         if (!_nonNullValuedTokenTypes.Contains(Type))
