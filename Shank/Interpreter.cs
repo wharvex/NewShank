@@ -610,7 +610,7 @@ public class Interpreter
             );
 
         if (
-            fc.Parameters.Count != ((CallableNode)calledFunction).ParameterVariables.Count
+            fc.Arguments.Count != ((CallableNode)calledFunction).ParameterVariables.Count
             && calledFunction is BuiltInFunctionNode { IsVariadic: false }
         ) // make sure that the counts match
             throw new Exception(
@@ -618,11 +618,11 @@ public class Interpreter
             );
         // make the list of parameters
         var passed = new List<InterpreterDataType>();
-        foreach (var fcp in fc.Parameters)
+        foreach (var fcp in fc.Arguments)
         {
-            if (fcp.Variable != null)
+            if (fcp is VariableUsagePlainNode variableUsagePlainNode)
             {
-                var name = fcp.Variable.Name;
+                var name = variableUsagePlainNode.Name;
                 var value = variables[name];
                 switch (value)
                 {
@@ -642,20 +642,22 @@ public class Interpreter
                         passed.Add(new BooleanDataType(boolVal.Value));
                         break;
                     case ArrayDataType arrayVal:
-                        AddToParamsArray(arrayVal, fcp, passed, variables);
+                        AddToParamsArray(arrayVal, variableUsagePlainNode, passed, variables);
                         break;
                     case RecordDataType recordVal:
-                        AddToParamsRecord(recordVal, fcp, passed);
+                        AddToParamsRecord(recordVal, variableUsagePlainNode, passed);
                         break;
                     case EnumDataType enumVal:
                         passed.Add(new EnumDataType(enumVal.Type, enumVal.Value));
                         break;
                     case ReferenceDataType referenceVal:
-                        if (fcp.Variable.Extension != null)
+                        if (variableUsagePlainNode.Extension != null)
                         {
-                            var vrn = ((VariableUsagePlainNode)fcp.Variable.Extension);
+                            var vrn = ((VariableUsagePlainNode)variableUsagePlainNode.Extension);
                             if (referenceVal.Record is null)
-                                throw new Exception($"{fcp.Variable.Name} was never allocated.");
+                                throw new Exception(
+                                    $"{variableUsagePlainNode.Name} was never allocated."
+                                );
                             if (referenceVal.Record.Value[vrn.Name] is int)
                                 passed.Add(
                                     new IntDataType((int)referenceVal.Record.Value[vrn.Name])
@@ -684,7 +686,7 @@ public class Interpreter
             }
             else
             {
-                var value = fcp.Constant;
+                var value = fcp;
                 switch (value)
                 {
                     // is a constant
@@ -732,13 +734,12 @@ public class Interpreter
                 (
                     (calledFunction is BuiltInFunctionNode { IsVariadic: true })
                     || !((CallableNode)calledFunction).ParameterVariables[i].IsConstant
-                )
-                && fc.Parameters[i].Variable != null
-                && fc.Parameters[i].IsVariable
+                ) && fc.Arguments[i] is VariableUsagePlainNode variableUsagePlainNode
             )
             {
                 // if this parameter is a "var", then copy the new value back to the parameter holder
-                variables[fc.Parameters[i]?.Variable?.Name ?? ""] = passed[i];
+                if (variableUsagePlainNode.IsVariableFunctionCall)
+                    variables[variableUsagePlainNode.Name] = passed[i];
             }
         }
     }
@@ -746,12 +747,12 @@ public class Interpreter
     // TODO
     private static void AddToParamsArray(
         ArrayDataType adt,
-        ParameterNode pn,
+        VariableUsagePlainNode args,
         List<InterpreterDataType> paramsList,
         Dictionary<string, InterpreterDataType> variables
     )
     {
-        if ((pn.Variable ?? throw new InvalidOperationException()).Extension is { } i)
+        if (args.Extension is { } i)
         {
             // Passing in one element of the array.
             var index = ResolveInt(i, variables);
@@ -785,11 +786,11 @@ public class Interpreter
 
     private static void AddToParamsRecord(
         RecordDataType rdt,
-        ParameterNode pn,
+        VariableUsagePlainNode args, //ParameterNode pn,
         List<InterpreterDataType> paramsList
     )
     {
-        var pnVrn = pn.GetVariableSafe();
+        var pnVrn = args; //pn.GetVariableSafe();
         if (pnVrn.ExtensionType == VariableUsagePlainNode.VrnExtType.RecordMember)
         {
             var rmVrn = pnVrn.GetRecordMemberReferenceSafe();
@@ -805,7 +806,7 @@ public class Interpreter
                     RecordType
                         => GetNestedParam(
                             rdt,
-                            pn.Variable
+                            args
                                 ?? throw new Exception("Could not find extension for nested record")
                         ),
                     EnumType => rdt.GetValueEnum(rmVrn.Name),

@@ -36,6 +36,8 @@ public class VariableUsagePlainNode : VariableUsageNodeTemp
 
     public string? EnclosingVrnName { get; set; }
 
+    public bool IsVariableFunctionCall { get; set; }
+
     public ASTNode GetExtensionSafe() =>
         Extension ?? throw new InvalidOperationException("Expected Extension to not be null.");
 

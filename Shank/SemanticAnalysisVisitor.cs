@@ -67,10 +67,10 @@ public class SemanticAnalysisVisitor : Visitor
         throw new NotImplementedException();
     }
 
-    public override void Visit(ParameterNode node)
-    {
-        throw new NotImplementedException();
-    }
+    // public override void Visit(ParameterNode node)
+    // {
+    //     throw new NotImplementedException();
+    // }
 
     public override void Visit(FunctionCallNode node)
     {

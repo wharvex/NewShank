@@ -19,5 +19,5 @@ public abstract class ExpressionVisitor<T>
     public abstract T Visit(BooleanExpressionNode node);
     public abstract T Visit(RecordNode node);
 
-    public abstract T Visit(ParameterNode node);
+    //public abstract T Visit(ParameterNode node);
 }

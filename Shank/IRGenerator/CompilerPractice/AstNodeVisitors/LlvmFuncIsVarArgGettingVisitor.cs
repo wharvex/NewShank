@@ -89,10 +89,10 @@ public class LlvmFuncIsVarArgGettingVisitor : IAstNodeVisitor<bool>
         throw new NotImplementedException();
     }
 
-    public bool Visit(ParameterNode p)
-    {
-        throw new NotImplementedException();
-    }
+    // public bool Visit(ParameterNode p)
+    // {
+    //     throw new NotImplementedException();
+    // }
 
     public bool Visit(ProgramNode p)
     {
