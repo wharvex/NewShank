@@ -1193,8 +1193,8 @@ public class SemanticAnalysis
                 if (!usedGenerics.Distinct().SequenceEqual(record.GenericTypeParameterNames))
                 {
                     // TODO: make warnnig function for uniformity
-                    Console.WriteLine(
-                        $"Warning: Generic Type parameter(s) {string.Join(", ", record.GenericTypeParameterNames.Except(usedGenerics.Distinct()))} are unused in record {record.Name}",
+                    throw new SemanticErrorException(
+                        $"Generic Type parameter(s) {string.Join(", ", record.GenericTypeParameterNames.Except(usedGenerics.Distinct()))} are unused for record {record.Name}",
                         record
                     );
                 }
