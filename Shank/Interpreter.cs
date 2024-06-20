@@ -12,11 +12,11 @@ public class Interpreter
 
     public static ModuleNode? StartModule { get; set; }
     public static StringBuilder testOutput = new StringBuilder();
-    private static InterptOptions? _interpreterOptions;
-    public static InterptOptions InterpreterOptions
+    public static InterptOptions? InterpreterOptions { get; set; }
+
+    public static bool GetVuopTestFlag()
     {
-        get => _interpreterOptions ?? throw new InvalidOperationException();
-        set => _interpreterOptions = value;
+        return InterpreterOptions?.VuOpTest ?? false;
     }
 
     public static Dictionary<string, ModuleNode> GetModulesSafe() =>
@@ -148,7 +148,7 @@ public class Interpreter
             }
         }
         // Interpret instructions
-        if (InterpreterOptions.VuOpTest)
+        if (GetVuopTestFlag())
         {
             NewInterpretBlock(fn.Statements, variables, fn);
         }
