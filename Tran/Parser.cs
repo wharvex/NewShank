@@ -299,7 +299,10 @@ public class Parser
                     // Return the 'IF' node with 'ELSE IF' or 'ELSE'
                     return new IfNode(
                         condition
-                            ?? throw new InvalidOperationException("In ParseIf, condition is null"),block, nextIf);
+                            ?? throw new InvalidOperationException("In ParseIf, condition is null"),
+                        block,
+                        nextIf
+                    );
                 }
                 // Return the 'IF' node with 'ELSE'
                 var elseBlock = ParseBlock();
@@ -340,7 +343,7 @@ public class Parser
                 }
             }
         }
-    //double check if I should return a string
+        //double check if I should return a string
         if (handler.MatchAndRemove(TokenType.PERIOD) != null)
         {
             if (handler.MatchAndRemove(TokenType.CLONE) != null)
@@ -355,7 +358,6 @@ public class Parser
                     }
                 }
             }
-            
         }
         if (handler.MatchAndRemove(TokenType.PERIOD) != null)
         {
@@ -371,10 +373,8 @@ public class Parser
                     }
                 }
             }
-            
         }
-        
-        
+
         if (handler.MatchAndRemove(TokenType.CONSOLE) != null)
         {
             if (handler.MatchAndRemove(TokenType.PERIOD) != null)

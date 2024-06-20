@@ -7,9 +7,5 @@ using Tran;
 namespace TranUnitTests
 {
     [TestClass]
-    public class ParserTests
-    {
-        
-        
-    }
+    public class ParserTests { }
 }

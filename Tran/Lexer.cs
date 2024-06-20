@@ -50,7 +50,6 @@ public class Lexer
         keywordHash["times"] = TokenType.TIMES;
         keywordHash["clone"] = TokenType.CLONE;
         keywordHash["getDate"] = TokenType.GETDATE;
-        
     }
 
     private void TwoCharacterHashmap()
