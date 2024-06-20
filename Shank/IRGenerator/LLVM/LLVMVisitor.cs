@@ -323,18 +323,18 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
         record.LlvmTypeRef.StructSetBody(args.Select(s => s.Item2).ToArray(), false);
     }
 
-    public override void Visit(ParameterNode node)
-    {
-        if (node.IsVariable)
-        {
-            var vars = context.GetVariable(node.Variable?.Name);
-            expr.Push(vars.ValueRef);
-        }
-        else
-        {
-            node.Constant?.Accept(this);
-        }
-    }
+    // public override void Visit(ParameterNode node)
+    // {
+    //     if (node.IsVariable)
+    //     {
+    //         var vars = context.GetVariable(node.Variable?.Name);
+    //         expr.Push(vars.ValueRef);
+    //     }
+    //     else
+    //     {
+    //         node.Constant?.Accept(this);
+    //     }
+    // }
 
     public override void Visit(FunctionCallNode node)
     {
@@ -343,7 +343,7 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
             builder.BuildCall2(
                 context.CFuntions.printf.TypeOf,
                 context.CFuntions.printf.Function,
-                node.Parameters.Select(p =>
+                node.Arguments.Select(p => //).Parameters.Select(p =>
                 {
                     p.Accept(this);
                     LLVMValueRef b = expr.Pop();
@@ -365,8 +365,12 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
             if (
                 function
                     .ArguementMutability.Zip( //mutable
-                        node.Parameters //multable
-                        .Select(p => p.IsVariable)
+                        node.Arguments //Parameters //multable
+                        .Select(
+                            p =>
+                                p is VariableUsagePlainNode variableUsagePlainNode
+                                && variableUsagePlainNode.IsVariableFunctionCall
+                        ) //.IsVariable)
                     )
                     .Any(a => a is { First: true, Second: false })
             )
@@ -374,7 +378,7 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
                 throw new Exception($"call to {node.Name} has a mismatch of mutability");
             }
 
-            var parameters = node.Parameters.Select(p =>
+            var parameters = node.Arguments.Select(p => //).Parameters.Select(p =>
             {
                 p.Accept(this);
                 return expr.Pop();

@@ -90,10 +90,10 @@ public class LlvmFuncNameGettingVisitor : IAstNodeVisitor<string>
         throw new NotImplementedException();
     }
 
-    public string Visit(ParameterNode p)
-    {
-        throw new NotImplementedException();
-    }
+    // public string Visit(ParameterNode p)
+    // {
+    //     throw new NotImplementedException();
+    // }
 
     public string Visit(ProgramNode p)
     {

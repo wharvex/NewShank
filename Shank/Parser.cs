@@ -822,31 +822,35 @@ public class Parser
         var name = MatchAndRemove(Token.TokenType.Identifier);
         if (name == null)
             return null;
-        var parameters = new List<ParameterNode>();
+        var arguments = new List<ExpressionNode>();
         int lineNum = name.LineNumber;
         while (ExpectsEndOfLine() == false)
         {
             var isVariable = MatchAndRemove(Token.TokenType.Var) != null;
-            var variable = GetVariableUsagePlainNode();
-            if (variable == null)
+            if (!isVariable)
             {
-                // might be a constant
-                var f = Factor();
-                if (f == null)
+                var e = Expression();
+                if (e == null)
                     throw new SyntaxErrorException(
                         $"Expected a constant or a variable instead of {_tokens[0]}",
                         Peek(0)
                     );
-                parameters.Add(new ParameterNode(f));
+                if (e is VariableUsagePlainNode variableUsagePlainNode)
+                    variableUsagePlainNode.IsVariableFunctionCall = false;
+                arguments.Add(e);
             }
             else
-                parameters.Add(new ParameterNode(variable, isVariable));
+            {
+                var variable = GetVariableUsagePlainNode();
+                variable.IsVariableFunctionCall = true;
+                arguments.Add(variable);
+            }
 
             MatchAndRemove(Token.TokenType.Comma);
         }
 
         var retVal = new FunctionCallNode(name.Value != null ? name.Value : string.Empty);
-        retVal.Parameters.AddRange(parameters);
+        retVal.Arguments.AddRange(arguments);
         retVal.LineNum = lineNum;
         return retVal;
     }

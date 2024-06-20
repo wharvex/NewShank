@@ -116,7 +116,9 @@ public class SemanticAnalysis
                     variables
                 );
 
-                CheckAssignment(an.Target.Name, targetType, an.Expression, variables);
+                var targetName = GetVuopTestFlag() ? an.NewTarget.GetPlain().Name : an.Target.Name;
+
+                CheckAssignment(targetName, targetType, an.Expression, variables);
             }
             else if (s is FunctionCallNode fn)
             {
@@ -136,7 +138,7 @@ public class SemanticAnalysis
                     foundFunction = true;
                     if (parentModule.getFunctions()[fn.Name] is not BuiltInFunctionNode)
                         fn.InstiatedGenerics = CheckFunctionCall(
-                            fn.Parameters,
+                            fn.Arguments,
                             variables,
                             (FunctionNode)parentModule.getFunctions()[fn.Name],
                             fn
@@ -150,7 +152,7 @@ public class SemanticAnalysis
                         {
                             foundFunction = true;
                             fn.InstiatedGenerics = CheckFunctionCall(
-                                fn.Parameters,
+                                fn.Arguments,
                                 variables,
                                 (FunctionNode)parentModule.Imported[fn.Name],
                                 fn
@@ -232,14 +234,14 @@ public class SemanticAnalysis
     // for instiation we do lose type information, such as what type of record, or enum, what is the inner type of the array?
     // and IType is the best because it only stores whats neccesary for a givern type
     private static Dictionary<string, Type> CheckFunctionCall(
-        List<ParameterNode> param,
+        List<ExpressionNode> args,
         Dictionary<string, VariableDeclarationNode> variables,
         FunctionNode fn,
         FunctionCallNode functionCallNode
     )
     {
         // TODO: overloads and default parameters might have different arrity
-        var selectMany = fn.ParameterVariables.Zip(param)
+        var selectMany = fn.ParameterVariables.Zip(args)
             .SelectMany(paramAndArg =>
             {
                 var param = paramAndArg.First;
@@ -268,14 +270,14 @@ public class SemanticAnalysis
 
     public static IEnumerable<(string, Type)> TypeCheckAndInstiateGenericParameter(
         VariableDeclarationNode param,
-        ParameterNode argument,
+        ExpressionNode argument,
         Dictionary<string, VariableDeclarationNode> variables,
         FunctionNode fn
     )
     {
         // check that the arguement passed in has the right type for its parameter
         // and also if the parameter has any generics try to instiate them
-        ExpressionNode expression = argument.Variable ?? argument.Constant!;
+        ExpressionNode expression = argument;
         CheckRange(param.Name!, param.Type, expression, variables);
 
         if (
@@ -330,24 +332,16 @@ public class SemanticAnalysis
     // assumptions if the arguement is a variable it assumed to be there already from previous check in check function call
     private static void CheckParameterMutability(
         VariableDeclarationNode param,
-        ParameterNode argument,
+        ExpressionNode argument,
         Dictionary<string, VariableDeclarationNode> variables,
         FunctionCallNode fn
     )
     {
         // check that the arguement passed in has the right type of mutablility for its parameter
-        if (argument.IsVariable)
+        if (argument is VariableUsagePlainNode variableUsagePlainNode)
         {
-            VariableDeclarationNode? lookedUpArguement = variables.GetValueOrDefault(
-                (
-                    argument.Variable
-                    ?? throw new SemanticErrorException(
-                        $"Cannot pass a non variable as being var to a function call",
-                        fn
-                    )
-                ).Name
-            );
-            if (lookedUpArguement.IsConstant)
+            VariableDeclarationNode? lookedUpArguement = variables[variableUsagePlainNode.Name];
+            if (lookedUpArguement.IsConstant && !param.IsConstant)
             {
                 throw new SemanticErrorException(
                     $"cannot pass non var argument when you annotate an argument var",
@@ -416,6 +410,27 @@ public class SemanticAnalysis
             {
                 throw new Exception("Incorrect type of range.");
             }*/
+        }
+    }
+
+    private static void NewCheckRange(
+        string targetName,
+        Type targetType,
+        ExpressionNode expression,
+        Dictionary<string, VariableDeclarationNode> vdnByName
+    )
+    {
+        if (targetType is RangeType i) // all other i range type are bounded by integers
+        {
+            var from = i.Range.From;
+            var to = i.Range.To;
+            int upper = (int)GetMaxRange(expression, vdnByName);
+            int lower = (int)GetMinRange(expression, vdnByName);
+
+            if (lower < from || upper > to)
+                throw new Exception(
+                    $"The variable {targetName!} can only be assigned expressions that wont overstep its range."
+                );
         }
     }
 

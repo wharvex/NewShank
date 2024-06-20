@@ -11,7 +11,7 @@ public class FunctionCallNode : StatementNode
 {
     public string Name { get; set; }
     public int LineNum { get; set; }
-    public List<ParameterNode> Parameters { get; } = [];
+    public List<ExpressionNode> Arguments { get; } = [];
     public string OverloadNameExt { get; set; } = "";
 
     // generics of the called function that this call site instiated to specific types
@@ -35,27 +35,63 @@ public class FunctionCallNode : StatementNode
         }
 
         // If the param counts don't match, it's not a match.
-        if (givenFunction.ParameterVariables.Count != Parameters.Count)
+        // if (givenFunction.ParameterVariables.Count != Parameters.Count)
+        // {
+        //     return false;
+        // }
+        if (givenFunction.ParameterVariables.Count != Arguments.Count)
         {
             return false;
         }
-
         // If there's any parameter whose type and 'var' status would disqualify the given
         // function from matching this call, return false, otherwise true.
-        return !Parameters
-            .Where(
-                (p, i) =>
-                    !p.EqualsWrtTypeAndVar(givenFunction.ParameterVariables[i], variablesInScope)
+        // return !Parameters
+        //     .Where(
+        //         (p, i) =>
+        //             !p.EqualsWrtTypeAndVar(
+        //                 givenFunction.ParameterVariables[i],
+        //                 variablesInScope
+        //             )
+        //     )
+        //     .Any();
+        //return !Arguments
+        // .Where(
+        //     (p, i) =>
+        //         !p.EqualsWrtTypeAndVar(
+        //             givenFunction.ParameterVariables[i],
+        //             variablesInScope
+        //         )
+        // )
+        // .Any();
+        for (int i = 0; i < Arguments.Count(); i++)
+        {
+            //Checks if it is a variable or constant
+            if (
+                (Arguments[i] is VariableUsageNodeTemp)
+                != givenFunction.ParameterVariables[i].IsConstant
             )
-            .Any();
+                ;
+        }
+
+        return true;
     }
 
     public override object[] returnStatementTokens()
     {
         var b = new StringBuilder();
-        if (Parameters.Any())
+        // if (Parameters.Any())
+        // {
+        //     Parameters.ForEach(p => b.AppendLine($"   {p}"));
+        // }
+
+        if (Arguments.Any())
         {
-            Parameters.ForEach(p => b.AppendLine($"   {p}"));
+            Arguments.ForEach(p => b.AppendLine($"   {p}"));
+        }
+
+        if (Arguments.Any())
+        {
+            Arguments.ForEach(p => b.AppendLine($"   {p}"));
         }
 
         object[] arr = { "FUNCTION", Name, b.ToString() };
@@ -97,13 +133,14 @@ public class FunctionCallNode : StatementNode
     public override string ToString()
     {
         var b = new StringBuilder();
+
         b.Append($"Call to function `{Name}'");
-        if (Parameters.Count <= 0)
+        if (Arguments.Count <= 0)
         {
             return b.ToString();
         }
         b.Append(" with arguments [ ");
-        Parameters.ForEach(p => b.Append($"{p} "));
+        Arguments.ForEach(p => b.Append($"{p} "));
         b.Append(']');
 
         return b.ToString();

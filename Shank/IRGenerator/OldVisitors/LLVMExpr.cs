@@ -247,10 +247,10 @@ public class LLVMExpr(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
     //     throw new NotImplementedException();
     // }
 
-    public override LLVMValueRef Visit(ParameterNode node)
-    {
-        return node.IsVariable
-            ? context.GetVariable(node.Variable?.Name).ValueRef
-            : node.Constant.Accept(this);
-    }
+    // public override LLVMValueRef Visit(ParameterNode node)
+    // {
+    //     return node.IsVariable
+    //         ? context.GetVariable(node.Variable?.Name).ValueRef
+    //         : node.Constant.Accept(this);
+    // }
 }

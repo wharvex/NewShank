@@ -1,0 +1,4 @@
+define start()
+variables b : integer
+    b := 2
+    myFunc var b

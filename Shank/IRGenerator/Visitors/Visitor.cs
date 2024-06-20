@@ -19,7 +19,7 @@ public abstract class Visitor
     public abstract void Visit(BooleanExpressionNode node);
     public abstract void Visit(RecordNode node);
 
-    public abstract void Visit(ParameterNode node);
+    //public abstract void Visit(ParameterNode node);
 
     public abstract void Visit(FunctionCallNode node);
     public abstract void Visit(FunctionNode node);

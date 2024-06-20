@@ -21,7 +21,8 @@ public interface IAstNodeVisitor<T>
     T Visit(IntNode i);
     T Visit(MathOpNode m);
     T Visit(ModuleNode m);
-    T Visit(ParameterNode p);
+
+    //T Visit(ParameterNode p);
     T Visit(ProgramNode p);
     T Visit(RecordNode r);
     T Visit(RepeatNode r);

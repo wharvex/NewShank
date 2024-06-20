@@ -88,10 +88,10 @@ public class LlvmFuncRetTypeGettingVisitor(LLVMContextRef llvmContext)
         throw new NotImplementedException();
     }
 
-    public LLVMTypeRef Visit(ParameterNode p)
-    {
-        throw new NotImplementedException();
-    }
+    // public LLVMTypeRef Visit(ParameterNode p)
+    // {
+    //     throw new NotImplementedException();
+    // }
 
     public LLVMTypeRef Visit(ProgramNode p)
     {

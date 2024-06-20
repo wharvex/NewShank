@@ -19,8 +19,8 @@ function st
     "Interpret UnitTestTests1 -u", # 8
     "Interpret Builtins/Write", # 9
     "Interpret Enums", # 10
-    "Compile TestLlvmTheoAndMendel -S --print-ir" # 10
-    #"CompilePractice Minimal/PrintInt/Shank --flat PrintInt" # 10
+    "Compile TestLlvmTheoAndMendel -S --print-ir" # 11
+    #"CompilePractice Minimal/PrintInt/Shank --flat PrintInt"
     #"Interpret Generics/simple/functions2" ** revisit this to debug **
     #"Interpret OldShankFiles/Pascals.shank"
     #"Interpret OldShankFiles/GCD.shank"

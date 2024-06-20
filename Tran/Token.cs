@@ -65,7 +65,9 @@ public enum TokenType
     FUNCTIONBLOCKIDENTIFIER,
     TAB,
     NEWLINE,
-    TIMES
+    TIMES,
+    CLONE,
+    GETDATE
 }
 
 public class Token

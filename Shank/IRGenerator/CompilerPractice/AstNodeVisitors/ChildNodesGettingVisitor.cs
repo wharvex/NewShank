@@ -84,10 +84,10 @@ public class ChildNodesGettingVisitor : IAstNodeVisitor<List<ASTNode>>
         throw new NotImplementedException();
     }
 
-    public List<ASTNode> Visit(ParameterNode p)
-    {
-        throw new NotImplementedException();
-    }
+    // public List<ASTNode> Visit(ParameterNode p)
+    // {
+    //     throw new NotImplementedException();
+    // }
 
     public List<ASTNode> Visit(ProgramNode p)
     {
