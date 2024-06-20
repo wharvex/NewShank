@@ -18,7 +18,8 @@ function st
     "Interpret Globals", # 7
     "Interpret UnitTestTests1 -u", # 8
     "Interpret Builtins/Write", # 9
-    "Interpret Enums" # 10
+    "Interpret Enums", # 10
+    "Compile TestLlvmTheoAndMendel" # 10
     #"CompilePractice Minimal/PrintInt/Shank --flat PrintInt" # 10
     #"Interpret Generics/simple/functions2" ** revisit this to debug **
     #"Interpret OldShankFiles/Pascals.shank"

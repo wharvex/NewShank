@@ -519,7 +519,7 @@ public class SemanticAnalysis
             MathOpNode mathOpNode => GetTypeOfMathOp(mathOpNode, variables),
             StringNode stringNode => new StringType(),
             VariableUsageNodeTemp variableReferenceNode
-                => InterpreterOptions.VuOpTest
+                => GetVuopTestFlag()
                     ? NewGetTypeOfVariableUsage(variableReferenceNode, variables)
                     : GetTypeOfVariableUsage(
                         (VariableUsagePlainNode)variableReferenceNode,
