@@ -97,15 +97,15 @@ public class Token
     /// <returns>Token value as a String</returns>
     /// <exception cref="InvalidOperationException">
     /// <list type="bullet">
-    ///     <item> 
+    ///     <item>
     ///         <description>The tokens type does not meet the criteria above</description>
     ///     </item>
-    ///     <item> 
+    ///     <item>
     ///         <description>A value is not present (is null)</description>
     ///     </item>
     /// </list>
     /// </exception>
-    
+
     public string GetValueSafe()
     {
         if (!_nonNullValuedTokenTypes.Contains(Type))

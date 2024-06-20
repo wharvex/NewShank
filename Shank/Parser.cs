@@ -367,7 +367,7 @@ public class Parser
 
     /// <summary>
     ///     <para>
-    ///         Method <c>Module</c> 
+    ///         Method <c>Module</c>
     ///     </para>
     /// </summary>
     /// <returns></returns>
@@ -1222,9 +1222,9 @@ public class Parser
         };
 
     /// <summary>
-    ///     <para> 
-    ///         Method <c>GetMutability</c> determines the ability for an object to change 
-    ///         once it is created by reading the declaration context and determinning 
+    ///     <para>
+    ///         Method <c>GetMutability</c> determines the ability for an object to change
+    ///         once it is created by reading the declaration context and determinning
     ///         whether the variable type is inferred.
     ///     </para>
     /// </summary>
@@ -1237,13 +1237,13 @@ public class Parser
     ///         <item>
     ///             <description>Keyword `var' not allowed in a record declaration.</description>
     ///         </item>
-    ///         <item> 
+    ///         <item>
     ///             <description>Keyword `var' not allowed in an enum declaration.</description>
     ///         </item>
-    ///         <item> 
+    ///         <item>
     ///             <description>Keyword `var' not allowed in a variables line.</description>
     ///         </item>
-    ///         <item> 
+    ///         <item>
     ///             <description>Keyword `var' not allowed in a constants line.</description>
     ///         </item>
     ///     </list>
@@ -1265,7 +1265,8 @@ public class Parser
                     varToken
                 ),
             //when the declaration context is a Record Declaration
-            VariableDeclarationNode.DeclarationContext.RecordDeclaration => false,
+            VariableDeclarationNode.DeclarationContext.RecordDeclaration
+                => false,
 
             //when the declartion context is an Enum Declaration and "var" keyword is present
             VariableDeclarationNode.DeclarationContext.EnumDeclaration when hasVar
@@ -1275,13 +1276,16 @@ public class Parser
                 ),
 
             //when the declaration context is a Enum Declaration
-            VariableDeclarationNode.DeclarationContext.EnumDeclaration => false,
+            VariableDeclarationNode.DeclarationContext.EnumDeclaration
+                => false,
 
             //when the declartion context is a Function Signature and "var" keyword is present
-            VariableDeclarationNode.DeclarationContext.FunctionSignature when hasVar => false,
+            VariableDeclarationNode.DeclarationContext.FunctionSignature when hasVar
+                => false,
 
             //when the declartion context is a Function Signature and "var" keyword is absent
-            VariableDeclarationNode.DeclarationContext.FunctionSignature when !hasVar => true,
+            VariableDeclarationNode.DeclarationContext.FunctionSignature when !hasVar
+                => true,
 
             //when the declaration context is a Variables Line and "var" keyword is present
             VariableDeclarationNode.DeclarationContext.VariablesLine when hasVar
@@ -1291,7 +1295,8 @@ public class Parser
                 ),
 
             //when the declaration context is a Variables Line
-            VariableDeclarationNode.DeclarationContext.VariablesLine => false,
+            VariableDeclarationNode.DeclarationContext.VariablesLine
+                => false,
 
             //when the declaration context is a Constants Line and "var" keyword is present
             VariableDeclarationNode.DeclarationContext.ConstantsLine when hasVar
@@ -1300,10 +1305,11 @@ public class Parser
                     varToken
                 ),
 
-            //when declaration context is a Constants Line 
-            VariableDeclarationNode.DeclarationContext.ConstantsLine => true,
+            //when declaration context is a Constants Line
+            VariableDeclarationNode.DeclarationContext.ConstantsLine
+                => true,
             _
-            //default case
+                //default case
                 => throw new NotImplementedException(
                     "Invalid variable declaration context `"
                         + declarationContext
@@ -1313,7 +1319,7 @@ public class Parser
 
     /// <summary>
     ///     <para>
-    ///          Method <c>GetVariables</c>    
+    ///          Method <c>GetVariables</c>
     ///     </para>
     /// </summary>
     /// <param name="parentModuleName"></param>
@@ -1381,7 +1387,7 @@ public class Parser
 
     /// <summary>
     ///     Method <c>RequiresAndReturnsToken</c> attempts to MatchAndRemove a token if its TokenType matches
-    ///     the type that is passed in 
+    ///     the type that is passed in
     /// </summary>
     /// <param name="tokenType">TokenType expected</param>
     /// <returns>Expected Token</returns>
@@ -1413,7 +1419,7 @@ public class Parser
 
     /// <summary>
     ///     <para>
-    ///     Method <c>ParseCommaSeparatedIdentifiers</c> 
+    ///     Method <c>ParseCommaSeparatedIdentifiers</c>
     ///     </para>
     /// </summary>
     /// <param name="firstId"></param>
@@ -1757,20 +1763,19 @@ public class Parser
         //matches and removes the identifier
         var token = MatchAndRemove(Token.TokenType.Identifier);
 
-        //if no identifier is found or the identifier does not have a defined value 
+        //if no identifier is found or the identifier does not have a defined value
         if (token == null || token.Value == null)
             throw new SyntaxErrorException(
                 "An export call must be followed by an identifier, not ",
                 Peek(0)
             );
 
-
         LinkedList<string> exports = new LinkedList<string>();
 
         //add the token's value to the export list
         exports.AddLast(token.Value);
 
-        //while a comma is present 
+        //while a comma is present
         while (MatchAndRemove(Token.TokenType.Comma) != null)
         {
             //match and remove the next identifier
@@ -1810,7 +1815,7 @@ public class Parser
     /// </summary>
     /// <returns>LinkedList of import functions</returns>
     /// <exception cref="SyntaxErrorException">
-    /// <list type="bullet"> 
+    /// <list type="bullet">
     ///     <item>
     ///         <description>Brackets do not contain a list of functions</description>
     ///     </item>
@@ -1824,7 +1829,6 @@ public class Parser
         var functionsToImport = new LinkedList<string>();
 
         MatchAndRemove(Token.TokenType.LeftBracket);
-
 
         //while there is more in the import list
         while (MatchAndRemove(Token.TokenType.RightBracket) == null)
@@ -1842,7 +1846,6 @@ public class Parser
 
             //add the import function to our list
             functionsToImport.AddLast(token.Value);
-
 
             //match and remove hte next comma if there are more methods to import
             if (Peek(1).Type == Token.TokenType.Identifier)
