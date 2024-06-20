@@ -162,9 +162,10 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
             var a = builder.BuildGEP2(value.TypeRef, value.ValueRef, new[] { expr.Pop() });
             expr.Push(builder.BuildLoad2(value.TypeRef, a));
         }
-        // else if (node.ExtensionType == VariableUsagePlainNode.VrnExtType.RecordMember)
-
-        expr.Push(builder.BuildLoad2(value.TypeRef, value.ValueRef));
+        else
+        {
+            expr.Push(builder.BuildLoad2(value.TypeRef, value.ValueRef));
+        }
     }
 
     public override void Visit(CharNode node)
@@ -327,37 +328,59 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
         if (node.IsVariable)
         {
             var vars = context.GetVariable(node.Variable?.Name);
+            expr.Push(vars.ValueRef);
         }
         else
         {
-            node.Constant.Accept(this);
+            node.Constant?.Accept(this);
         }
     }
 
     public override void Visit(FunctionCallNode node)
     {
-        var function =
-            context.GetFunction(node.Name)
-            ?? throw new Exception($"function {node.Name} not found");
-        // if any arguement is not mutable, but is required to be mutable
-        if (
-            function
-                .ArguementMutability.Zip( //mutable
-                    node.Parameters //multable
-                    .Select(p => p.IsVariable)
-                )
-                .Any(a => a is { First: true, Second: false })
-        )
+        if (node.Name == "write")
         {
-            throw new Exception($"call to {node.Name} has a mismatch of mutability");
+            builder.BuildCall2(
+                context.CFuntions.printf.TypeOf,
+                context.CFuntions.printf.Function,
+                node.Parameters.Select(p =>
+                {
+                    p.Accept(this);
+                    LLVMValueRef b = expr.Pop();
+                    if (_types(b.TypeOf) == Types.STRING)
+                    {
+                        b = builder.BuildExtractValue(b, 1);
+                    }
+                    return b;
+                })
+                    .ToArray()
+            );
         }
-
-        var parameters = node.Parameters.Select(p =>
+        else
         {
-            p.Accept(this);
-            return expr.Pop();
-        });
-        builder.BuildCall2(function.TypeOf, function.Function, parameters.ToArray());
+            var function =
+                context.GetFunction(node.Name)
+                ?? throw new Exception($"function {node.Name} not found");
+            // if any arguement is not mutable, but is required to be mutable
+            if (
+                function
+                    .ArguementMutability.Zip( //mutable
+                        node.Parameters //multable
+                        .Select(p => p.IsVariable)
+                    )
+                    .Any(a => a is { First: true, Second: false })
+            )
+            {
+                throw new Exception($"call to {node.Name} has a mismatch of mutability");
+            }
+
+            var parameters = node.Parameters.Select(p =>
+            {
+                p.Accept(this);
+                return expr.Pop();
+            });
+            builder.BuildCall2(function.TypeOf, function.Function, parameters.ToArray());
+        }
     }
 
     public override void Visit(FunctionNode node)

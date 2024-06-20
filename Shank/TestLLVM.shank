@@ -11,10 +11,12 @@ variables ss: string
       
 
 define foo(bar: string; t: integer; h: boolean; s: string)
-variables n : integer
+variables n, n1 : integer
 variables ss: string
      n:= 40
-     ss := "f"
+     n1 := n
+     
+     
  
 define varf(var foo: integer)
     foo := 5
