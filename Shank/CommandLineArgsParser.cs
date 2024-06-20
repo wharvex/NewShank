@@ -142,6 +142,7 @@ public class CommandLineArgsParser
 
         // GetFiles(options.InputFile).ForEach(ip => ScanAndParse(ip, program));
         program.SetStartModule();
+        BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
         SemanticAnalysis.CheckModules(program);
 
         Interpreter.Modules = program.Modules;

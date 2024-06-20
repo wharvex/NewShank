@@ -6,15 +6,14 @@ variables n : integer
 variables ss: string
     n := 10
     n := n + 1
-    varf var n
     ss := "ffff" + "gg"
-      
+       
 
 define foo(bar: string; t: integer; h: boolean; s: string)
 variables n : integer
 variables ss: string
      n:= 40
-     ss := "f"
+    { ss := "f" }
 
 define varf(var foo: integer)
     foo := 5

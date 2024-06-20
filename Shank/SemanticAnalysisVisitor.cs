@@ -120,6 +120,11 @@ public class SemanticAnalysisVisitor : Visitor
     public override void Visit(ProgramNode node)
     {
         StartModule = node.GetStartModuleSafe();
+        node.Modules.Values.ToList()
+            .ForEach(n =>
+            {
+                n.Accept(this);
+            });
     }
 
     public override void Visit(ForNode node)

@@ -12,7 +12,7 @@ public abstract class ExpressionNode : ASTNode
         throw new NotImplementedException();
     }
 
-    public override void Accept(Visitor v) { }
+    public override void Accept(Visitor v) => throw new NotImplementedException();
 
     public override T Accept<T>(IAstNodeVisitor<T> visitor)
     {

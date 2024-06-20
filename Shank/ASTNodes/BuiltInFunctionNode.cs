@@ -23,5 +23,5 @@ public class BuiltInFunctionNode : CallableNode
     // }
     public override T Accept<T>(IAstNodeVisitor<T> visitor) => visitor.Visit(this);
 
-    public override void Accept(Visitor v) => throw new NotImplementedException();
+    public override void Accept(Visitor v) => throw new NotImplementedException("");
 }
