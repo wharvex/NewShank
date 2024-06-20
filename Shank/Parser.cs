@@ -691,13 +691,15 @@ public class Parser
         return typeToken.Type switch
         {
             // we pass true to checkRange because this is the float type so the range could be a range with floats, in any other case the range must be only of integers
-            Token.TokenType.Real => new RealType(CheckRange(true, Range.DefaultFloat())),
+            Token.TokenType.Real
+                => new RealType(CheckRange(true, Range.DefaultFloat())),
             Token.TokenType.Identifier => CustomType(declarationContext, typeToken),
             Token.TokenType.Integer => new IntegerType(CheckRange(false, Range.DefaultInteger())),
             Token.TokenType.Boolean => new BooleanType(),
             Token.TokenType.Character
                 => new CharacterType(CheckRange(false, Range.DefaultCharacter())),
-            Token.TokenType.String => new StringType(CheckRange(false, Range.DefaultSmallInteger())),
+            Token.TokenType.String
+                => new StringType(CheckRange(false, Range.DefaultSmallInteger())),
             Token.TokenType.Array => ArrayType(declarationContext, typeToken),
             // we cannot check unknown type for refersTo being on enum, but if we have refersTo integer we can check that at parse time
             Token.TokenType.RefersTo
