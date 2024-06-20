@@ -116,7 +116,9 @@ public class SemanticAnalysis
                     variables
                 );
 
-                CheckAssignment(an.Target.Name, targetType, an.Expression, variables);
+                var targetName = GetVuopTestFlag() ? an.NewTarget.GetPlain().Name : an.Target.Name;
+
+                CheckAssignment(targetName, targetType, an.Expression, variables);
             }
             else if (s is FunctionCallNode fn)
             {
@@ -408,6 +410,27 @@ public class SemanticAnalysis
             {
                 throw new Exception("Incorrect type of range.");
             }*/
+        }
+    }
+
+    private static void NewCheckRange(
+        string targetName,
+        Type targetType,
+        ExpressionNode expression,
+        Dictionary<string, VariableDeclarationNode> vdnByName
+    )
+    {
+        if (targetType is RangeType i) // all other i range type are bounded by integers
+        {
+            var from = i.Range.From;
+            var to = i.Range.To;
+            int upper = (int)GetMaxRange(expression, vdnByName);
+            int lower = (int)GetMinRange(expression, vdnByName);
+
+            if (lower < from || upper > to)
+                throw new Exception(
+                    $"The variable {targetName!} can only be assigned expressions that wont overstep its range."
+                );
         }
     }
 
