@@ -690,13 +690,14 @@ public class Parser
 
         return typeToken.Type switch
         {
+            // we pass true to checkRange because this is the float type so the range could be a range with floats, in any other case the range must be only of integers
             Token.TokenType.Real => new RealType(CheckRange(true, Range.DefaultFloat())),
             Token.TokenType.Identifier => CustomType(declarationContext, typeToken),
-            Token.TokenType.Integer => new IntegerType(CheckRange(true, Range.DefaultInteger())),
+            Token.TokenType.Integer => new IntegerType(CheckRange(false, Range.DefaultInteger())),
             Token.TokenType.Boolean => new BooleanType(),
             Token.TokenType.Character
-                => new CharacterType(CheckRange(true, Range.DefaultCharacter())),
-            Token.TokenType.String => new StringType(CheckRange(true, Range.DefaultSmallInteger())),
+                => new CharacterType(CheckRange(false, Range.DefaultCharacter())),
+            Token.TokenType.String => new StringType(CheckRange(false, Range.DefaultSmallInteger())),
             Token.TokenType.Array => ArrayType(declarationContext, typeToken),
             // we cannot check unknown type for refersTo being on enum, but if we have refersTo integer we can check that at parse time
             Token.TokenType.RefersTo
@@ -813,6 +814,7 @@ public class Parser
         return CheckRangeInner(isFloat, defaultRange) ?? defaultRange;
     }
 
+    // for isFloat signifies that the range we are parsing can be a float, otherwise we do not allow floats in ranges
     private Range? CheckRangeInner(bool isFloat, Range defaultRange)
     {
         if (MatchAndRemove(Token.TokenType.From) is null)
@@ -831,7 +833,9 @@ public class Parser
         var toNode = ProcessNumericConstant(
             toToken ?? throw new SyntaxErrorException("Expected a number", Peek(0))
         );
-        if (!isFloat && fromNode is FloatNode || toNode is FloatNode)
+        // the parenthesis are required after the &&, otherwise it read "if (not parsing float ranges and the from is a float) or the to is a float
+        // because && has more precedence than ||
+        if (!isFloat && (fromNode is FloatNode || toNode is FloatNode))
         {
             throw new SyntaxErrorException("Expected integer type limits found float ones", null);
         }
