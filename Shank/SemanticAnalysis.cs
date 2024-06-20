@@ -1052,9 +1052,17 @@ public class SemanticAnalysis
                     currentFunction.GenericTypeParameterNames ?? []
                 );
                 var generics = currentFunction.GenericTypeParameterNames ?? [];
+                List<string> usedGenerics = [];
                 foreach (var variable in currentFunction.ParameterVariables)
                 {
-                    variable.Type = ResolveType(variable.Type, currentModule.Value, generics);
+                    // find the type of each parameter, and also see what generics each parameter uses
+                    variable.Type = ResolveType(variable.Type, currentModule.Value, generics, (GenericType generic) => { usedGenerics.Add(generic.Name); return generic; });
+
+                }
+                // if not all generics are used in the parameters that means those generics cannot be infered, but they could be used for variables which is bad
+                if (!usedGenerics.Distinct().SequenceEqual(generics))
+                {
+                    throw new SemanticErrorException($"Generic Type parameter(s) {string.Join(", ", generics.Except(usedGenerics.Distinct()))}  cannot be infered for function {currentFunction.Name}", currentFunction);
                 }
 
                 // foreach (var statement in currentFunction.Statements)
@@ -1118,7 +1126,7 @@ public class SemanticAnalysis
             }
             else
             {
-                variable.Type = ResolveType(variable.Type, currentModule, generics);
+                variable.Type = ResolveType(variable.Type, currentModule, generics, x => x);
             }
         }
     }
@@ -1149,31 +1157,40 @@ public class SemanticAnalysis
         {
             foreach (var record in module.Records.Values)
             {
+                List<string> usedGenerics = [];
                 record.Type.Fields = record
                     .Type.Fields.Select(field =>
                     {
                         return KeyValuePair.Create(
                             field.Key,
-                            ResolveType(field.Value, module, record.Type.Generics)
+                            ResolveType(field.Value, module, record.GenericTypeParameterNames, (GenericType generic) => { usedGenerics.Add(generic.Name); return generic; })
+
                         );
                     })
                     .ToDictionary();
+                if (!usedGenerics.Distinct().SequenceEqual(record.GenericTypeParameterNames))
+                {
+                    // TODO: make warnnig function for uniformity
+                    Console.WriteLine($"Warning: Generic Type parameter(s) {string.Join(", ", record.GenericTypeParameterNames.Except(usedGenerics.Distinct()))} are unused in record {record.Name}", record);
+                }
+
+
             }
         }
     }
 
-    private static Type ResolveType(Type member, ModuleNode module, List<string> generics)
+    private static Type ResolveType(Type member, ModuleNode module, List<string> generics, Func<GenericType, GenericType> genericCollector)
     {
         return member switch
         {
-            UnknownType u => ResolveType(u, module, generics),
+            UnknownType u => ResolveType(u, module, generics, genericCollector),
             ReferenceType(UnknownType u) => handleReferenceType(u),
             _ => member
         };
 
         Type handleReferenceType(UnknownType type)
         {
-            var resolvedType = ResolveType(type, module, generics);
+            var resolvedType = ResolveType(type, module, generics, genericCollector);
             if (resolvedType is not (RecordType or InstantiatedType or GenericType))
             {
                 throw new SemanticErrorException(
@@ -1185,9 +1202,10 @@ public class SemanticAnalysis
         }
     }
 
-    private static Type ResolveType(UnknownType member, ModuleNode module, List<string> generics)
+    private static Type ResolveType(UnknownType member, ModuleNode module, List<string> generics, Func<GenericType, GenericType> genericCollector)
     {
         var resolveType =
+            // TODO: should this be the other way I.E. generics shadow other types
             module.Records.GetValueOrDefault(member.TypeName)?.Type
             ?? (Type?)module.Enums.GetValueOrDefault(member.TypeName)?.Type
             ?? (
@@ -1197,7 +1215,7 @@ public class SemanticAnalysis
                             $"generics type cannot have generics on it",
                             module
                         )
-                        : new GenericType(member.TypeName)
+                        : genericCollector(new GenericType(member.TypeName))
                     : throw new SemanticErrorException($"Unbound type {member}", module)
             );
         if (resolveType is EnumType && member.TypeParameters.Count != 0)
@@ -1215,7 +1233,7 @@ public class SemanticAnalysis
             }
             var instantiatedGenerics = record
                 .Generics.Zip(
-                    member.TypeParameters.Select(type => ResolveType(type, module, generics))
+                    member.TypeParameters.Select(type => ResolveType(type, module, generics, genericCollector))
                 )
                 .ToDictionary();
             resolveType = new InstantiatedType(record, instantiatedGenerics);

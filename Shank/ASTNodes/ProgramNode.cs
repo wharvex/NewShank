@@ -1,7 +1,4 @@
-﻿using LLVMSharp.Interop;
-using Shank.ASTNodes;
-using Shank.ExprVisitors;
-using Shank.IRGenerator;
+﻿using Shank.ExprVisitors;
 using Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 
 namespace Shank.ASTNodes;
@@ -69,6 +66,12 @@ public class ProgramNode : ASTNode
                     "At least one start function required. This should be a SemanticErrorException."
                 ),
         };
+
+        var startFunction = StartModule.getFunction("start")!;
+        if (((FunctionNode)startFunction).GenericTypeParameterNames?.Count > 0)
+        {
+            throw new SemanticErrorException("start functon cannot have generics", startFunction);
+        }
     }
 
     // public void VisitProgram(
