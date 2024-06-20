@@ -12,7 +12,7 @@ namespace TranUnitTests
         private Parser parser;
         private TokenHandler handler;
         private LinkedList<Token> tokens;
-        
+
         [TestInitialize]
         public void Setup()
         {
