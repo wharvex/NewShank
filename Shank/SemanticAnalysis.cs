@@ -11,11 +11,11 @@ public class SemanticAnalysis
     public static ProgramNode? AstRoot { get; set; }
     public static Dictionary<string, ModuleNode>? Modules { get; set; }
     public static ModuleNode? StartModule { get; set; }
-    private static InterptOptions? _interpreterOptions;
-    public static InterptOptions InterpreterOptions
+    public static InterptOptions? InterpreterOptions { get; set; }
+
+    public static bool GetVuopTestFlag()
     {
-        get => _interpreterOptions ?? throw new InvalidOperationException();
-        set => _interpreterOptions = value;
+        return InterpreterOptions?.VuOpTest ?? false;
     }
 
     private static ProgramNode GetAstRootSafe() =>
@@ -112,7 +112,7 @@ public class SemanticAnalysis
                     }
 
                 var targetType = GetTypeOfExpression(
-                    InterpreterOptions.VuOpTest ? an.NewTarget : an.Target,
+                    GetVuopTestFlag() ? an.NewTarget : an.Target,
                     variables
                 );
 
@@ -518,10 +518,13 @@ public class SemanticAnalysis
             FloatNode floatNode => new RealType(),
             MathOpNode mathOpNode => GetTypeOfMathOp(mathOpNode, variables),
             StringNode stringNode => new StringType(),
-            VariableUsagePlainNode variableReferenceNode
-                => InterpreterOptions.VuOpTest
+            VariableUsageNodeTemp variableReferenceNode
+                => GetVuopTestFlag()
                     ? NewGetTypeOfVariableUsage(variableReferenceNode, variables)
-                    : GetTypeOfVariableUsage(variableReferenceNode, variables),
+                    : GetTypeOfVariableUsage(
+                        (VariableUsagePlainNode)variableReferenceNode,
+                        variables
+                    ),
             _ => throw new ArgumentOutOfRangeException(expression.ToString())
         };
 
