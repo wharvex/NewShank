@@ -1,4 +1,6 @@
-﻿namespace Shank.ASTNodes;
+﻿using System.Diagnostics;
+
+namespace Shank.ASTNodes;
 
 public abstract class VariableUsageNodeTemp : ExpressionNode
 {
@@ -7,9 +9,15 @@ public abstract class VariableUsageNodeTemp : ExpressionNode
         var ret = this;
         while (ret is not VariableUsagePlainNode)
         {
-            ret = ret is VariableUsageIndexNode vin
-                ? vin.Left
-                : ((VariableUsageMemberNode)ret).Left;
+            ret = ret switch
+            {
+                VariableUsageIndexNode vuin => vuin.Left,
+                VariableUsageMemberNode vumn => vumn.Left,
+                _
+                    => throw new UnreachableException(
+                        "VUN class hierarchy was altered; please update this switch accordingly."
+                    )
+            };
         }
 
         return (VariableUsagePlainNode)ret;

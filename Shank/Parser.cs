@@ -34,6 +34,10 @@ public class Parser
     {
         _tokens = tokens;
         InterpreterOptions = options;
+        if (InterpreterOptions is not null && InterpreterOptions.VuOpTest)
+        {
+            OutputHelper.DebugPrintTxt("starting vuop test debug output", "vuop");
+        }
     }
 
     private readonly List<Token> _tokens;
@@ -43,10 +47,8 @@ public class Parser
     public static string FileName { get; set; }
 
     /// <summary>
-    /// <para>
     ///    Method <c>MatchAndRemove</c> removes I token if the TokenType matches
     ///    the parameter's type
-    /// </para>
     /// </summary>
     /// <param name="t">TokenType passed in</param>
     /// <returns>Token's value otherwise null</returns>
@@ -94,10 +96,8 @@ public class Parser
     }
 
     /// <summary>
-    /// <para>
     ///     Method <c>MatchAndRemoveMultiple</c> removes multiple tokens if the TokenType
     ///     matches the array of parameters passed in
-    /// </para>
     /// </summary>
     /// <param name="ts">List of TokenTypes</param>
     /// <returns>Values of the tokens removeed otherwise null</returns>
@@ -115,11 +115,9 @@ public class Parser
     }
 
     /// <summary>
-    /// <para>
     ///     Method <c>Peek</c> reads the value of the next value with <e>n</e> offset
     ///     and returns the value. If the offset passed in is beyond the end of the file,
     ///     the function may return null.
-    /// </para>
     /// </summary>
     /// <param name="offset">Number of characters you are peeking ahead</param>
     /// <returns>Token value or else null</returns>
@@ -130,11 +128,9 @@ public class Parser
     }
 
     /// <summary>
-    /// <para>
     ///     Method <c>PeekSafe</c> reads the value of the next value with <e>n</e> offset
     ///     and returns the value fetched from <e>Peek</e>. If it returns null, an exception is thrown.
     ///     See Peek documentation for null cases.
-    /// </para>
     /// </summary>
     /// <param name="offset">Number of characters you are peeking ahead</param>
     /// <returns>Token value</returns>
@@ -144,10 +140,8 @@ public class Parser
         Peek(offset) ?? throw new SyntaxErrorException("Unexpected EOF", null);
 
     /// <summary>
-    /// <para>
     ///     Method <c>ExpectsEndOfLine</c> reads attempts to match the next token to EndOfLine.
     ///     If found, the Token is returned and removed from our list. If not null is returned.
-    /// </para>
     /// </summary>
     /// <returns>Token value otherwise null</returns>
     private bool ExpectsEndOfLine()
@@ -167,10 +161,8 @@ public class Parser
     }
 
     /// <summary>
-    ///     <para>
     ///     Method <c>ConsumeBlankLines</c> removes the next token repeatedly until its type
     ///     no longer matches EndOfLine
-    ///     </para>
     /// </summary>
 
     private void ConsumeBlankLines()
@@ -179,10 +171,8 @@ public class Parser
     }
 
     /// <summary>
-    ///     <para>
     ///     Method <c>RequiresEndOfLine</c> checks the return value of <c>RequiresEndOfLine</c>.
     ///     If not present an exception is thrown.
-    ///     </para>
     /// </summary>
     /// <exception cref="SyntaxErrorException">An EndOfLine token is not encountered</exception>
 
@@ -195,7 +185,6 @@ public class Parser
     }
 
     /// <summary>
-    ///     <para>
     ///     Method <c>GetVariableUsagePlainNode</c> parses a variable usage according to the
     ///     following syntax example:
     ///
@@ -204,7 +193,6 @@ public class Parser
     ///                 or
     ///
     ///             IDENTIFIER.reference
-    ///     </para>
     /// </summary>
     /// <returns>new VariableUsagePlainNode otherwise exception</returns>
     /// <exception cref="SyntaxErrorException">
@@ -275,16 +263,14 @@ public class Parser
     }
 
     /// <summary>
-    ///     <para>
     ///    Method <c>GetVariableUsageNode</c> parses nested variable usages according to the
-    ///    following syntax example:
+    ///     following syntax example:
     ///
     ///             IDENTIFIER[expression][expression]...
     ///
     ///                 or
     ///
     ///             IDENTIFIER.reference.reference...
-    ///    </para>
     /// </summary>
     /// <returns>VariableUsageTempNode or VariableUsageIndexNode or VariableUsageMemberNode else exception</returns>
     /// <exception cref="SyntaxErrorException">Expression is not present in an array index</exception>
@@ -354,25 +340,9 @@ public class Parser
         }
     }
 
-    /// <summary>
-    ///     <para>
-    ///         Method <c>MemberAccess</c> creates a new MemberAccessNode assuming that the next token
-    ///         is an identifier. For exception cases, please refer to the documentation of <c>RequiresAndReturnsToken</c>
-    ///     </para>
-    /// </summary>
-    /// <returns>new MemberAccessNode</returns>
-
     private MemberAccessNode MemberAccess() =>
         new MemberAccessNode(RequiresAndReturnsToken(Token.TokenType.Identifier).GetValueSafe());
 
-    /// <summary>
-    ///     <para>
-    ///         Method <c>Module</c>
-    ///     </para>
-    /// </summary>
-    /// <returns></returns>
-    /// <exception cref="SyntaxErrorException"></exception>
-    /// <exception cref="NotImplementedException"></exception>
     public ModuleNode Module()
     {
         // Get the module name if there is one, or set it to default.
@@ -404,11 +374,9 @@ public class Parser
             // Handle the construct based on what type it is.
             switch (indentZeroToken.Type)
             {
-                //if we have exports add them to the module
                 case Token.TokenType.Export:
                     ret.addExportNames(Export());
                     break;
-                //module contains import list
                 case Token.TokenType.Import:
                     // An import statement starts with the `import' keyword, then a mandatory module
                     // name to import from, then optional square brackets surrounding one or more
@@ -433,8 +401,6 @@ public class Parser
                     }
 
                     break;
-
-                //module contains function definition
                 case Token.TokenType.Define:
                     ret.addFunction(Function(moduleName));
                     break;
@@ -480,9 +446,7 @@ public class Parser
         // Process parameter variables.
         if (MatchAndRemove(Token.TokenType.LeftParen) == null)
             throw new SyntaxErrorException("Expected a left paren", Peek(0));
-
         var done = false;
-
         while (!done)
         {
             var vars = GetVariables(
@@ -629,10 +593,6 @@ public class Parser
         //     MatchAndRemove(Token.TokenType.EndOfLine);
         // }
 
-        if (InterpreterOptions is not null)
-        {
-            OutputHelper.DebugPrintTxt(InterpreterOptions.VuOpTest.ToString(), "vuop");
-        }
         return (
                 InterpreterOptions is not null && InterpreterOptions.VuOpTest
                     ? NewAssignment()
@@ -690,9 +650,7 @@ public class Parser
 
         return typeToken.Type switch
         {
-            // we pass true to checkRange because this is the float type so the range could be a range with floats, in any other case the range must be only of integers
-            Token.TokenType.Real
-                => new RealType(CheckRange(true, Range.DefaultFloat())),
+            Token.TokenType.Real => new RealType(CheckRange(true, Range.DefaultFloat())),
             Token.TokenType.Identifier => CustomType(declarationContext, typeToken),
             Token.TokenType.Integer => new IntegerType(CheckRange(false, Range.DefaultInteger())),
             Token.TokenType.Boolean => new BooleanType(),
@@ -816,7 +774,6 @@ public class Parser
         return CheckRangeInner(isFloat, defaultRange) ?? defaultRange;
     }
 
-    // for isFloat signifies that the range we are parsing can be a float, otherwise we do not allow floats in ranges
     private Range? CheckRangeInner(bool isFloat, Range defaultRange)
     {
         if (MatchAndRemove(Token.TokenType.From) is null)
@@ -835,8 +792,6 @@ public class Parser
         var toNode = ProcessNumericConstant(
             toToken ?? throw new SyntaxErrorException("Expected a number", Peek(0))
         );
-        // the parenthesis are required after the &&, otherwise it read "if (not parsing float ranges and the from is a float) or the to is a float
-        // because && has more precedence than ||
         if (!isFloat && (fromNode is FloatNode || toNode is FloatNode))
         {
             throw new SyntaxErrorException("Expected integer type limits found float ones", null);
@@ -1050,42 +1005,54 @@ public class Parser
     private StatementNode? NewAssignment()
     {
         OutputHelper.DebugPrintTxt("hello from new assignment", "vuop", true);
-        if (
-            Peek(1)?.Type
-            is Token.TokenType.Assignment
-                or Token.TokenType.LeftBracket
-                or Token.TokenType.Dot
-        )
-        {
-            var target = GetVariableUsagePlainNode();
-            if (target == null)
-                throw new SyntaxErrorException(
-                    "Found an assignment without a valid identifier.",
-                    Peek(0)
-                );
-            MatchAndRemove(Token.TokenType.Assignment);
-            var expression = ParseExpressionLine();
-            if (expression == null)
-                throw new SyntaxErrorException(
-                    "Found an assignment without a valid right hand side.",
-                    Peek(0)
-                );
-            return new AssignmentNode(target, expression);
-        }
-        else
+        OutputHelper.DebugPrintTxt(
+            "Assignment token found on line "
+                + Line
+                + ": "
+                + FindBeforeEol(Token.TokenType.Assignment),
+            "vuop",
+            true
+        );
+        if (!FindBeforeEol(Token.TokenType.Assignment))
         {
             return null;
         }
+
+        var target =
+            GetVariableUsageNode()
+            ?? throw new SyntaxErrorException("Expected variable usage", Peek(0));
+
+        RequiresToken(Token.TokenType.Assignment);
+
+        var expression =
+            ParseExpressionLine() ?? throw new SyntaxErrorException("Expected expression", Peek(0));
+
+        return new AssignmentNode(new VariableUsagePlainNode("empty"), expression, target);
+    }
+
+    private bool FindBeforeEol(Token.TokenType tokenType)
+    {
+        var i = 0;
+        var next = Peek(i);
+        while (next is not null && next.Type != Token.TokenType.EndOfLine)
+        {
+            if (next.Type == tokenType)
+            {
+                return true;
+            }
+
+            next = Peek(++i);
+        }
+
+        return false;
     }
 
     /// <summary>
-    /// <para>
     /// Process an arbitrary number of consecutive variables declaration lines (i.e. lines that
     /// start with the 'variables' keyword).
-    /// </para>
     /// </summary>
-    /// <param name="parentModule">The parent module passed in as a string</param>
-    /// <returns>List of variable declarations</returns>
+    /// <param name="parentModule"></param>
+    /// <returns></returns>
     private List<VariableDeclarationNode> ProcessVariables(string parentModule)
     {
         var retVal = new List<VariableDeclarationNode>();
@@ -1168,16 +1135,7 @@ public class Parser
     {
         // ranges parsed in the type
         return names
-            .Select(
-                n =>
-                    new VariableDeclarationNode()
-                    {
-                        IsConstant = isConstant,
-                        Type = type,
-                        Name = n,
-                        ModuleName = parentModuleName,
-                    }
-            )
+            .Select(n => new VariableDeclarationNode(isConstant, type, n, parentModuleName))
             .ToList();
     }
 
@@ -1227,95 +1185,40 @@ public class Parser
                 )
         };
 
-    /// <summary>
-    ///     <para>
-    ///         Method <c>GetMutability</c> determines the ability for an object to change
-    ///         once it is created by reading the declaration context and determinning
-    ///         whether the variable type is inferred.
-    ///     </para>
-    /// </summary>
-    /// <param name="declarationContext">How the variable declaration is being used</param>
-    /// <param name="hasVar">whether or not "var" keyword is present (inferred data type)</param>
-    /// <param name="varToken">the variable value itself (used in exceptions)</param>
-    /// <returns>boolean true or false</returns>
-    /// <exception cref="SyntaxErrorException">
-    ///     <list type="bullet">
-    ///         <item>
-    ///             <description>Keyword `var' not allowed in a record declaration.</description>
-    ///         </item>
-    ///         <item>
-    ///             <description>Keyword `var' not allowed in an enum declaration.</description>
-    ///         </item>
-    ///         <item>
-    ///             <description>Keyword `var' not allowed in a variables line.</description>
-    ///         </item>
-    ///         <item>
-    ///             <description>Keyword `var' not allowed in a constants line.</description>
-    ///         </item>
-    ///     </list>
-    /// </exception>
-    /// <exception cref="NotImplementedException">A valid variable context was not reached</exception>
     private static bool GetMutability(
         VariableDeclarationNode.DeclarationContext declarationContext,
         bool hasVar,
         Token? varToken
     ) =>
-        //read this basically as a switch statement with each lambda expression
-        //representing a "case"
         declarationContext switch
         {
-            //when the declaration context is a Record Declaration and "var"keyword is present
             VariableDeclarationNode.DeclarationContext.RecordDeclaration when hasVar
                 => throw new SyntaxErrorException(
                     "Keyword `var' not allowed in a record declaration.",
                     varToken
                 ),
-            //when the declaration context is a Record Declaration
-            VariableDeclarationNode.DeclarationContext.RecordDeclaration
-                => false,
-
-            //when the declartion context is an Enum Declaration and "var" keyword is present
+            VariableDeclarationNode.DeclarationContext.RecordDeclaration => false,
             VariableDeclarationNode.DeclarationContext.EnumDeclaration when hasVar
                 => throw new SyntaxErrorException(
                     "Keyword `var' not allowed in an enum declaration.",
                     varToken
                 ),
-
-            //when the declaration context is a Enum Declaration
-            VariableDeclarationNode.DeclarationContext.EnumDeclaration
-                => false,
-
-            //when the declartion context is a Function Signature and "var" keyword is present
-            VariableDeclarationNode.DeclarationContext.FunctionSignature when hasVar
-                => false,
-
-            //when the declartion context is a Function Signature and "var" keyword is absent
-            VariableDeclarationNode.DeclarationContext.FunctionSignature when !hasVar
-                => true,
-
-            //when the declaration context is a Variables Line and "var" keyword is present
+            VariableDeclarationNode.DeclarationContext.EnumDeclaration => false,
+            VariableDeclarationNode.DeclarationContext.FunctionSignature when hasVar => false,
+            VariableDeclarationNode.DeclarationContext.FunctionSignature when !hasVar => true,
             VariableDeclarationNode.DeclarationContext.VariablesLine when hasVar
                 => throw new SyntaxErrorException(
                     "Keyword `var' not allowed in a variables line.",
                     varToken
                 ),
-
-            //when the declaration context is a Variables Line
-            VariableDeclarationNode.DeclarationContext.VariablesLine
-                => false,
-
-            //when the declaration context is a Constants Line and "var" keyword is present
+            VariableDeclarationNode.DeclarationContext.VariablesLine => false,
             VariableDeclarationNode.DeclarationContext.ConstantsLine when hasVar
                 => throw new SyntaxErrorException(
                     "Keyword `var' not allowed in a constants line.",
                     varToken
                 ),
-
-            //when declaration context is a Constants Line
-            VariableDeclarationNode.DeclarationContext.ConstantsLine
-                => true,
+            VariableDeclarationNode.DeclarationContext.ConstantsLine => true,
             _
-                //default case
                 => throw new NotImplementedException(
                     "Invalid variable declaration context `"
                         + declarationContext
@@ -1323,24 +1226,13 @@ public class Parser
                 )
         };
 
-    /// <summary>
-    ///     <para>
-    ///          Method <c>GetVariables</c>
-    ///     </para>
-    /// </summary>
-    /// <param name="parentModuleName"></param>
-    /// <param name="declarationContext"></param>
-    /// <returns></returns>
     private List<VariableDeclarationNode>? GetVariables(
         string parentModuleName,
         VariableDeclarationNode.DeclarationContext declarationContext
     )
     {
-        //remove the variable
         var varToken = MatchAndRemove(Token.TokenType.Var);
         var hasVar = varToken is not null;
-
-        //determine if the variable is immutable (remains constant)
         var isConstant = GetMutability(declarationContext, hasVar, varToken);
 
         // Get variable names.
@@ -1391,14 +1283,6 @@ public class Parser
         }
     }
 
-    /// <summary>
-    ///     Method <c>RequiresAndReturnsToken</c> attempts to MatchAndRemove a token if its TokenType matches
-    ///     the type that is passed in
-    /// </summary>
-    /// <param name="tokenType">TokenType expected</param>
-    /// <returns>Expected Token</returns>
-    /// <exception cref="SyntaxErrorException">TokenTypes do not match</exception>
-
     private Token RequiresAndReturnsToken(Token.TokenType tokenType) =>
         MatchAndRemove(tokenType)
         ?? throw new SyntaxErrorException("Expected a " + tokenType, Peek(0));
@@ -1422,14 +1306,6 @@ public class Parser
             );
         }
     }
-
-    /// <summary>
-    ///     <para>
-    ///     Method <c>ParseCommaSeparatedIdentifiers</c>
-    ///     </para>
-    /// </summary>
-    /// <param name="firstId"></param>
-    /// <param name="idValues"></param>
 
     private void ParseCommaSeparatedIdentifiers(Token firstId, List<string> idValues)
     {
@@ -1759,42 +1635,25 @@ public class Parser
         return new IntNode(int.Parse(token.Value));
     }
 
-    /// <summary>
-    ///     Method <c>Export</c> matches and removes a list of exports (identifiers) and returns the list for use
-    /// </summary>
-    /// <returns>LinkedList of export values (string)</returns>
-    /// <exception cref="SyntaxErrorException">An export call is not followed by an identifier</exception>
+    //private string? Export()
     private LinkedList<string> Export()
     {
-        //matches and removes the identifier
         var token = MatchAndRemove(Token.TokenType.Identifier);
-
-        //if no identifier is found or the identifier does not have a defined value
         if (token == null || token.Value == null)
             throw new SyntaxErrorException(
                 "An export call must be followed by an identifier, not ",
                 Peek(0)
             );
-
         LinkedList<string> exports = new LinkedList<string>();
-
-        //add the token's value to the export list
         exports.AddLast(token.Value);
-
-        //while a comma is present
         while (MatchAndRemove(Token.TokenType.Comma) != null)
         {
-            //match and remove the next identifier
             token = MatchAndRemove(Token.TokenType.Identifier);
-
-            //check to see if the identifier is actually present
             if (token == null || token.Value == null)
                 throw new SyntaxErrorException(
                     "An comma in an export call must be followed by an identifer, ",
                     Peek(0)
                 );
-
-            //add it to exports
             exports.AddLast(token.Value);
         }
 
@@ -1813,35 +1672,13 @@ public class Parser
         return token.Value;
     }
 
-    /// <summary>
-    /// <para>
-    ///     Method <c>checkForFunctions</c> reads an import statement and determines the functions
-    ///     associated with it. These functions are removed, stored, and returned in a list
-    /// </para>
-    /// </summary>
-    /// <returns>LinkedList of import functions</returns>
-    /// <exception cref="SyntaxErrorException">
-    /// <list type="bullet">
-    ///     <item>
-    ///         <description>Brackets do not contain a list of functions</description>
-    ///     </item>
-    ///     <item>
-    ///         <description>Any two function names aren't separated by a comma</description>
-    ///     </item>
-    /// </list>
-    /// </exception>
     private LinkedList<string> checkForFunctions()
     {
         var functionsToImport = new LinkedList<string>();
-
         MatchAndRemove(Token.TokenType.LeftBracket);
-
-        //while there is more in the import list
         while (MatchAndRemove(Token.TokenType.RightBracket) == null)
         {
-            //m,atch and remove the method identifier
             var token = MatchAndRemove(Token.TokenType.Identifier);
-
             if (token == null || token.Value == null)
             {
                 throw new SyntaxErrorException(
@@ -1850,10 +1687,7 @@ public class Parser
                 );
             }
 
-            //add the import function to our list
             functionsToImport.AddLast(token.Value);
-
-            //match and remove hte next comma if there are more methods to import
             if (Peek(1).Type == Token.TokenType.Identifier)
             {
                 if (MatchAndRemove(Token.TokenType.Comma) == null)
