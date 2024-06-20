@@ -8,6 +8,8 @@ namespace Tran
 {
     internal class main
     {
-        public static void Main(string[] args) { }
+        public static void Main(string[] args)
+        {
+        }
     }
 }
