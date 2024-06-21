@@ -1,0 +1,12 @@
+record Baz generic A
+    inner: A
+
+enum Days = [today, tomorrow]
+
+define start()
+variables z: Baz string
+variables g: Days
+    foo 1, z, g
+
+define foo(a: A; b: A; c: A) generic A
+    write a

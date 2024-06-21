@@ -1,0 +1,5 @@
+record foo generic A
+    bar: integer
+
+define start()
+    write 1

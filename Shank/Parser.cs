@@ -650,15 +650,15 @@ public class Parser
 
         return typeToken.Type switch
         {
-            Token.TokenType.Real => new RealType(CheckRange(true, Range.DefaultFloat())),
+            Token.TokenType.Real => new RealType(CheckRange(true, RealType.DefaultRange)),
             Token.TokenType.Identifier => CustomType(declarationContext, typeToken),
-            Token.TokenType.Integer => new IntegerType(CheckRange(false, Range.DefaultInteger())),
+            Token.TokenType.Integer => new IntegerType(CheckRange(false, IntegerType.DefaultRange)),
             Token.TokenType.Boolean => new BooleanType(),
             Token.TokenType.Character
-                => new CharacterType(CheckRange(false, Range.DefaultCharacter())),
+                => new CharacterType(CheckRange(false, CharacterType.DefaultRange)),
             Token.TokenType.String
-                => new StringType(CheckRange(false, Range.DefaultSmallInteger())),
-            Token.TokenType.Array => ArrayType(declarationContext, typeToken),
+                => new StringType(CheckRange(false, StringType.DefaultRange)),
+            Token.TokenType.Array => ArrayTypeParser(declarationContext, typeToken),
             // we cannot check unknown type for refersTo being on enum, but if we have refersTo integer we can check that at parse time
             Token.TokenType.RefersTo
                 => new ReferenceType(
@@ -745,12 +745,12 @@ public class Parser
         return parser();
     }
 
-    private ArrayType ArrayType(
+    private ArrayType ArrayTypeParser(
         VariableDeclarationNode.DeclarationContext declarationContext,
         Token? arrayToken
     )
     {
-        var range = CheckRangeInner(false, Range.DefaultSmallInteger());
+        var range = CheckRangeInner(false, ArrayType.DefaultRange);
         if (
             range is null
             && declarationContext == VariableDeclarationNode.DeclarationContext.VariablesLine

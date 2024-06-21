@@ -1,0 +1,2 @@
+define start() generic A
+    write 1

@@ -7,34 +7,31 @@ namespace Shank;
 public interface Type // our marker interface anything that implements is known to represent a shank type
 #pragma warning restore IDE1006 // Naming Styles
 {
-    // when have a list of generic types and what typees replace them we need a function that does the replacement
+    // when have a list of generic types and what types replace them we need a function that does the replacement
     Type Instantiate(Dictionary<string, Type> instantiatedGenerics);
+    public string ToString();
 }
 
-public record struct Range // the type that represents a type range in shank (from .. to ..), as ranges on types are part of the types
-(float From, float To)
+public readonly record struct
+    Range // the type that represents a type range in shank (from … to …), as ranges on types are part of the types
+    (float From, float To)
 {
-    public static Range DefaultFloat()
-    {
-        return new Range(float.MinValue, float.MaxValue);
-    }
+    public static Range DefaultFloat=>
+         new (float.MinValue, float.MaxValue);
 
-    public static Range DefaultInteger()
-    {
-        return new Range(long.MinValue, long.MaxValue);
-    }
+    public static Range DefaultInteger =>
+        new (long.MinValue, long.MaxValue);
 
-    public static Range DefaultSmallInteger()
-    {
         // since this is just for arrays and strings should it be unsigned
-        return new Range(uint.MinValue, uint.MaxValue);
-    }
+    public static Range DefaultSmallInteger =>
+        new(uint.MinValue, uint.MaxValue);
 
-    public static Range DefaultCharacter()
-    {
         // since this is just for characters should it be unsigned
-        return new Range(byte.MinValue, byte.MaxValue);
-    }
+    public static Range DefaultCharacter =>
+         new (byte.MinValue, byte.MaxValue);
+    
+
+    public override string ToString() => $"from {From} to {To}";
 }
 
 // ReSharper disable once InconsistentNaming
@@ -43,85 +40,85 @@ public interface RangeType : Type // this is a bit more specific than a plain IT
 #pragma warning restore IDE1006 // Naming Styles
 {
     // TODO: ranges should not be part of type equality as its not this range == the other range
-    // its more this range in that range, so we do it seperatly
-    public Range Range { get; set; }
+    // its more this range in that range, so we do it separately
+    public Range Range { get; init; }
+    public static abstract Range DefaultRange { get; }
+}
+public static class RangeTypeExt
+{
+    public static Range DefaultRange<T>(this T _) where T : RangeType => T.DefaultRange;
+
+    // get the string version of the range
+    // if the range is the default one we don't do anything
+    public static string RangeString<T>(this T range) where T : RangeType => T.DefaultRange == range.Range ? "" : $" {range.Range}";
 }
 
 public struct BooleanType : Type
 {
     public readonly Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;
+    public readonly override string ToString() => "boolean";
 }
 
-public record struct StringType(Range Range) : RangeType
+public readonly record struct StringType(Range Range) : RangeType
 {
-    public readonly bool Equals(StringType other)
-    {
-        return true; // we do range checking seperatly as we do not know which is the one with more important range
-    }
+    public static Range DefaultRange => Range.DefaultSmallInteger;
 
-    public readonly Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;
+    public bool Equals(StringType other) => true; // we do range checking separately as we do not know which is the one with more important range
 
-    public override readonly int GetHashCode()
-    {
-        return 0;
-    }
+    public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;
+
+    public override int GetHashCode() => 0;
 
     public StringType()
-        : this(Range.DefaultSmallInteger()) { }
+        : this(DefaultRange) { }
+
+    public override string ToString() => $"string{this.RangeString()}";
 }
 
-public record struct RealType(Range Range) : RangeType
+public readonly record struct RealType(Range Range) : RangeType
 {
-    public readonly bool Equals(RealType other)
-    {
-        return true; // we do range checking seperatly as we do not know which is the one with more important range
-    }
+    public static Range DefaultRange => Range.DefaultFloat;
 
-    public readonly Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;
+    public bool Equals(RealType other) => true; // we do range checking separately as we do not know which is the one with more important range
 
-    public override readonly int GetHashCode()
-    {
-        return 0;
-    }
+    public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;
+
+    public override int GetHashCode() => 0;
 
     public RealType()
-        : this(Range.DefaultFloat()) { }
+        : this(Range.DefaultFloat) { }
+
+    public override string ToString() => $"real{this.RangeString()}";
 }
 
-public record struct IntegerType(Range Range) : RangeType
+public readonly record struct IntegerType(Range Range) : RangeType
 {
-    public readonly bool Equals(IntegerType other)
-    {
-        return true; // we do range checking seperatly as we do not know which is the one with more important range
-    }
+    public static Range DefaultRange => Range.DefaultInteger;
 
-    public readonly Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;
+    public bool Equals(IntegerType other) => true; // we do range checking separately as we do not know which is the one with more important range
 
-    public override readonly int GetHashCode()
-    {
-        return 0;
-    }
+    public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;
+
+    public override int GetHashCode() => 0;
 
     public IntegerType()
-        : this(Range.DefaultInteger()) { }
+        : this(DefaultRange) { }
+    public override string ToString() => $"integer{this.RangeString()}";
 }
 
-public record struct CharacterType(Range Range) : RangeType
+public readonly record struct CharacterType(Range Range) : RangeType
 {
-    public readonly bool Equals(CharacterType other)
-    {
-        return true; // we do range checking seperatly as we do not know which is the one with more important range
-    }
+    public bool Equals(CharacterType other) => true; // we do range checking separately as we do not know which is the one with more important range
 
-    public override readonly int GetHashCode()
-    {
-        return 0;
-    }
+    public override int GetHashCode() => 0;
 
-    public readonly Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;
+    public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;
 
     public CharacterType()
-        : this(Range.DefaultCharacter()) { }
+        : this(DefaultRange) { }
+
+    public static Range DefaultRange => Range.DefaultCharacter;
+    public override string ToString() => $"character{this.RangeString()}";
 }
 
 public class EnumType(string name, List<string> variants) : Type
@@ -130,6 +127,8 @@ public class EnumType(string name, List<string> variants) : Type
     public List<string> Variants { get; } = variants;
 
     public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;
+
+    public override string ToString() => $"{Name} [{string.Join(", ", Variants)}]";
 } // enums are just a list of variants
 
 public class RecordType(string name, Dictionary<string, Type> fields, List<string> generics) : Type
@@ -149,33 +148,31 @@ public class RecordType(string name, Dictionary<string, Type> fields, List<strin
         return member?.Instantiate(instantiatedGenerics);
     }
 
-    public override string ToString()
-    {
-        return Name;
-    }
+    // TODO: should this print newlines for each member as it does not get used by any other Type.ToString
+    public override string ToString() => $"{Name} generic {string.Join(", ", Generics)} [{string.Join(", ", Fields.Select(typePair => $"{typePair.Key}: {typePair.Value}"))}]";
 } // records need to keep the types of their members along with any generics they declare
 
-public record struct ArrayType(Type Inner, Range Range) : RangeType // arrays have only one inner type
+public readonly record struct ArrayType(Type Inner, Range Range) : RangeType // arrays have only one inner type
 {
-    public readonly bool Equals(ArrayType other)
+    public bool Equals(ArrayType other)
     {
         return other.Inner.Equals(Inner);
     }
 
-    public override readonly int GetHashCode()
-    {
-        return Inner.GetHashCode();
-    }
+    public override int GetHashCode() => Inner.GetHashCode();
 
-    public readonly Type Instantiate(Dictionary<string, Type> instantiatedGenerics) =>
+    public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) =>
         new ArrayType(Inner.Instantiate(instantiatedGenerics), Range);
 
     public ArrayType(Type inner, Range? range)
-        : this(inner, range ?? Range.DefaultSmallInteger()) { }
+        : this(inner, range ?? DefaultRange) { }
+
+    public static Range DefaultRange => Range.DefaultSmallInteger;
+    public override string ToString() => $"array {this.RangeString()} of {Inner}";
 }
 
-public readonly record struct UnknownType(string TypeName, List<Type> TypeParameters) : Type // unknown types are those types that we have not found their proper definition during semantic analysis yet
-// they also need to keep and generics they instiate like Int, String in HashMap Int, String
+public readonly record struct UnknownType(string TypeName, List<Type> TypeParameters) : Type // unknown types are those types that we have not found their proper definition during semantic analysis, yet
+// they also need to keep and generics they instantiate like Int, String in HashMap Int, String
 {
     public UnknownType(string TypeName)
         : this(TypeName, []) { }
@@ -208,53 +205,47 @@ public readonly record struct UnknownType(string TypeName, List<Type> TypeParame
             ? VariableDeclarationNode.UnknownTypeResolver.Record
             : VariableDeclarationNode.UnknownTypeResolver.None;
     }
+    public override string ToString() => $"{TypeName}({string.Join(", ", TypeParameters)})";
 }
 
 // Only used in semantic analysis and later
 // represents a generic type, since we don't use UnknownType is semantic analysis
 // also generics cannot have type parameters
-public record struct GenericType(string Name) : Type
+public readonly record struct GenericType(string Name) : Type
 {
-    public readonly Type Instantiate(Dictionary<string, Type> instantiatedGenerics) =>
+    public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) =>
         instantiatedGenerics.GetValueOrDefault(Name, this);
+
+    public override string ToString() => Name;
 }
 
 // Only used in semantic analysis and later
 // what is this and why do we need it?
 // record types define the structure of the record, but each time you use the record in your code (in a variable declaration, parameter, or even another record)
 // you give and generics that may be defined new types (these could another generic, a record, float, ...)
-public record struct InstantiatedType(
+public readonly record struct InstantiatedType(
     RecordType Inner,
     Dictionary<string, Type> InstantiatedGenerics
 ) : Type
 {
-    public readonly Type Instantiate(Dictionary<string, Type> instantiatedGenerics) =>
-        new InstantiatedType(
-            Inner,
-            InstantiatedGenerics
-                .Select(tpair => (tpair.Key, tpair.Value.Instantiate(instantiatedGenerics)))
-                .ToDictionary()
-        );
+    public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) =>
+        this with { InstantiatedGenerics = InstantiatedGenerics
+            .Select(typePair => (typePair.Key, typePair.Value.Instantiate(instantiatedGenerics)))
+            .ToDictionary() };
 
-    public readonly bool Equals(InstantiatedType other) =>
+    public bool Equals(InstantiatedType other) =>
         Inner.Equals(other.Inner) && InstantiatedGenerics.SequenceEqual(other.InstantiatedGenerics);
 
-    public override readonly int GetHashCode()
-    {
-        return HashCode.Combine(Inner, InstantiatedGenerics);
-    }
+    public override int GetHashCode() => HashCode.Combine(Inner, InstantiatedGenerics);
 
-    public readonly Type? GetMember(string name) => Inner.GetMember(name, InstantiatedGenerics);
+    public Type? GetMember(string name) => Inner.GetMember(name, InstantiatedGenerics);
 
-    public override readonly string ToString()
-    {
-        return $"{Inner}<{string.Join(",", InstantiatedGenerics.Select(tpair => $"{tpair.Key}: {tpair.Value}"))}>";
-    }
+    public override string ToString() => $"{Inner}({string.Join(", ", InstantiatedGenerics.Select(typePair => $"{typePair.Value}"))})";
 }
 
-public record struct ReferenceType(Type Inner) : Type
+public readonly record struct ReferenceType(Type Inner) : Type
 {
-    public readonly Type Instantiate(Dictionary<string, Type> instantiatedGenerics)
+    public Type Instantiate(Dictionary<string, Type> instantiatedGenerics)
     {
         var instantiate = Inner.Instantiate(instantiatedGenerics);
         return new ReferenceType(
@@ -266,4 +257,6 @@ public record struct ReferenceType(Type Inner) : Type
                 )
         );
     }
+
+    public override string ToString() => $"refersTo {Inner}";
 }
