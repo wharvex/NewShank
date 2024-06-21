@@ -22,7 +22,10 @@ public class LLVMVisitPrototype(Context context, LLVMBuilderRef builder, LLVMMod
         var args = node.ParameterVariables.Select(
             s =>
                 context.GetLLVMTypeFromShankType(s.Type)
-                ?? throw new CompilerException($"type of parameter {s.Name} is not found", s.Line)
+                ?? throw new CompilerException(
+                    $"" + $"type of parameter {s.Name} is not found",
+                    s.Line
+                )
         );
         var arguementMutability = node.ParameterVariables.Select(p => !p.IsConstant);
         node.Name = (node.Name.Equals("start") ? "main" : node.Name);
@@ -68,7 +71,14 @@ public class LLVMVisitPrototype(Context context, LLVMBuilderRef builder, LLVMMod
             context.GetLLVMTypeFromShankType(node.Type) ?? throw new Exception("null type"),
             node.GetNameSafe()
         );
+        // a.Linkage = LLVMLinkage.LLVMExternalLinkage;
+        // a.Linkage = LLVMLinkage.LLVMCommonLinkage;
+        // a.SetAlignment(4);
+        // a.Initializer = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, 0);
         var variable = context.NewVariable(node.Type);
+        a.Initializer = LLVMValueRef.CreateConstNull(
+            context.GetLLVMTypeFromShankType(node.Type) ?? throw new Exception("null type")
+        );
         context.AddVariable(node.GetNameSafe(), variable(a, !node.IsConstant), true);
     }
 }

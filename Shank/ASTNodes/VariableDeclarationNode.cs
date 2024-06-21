@@ -73,9 +73,9 @@ public class VariableDeclarationNode : ASTNode
         return ret;
     }
 
-    public LLVMTypeRef GetLLVMType(Context context, Type type) =>
-        context.GetLLVMTypeFromShankType(type, false)
-        ?? throw new Exception($"Type {type} doesnt exist");
+    // public LLVMTypeRef GetLLVMType(Context context, Type type) =>
+    //     context.GetLLVMTypeFromShankType(type, false)
+    //     ?? throw new Exception($"Type {type} doesnt exist");
 
     public bool IsConstant { get; set; }
     public ASTNode? InitialValue { get; set; }
@@ -136,6 +136,8 @@ public class VariableDeclarationNode : ASTNode
         b.Append(InitialValue is not null ? $" init {InitialValue}" : "");
         return b.ToString();
     }
+
+    // public ASTNode GetDefault() => Type.
 
     // public override LLVMValueRef Visit(
     //     LLVMVisitor visitor,
