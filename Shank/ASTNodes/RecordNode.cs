@@ -17,7 +17,7 @@ public class RecordNode(
     public RecordType Type =
         new(
             name,
-            members.Select(member => (member.Name, NewType: member.Type)).ToDictionary(),
+            members.Select(member => (member.GetNameSafe(), NewType: member.Type)).ToDictionary(),
             genericTypeParameterNames ?? []
         );
 
@@ -36,12 +36,6 @@ public class RecordNode(
         )
             .ToList();
     public bool IsPublic { get; set; } = false;
-
-    public static RecordMemberNode ToMember(StatementNode? sn) =>
-        (RecordMemberNode)(
-            sn
-            ?? throw new ArgumentNullException(nameof(sn), "Expected StatementNode to not be null")
-        );
 
     // public VariableNode? GetFromMembersByName(string name) =>
     //     Members2.FirstOrDefault(v => v?.Name?.Equals(name) ?? false, null);
