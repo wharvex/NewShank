@@ -21,6 +21,17 @@ public class Settings
 
     [Option("set-op-level", HelpText = "sets the default op level")]
     public string? SetOpLevel { get; set; }
+
+    [Option("print-settings", HelpText = "sets the default op level")]
+    public bool PrintDefaultSettings { get; set; }
+
+    [Option("delete-settings", HelpText = "sets the default op level")]
+    public bool DeleteSettings { get; set; }
+
+    public override string ToString()
+    {
+        return "linker: " + Setlinker + " op level: " + SetOpLevel + " cpu: " + SetCPU;
+    }
 }
 
 [Verb("Compile", isDefault: false, HelpText = "Runs the shank compiler")]
@@ -154,17 +165,29 @@ public class CommandLineArgsParser
 
     public void SealizeSettings(Settings settings)
     {
-        if (File.Exists(Path.Combine(OutputHelper.DocPath, "~ShankData", "DefaultSettings.json")))
+        var path = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "~ShankData"
+        );
+        var filePath = Path.Combine(path, "DefaultSettings.json");
+        if (settings.DeleteSettings)
         {
-            Settings s = JsonConvert.DeserializeObject<Settings>(
-                File.ReadAllText(
-                    Path.Combine(OutputHelper.DocPath, "~ShankData", "DefaultSettings.json")
-                )
-            );
-            Console.WriteLine(settings.Setlinker == null);
+            File.Delete(filePath);
+        }
+
+        if (settings.PrintDefaultSettings)
+        {
+            Settings s = JsonConvert.DeserializeObject<Settings>(File.ReadAllText(filePath));
+            Console.WriteLine(s.ToString());
+        }
+
+        if (settings.PrintDefaultSettings) { }
+
+        if (File.Exists(filePath))
+        {
+            Settings s = JsonConvert.DeserializeObject<Settings>(File.ReadAllText(filePath));
             if (settings.Setlinker == null)
             {
-                Console.WriteLine("link; " + s.Setlinker);
                 settings.Setlinker = s.Setlinker;
             }
 
@@ -180,13 +203,11 @@ public class CommandLineArgsParser
         }
         else
         {
-            Directory.CreateDirectory(Path.Combine(OutputHelper.DocPath, "~ShankData"));
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
         }
 
-        File.WriteAllText(
-            Path.Combine(OutputHelper.DocPath, "~ShankData", "DefaultSettings.json"),
-            JsonConvert.SerializeObject(settings)
-        );
+        File.WriteAllText(filePath, JsonConvert.SerializeObject(settings));
         Console.WriteLine(JsonConvert.SerializeObject(settings));
         Console.WriteLine("settings saved");
     }
@@ -222,6 +243,7 @@ public class CommandLineArgsParser
                 }
             }
         }
+
         LLVMCodeGen a = new LLVMCodeGen();
         options.InputFile.ToList().ForEach(n => Console.WriteLine(n));
 
