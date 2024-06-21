@@ -255,7 +255,11 @@ public class Parser
 
                 if (variableReference != null)
                 {
-                    return new VariableUsagePlainNode(wordToken.GetValue(), variableReference, VariableUsagePlainNode.VrnExtType.RecordMember);
+                    return new VariableUsagePlainNode(
+                        wordToken.GetValue(),
+                        variableReference,
+                        VariableUsagePlainNode.VrnExtType.RecordMember
+                    );
                 }
             }
             return new VariableUsagePlainNode(wordToken.GetValue());
