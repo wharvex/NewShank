@@ -6,7 +6,7 @@ using Shank.ASTNodes;
 
 namespace Shank;
 
-public class Interpreter
+public class Interpreter //e
 {
     public static Dictionary<string, ModuleNode>? Modules { get; set; }
 
