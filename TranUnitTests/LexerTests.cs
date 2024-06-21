@@ -22,6 +22,17 @@ namespace TranUnitTests
                 "WORD(Haneen)\n" + " WORD(Qasem)\n" + " SEPARATOR\n",
                 actualTokensString
             );
+
+            file = "word.reference";
+            lexer = new Lexer(file);
+            tokens = lexer.Lex();
+
+            // Collect the values of the tokens to create the expected string
+            actualTokensString = string.Join("\n", tokens) + "\n";
+            Assert.AreEqual(
+                "WORD(word)\n" + "PERIOD\n" + " WORD(reference)\n" + " SEPARATOR\n",
+                actualTokensString
+            );
         }
 
         [TestMethod]

@@ -244,9 +244,23 @@ public class Parser
     }
 
     //TODO: finish implementing ParseVariableReference()
-    public VariableUsagePlainNode ParseVariableReference()
+    public VariableUsagePlainNode? ParseVariableReference()
     {
-        throw new NotImplementedException();
+        var wordToken = handler.MatchAndRemove(TokenType.WORD);
+        if (wordToken != null)
+        {
+            if (handler.MatchAndRemove(TokenType.PERIOD) != null)
+            {
+                VariableUsagePlainNode? variableReference = ParseVariableReference();
+
+                if (variableReference != null)
+                {
+                    return new VariableUsagePlainNode(wordToken.GetValue(), variableReference, VariableUsagePlainNode.VrnExtType.RecordMember);
+                }
+            }
+            return new VariableUsagePlainNode(wordToken.GetValue());
+        }
+        return null;
     }
 
     //TODO: check for other statement types
