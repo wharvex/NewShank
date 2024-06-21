@@ -270,7 +270,7 @@ public class Parser
     //TODO: check for other statement types
     public ASTNode? ParseStatement()
     {
-        var statement = ParseIf() ?? ParseLoop() ?? ParseReturn() ?? ParseExpression();
+        var statement = ParseIf() ?? ParseLoop() ?? ParseReturn() ?? ParseFunctionCall() ?? ParseExpression();
         return statement;
     }
 
@@ -673,6 +673,12 @@ public class Parser
             if (handler.MatchAndRemove(TokenType.CLOSEDPARENTHESIS) == null)
                 throw new Exception("Closing parenthesis expected after.");
             return exp;
+        }
+
+        VariableUsagePlainNode? variable;
+        if ((variable = ParseVariableReference()) != null)
+        {
+            return variable;
         }
         if (handler.MatchAndRemove(TokenType.TRUE) is { })
             return new BoolNode(true);
