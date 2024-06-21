@@ -270,7 +270,8 @@ public class Parser
     //TODO: check for other statement types
     public ASTNode? ParseStatement()
     {
-        var statement = ParseIf() ?? ParseLoop() ?? ParseReturn() ?? ParseFunctionCall() ?? ParseExpression();
+        var statement =
+            ParseIf() ?? ParseLoop() ?? ParseReturn() ?? ParseFunctionCall() ?? ParseExpression();
         return statement;
     }
 
