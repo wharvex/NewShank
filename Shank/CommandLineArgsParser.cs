@@ -8,10 +8,31 @@ using Newtonsoft.Json.Converters;
 using Shank;
 using Shank.ASTNodes;
 using Shank.IRGenerator.CompilerPractice;
+using Parser = Shank.Parser;
+
+[Verb("Settings", isDefault: false, HelpText = "sets settings for you")]
+public class Settings
+{
+    [Option("set-linker", HelpText = "sets the default linker")]
+    public string? Setlinker { get; set; }
+
+    [Option("set-cpu", HelpText = "sets the default CPU")]
+    public string? SetCPU { get; set; }
+
+    [Option("set-op-level", HelpText = "sets the default op level")]
+    public string? SetOpLevel { get; set; }
+}
 
 [Verb("Compile", isDefault: false, HelpText = "Runs the shank compiler")]
 public class CompileOptions
 {
+    [Option(
+        "use-default-settings",
+        Default = false,
+        HelpText = "uses the default settings in AppData/~ShankData"
+    )]
+    public bool DefaultSettings { get; set; }
+
     [Value(index: 0, MetaName = "inputFile", HelpText = "The Shank source file", Required = true)]
     public IEnumerable<string> InputFile { get; set; }
 
@@ -118,17 +139,89 @@ public class CommandLineArgsParser
         // new Options().InputFiles = "a";
         ProgramNode program = new ProgramNode();
         CommandLine
-            .Parser.Default.ParseArguments<CompileOptions, InterptOptions, CompilePracticeOptions>(
-                args
-            )
+            .Parser.Default.ParseArguments<
+                CompileOptions,
+                Settings,
+                InterptOptions,
+                CompilePracticeOptions
+            >(args)
+            .WithParsed<Settings>(options => SealizeSettings(options))
             .WithParsed<CompileOptions>(options => RunCompiler(options, program))
             .WithParsed<InterptOptions>(options => RunInterptrer(options, program))
             .WithParsed<CompilePracticeOptions>(options => RunCompilePractice(options, program))
             .WithNotParsed(errors => Console.WriteLine($"error with running Shank"));
     }
 
+    public void SealizeSettings(Settings settings)
+    {
+        if (File.Exists(Path.Combine(OutputHelper.DocPath, "~ShankData", "DefaultSettings.json")))
+        {
+            Settings s = JsonConvert.DeserializeObject<Settings>(
+                File.ReadAllText(
+                    Path.Combine(OutputHelper.DocPath, "~ShankData", "DefaultSettings.json")
+                )
+            );
+            Console.WriteLine(settings.Setlinker == null);
+            if (settings.Setlinker == null)
+            {
+                Console.WriteLine("link; " + s.Setlinker);
+                settings.Setlinker = s.Setlinker;
+            }
+
+            if (settings.SetOpLevel == null)
+            {
+                settings.SetOpLevel = s.SetOpLevel;
+            }
+
+            if (settings.SetCPU == null)
+            {
+                settings.SetCPU = s.SetCPU;
+            }
+        }
+        else
+        {
+            Directory.CreateDirectory(Path.Combine(OutputHelper.DocPath, "~ShankData"));
+        }
+
+        File.WriteAllText(
+            Path.Combine(OutputHelper.DocPath, "~ShankData", "DefaultSettings.json"),
+            JsonConvert.SerializeObject(settings)
+        );
+        Console.WriteLine(JsonConvert.SerializeObject(settings));
+        Console.WriteLine("settings saved");
+    }
+
     public void RunCompiler(CompileOptions options, ProgramNode program)
     {
+        if (options.DefaultSettings)
+        {
+            if (
+                File.Exists(
+                    Path.Combine(OutputHelper.DocPath, "~ShankData", "DefaultSettings.json")
+                )
+            )
+            {
+                Settings? s = JsonConvert.DeserializeObject<Settings>(
+                    File.ReadAllText(
+                        Path.Combine(OutputHelper.DocPath, "~ShankData", "DefaultSettings.json")
+                    )
+                );
+                if (s.Setlinker != null)
+                {
+                    options.LinkerOption = s.Setlinker;
+                }
+
+                if (s.SetCPU != null)
+                {
+                    options.TargetCPU = s.SetCPU;
+                }
+
+                if (s.SetOpLevel != null)
+                {
+                    options.OptimizationLevels = s.SetOpLevel;
+                }
+            }
+        }
         LLVMCodeGen a = new LLVMCodeGen();
         options.InputFile.ToList().ForEach(n => Console.WriteLine(n));
 
