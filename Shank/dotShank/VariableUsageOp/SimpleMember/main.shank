@@ -1,0 +1,7 @@
+record Student
+    gpa : real
+
+define start()
+variables student : Student
+    student.gpa := 3.8
+    write "hello from vuop member"

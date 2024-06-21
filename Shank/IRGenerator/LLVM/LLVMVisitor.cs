@@ -414,7 +414,6 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
 
         node.LocalVariables.ForEach(variable => variable.Accept(this));
         node.Statements.ForEach(s => s.Accept(this));
-        // return 0 to singify ok
         builder.BuildRet(LLVMValueRef.CreateConstInt(module.Context.Int32Type, (ulong)0));
         context.ResetLocal();
     }

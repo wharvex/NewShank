@@ -189,7 +189,7 @@ public class Parser
             }
             if (handler.MatchAndRemove(TokenType.OPENPARENTHESIS) != null)
             {
-                functionNode.LocalVariables = ParseArguments(false);
+                functionNode.LocalVariables = ParseParameters(false);
                 if (handler.MatchAndRemove(TokenType.CLOSEDPARENTHESIS) == null)
                     throw new Exception("Function declaration missing end parenthesis");
             }
@@ -199,7 +199,7 @@ public class Parser
             }
             if (handler.MatchAndRemove(TokenType.COLON) != null)
             {
-                functionNode.ParameterVariables.AddRange(ParseArguments(true));
+                functionNode.ParameterVariables.AddRange(ParseParameters(true));
             }
             functionNode.Statements = ParseBlock();
             return true;
@@ -208,7 +208,7 @@ public class Parser
         return false;
     }
 
-    public List<VariableDeclarationNode> ParseArguments(bool isConstant)
+    public List<VariableDeclarationNode> ParseParameters(bool isConstant)
     {
         var parameters = new List<VariableDeclarationNode>();
         var variable = new VariableDeclarationNode();
@@ -226,21 +226,21 @@ public class Parser
         return parameters;
     }
 
-    public List<ParameterNode> ParseParameters()
+    public List<ExpressionNode> ParseArguments()
     {
-        var parameters = new List<ParameterNode>();
-        VariableUsagePlainNode variable;
+        var arguments = new List<ExpressionNode>();
+        ExpressionNode? expression;
         do
         {
             AcceptSeparators();
-            if ((variable = ParseVariableReference()) != null)
+            if ((expression = ParseExpression()) != null)
             {
-                parameters.Add(new ParameterNode(variable, false));
+                arguments.Add(expression);
                 continue;
             }
             throw new Exception("No name provided for variable in parameters");
         } while (handler.MatchAndRemove(TokenType.COMMA) != null);
-        return parameters;
+        return arguments;
     }
 
     //TODO: finish implementing ParseVariableReference()
@@ -482,7 +482,7 @@ public class Parser
             );
         }
 
-        List<ParameterNode> parameters = ParseParameters();
+        List<ExpressionNode> parameters = ParseArguments();
 
         if (handler.MatchAndRemove(TokenType.CLOSEDPARENTHESIS) == null)
         {
@@ -492,7 +492,7 @@ public class Parser
         }
 
         FunctionCallNode functionCallNode = new FunctionCallNode(functionName);
-        functionCallNode.Parameters.AddRange(parameters);
+        functionCallNode.Arguments.AddRange(parameters);
         functionCallNode.LineNum = functionLineNumber;
         return functionCallNode;
     }
