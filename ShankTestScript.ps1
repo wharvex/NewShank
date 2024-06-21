@@ -11,15 +11,16 @@ function st
     $path_list = "NotAPath", # 0
     "Interpret ModuleTest2", # 1
     "Interpret Records/simple", # 2
-    "Interpret VariableUsageOp/Simple --vuop-test", # 3
-    "Interpret RealRange", # 4
-    "Interpret Arrays/sum", # 5
-    "Interpret Records/nested", # 6
-    "Interpret Globals", # 7
-    "Interpret UnitTestTests1 -u", # 8
-    "Interpret Builtins/Write", # 9
-    "Interpret Enums", # 10
-    "Compile TestLlvmTheoAndMendel -S --print-ir" # 11
+    "Interpret RealRange", # 3
+    "Interpret Arrays/sum", # 4
+    "Interpret Records/nested", # 5
+    "Interpret Globals", # 6
+    "Interpret UnitTestTests1 -u", # 7
+    "Interpret Builtins/Write", # 8
+    "Interpret Enums", # 9
+    "Compile TestLlvmTheoAndMendel -S --print-ir", # 10
+    "Interpret VariableUsageOp/SimplePlain --vuop-test", # 11
+    "Interpret VariableUsageOp/SimpleIndex --vuop-test" # 12
     #"CompilePractice Minimal/PrintInt/Shank --flat PrintInt"
     #"Interpret Generics/simple/functions2" ** revisit this to debug **
     #"Interpret OldShankFiles/Pascals.shank"
