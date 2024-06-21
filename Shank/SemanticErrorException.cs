@@ -6,7 +6,7 @@ public class SemanticErrorException : Exception
 {
     private readonly ASTNode? _cause;
 
-    public SemanticErrorException(string message, ASTNode? causeNode)
+    public SemanticErrorException(string message, ASTNode? causeNode = null)
         : base(message)
     {
         _cause = causeNode;

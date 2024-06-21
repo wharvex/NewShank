@@ -48,12 +48,7 @@ public class SemanticAnalysis
                     parentModule,
                     [.. fn.LocalVariables.Concat(fn.ParameterVariables)]
                 );
-                CheckBlock(
-                    fn.Statements,
-                    variables,
-                    variables.ToDictionary(kvp => kvp.Key, _ => false),
-                    parentModule
-                );
+                CheckBlock(fn.Statements, variables, parentModule);
             });
     }
 
@@ -78,25 +73,9 @@ public class SemanticAnalysis
     private static void CheckBlock(
         List<StatementNode> statements,
         Dictionary<string, VariableDeclarationNode> variables,
-        Dictionary<string, bool> variablesSet,
         ModuleNode parentModule
     )
     {
-        // This foreach loop goes through the statements in order, starting with the outermost
-        // scope (i.e. a function block) in which the variables passed in are visible.
-
-        // Therefore, the following should be sufficient to ensure variables are set before use.
-
-        // When we encounter a variable x as the target of an assignment, we determine if
-        // the assignment is valid, and if it is valid, then we set the Value of x's Key in
-        // variablesSet to true. (If it's not valid, throw an exception.)
-
-        // When we encounter a variable x NOT as the target of an assignment, then we look x up
-        // in variablesSet, and if its Value is false, then we throw an exception.
-
-        // TODO: How to lookup/store the name of a "complex" VRN in variablesSet, i.e. one with
-        // an Extension?
-
         foreach (var s in statements)
         {
             var foundFunction = false;
@@ -118,7 +97,7 @@ public class SemanticAnalysis
 
                 var targetName = GetVuopTestFlag() ? an.NewTarget.GetPlain().Name : an.Target.Name;
 
-                CheckAssignment(targetName, targetType, an.Expression, variables);
+                CheckAssignment(targetName, targetType, an.Expression, variables, an.NewTarget);
             }
             else if (s is FunctionCallNode fn)
             {
@@ -196,13 +175,21 @@ public class SemanticAnalysis
     }
 
     private static Dictionary<string, Type> CheckAssignment(
-        String targetName,
+        string targetName,
         Type targetType,
         ExpressionNode expression,
-        Dictionary<string, VariableDeclarationNode> variables
+        Dictionary<string, VariableDeclarationNode> variables,
+        VariableUsageNodeTemp newTarget
     )
     {
-        CheckRange(targetName, targetType, expression, variables);
+        if (GetVuopTestFlag())
+        {
+            NewCheckRange(newTarget, targetType, expression, variables);
+        }
+        else
+        {
+            CheckRange(targetName, targetType, expression, variables);
+        }
 
         if (
             targetType is EnumType e
@@ -218,6 +205,10 @@ public class SemanticAnalysis
         else
         {
             var expressionType = GetTypeOfExpression(expression, variables);
+            if (targetType is ArrayType { Inner: RangeType irt })
+            {
+                targetType = irt;
+            }
             if (!targetType.Equals(expressionType))
             {
                 throw new SemanticErrorException(
@@ -414,23 +405,45 @@ public class SemanticAnalysis
     }
 
     private static void NewCheckRange(
-        string targetName,
+        VariableUsageNodeTemp target,
         Type targetType,
         ExpressionNode expression,
         Dictionary<string, VariableDeclarationNode> vdnByName
     )
     {
-        if (targetType is RangeType i) // all other i range type are bounded by integers
+        if (targetType is not RangeType rt)
         {
-            var from = i.Range.From;
-            var to = i.Range.To;
-            int upper = (int)GetMaxRange(expression, vdnByName);
-            int lower = (int)GetMinRange(expression, vdnByName);
+            return;
+        }
 
-            if (lower < from || upper > to)
-                throw new Exception(
-                    $"The variable {targetName!} can only be assigned expressions that wont overstep its range."
-                );
+        // This is the result of accepting the "merge into pattern" ReSharper autocorrect.
+        // Equivalent to: if (targetType is ArrayType at && at.Inner is RangeType irt)
+        if (targetType is ArrayType { Inner: RangeType irt })
+        {
+            rt = irt;
+        }
+
+        var targetFrom = rt.Range.From;
+        var targetTo = rt.Range.To;
+        var expFrom = GetMinRange(expression, vdnByName);
+        var expTo = GetMaxRange(expression, vdnByName);
+
+        if (expFrom < targetFrom || expTo > targetTo)
+        {
+            throw new SemanticErrorException(
+                target
+                    + " invalid as the LHS of an assignment whose RHS exceeds the range of "
+                    + target
+                    + "\n\ntarget from: "
+                    + targetFrom
+                    + "\ntarget to: "
+                    + targetTo
+                    + "\nexpression from: "
+                    + expFrom
+                    + "\nexpression to: "
+                    + expTo
+                    + "\n\n"
+            );
         }
     }
 
@@ -678,10 +691,13 @@ public class SemanticAnalysis
         )
         {
             var vunPlainName = vun.GetPlain().Name;
-            var vdn =
-                vdnByName.GetValueOrDefault(vunPlainName)
-                ?? throw new SemanticErrorException($"Variable {vunPlainName} not found", vun);
-            return vdn.Type;
+
+            if (vdnByName.TryGetValue(vunPlainName, out var vdn))
+            {
+                return vdn.Type;
+            }
+
+            throw new SemanticErrorException($"Variable {vunPlainName} not found", vun);
         }
     }
 
