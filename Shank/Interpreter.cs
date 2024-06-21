@@ -328,7 +328,7 @@ public class Interpreter //e
                         it.Value = ResolveInt(an.Expression, variables);
                         break;
                     case ArrayDataType at:
-                        AssignToArray(at, an, variables);
+                        NewAssignToArray(at, an, variables);
                         break;
                     case FloatDataType ft:
                         ft.Value = ResolveFloat(an.Expression, variables);
@@ -484,6 +484,31 @@ public class Interpreter //e
                 "Assigning any value to an array variable base is not implemented yet."
             );
         }
+    }
+
+    private static void NewAssignToArray(
+        ArrayDataType adt,
+        AssignmentNode an,
+        Dictionary<string, InterpreterDataType> variables
+    )
+    {
+        adt.AddElement(
+            adt.ArrayContentsType switch
+            {
+                IntegerType => NewResolveInt(an.Expression, variables),
+                RealType => ResolveFloat(an.Expression, variables),
+                StringType => ResolveString(an.Expression, variables),
+                CharacterType => ResolveChar(an.Expression, variables),
+                BooleanType => ResolveBool(an.Expression, variables),
+                _
+                    => throw new NotImplementedException(
+                        "Assigning a value of type "
+                            + adt.ArrayContentsType
+                            + " to an array index is not implemented yet."
+                    )
+            },
+            NewResolveInt(((VariableUsageIndexNode)an.NewTarget).Right, variables)
+        );
     }
 
     private static bool ResolveBool(ASTNode node, Dictionary<string, InterpreterDataType> variables)
@@ -888,7 +913,7 @@ public class Interpreter //e
                 return new BooleanDataType(((vn.InitialValue as BoolNode)?.Value) ?? true);
             case ArrayType a:
             {
-                return new ArrayDataType(a.Inner);
+                return new ArrayDataType(a);
             }
             // TODO: merge record type and record node into one
             case InstantiatedType r:
@@ -1236,6 +1261,45 @@ public class Interpreter //e
         }
         else
             throw new ArgumentException(nameof(node));
+    }
+
+    public static int NewResolveInt(ASTNode node, Dictionary<string, InterpreterDataType> variables)
+    {
+        switch (node)
+        {
+            case MathOpNode mon:
+            {
+                var left = NewResolveInt(mon.Left, variables);
+                var right = NewResolveInt(mon.Right, variables);
+                return mon.Op switch
+                {
+                    MathOpNode.MathOpType.Plus => left + right,
+                    MathOpNode.MathOpType.Minus => left - right,
+                    MathOpNode.MathOpType.Times => left * right,
+                    MathOpNode.MathOpType.Divide => left / right,
+                    MathOpNode.MathOpType.Modulo => left % right,
+                    _ => throw new ArgumentOutOfRangeException()
+                };
+            }
+            case IntNode fn:
+                return fn.Value;
+            case VariableUsageNodeTemp vun:
+                return vun switch
+                {
+                    VariableUsagePlainNode p => ((IntDataType)variables[p.Name]).Value,
+
+                    VariableUsageIndexNode i
+                        => ((ArrayDataType)variables[i.GetPlain().Name]).GetElementInteger(
+                            ResolveInt(i.Right, variables)
+                        ),
+                    _ => throw new NotImplementedException()
+                };
+            default:
+                throw new ArgumentException(
+                    "Unsupported node type for resolving to int:",
+                    nameof(node)
+                );
+        }
     }
 
     public static object ResolveRecord(

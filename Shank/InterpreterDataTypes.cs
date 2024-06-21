@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text;
 using LLVMSharp;
+using Microsoft.VisualBasic;
 using Shank.ASTNodes;
 
 namespace Shank;
@@ -180,16 +181,12 @@ public class ArrayDataType : InterpreterDataType
 {
     public List<object> Value { get; }
 
-    // TODO: Is this bad form since DataType is part of an AST node (VariableNode), and
-    // ArrayDataType is part of the Interpreter?
     public Type ArrayContentsType { get; init; }
 
-    // We don't need 'from' or 'to' because Semantic Analysis should take care of error-checking
-    // issues with these.
-    public ArrayDataType(Type arrayContentsType)
+    public ArrayDataType(ArrayType arrayType)
     {
         Value = [];
-        ArrayContentsType = arrayContentsType;
+        ArrayContentsType = arrayType.Inner;
     }
 
     public ArrayDataType(List<object> val, Type arrayContentsType)
@@ -205,13 +202,14 @@ public class ArrayDataType : InterpreterDataType
 
     public object GetElement(int idx)
     {
-        var ret =
-            Value[idx]
-            ?? throw new InvalidOperationException(
-                "Something went wrong internally. No element of this List--which models a "
-                    + "Shank array--should be null, because there is no such thing as null in Shank"
-            );
-        return ret;
+        if (idx < Value.Count && idx >= 0)
+        {
+            return Value[idx];
+        }
+
+        throw new InvalidOperationException(
+            "\nIndex out of range.\nidx: " + idx + "; count: " + Value.Count
+        );
     }
 
     public float GetElementReal(int idx)

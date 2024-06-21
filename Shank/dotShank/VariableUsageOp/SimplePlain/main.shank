@@ -1,4 +1,4 @@
 define start()
 variables a : integer
     a := 33
-    write "hello vuop"
+    write "hello from vuop plain"
