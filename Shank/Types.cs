@@ -12,24 +12,18 @@ public interface Type // our marker interface anything that implements is known 
     public string ToString();
 }
 
-public readonly record struct
-    Range // the type that represents a type range in shank (from … to …), as ranges on types are part of the types
-    (float From, float To)
+public readonly record struct Range // the type that represents a type range in shank (from … to …), as ranges on types are part of the types
+(float From, float To)
 {
-    public static Range DefaultFloat=>
-         new (float.MinValue, float.MaxValue);
+    public static Range DefaultFloat => new(float.MinValue, float.MaxValue);
 
-    public static Range DefaultInteger =>
-        new (long.MinValue, long.MaxValue);
+    public static Range DefaultInteger => new(long.MinValue, long.MaxValue);
 
-        // since this is just for arrays and strings should it be unsigned
-    public static Range DefaultSmallInteger =>
-        new(uint.MinValue, uint.MaxValue);
+    // since this is just for arrays and strings should it be unsigned
+    public static Range DefaultSmallInteger => new(uint.MinValue, uint.MaxValue);
 
-        // since this is just for characters should it be unsigned
-    public static Range DefaultCharacter =>
-         new (byte.MinValue, byte.MaxValue);
-    
+    // since this is just for characters should it be unsigned
+    public static Range DefaultCharacter => new(byte.MinValue, byte.MaxValue);
 
     public override string ToString() => $"from {From} to {To}";
 }
@@ -44,19 +38,23 @@ public interface RangeType : Type // this is a bit more specific than a plain IT
     public Range Range { get; init; }
     public static abstract Range DefaultRange { get; }
 }
+
 public static class RangeTypeExt
 {
-    public static Range DefaultRange<T>(this T _) where T : RangeType => T.DefaultRange;
+    public static Range DefaultRange<T>(this T _)
+        where T : RangeType => T.DefaultRange;
 
     // get the string version of the range
     // if the range is the default one we don't do anything
-    public static string RangeString<T>(this T range) where T : RangeType => T.DefaultRange == range.Range ? "" : $" {range.Range}";
+    public static string RangeString<T>(this T range)
+        where T : RangeType => T.DefaultRange == range.Range ? "" : $" {range.Range}";
 }
 
 public struct BooleanType : Type
 {
     public readonly Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;
-    public readonly override string ToString() => "boolean";
+
+    public override readonly string ToString() => "boolean";
 }
 
 public readonly record struct StringType(Range Range) : RangeType
@@ -103,6 +101,7 @@ public readonly record struct IntegerType(Range Range) : RangeType
 
     public IntegerType()
         : this(DefaultRange) { }
+
     public override string ToString() => $"integer{this.RangeString()}";
 }
 
@@ -118,6 +117,7 @@ public readonly record struct CharacterType(Range Range) : RangeType
         : this(DefaultRange) { }
 
     public static Range DefaultRange => Range.DefaultCharacter;
+
     public override string ToString() => $"character{this.RangeString()}";
 }
 
@@ -149,7 +149,8 @@ public class RecordType(string name, Dictionary<string, Type> fields, List<strin
     }
 
     // TODO: should this print newlines for each member as it does not get used by any other Type.ToString
-    public override string ToString() => $"{Name} generic {string.Join(", ", Generics)} [{string.Join(", ", Fields.Select(typePair => $"{typePair.Key}: {typePair.Value}"))}]";
+    public override string ToString() =>
+        $"{Name} generic {string.Join(", ", Generics)} [{string.Join(", ", Fields.Select(typePair => $"{typePair.Key}: {typePair.Value}"))}]";
 } // records need to keep the types of their members along with any generics they declare
 
 public readonly record struct ArrayType(Type Inner, Range Range) : RangeType // arrays have only one inner type
@@ -168,6 +169,7 @@ public readonly record struct ArrayType(Type Inner, Range Range) : RangeType // 
         : this(inner, range ?? DefaultRange) { }
 
     public static Range DefaultRange => Range.DefaultSmallInteger;
+
     public override string ToString() => $"array {this.RangeString()} of {Inner}";
 }
 
@@ -205,6 +207,7 @@ public readonly record struct UnknownType(string TypeName, List<Type> TypeParame
             ? VariableDeclarationNode.UnknownTypeResolver.Record
             : VariableDeclarationNode.UnknownTypeResolver.None;
     }
+
     public override string ToString() => $"{TypeName}({string.Join(", ", TypeParameters)})";
 }
 
@@ -229,9 +232,14 @@ public readonly record struct InstantiatedType(
 ) : Type
 {
     public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) =>
-        this with { InstantiatedGenerics = InstantiatedGenerics
-            .Select(typePair => (typePair.Key, typePair.Value.Instantiate(instantiatedGenerics)))
-            .ToDictionary() };
+        this with
+        {
+            InstantiatedGenerics = InstantiatedGenerics
+                .Select(
+                    typePair => (typePair.Key, typePair.Value.Instantiate(instantiatedGenerics))
+                )
+                .ToDictionary()
+        };
 
     public bool Equals(InstantiatedType other) =>
         Inner.Equals(other.Inner) && InstantiatedGenerics.SequenceEqual(other.InstantiatedGenerics);
@@ -240,7 +248,8 @@ public readonly record struct InstantiatedType(
 
     public Type? GetMember(string name) => Inner.GetMember(name, InstantiatedGenerics);
 
-    public override string ToString() => $"{Inner}({string.Join(", ", InstantiatedGenerics.Select(typePair => $"{typePair.Value}"))})";
+    public override string ToString() =>
+        $"{Inner}({string.Join(", ", InstantiatedGenerics.Select(typePair => $"{typePair.Value}"))})";
 }
 
 public readonly record struct ReferenceType(Type Inner) : Type
