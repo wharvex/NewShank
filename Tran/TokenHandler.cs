@@ -29,11 +29,11 @@ public class TokenHandler
     // else returns an empty optional
     public Token? MatchAndRemove(TokenType t)
     {
-        if (tokens.Count <= 0)
-            return null;
-        if (tokens.First.Value.GetTokenType() == t)
+        if (tokens.Count > 0 && tokens.First.Value.GetTokenType() == t)
         {
-            return tokens.First.Value;
+            var matchedToken = tokens.First.Value;
+            tokens.RemoveFirst();
+            return matchedToken;
         }
         return null;
     }

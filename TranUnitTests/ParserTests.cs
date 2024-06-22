@@ -23,13 +23,13 @@ namespace TranUnitTests
         [TestMethod]
         public void TestParseFunction()
         {
-            var testString = "1 * 2";
+            var testString = "1+2";
             Lexer newLexer = new Lexer(testString);
             LinkedList<Token> tokens = newLexer.Lex();
             Parser newParser = new Parser(tokens);
             var expression = newParser.ParseExpression();
-            Console.Write(expression);
-            Assert.AreEqual("((1) * (2))", expression.ToString());
+            //Console.Write(expression);
+            Assert.AreEqual("1 Plus 2", expression.ToString());
         }
     }
 }
