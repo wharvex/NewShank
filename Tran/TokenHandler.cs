@@ -30,11 +30,11 @@ public class TokenHandler
     public Token? MatchAndRemove(TokenType t)
     {
         if (tokens.Count > 0 && tokens.First.Value.GetTokenType() == t)
-        { 
+        {
             var matchedToken = tokens.First.Value;
             tokens.RemoveFirst();
             return matchedToken;
         }
-         return null;
+        return null;
     }
 }

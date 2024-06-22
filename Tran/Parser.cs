@@ -776,5 +776,4 @@ public class Parser
 
         return GetTypeUsageFromToken(tokenType);
     }
-    
 }
