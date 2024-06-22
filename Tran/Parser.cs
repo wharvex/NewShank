@@ -519,7 +519,6 @@ public class Parser
             {
                 throw new Exception("Term expected after.");
             }
-
             lt = new MathOpNode(lt, MathOpNode.MathOpType.Plus, rt);
             return ParseExpressionRhs(lt);
         }
@@ -777,4 +776,5 @@ public class Parser
 
         return GetTypeUsageFromToken(tokenType);
     }
+    
 }
