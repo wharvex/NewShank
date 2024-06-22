@@ -1,6 +1,5 @@
 using LLVMSharp.Interop;
 using Shank.ASTNodes;
-using Shank.Interfaces;
 
 namespace Shank.IRGenerator.CompilerPractice;
 

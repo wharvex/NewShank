@@ -1,7 +1,6 @@
 using System.Text.Json.Serialization;
 using LLVMSharp.Interop;
 using Shank.ExprVisitors;
-using Shank.Interfaces;
 using Shank.IRGenerator;
 
 namespace Shank.ASTNodes;
