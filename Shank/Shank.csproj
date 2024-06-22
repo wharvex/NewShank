@@ -84,7 +84,7 @@
     <Folder Include="dotShank\Overloads\" />
     <Folder Include="dotShank\Records\" />
     <Folder Include="dotShank\UnitTestTests1\" />
-    <Folder Include="Interfaces\" />
+    <Folder Include="AstVisitorsTim\" />
   </ItemGroup>
 
   <ItemGroup>

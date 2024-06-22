@@ -533,11 +533,11 @@ public class Parser
         return bodyContents.Cast<VariableDeclarationNode>().ToList();
     }
 
-    private void StatementsBody(List<StatementNode> statements, bool isRecord = false)
+    private void StatementsBody(List<StatementNode> statements)
     {
         RequiresToken(Token.TokenType.Indent);
 
-        Statements(statements, isRecord);
+        Statements(statements);
 
         RequiresToken(Token.TokenType.Dedent);
     }
@@ -555,44 +555,23 @@ public class Parser
         RequiresToken(Token.TokenType.Dedent);
     }
 
-    private void Statements(List<StatementNode> statements, bool isRecord = false)
+    private void Statements(List<StatementNode> statements)
     {
-        StatementNode? s;
         do
         {
-            s = Statement(isRecord);
+            var s = Statement();
 
             if (s is null)
             {
-                continue;
+                break;
             }
 
             statements.Add(s);
-        } while (s is not null);
+        } while (true);
     }
 
-    private void Statements2(List<ASTNode> statements)
+    private StatementNode? Statement()
     {
-        StatementNode? s = Statement2();
-        while (s is not null)
-        {
-            statements.Add(s);
-            s = Statement2();
-        }
-    }
-
-    private StatementNode? Statement(bool isRecord = false)
-    {
-        // In order to know if we should parse a statement as a record member declaration, we use
-        // an "isRecord" flag. We need to use this flag because two arbitrary identifiers in a row
-        // could be a record member declaration or a function call from the Parser's point of view,
-        // so we need to know the context.
-
-        // if (Peek(0)?.Type is Token.TokenType.EndOfLine)
-        // {
-        //     MatchAndRemove(Token.TokenType.EndOfLine);
-        // }
-
         return (
                 InterpreterOptions is not null && InterpreterOptions.VuOpTest
                     ? NewAssignment()
@@ -602,28 +581,7 @@ public class Parser
             ?? Repeat()
             ?? For()
             ?? If()
-            ?? (isRecord ? RecordMember() : FunctionCall());
-    }
-
-    private StatementNode? Statement2()
-    {
-        return Assignment() ?? While() ?? Repeat() ?? For() ?? If() ?? FunctionCall();
-    }
-
-    private RecordMemberNode? RecordMember()
-    {
-        var nameToken = MatchAndRemove(Token.TokenType.Identifier);
-
-        if (nameToken is null)
-        {
-            return null;
-        }
-
-        RequiresToken(Token.TokenType.Colon);
-        var type = Type(VariableDeclarationNode.DeclarationContext.RecordDeclaration);
-
-        RequiresEndOfLine();
-        return new RecordMemberNode(nameToken.GetValueSafe(), type);
+            ?? FunctionCall();
     }
 
     public static Type GetDataTypeFromConstantNodeType(ASTNode constantNode) =>
