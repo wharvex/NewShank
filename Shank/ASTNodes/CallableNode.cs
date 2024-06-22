@@ -3,7 +3,6 @@ using LLVMSharp.Interop;
 using Shank.ExprVisitors;
 using Shank.Interfaces;
 using Shank.IRGenerator;
-using Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 
 namespace Shank.ASTNodes;
 
@@ -78,11 +77,6 @@ public abstract class CallableNode : ASTNode
     }
 
     public override void Accept<T>(StatementVisitor v)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override T Accept<T>(IAstNodeVisitor<T> visitor)
     {
         throw new NotImplementedException();
     }

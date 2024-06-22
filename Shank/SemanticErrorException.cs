@@ -21,7 +21,7 @@ public class SemanticErrorException : Exception
             + " at line "
             + (_cause?.Line ?? 0)
             + ", node: "
-            + (_cause?.NodeName ?? "??")
+            + (_cause?.GetType().Name ?? "??")
             + "\nStack Trace: \n"
             + RESET
             + base.ToString();

@@ -1,7 +1,6 @@
 ﻿using LLVMSharp.Interop;
 using Shank.ExprVisitors;
 using Shank.IRGenerator;
-using Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 
 namespace Shank.ASTNodes;
 
@@ -33,8 +32,6 @@ public class EmptyNode(string comment) : ASTNode
     {
         throw new NotImplementedException();
     }
-
-    public override T Accept<T>(IAstNodeVisitor<T> visitor) => visitor.Visit(this);
 
     public override string ToString()
     {

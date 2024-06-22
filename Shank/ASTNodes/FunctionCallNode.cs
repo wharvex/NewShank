@@ -3,7 +3,6 @@ using LLVMSharp.Interop;
 using Shank.ExprVisitors;
 using Shank.Interfaces;
 using Shank.IRGenerator;
-using Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 
 namespace Shank.ASTNodes;
 
@@ -152,6 +151,4 @@ public class FunctionCallNode : StatementNode
     }
 
     public override void Accept(Visitor v) => v.Visit(this);
-
-    public override T Accept<T>(IAstNodeVisitor<T> visitor) => visitor.Visit(this);
 }

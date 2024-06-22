@@ -1,5 +1,4 @@
 ﻿using Shank.ExprVisitors;
-using Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 
 namespace Shank.ASTNodes;
 
@@ -105,6 +104,4 @@ public class ProgramNode : ASTNode
     }
 
     public override void Accept(Visitor v) => v.Visit(this);
-
-    public override T Accept<T>(IAstNodeVisitor<T> visitor) => visitor.Visit(this);
 }

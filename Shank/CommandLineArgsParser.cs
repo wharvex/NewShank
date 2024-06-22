@@ -301,7 +301,6 @@ public class CommandLineArgsParser
         BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
         SemanticAnalysis.AstRoot = program;
         SemanticAnalysis.CheckModules(program);
-        SemanticAnalysis.Experimental();
         var jSets = new JsonSerializerSettings
         {
             ReferenceLoopHandling = ReferenceLoopHandling.Ignore,

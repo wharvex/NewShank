@@ -1,7 +1,6 @@
 using LLVMSharp.Interop;
 using Shank.ExprVisitors;
 using Shank.IRGenerator;
-using Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 
 namespace Shank.ASTNodes;
 
@@ -62,6 +61,4 @@ public class AssignmentNode : StatementNode
     {
         return $"{Target} assigned as {Expression}";
     }
-
-    public override T Accept<T>(IAstNodeVisitor<T> visitor) => visitor.Visit(this);
 }

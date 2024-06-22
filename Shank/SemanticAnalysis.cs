@@ -1182,19 +1182,6 @@ public class SemanticAnalysis
         return dictionary.TryGetValue(key, out var value) && (value is U v && (result = v) == v);
     }
 
-    public static void Experimental()
-    {
-        var moduleAnythings = GetAstRootSafe()
-            .GetChildNodes(ContentsCollectors.ChildNodesCollector)
-            .SelectMany(n => n?.GetChildNodes(ContentsCollectors.ChildNodesCollector) ?? [])
-            .ToList();
-
-        OutputHelper.DebugPrintTxt(
-            string.Join("\n", moduleAnythings.Select((n, i) => i + "\n" + n)),
-            "getChildNodes"
-        );
-    }
-
     public static void AssignNestedTypes()
     {
         Dictionary<(string, string), RecordNode> resolvedRecords = new();

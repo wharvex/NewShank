@@ -1,5 +1,4 @@
 using Shank.ExprVisitors;
-using Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 
 namespace Shank.ASTNodes;
 
@@ -37,6 +36,4 @@ public class EnumNode(string type, string parentModuleName, List<string> enumEle
     }
 
     public override void Accept(Visitor v) => v.Visit(this);
-
-    public override T Accept<T>(IAstNodeVisitor<T> visitor) => visitor.Visit(this);
 }

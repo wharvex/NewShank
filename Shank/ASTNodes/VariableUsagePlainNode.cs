@@ -1,7 +1,6 @@
 using LLVMSharp.Interop;
 using Shank.ExprVisitors;
 using Shank.IRGenerator;
-using Shank.IRGenerator.CompilerPractice.AstNodeVisitors;
 
 namespace Shank.ASTNodes;
 
@@ -76,7 +75,7 @@ public class VariableUsagePlainNode : VariableUsageNodeTemp
             else
             {
                 throw new InvalidOperationException(
-                    "Expected " + ext.NodeName + " to be a VariableReferenceNode."
+                    "Expected " + ext + " to be a VariableReferenceNode."
                 );
             }
         }
@@ -128,6 +127,4 @@ public class VariableUsagePlainNode : VariableUsageNodeTemp
     public override T Accept<T>(ExpressionVisitor<T> visit) => visit.Visit(this);
 
     public override void Accept(Visitor v) => v.Visit(this);
-
-    public override T Accept<T>(IAstNodeVisitor<T> visitor) => visitor.Visit(this);
 }
