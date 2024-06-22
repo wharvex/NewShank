@@ -32,8 +32,6 @@ public class VariableDeclarationNode : ASTNode
         ConstantsLine
     };
 
-    // Added to allow type name to appear in AST JSON. See Wiki Gen Disc.
-    public TypeNameNode? TypeName { get; set; }
     public Type Type { get; set; }
 
     // We need this parameterless constructor to ensure all the VDN object initializers still work.
@@ -45,32 +43,6 @@ public class VariableDeclarationNode : ASTNode
         Type = type;
         Name = name;
         ModuleName = moduleName;
-        TypeName = GetTypeNameNode(type);
-    }
-
-    public static TypeNameNode GetTypeNameNode(Type type)
-    {
-        var ret = new TypeNameNode(type.GetType().Name);
-        var outerType = type;
-        var innerTypeName = ret;
-
-        while (true)
-        {
-            var innerType = outerType switch
-            {
-                ArrayType at => at.Inner,
-                _ => null
-            };
-            if (innerType is null)
-            {
-                break;
-            }
-            innerTypeName.InnerName = new TypeNameNode(innerType.GetType().Name);
-            innerTypeName = ret.InnerName ?? throw new UnreachableException();
-            outerType = innerType;
-        }
-
-        return ret;
     }
 
     // public LLVMTypeRef GetLLVMType(Context context, Type type) =>

@@ -21,7 +21,8 @@ public class OutputHelper
         {
             ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
             Converters = [new StringEnumConverter()],
-            Formatting = Formatting.Indented
+            Formatting = Formatting.Indented,
+            TypeNameHandling = TypeNameHandling.All
         };
         DebugPrintJson(JsonConvert.SerializeObject(program, jSets), "ast_" + postSuffix);
     }
