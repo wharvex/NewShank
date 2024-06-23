@@ -1,0 +1,7 @@
+define start()
+variables  i : integer
+	for i from 1 to 10
+		write i
+	for i from 1 to 10
+		write i+3
+	

@@ -5,7 +5,7 @@ variables myArray : array from 0 to 4 of integer
     myArray[0] := 0
     myArray[1] := 1
     myArray[2] := 2
-    {myArray[3] := 3} {This line is commented out to show that if we do not set every index we will get an error}
+    myArray[3] := 3 {Comment this out to show that if we do not set every index we will get an error}
     myArray[4] := 4
 
     write myArray[0]
