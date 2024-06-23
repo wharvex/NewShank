@@ -149,8 +149,6 @@ public class RecordType(string name, Dictionary<string, Type> fields, List<strin
         return member?.Instantiate(instantiatedGenerics);
     }
 
-    public void Accept(IRecordTypeVisitor visitor) => visitor.Visit(this);
-
     // TODO: should this print newlines for each member as it does not get used by any other Type.ToString
     public override string ToString() =>
         $"{Name} generic {string.Join(", ", Generics)} [{string.Join(", ", Fields.Select(typePair => $"{typePair.Key}: {typePair.Value}"))}]";
@@ -250,6 +248,8 @@ public readonly record struct InstantiatedType(
     public override int GetHashCode() => HashCode.Combine(Inner, InstantiatedGenerics);
 
     public Type? GetMember(string name) => Inner.GetMember(name, InstantiatedGenerics);
+
+    public void Accept(IInstantiatedTypeVisitor visitor) => visitor.Visit(this);
 
     public override string ToString() =>
         $"{Inner}({string.Join(", ", InstantiatedGenerics.Select(typePair => $"{typePair.Value}"))})";
