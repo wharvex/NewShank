@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using Shank.AstVisitorsTim;
 
 namespace Shank.ASTNodes;
 
@@ -22,4 +23,6 @@ public abstract class VariableUsageNodeTemp : ExpressionNode
 
         return (VariableUsagePlainNode)ret;
     }
+
+    public void Accept(IVariableUsageVisitor visitor) => visitor.Visit(this);
 }

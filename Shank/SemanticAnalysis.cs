@@ -3,6 +3,7 @@ using System.Text;
 using Optional;
 using Optional.Linq;
 using Shank.ASTNodes;
+using Shank.AstVisitorsTim;
 
 namespace Shank;
 
@@ -90,11 +91,13 @@ public class SemanticAnalysis
                         );
                     }
 
+                // vuop control flow reroute
                 var targetType = GetTypeOfExpression(
                     GetVuopTestFlag() ? an.NewTarget : an.Target,
                     variables
                 );
 
+                // vuop control flow reroute
                 var targetName = GetVuopTestFlag() ? an.NewTarget.GetPlain().Name : an.Target.Name;
 
                 CheckAssignment(targetName, targetType, an.Expression, variables, an.NewTarget);
@@ -182,6 +185,7 @@ public class SemanticAnalysis
         VariableUsageNodeTemp newTarget
     )
     {
+        // vuop control flow reroute
         if (GetVuopTestFlag())
         {
             NewCheckRange(newTarget, targetType, expression, variables);
@@ -208,6 +212,17 @@ public class SemanticAnalysis
             if (targetType is ArrayType { Inner: RangeType irt })
             {
                 targetType = irt;
+            }
+            else if (targetType is RecordType recType)
+            {
+                var gettingVisitor = new SemanticAnalysisMemberAccessGettingVisitor();
+                newTarget.Accept(gettingVisitor);
+                var checkingVisitor = new SemanticAnalysisMemberAccessTypeCheckingVisitor(
+                    gettingVisitor,
+                    expressionType
+                );
+                recType.Accept(checkingVisitor);
+                return [];
             }
             if (!targetType.Equals(expressionType))
             {

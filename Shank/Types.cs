@@ -1,4 +1,5 @@
 using Shank.ASTNodes;
+using Shank.AstVisitorsTim;
 
 namespace Shank;
 
@@ -147,6 +148,8 @@ public class RecordType(string name, Dictionary<string, Type> fields, List<strin
         var member = Fields.GetValueOrDefault(name);
         return member?.Instantiate(instantiatedGenerics);
     }
+
+    public void Accept(IRecordTypeVisitor visitor) => visitor.Visit(this);
 
     // TODO: should this print newlines for each member as it does not get used by any other Type.ToString
     public override string ToString() =>
