@@ -1,0 +1,12 @@
+define myFunc(a : string)
+    write a
+
+{This is not an example of OVERLOADING, this is defining a NEW FUNCTION}
+define myFunc2(a : string; b : integer)
+    write a
+    write b
+
+define start()
+    write "hello world"
+    myFunc2 "hi", 1
+    myFunc "hi2"

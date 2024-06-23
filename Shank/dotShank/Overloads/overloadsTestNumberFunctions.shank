@@ -1,7 +1,7 @@
-define myFunc(a : string)
+define adding(a : integer, b : integer)
     write a
 
-define myFunc2(a : string; b : integer)
+define adding(a : string; b : string)
     write a
     write b
 
