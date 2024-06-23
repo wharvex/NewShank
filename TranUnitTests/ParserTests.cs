@@ -64,13 +64,20 @@ namespace TranUnitTests
         [TestMethod]
         public void ParseFunctionTest()
         {
-            CreateParser(@"
+            CreateParser(
+                @"
 class Tran
     helloWorld()
-        x = 1 + 1".Replace("    ", "\t"));
+        x = 1 + 1".Replace("    ", "\t")
+            );
             parser.Parse();
             Assert.AreEqual("helloWorld", parser.thisClass.Functions.First().Key);
-            Assert.AreEqual("x assigned as 1 Plus 1", ((FunctionNode)parser.thisClass.Functions.First().Value).Statements.First().ToString());
+            Assert.AreEqual(
+                "x assigned as 1 Plus 1",
+                ((FunctionNode)parser.thisClass.Functions.First().Value)
+                    .Statements.First()
+                    .ToString()
+            );
         }
     }
 }
