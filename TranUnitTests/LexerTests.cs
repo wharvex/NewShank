@@ -125,7 +125,7 @@ namespace TranUnitTests
                 + " MINUSEQUALS\n"
                 + " AND\n"
                 + " OR\n"
-                + " FUNCTIONBLOCKIDENTIFIER\n"
+                + " BLOCKID\n"
                 + " SEPARATOR\n";
             Assert.AreEqual(expectedTokensString, actualTokensString);
         }

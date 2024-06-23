@@ -4,6 +4,8 @@ namespace Shank.Tran;
 
 public enum TokenType
 {
+    EQUAL,
+    NUMERAL,
     INTERFACE,
     NUMBER,
     CLASS,
@@ -62,7 +64,7 @@ public enum TokenType
     OR,
     RETURN,
     ELSE,
-    FUNCTIONBLOCKIDENTIFIER,
+    BLOCKID,
     TAB,
     NEWLINE,
     TIMES,

@@ -50,6 +50,10 @@ public class Lexer
         keywordHash["times"] = TokenType.TIMES;
         keywordHash["clone"] = TokenType.CLONE;
         keywordHash["getDate"] = TokenType.GETDATE;
+        keywordHash["number"] = TokenType.NUMBER;
+        keywordHash["boolean"] = TokenType.BOOLEAN;
+        keywordHash["string"] = TokenType.STRING;
+        keywordHash["character"] = TokenType.CHARACTER;
     }
 
     private void TwoCharacterHashmap()
@@ -72,11 +76,11 @@ public class Lexer
 
     private void OneCharacterHashmap()
     {
+        oneCharacterHash["="] = TokenType.EQUAL;
         oneCharacterHash["{"] = TokenType.OPENANGLEBRACKET;
         oneCharacterHash["}"] = TokenType.CLOSEDANGLEBRACKET;
         oneCharacterHash["("] = TokenType.OPENPARENTHESIS;
         oneCharacterHash[")"] = TokenType.CLOSEDPARENTHESIS;
-        oneCharacterHash["="] = TokenType.EQUALS;
         oneCharacterHash[">"] = TokenType.GREATERTHAN;
         oneCharacterHash["<"] = TokenType.LESSTHAN;
         oneCharacterHash["+"] = TokenType.PLUS;
@@ -103,16 +107,6 @@ public class Lexer
             {
                 stringHandler.GetChar();
                 characterPosition++;
-            }
-            else if (currentCharacter == '\n' && stringHandler.Peek(1) == '\t')
-            {
-                stringHandler.GetChar();
-                stringHandler.GetChar();
-                lineNumber += 2;
-                characterPosition += 2;
-                tokens.AddLast(
-                    (new Token(TokenType.FUNCTIONBLOCKIDENTIFIER, lineNumber, characterPosition))
-                );
             }
             else if (currentCharacter == '\r')
             {
@@ -205,7 +199,7 @@ public class Lexer
         }
         int length = characterPosition - startPosition;
         string value = stringHandler.GetSubstring(startPosition, length);
-        return new Token(TokenType.NUMBER, value, lineNumber, startPosition);
+        return new Token(TokenType.NUMERAL, value, lineNumber, startPosition);
     }
 
     private Token ProcessSymbols()

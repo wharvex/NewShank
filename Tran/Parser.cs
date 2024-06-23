@@ -9,15 +9,18 @@ public class Parser
 {
     private TokenHandler handler;
     private ProgramNode program;
-    private ModuleNode thisClass;
+    public ModuleNode thisClass;
     private LinkedList<string> sharedNames;
-    private List<VariableDeclarationNode> members;
+    public List<VariableDeclarationNode> members;
+    private int blockLevel;
 
     public Parser(LinkedList<Token> tokens)
     {
         handler = new TokenHandler(tokens);
         program = new ProgramNode();
         sharedNames = new LinkedList<string>();
+        members = [];
+        blockLevel = 1;
     }
 
     public bool AcceptSeparators()
@@ -38,28 +41,28 @@ public class Parser
 
     public ProgramNode Parse()
     {
+        AcceptSeparators();
+        if (!ParseClass() && !ParseInterface())
+        {
+            throw new Exception("No class declaration found in file");
+        }
+        AcceptSeparators();
+
         while (handler.MoreTokens())
         {
-            if (!ParseClass() && !ParseInterface())
-            {
-                throw new Exception("No class declaration found in file");
-            }
-            AcceptSeparators();
-
             if (ParseField() || ParseFunction())
             {
                 AcceptSeparators();
                 continue;
             }
-
-            thisClass.ExportTargetNames = sharedNames;
-            thisClass.UpdateExports();
-
-            RecordNode? record = new RecordNode(thisClass.Name, thisClass.Name, members, null);
-            thisClass.AddRecord(record);
             throw new Exception("Statement is not a function or field");
         }
+        thisClass.ExportTargetNames = sharedNames;
+        thisClass.UpdateExports();
 
+        //TODO: how do we pass the record into every function if we can't parse every field before parsing functions (e.g. how do we pass in the record if it is incomplete?)
+        RecordNode? record = new RecordNode(thisClass.Name, thisClass.Name, members, null);
+        thisClass.AddRecord(record);
         return program;
     }
 
@@ -133,7 +136,7 @@ public class Parser
     //Variable Reference: ensure the correct scope is used and uses record if applicable
     //Class: Should add fields to a record node that is passed to every function to check if variable is in it
     //Interfaces: contain an enum inside the interface for subtype of class, each class has a type - do later
-    private bool ParseClass()
+    public bool ParseClass()
     {
         if (handler.MatchAndRemove(TokenType.CLASS) != null)
         {
@@ -211,7 +214,11 @@ public class Parser
     public List<VariableDeclarationNode> ParseParameters(bool isConstant)
     {
         var parameters = new List<VariableDeclarationNode>();
-        var variable = new VariableDeclarationNode();
+        var variable = ParseVariableDeclaration();
+        if (variable == null)
+        {
+            return [];
+        }
         do
         {
             AcceptSeparators();
@@ -271,17 +278,36 @@ public class Parser
     public ASTNode? ParseStatement()
     {
         var statement =
-            ParseIf() ?? ParseLoop() ?? ParseReturn() ?? ParseFunctionCall() ?? ParseExpression();
+            ParseIf() ?? ParseLoop() ?? ParseReturn() ?? ParseFunctionCall() ?? ParseAssignment();
         return statement;
     }
 
-    //TODO: finish implementing ParseReturn()
-    public ASTNode? ParseReturn()
+    private StatementNode? ParseAssignment()
     {
-        throw new NotImplementedException();
+        var variable = ParseVariableReference();
+        if (variable != null)
+        {
+            if (handler.MatchAndRemove(TokenType.EQUAL) != null)
+            {
+                var expression = ParseExpression();
+                if (expression != null)
+                {
+                    //TODO: check if newTarget is something we need to worry about
+                    return new AssignmentNode(variable, expression, null);
+                }
+            }
+        }
+
+        return null;
     }
 
-    public ASTNode? ParseLoop()
+    //TODO: finish implementing ParseReturn()
+    public StatementNode? ParseReturn()
+    {
+        return null;
+    }
+
+    public StatementNode? ParseLoop()
     {
         if (handler.MatchAndRemove(TokenType.LOOP) != null)
         {
@@ -302,7 +328,7 @@ public class Parser
         return null;
     }
 
-    public ASTNode? ParseIf()
+    public StatementNode? ParseIf()
     {
         if (handler.MatchAndRemove(TokenType.IF) != null)
         {
@@ -440,26 +466,33 @@ public class Parser
 
     public List<StatementNode> ParseBlock()
     {
-        List<StatementNode> blocks = new List<StatementNode>();
-        AcceptSeparators();
-        while (handler.MatchAndRemove(TokenType.FUNCTIONBLOCKIDENTIFIER) != null)
+        blockLevel++;
+        int currentLevel = 0;
+        var statements = new List<StatementNode>();
+        while (handler.MatchAndRemove(TokenType.NEWLINE) != null)
         {
-            if (handler.MatchAndRemove(TokenType.TAB) != null)
+            while (handler.MatchAndRemove(TokenType.TAB) != null)
             {
-                throw new Exception("Invalid indentation from ParseBlock");
+                currentLevel++;
             }
-            AcceptNewline();
-            ASTNode? statement = ParseStatement();
-            AcceptNewline();
+            if (currentLevel != blockLevel)
+            {
+                throw new Exception("Invalid indentation in block");
+            }
+
+            var statement = ParseStatement();
             if (statement != null)
             {
-                blocks.Add((StatementNode)statement);
+                statements.Add((StatementNode)statement);
             }
+            AcceptNewlines();
         }
-        return blocks;
+
+        blockLevel--;
+        return statements;
     }
 
-    public void AcceptNewline()
+    public void AcceptNewlines()
     {
         while (handler.Peek(0) != null && handler.Peek(0).GetTokenType() == TokenType.NEWLINE)
         {
@@ -467,7 +500,7 @@ public class Parser
         }
     }
 
-    public ASTNode? ParseFunctionCall()
+    public StatementNode? ParseFunctionCall()
     {
         AcceptSeparators();
         var functionToken = handler.MatchAndRemove(TokenType.FUNCTION);
@@ -685,7 +718,7 @@ public class Parser
         if (handler.MatchAndRemove(TokenType.FALSE) is { })
             return new BoolNode(false);
 
-        var token = handler.MatchAndRemove(TokenType.NUMBER);
+        var token = handler.MatchAndRemove(TokenType.NUMERAL);
         if (token == null)
             return null;
         if (token.GetValue().Contains('.'))
@@ -749,6 +782,10 @@ public class Parser
     public VariableDeclarationNode? ParseVariableDeclaration()
     {
         Type variableType = ParseType();
+        if (variableType == null)
+        {
+            return null;
+        }
         Token? nameToken = handler.MatchAndRemove(TokenType.WORD);
         if (nameToken == null)
         {
