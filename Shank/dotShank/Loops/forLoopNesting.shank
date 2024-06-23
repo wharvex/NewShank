@@ -1,10 +1,11 @@
 {Working simple for nested for loop}
 define start()
-variables  i : integer
+variables  i,a : integer
 	for i from 1 to 10
-		write "Round:" i
-		for i from 0 to 3
-			write i
+		write "**** Outer round:" i "****"
+		for a from 0 to 3
+			write "Inner i:" i
+			write "Inner a:" a
 		
 
 	
