@@ -14,40 +14,45 @@ public interface IRecordTypeVisitor : IAstVisitor
     void Visit(RecordType rt);
 }
 
-public class SemanticAnalysisMemberAccessGettingVisitor : IVariableUsageVisitor
+public interface IInstantiatedTypeVisitor : IAstVisitor
 {
-    private MemberAccessNode? _memberAccess;
-    public MemberAccessNode MemberAccess
+    void Visit(InstantiatedType it);
+}
+
+public class MemberExpectingVisitor : IVariableUsageVisitor
+{
+    private MemberAccessNode? _contents;
+    public MemberAccessNode Contents
     {
-        get => _memberAccess ?? throw new InvalidOperationException();
-        set => _memberAccess = value;
+        get => _contents ?? throw new InvalidOperationException();
+        set => _contents = value;
     }
 
     public void Visit(VariableUsageNodeTemp vun)
     {
-        if (vun is VariableUsageMemberNode vumn)
+        if (vun is VariableUsageMemberNode m)
         {
-            MemberAccess = vumn.Right;
+            Contents = m.Right;
         }
-
-        throw new SemanticErrorException("Variable usage looked up as record but is dotless.");
+        else
+        {
+            throw new SemanticErrorException("Expected member; found " + vun);
+        }
     }
 }
 
-public class SemanticAnalysisMemberAccessTypeCheckingVisitor(
-    SemanticAnalysisMemberAccessGettingVisitor samagv,
-    Type rhsType
-) : IRecordTypeVisitor
+public class MemberValidatingVisitor(MemberExpectingVisitor mev, Type expType)
+    : IInstantiatedTypeVisitor
 {
-    public SemanticAnalysisMemberAccessGettingVisitor Samagv { get; init; } = samagv;
-    public Type RhsType { get; init; } = rhsType;
+    public MemberExpectingVisitor Mev { get; init; } = mev;
+    public Type ExpType { get; init; } = expType;
 
-    public void Visit(RecordType rt)
+    public void Visit(InstantiatedType it)
     {
-        var x = rt.GetMember(Samagv.MemberAccess.Name, []);
+        var x = it.GetMember(Mev.Contents.Name);
         if (x is not null)
         {
-            if (!x.Equals(RhsType))
+            if (!x.Equals(ExpType))
             {
                 throw new SemanticErrorException("Wrong member type");
             }

@@ -91,16 +91,23 @@ public class SemanticAnalysis
                         );
                     }
 
-                // vuop control flow reroute
-                var targetType = GetTypeOfExpression(
-                    GetVuopTestFlag() ? an.NewTarget : an.Target,
-                    variables
-                );
-
-                // vuop control flow reroute
-                var targetName = GetVuopTestFlag() ? an.NewTarget.GetPlain().Name : an.Target.Name;
-
-                CheckAssignment(targetName, targetType, an.Expression, variables, an.NewTarget);
+                // Control flow reroute for vuop testing.
+                if (GetVuopTestFlag())
+                {
+                    var targetType = GetTypeOfExpression(an.NewTarget, variables);
+                    NewCheckAssignment(
+                        an.NewTarget.GetPlain().Name,
+                        targetType,
+                        an.Expression,
+                        variables,
+                        an.NewTarget
+                    );
+                }
+                else
+                {
+                    var targetType = GetTypeOfExpression(an.Target, variables);
+                    CheckAssignment(an.Target.Name, targetType, an.Expression, variables);
+                }
             }
             else if (s is FunctionCallNode fn)
             {
@@ -181,19 +188,46 @@ public class SemanticAnalysis
         string targetName,
         Type targetType,
         ExpressionNode expression,
+        Dictionary<string, VariableDeclarationNode> variables
+    )
+    {
+        CheckRange(targetName, targetType, expression, variables);
+
+        if (
+            targetType is EnumType e
+            && expression is VariableUsagePlainNode v
+            && e.Variants.Contains(v.Name)
+        )
+        {
+            if (v.ExtensionType != VariableUsagePlainNode.VrnExtType.None)
+            {
+                throw new SemanticErrorException($"ambiguous variable name {v.Name}", expression);
+            }
+        }
+        else
+        {
+            var expressionType = GetTypeOfExpression(expression, variables);
+            if (!targetType.Equals(expressionType))
+            {
+                throw new SemanticErrorException(
+                    $"Type mismatch cannot assign to {targetName}: {targetType} {expression}: {expressionType}",
+                    expression
+                );
+            }
+        }
+
+        return [];
+    }
+
+    private static void NewCheckAssignment(
+        string targetName,
+        Type targetType,
+        ExpressionNode expression,
         Dictionary<string, VariableDeclarationNode> variables,
         VariableUsageNodeTemp newTarget
     )
     {
-        // vuop control flow reroute
-        if (GetVuopTestFlag())
-        {
-            NewCheckRange(newTarget, targetType, expression, variables);
-        }
-        else
-        {
-            CheckRange(targetName, targetType, expression, variables);
-        }
+        NewCheckRange(newTarget, targetType, expression, variables);
 
         if (
             targetType is EnumType e
@@ -213,16 +247,13 @@ public class SemanticAnalysis
             {
                 targetType = irt;
             }
-            else if (targetType is RecordType recType)
+            else if (targetType is InstantiatedType it)
             {
-                var gettingVisitor = new SemanticAnalysisMemberAccessGettingVisitor();
-                newTarget.Accept(gettingVisitor);
-                var checkingVisitor = new SemanticAnalysisMemberAccessTypeCheckingVisitor(
-                    gettingVisitor,
-                    expressionType
-                );
-                recType.Accept(checkingVisitor);
-                return [];
+                var mev = new MemberExpectingVisitor();
+                newTarget.Accept(mev);
+                var mvv = new MemberValidatingVisitor(mev, expressionType);
+                it.Accept(mvv);
+                return;
             }
             if (!targetType.Equals(expressionType))
             {
@@ -232,8 +263,6 @@ public class SemanticAnalysis
                 );
             }
         }
-
-        return [];
     }
 
     // This is why something like type usage/IType is useful, because when we just return the datatype
@@ -561,6 +590,7 @@ public class SemanticAnalysis
             FloatNode floatNode => new RealType(),
             MathOpNode mathOpNode => GetTypeOfMathOp(mathOpNode, variables),
             StringNode stringNode => new StringType(),
+            // Control flow reroute for vuop testing.
             VariableUsageNodeTemp variableReferenceNode
                 => GetVuopTestFlag()
                     ? NewGetTypeOfVariableUsage(variableReferenceNode, variables)
