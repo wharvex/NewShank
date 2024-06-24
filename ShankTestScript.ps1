@@ -49,9 +49,9 @@ function st
         $args_list = -split $args_str
         $args_list[1] = "$($ds)$($args_list[1])"
 
-        $progress = if ($i -ne $null) `
+        $progress = if ($null -ne $i) `
         {"($i of $($path_list.Length - 1))"} `
-        Else {''}
+        else {''}
 
         "`n**** Running The Following Command $($progress) ****`n"
         "dotnet run $($args_list -join ' ') --project $sp`n"
@@ -63,8 +63,8 @@ function st
     {
         { $_ -eq 0 } { & $all_runner }
         { $_ -lt 0 -or $_ -ge $path_list.Length } { "Bad Argument" }
-        Default {
-            & $generic_runner $path_list[$_] 
+        default {
+            & $generic_runner $path_list[$_]
         }
     }
 }

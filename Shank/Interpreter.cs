@@ -3,10 +3,11 @@ using System.Net.Http.Headers;
 using System.Text;
 using LLVMSharp;
 using Shank.ASTNodes;
+using Shank.AstVisitorsTim;
 
 namespace Shank;
 
-public class Interpreter //e
+public class Interpreter
 {
     public static Dictionary<string, ModuleNode>? Modules { get; set; }
 
@@ -343,17 +344,17 @@ public class Interpreter //e
                         bt.Value = ResolveBool(an.Expression, variables);
                         break;
                     case RecordDataType rt:
-                        AssignToRecord(rt, an, variables);
+                        NewAssignToRecord(rt, an, variables);
                         break;
                     case EnumDataType et:
-                        et.Value = ResolveEnum((EnumDataType)target, an.Expression, variables);
+                        et.Value = ResolveEnum(et, an.Expression, variables);
                         break;
                     case ReferenceDataType rt:
                         if (rt.Record == null)
                             throw new Exception(
                                 $"{an.Target.Name} must be allocated before it can be addressed."
                             );
-                        AssignToRecord(rt.Record, an, variables);
+                        NewAssignToRecord(rt.Record, an, variables);
                         break;
                     default:
                         throw new Exception("Unknown type in assignment");
@@ -450,6 +451,38 @@ public class Interpreter //e
                 "Assigning any value to a record variable base is not implemented yet."
             );
         }
+    }
+
+    private static void NewAssignToRecord(
+        RecordDataType rdt,
+        AssignmentNode an,
+        Dictionary<string, InterpreterDataType> variables
+    )
+    {
+        // Create/dispatch a visitor that expects/collects a member on an's NewTarget.
+        var mev = new MemberExpectingVisitor();
+        an.NewTarget.Accept(mev);
+
+        var t = rdt.GetMemberType(mev.Contents.Name);
+
+        rdt.Value[mev.Contents.Name] = t switch
+        {
+            BooleanType => ResolveBool(an.Expression, variables),
+            StringType => ResolveString(an.Expression, variables),
+            RealType => ResolveFloat(an.Expression, variables),
+            IntegerType => ResolveInt(an.Expression, variables),
+            CharacterType => ResolveChar(an.Expression, variables),
+            InstantiatedType => ResolveRecord(an.Expression, variables),
+            ReferenceType => ResolveReference(an.Expression, variables),
+            EnumType => ResolveEnum(an.Expression, variables),
+
+            _
+                => throw new NotImplementedException(
+                    "Assigning a value of type "
+                        + t
+                        + " to a record variable member is not implemented yet."
+                )
+        };
     }
 
     private static void AssignToArray(
@@ -1290,7 +1323,7 @@ public class Interpreter //e
 
                     VariableUsageIndexNode i
                         => ((ArrayDataType)variables[i.GetPlain().Name]).GetElementInteger(
-                            ResolveInt(i.Right, variables)
+                            NewResolveInt(i.Right, variables)
                         ),
                     _ => throw new NotImplementedException()
                 };
