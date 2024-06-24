@@ -1,8 +1,0 @@
-record Student
-    gpa : real
-
-define start()
-variables student : Student
-    student.gpa := 3.8
-    write "hello from vuop function call member test"
-    write student.gpa

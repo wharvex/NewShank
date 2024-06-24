@@ -1,0 +1,5 @@
+define start()
+variables a : integer
+    a := 33
+    write "hello from vuop function call builtin integer plain test"
+    write a

@@ -1,5 +1,0 @@
-define start()
-variables a : integer
-    a := 33
-    write "hello from vuop function call plain test"
-    write a

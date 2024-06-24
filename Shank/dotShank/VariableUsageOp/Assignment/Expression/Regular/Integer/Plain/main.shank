@@ -1,0 +1,4 @@
+define start()
+variables a : integer
+    a := 33
+    write "hello from vuop assignment plain test"

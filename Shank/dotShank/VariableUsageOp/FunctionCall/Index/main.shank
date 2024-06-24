@@ -1,5 +1,0 @@
-define start()
-variables a : array from 0 to 9 of integer
-    a[0] := 33
-    write "hello from vuop function call index test"
-    write a[0]
