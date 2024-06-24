@@ -1,0 +1,14 @@
+define myFunc(a : string)
+    write a
+
+{This is not an example of OVERLOADING, this is defining a NEW FUNCTION, ALSO WE BREAK AFTER 3 ARGS!!!!!}
+define myFunc3(a : string; b : string, c : string)
+    write a
+    write b
+    write c
+
+define start()
+    write "hello world"
+    myFunc "MY FUNC 1"
+    myFunc2 "MY FUNC2", "Arg 2", "Arg 3"
+    

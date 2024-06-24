@@ -8,5 +8,6 @@ define myFunc2(a : string; b : integer)
 
 define start()
     write "hello world"
-    myFunc2 "hi", 1
-    myFunc "hi2"
+    myFunc "MY FUNC 1"
+    myFunc2 "My Func2", 2
+    

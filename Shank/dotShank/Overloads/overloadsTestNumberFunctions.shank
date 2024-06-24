@@ -1,9 +1,11 @@
-define myFunc2(a : integer; b : integer)
-    c:=a+b
+{This is not an example of OVERLOADING, this is defining a NEW FUNCTION}
+define myFunc2(a : integer; b : integer, c : integer)
+	write a
+    write b
     write c
 
 
-
 define start()
-    myFunc2 2, 1
-    {adding "hi2" "hi1"}
+    write "hello world"
+    myFunc2 2, 1, 3
+    
