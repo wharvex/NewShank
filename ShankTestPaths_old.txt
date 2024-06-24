@@ -1,0 +1,5 @@
+
+Interpret OldShankFiles/Pascals.shank
+Interpret OldShankFiles/GCD.shank
+Interpret Negative
+Interpret String
