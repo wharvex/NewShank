@@ -1,3 +1,7 @@
 define start()
-    write "here", "are", "some", "variadic", "arguments"
-    write "and", "a", "new", "line"
+variables a : integer
+    write "here", "are", "some", "variadic", "arg\numents" {no escape characters in this language!}
+    write 1, 2, 3, 4, 5
+    a := 80008
+    write a
+    {write 1+2 {Error, Why can't we do this?}}

@@ -1,11 +1,9 @@
-define adding(a : integer, b : integer)
-    write a
+define myFunc2(a : integer; b : integer)
+    c:=a+b
+    write c
 
-define adding(a : string; b : string)
-    write a
-    write b
+
 
 define start()
-    write "hello world"
-    myFunc2 "hi", 1
-    myFunc "hi2"
+    myFunc2 2, 1
+    {adding "hi2" "hi1"}
