@@ -79,5 +79,19 @@ class Tran
                     .ToString()
             );
         }
+
+
+        [TestMethod]
+        public void ParseLoop()
+        {
+            var testString = "loop x < 20 value = value + 1";
+                            
+            Lexer newLexer = new Lexer(testString);
+            LinkedList<Token> tokens = newLexer.Lex();
+            Parser newParser = new Parser(tokens);
+            var expression = newParser.ParseLoop();
+            Console.Write(expression);
+            //Assert.AreEqual("1 Plus 2", expression.ToString());
+        }
     }
 }

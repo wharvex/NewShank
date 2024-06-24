@@ -312,16 +312,16 @@ public class Parser
         if (handler.MatchAndRemove(TokenType.LOOP) != null)
         {
             var conditionLoop = ParseExpression() as BooleanExpressionNode;
-
-            if (conditionLoop == null)
+            
+          if (conditionLoop == null)
             {
                 throw new Exception("In ParseLoop method, the condition is null");
-            }
+           }
             var LoopBody = ParseBlock();
 
             if (LoopBody == null)
             {
-                throw new Exception("In ParseLoop method, the LoopBody is null");
+               throw new Exception("In ParseLoop method, the LoopBody is null");
             }
             return new WhileNode(conditionLoop, LoopBody);
         }
