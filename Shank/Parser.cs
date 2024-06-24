@@ -340,12 +340,35 @@ public class Parser
         }
     }
 
+    /// <summary>
+    ///     Method <c>MemberAccess</c> creATES MemberAccessNode containing the value of the next token  
+    /// </summary>
+    /// <returns>MemberAccessNode with value</returns>
+
     private MemberAccessNode MemberAccess() =>
         new MemberAccessNode(RequiresAndReturnsToken(Token.TokenType.Identifier).GetValueSafe());
 
+    /// <summary>
+    ///     Method <c>Module</c> parses a module and consumes constructs contained within
+    /// </summary>
+    /// <returns>ModuleNode containing the constructs as its contents</returns>
+    /// <exception cref="SyntaxErrorException">
+    ///     <list type="bullet"> 
+    ///         <item>
+    ///             <description>If a module identifier is not present</description>
+    ///         </item>
+    ///         <item>
+    ///             <description>If an indent-zero token to start a construct is not found</description>
+    ///         </item>
+    ///         <item> 
+    ///             <description>If an import does not have an identifier</description>
+    ///         </item>
+    ///     </list>
+    /// </exception>
+    /// <exception cref="NotImplementedException">The context for our indent-zero token does not exist</exception>
     public ModuleNode Module()
     {
-        // Get the module name if there is one, or set it to default.
+        //Get the module name if there is one, or set it to default.
         var moduleName = MatchAndRemove(Token.TokenType.Module) is null
             ? "default"
             : MatchAndRemove(Token.TokenType.Identifier)?.GetValueSafe()
@@ -433,6 +456,25 @@ public class Parser
         return ret;
     }
 
+    /// <summary>
+    ///     <para> 
+    ///         Method <c>Function</c> parses a function and returns a node contain its identifier, parameters, and body contents. 
+    ///         An extension for each function name is created based on its parameters so overloads don't produce name collisions. 
+    ///     </para>
+    /// </summary>
+    /// <param name="moduleName">The module that is processed along with the function(string)</param>
+    /// <returns>FunctionNode containing the functions contents</returns>
+    /// <exception cref="SyntaxErrorException">
+    ///     <list type="bullet"> 
+    ///         <item> 
+    ///             <description>A functions name is not found</description>
+    ///         </item>
+    ///         <item> 
+    ///             <description>Functions parameters are not closed in parenthesis</description>
+    ///         </item>
+    ///     </list>
+    /// </exception>
+
     public FunctionNode Function(string moduleName)
     {
         // Process function name.
@@ -483,6 +525,7 @@ public class Parser
 
         // Process function body and return function node.
         BodyFunction(funcNode);
+
         return funcNode;
     }
 
@@ -600,8 +643,19 @@ public class Parser
         };
 
     // assumptions you want to parse a type
+
+    /// <summary>
+    ///     <para> 
+    ///         Method <c>Type</c> 
+    ///     </para>
+    /// </summary>
+    /// <param name="declarationContext"></param>
+    /// <returns></returns>
+    /// <exception cref="SyntaxErrorException"></exception>
+    
     private Type Type(VariableDeclarationNode.DeclarationContext declarationContext)
     {
+        
         var typeToken =
             MatchAndRemoveMultiple(_shankTokenTypesPlusIdentifier)
             ?? throw new SyntaxErrorException("expected start of a type", Peek(0));
@@ -1054,6 +1108,17 @@ public class Parser
         return retVal;
     }
 
+    /// <summary>
+    ///     <para> 
+    ///         Method <c>CreateVariables</c> 
+    ///     </para>
+    /// </summary>
+    /// <param name="names"></param>
+    /// <param name="isConstant"></param>
+    /// <param name="parentModuleName"></param>
+    /// <param name="declarationContext"></param>
+    /// <returns></returns>
+    /// <exception cref="SyntaxErrorException"></exception>
     private List<VariableDeclarationNode> CreateVariables(
         List<string> names,
         bool isConstant,
@@ -1146,6 +1211,33 @@ public class Parser
                 )
         };
 
+    /// <summary>
+    ///     <para> 
+    ///         Method <c>GetMutability</c> determines if a character will remain constant based on its context and whether
+    ///         or not the "var" keyword is present
+    ///     </para>
+    /// </summary>
+    /// <param name="declarationContext">The context of the variable declaration</param>
+    /// <param name="hasVar">If a "var" keyword is present</param>
+    /// <param name="varToken">A token containing the "var" keyword (used for error messages)</param>
+    /// <returns></returns>
+    /// <exception cref="SyntaxErrorException">
+    ///     <list type="bullet"> 
+    ///         <item> 
+    ///             <description>Keyword `var' not allowed in a record declaration.</description>
+    ///         </item>
+    ///         <item> 
+    ///             <description>Keyword `var' not allowed in an enum declaration.</description>
+    ///         </item>
+    ///         <item> 
+    ///             <description>Keyword `var' not allowed in a variables line.</description>
+    ///         </item>
+    ///         <item> 
+    ///             <description>Keyword `var' not allowed in a constants line.</description>
+    ///         </item>
+    ///     </list>
+    /// </exception>
+    /// <exception cref="NotImplementedException">An invalid variable declaration context has been reached</exception>
     private static bool GetMutability(
         VariableDeclarationNode.DeclarationContext declarationContext,
         bool hasVar,
@@ -1187,6 +1279,14 @@ public class Parser
                 )
         };
 
+    /// <summary>
+    ///     <para> 
+    ///         Method <c>GetVariables</c> parses a comma separated list of variables and creates them
+    ///     </para>
+    /// </summary>
+    /// <param name="parentModuleName">the module in which the variables reside</param>
+    /// <param name="declarationContext">the conext of the variable declaration (used to get the mutability of the variable)</param>
+    /// <returns>List of variable declartions</returns>
     private List<VariableDeclarationNode>? GetVariables(
         string parentModuleName,
         VariableDeclarationNode.DeclarationContext declarationContext
@@ -1244,10 +1344,28 @@ public class Parser
         }
     }
 
+    /// <summary>
+    ///     <para>
+    ///         Method <c>RequiresAndReturnsToken</c> return a token if the TokenType matches that of the Token passed in 
+    ///     </para>
+    /// </summary>
+    /// <param name="tokenType">TokenType of the requested token</param>
+    /// <returns>Token otherwise throw an exception</returns>
+    /// <exception cref="SyntaxErrorException">If the TokenType passed in does not match the TokenType of the next Token</exception>
+
     private Token RequiresAndReturnsToken(Token.TokenType tokenType) =>
         MatchAndRemove(tokenType)
         ?? throw new SyntaxErrorException("Expected a " + tokenType, Peek(0));
 
+    /// <summary>
+    ///     <para> 
+    ///         Method <c>ParseCommaSeparatedTokens</c> parses a list of tokens separated by commas that matches the list of token types passed in
+    ///     </para>
+    /// </summary>
+    /// <param name="firstToken">A Token representing the first Token in the list</param>
+    /// <param name="tokens">Tokens representing the remainder of our list</param>
+    /// <param name="matchAgainst">List of TokenTypes to match against</param>
+    /// <exception cref="SyntaxErrorException">If the TokenType of a Token in the list doesn't match what was expected</exception>
     private void ParseCommaSeparatedTokens(
         Token firstToken,
         List<Token> tokens,
@@ -1267,6 +1385,14 @@ public class Parser
             );
         }
     }
+
+    /// <summary>
+    ///     <para> 
+    ///         Method <c>ParseCommaSeparatedIdentifiers</c> parses a comma separated list of identifiers
+    ///     </para>
+    /// </summary>
+    /// <param name="firstId">The Token of the first identifier in the list</param>
+    /// <param name="idValues">The values of the remaining list of identifiers (string)</param>
 
     private void ParseCommaSeparatedIdentifiers(Token firstId, List<string> idValues)
     {
@@ -1632,6 +1758,23 @@ public class Parser
             );
         return token.Value;
     }
+
+    /// <summary>
+    ///     <para>
+    ///         Method <c>checkForFunctions</c> parses a list of imports and adds the a list which is returned
+    ///     </para>
+    /// </summary>
+    /// <returns>A LinkedList of import statements (string)</returns>
+    /// <exception cref="SyntaxErrorException">
+    ///     <list> 
+    ///         <item> 
+    ///             <desciption>An import function list does not begin with an identifier</desciption>
+    ///         </item>
+    ///         <item> 
+    ///             <description>A function identifier list is not separated by commas</description>
+    ///         </item>
+    ///     </list>
+    /// </exception>
 
     private LinkedList<string> checkForFunctions()
     {

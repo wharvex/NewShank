@@ -278,6 +278,12 @@ public class ModuleNode : ASTNode
             });
     }
 
+    /// <summary>
+    ///     <para> 
+    ///         Method <c>addFunction</c> adds a function to a ModuleNode if it is present
+    ///     </para>
+    /// </summary>
+    /// <param name="function">The function passed in</param>
     public void addFunction(CallableNode? function)
     {
         if (function != null)
@@ -320,6 +326,10 @@ public class ModuleNode : ASTNode
         }
     }
 
+    /// <summary>
+    ///     
+    /// </summary>
+    /// <param name="name"></param>
     public void addImportName(string? name)
     {
         ImportTargetNames.Add(name, new LinkedList<string>());
