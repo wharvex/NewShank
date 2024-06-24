@@ -1041,7 +1041,7 @@ public class Parser
         var expression =
             ParseExpressionLine() ?? throw new SyntaxErrorException("Expected expression", Peek(0));
 
-        return new AssignmentNode(new VariableUsagePlainNode("empty"), expression, target);
+        return new AssignmentNode(target, expression, true);
     }
 
     private bool FindBeforeEol(Token.TokenType tokenType)

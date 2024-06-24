@@ -12,8 +12,8 @@ public abstract class VariableUsageNodeTemp : ExpressionNode
         {
             ret = ret switch
             {
-                VariableUsageIndexNode vuin => vuin.Left,
-                VariableUsageMemberNode vumn => vumn.Left,
+                VariableUsageIndexNode i => i.Left,
+                VariableUsageMemberNode m => m.Left,
                 _
                     => throw new UnreachableException(
                         "VUN class hierarchy was altered; please update this switch accordingly."

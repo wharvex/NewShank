@@ -9,15 +9,22 @@ namespace Shank.ASTNodes;
 /// </summary>
 public class AssignmentNode : StatementNode
 {
-    public AssignmentNode(
-        VariableUsagePlainNode target,
-        ExpressionNode expression,
-        VariableUsageNodeTemp? newTarget = null
-    )
+    public AssignmentNode(VariableUsagePlainNode target, ExpressionNode expression)
     {
         Target = target;
         Expression = expression;
-        NewTarget = newTarget ?? new VariableUsagePlainNode("empty");
+        NewTarget = new VariableUsagePlainNode("emptyNewTarget");
+    }
+
+    public AssignmentNode(
+        VariableUsageNodeTemp target,
+        ExpressionNode expression,
+        bool isVuopReroute
+    )
+    {
+        NewTarget = target;
+        Expression = expression;
+        Target = new VariableUsagePlainNode("emptyOldTarget");
     }
 
     /// <summary>

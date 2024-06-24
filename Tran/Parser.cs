@@ -293,7 +293,7 @@ public class Parser
                 if (expression != null)
                 {
                     //TODO: check if newTarget is something we need to worry about
-                    return new AssignmentNode(variable, expression, null);
+                    return new AssignmentNode(variable, expression);
                 }
             }
         }
