@@ -80,12 +80,11 @@ class Tran
             );
         }
 
-
         [TestMethod]
         public void ParseLoop()
         {
             var testString = "loop x < 20 value = value + 1";
-                            
+
             Lexer newLexer = new Lexer(testString);
             LinkedList<Token> tokens = newLexer.Lex();
             Parser newParser = new Parser(tokens);

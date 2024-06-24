@@ -27,12 +27,11 @@ namespace TranUnitTests
             lexer = new Lexer(file);
             tokens = lexer.Lex();
 
-            
             actualTokensString = string.Join("\n", tokens) + "\n";
-           // Assert.AreEqual(
-             //   "WORD(word)\n" + "PERIOD\n" + " WORD(reference)\n" + " SEPARATOR\n",
+            // Assert.AreEqual(
+            //   "WORD(word)\n" + "PERIOD\n" + " WORD(reference)\n" + " SEPARATOR\n",
             //    actualTokensString
-          //  );
+            //  );
         }
 
         [TestMethod]
