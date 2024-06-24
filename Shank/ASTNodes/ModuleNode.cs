@@ -279,7 +279,7 @@ public class ModuleNode : ASTNode
     }
 
     /// <summary>
-    ///     <para> 
+    ///     <para>
     ///         Method <c>addFunction</c> adds a function to a ModuleNode if it is present
     ///     </para>
     /// </summary>
@@ -327,7 +327,7 @@ public class ModuleNode : ASTNode
     }
 
     /// <summary>
-    ///     
+    ///
     /// </summary>
     /// <param name="name"></param>
     public void addImportName(string? name)
