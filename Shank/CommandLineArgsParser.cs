@@ -22,10 +22,10 @@ public class Settings
     [Option("set-op-level", HelpText = "sets the default op level")]
     public string? SetOpLevel { get; set; }
 
-    [Option("print-settings", HelpText = "sets the default op level")]
+    [Option("print-settings", HelpText = "displays default")]
     public bool PrintDefaultSettings { get; set; }
 
-    [Option("delete-settings", HelpText = "sets the default op level")]
+    [Option("clear-default", HelpText = "deletes default settings")]
     public bool DeleteSettings { get; set; }
 
     public override string ToString()
