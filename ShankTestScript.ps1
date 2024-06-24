@@ -19,9 +19,12 @@ function st
     "Interpret Builtins/Write", # 8
     "Interpret Enums", # 9
     "Compile TestLlvmTheoAndMendel -S --print-ir", # 10
-    "Interpret VariableUsageOp/SimplePlain --vuop-test", # 11
-    "Interpret VariableUsageOp/SimpleIndex --vuop-test", # 12
-    "Interpret VariableUsageOp/SimpleMember --vuop-test" # 13
+    "Interpret VariableUsageOp/Assignment/Plain --vuop-test", # 11
+    "Interpret VariableUsageOp/Assignment/Index --vuop-test", # 12
+    "Interpret VariableUsageOp/Assignment/Member --vuop-test", # 13
+    "Interpret VariableUsageOp/FunctionCall/Plain --vuop-test", # 14
+    "Interpret VariableUsageOp/FunctionCall/Index --vuop-test", # 15
+    "Interpret VariableUsageOp/FunctionCall/Member --vuop-test" # 16
     #"CompilePractice Minimal/PrintInt/Shank --flat PrintInt"
     #"Interpret Generics/simple/functions2" ** revisit this to debug **
     #"Interpret OldShankFiles/Pascals.shank"
