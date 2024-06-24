@@ -71,6 +71,7 @@ public abstract class LLVMValue(LLVMValueRef valueRef, bool isMutable, LLVMTypeR
 
     // the type of the value, does not include any pointers, you can know if its needs a pointer by looking at the isMutable field
     public LLVMTypeRef TypeRef { get; } = typeRef;
+
     public bool IsMutable { get; } = isMutable;
 }
 
@@ -225,9 +226,11 @@ public class Context
     /// <returns></returns>
     public LLVMTypeRef? GetLLVMTypeFromShankType(Type dataType)
     {
+        //broken with structs
         return dataType switch
         {
             IntegerType => LLVMTypeRef.Int64,
+            InstantiatedType t => CurrentModule.CustomTypes[t.Inner.Name].LlvmTypeRef,
             RealType => LLVMTypeRef.Double,
             RecordType recordType => CurrentModule.CustomTypes[recordType.Name].LlvmTypeRef,
             Shank.StringType => StringType,
@@ -257,7 +260,7 @@ public class Context
             {
                 IntegerType => (LLVMInteger.New, LLVMTypeRef.Int64),
                 RealType => (LLVMReal.New, LLVMTypeRef.Double),
-                RecordType recordType => NewRecordValue(recordType),
+                InstantiatedType recordType => NewRecordValue(recordType.Inner),
                 Shank.StringType => (LLVMString.New, LLVMStringType: StringType),
                 UnknownType unknownType => throw new NotImplementedException(),
                 BooleanType => (LLVMBoolean.New, LLVMTypeRef.Int1),

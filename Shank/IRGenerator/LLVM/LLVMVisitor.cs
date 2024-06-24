@@ -153,14 +153,25 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
     public override void Visit(VariableUsagePlainNode node)
     {
         LLVMValue value = context.GetVariable(node.Name);
-        if (
-            node.ExtensionType == VariableUsagePlainNode.VrnExtType.ArrayIndex
-            || node.ExtensionType == VariableUsagePlainNode.VrnExtType.RecordMember
-        )
+        if (node.ExtensionType == VariableUsagePlainNode.VrnExtType.ArrayIndex)
         {
             node.Extension?.Accept(this);
             var a = builder.BuildGEP2(value.TypeRef, value.ValueRef, new[] { expr.Pop() });
             expr.Push(builder.BuildLoad2(value.TypeRef, a));
+        }
+        else if (node.ExtensionType == VariableUsagePlainNode.VrnExtType.RecordMember)
+        {
+            var a = (RecordType)context.GetCustomType(value.TypeRef.StructName).Type;
+            var b = (VariableUsagePlainNode)node.GetExtensionSafe();
+
+            Console.WriteLine(a.Fields.Keys.ToList().IndexOf(b.Name));
+            var c = builder.BuildStructGEP2(
+                value.TypeRef,
+                value.ValueRef,
+                (uint)a.Fields.Keys.ToList().IndexOf(b.Name)
+            );
+            expr.Push(builder.BuildLoad2(value.TypeRef, c));
+            // builder.BuildStore(node.e, c);
         }
         else
         {
@@ -437,6 +448,7 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
     public override void Visit(AssignmentNode node)
     {
         var llvmValue = context.GetVariable(node.Target.Name);
+        // context.GetCustomType(node.)
         Console.WriteLine(node.ToString());
 
         node.Expression.Accept(this);
@@ -446,14 +458,24 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
             throw new Exception($"tried to mutate non mutable variable {node.Target.Name}");
         }
 
-        if (
-            node.Target.ExtensionType == VariableUsagePlainNode.VrnExtType.ArrayIndex
-            || node.Target.ExtensionType == VariableUsagePlainNode.VrnExtType.RecordMember
-        )
+        if (node.Target.ExtensionType == VariableUsagePlainNode.VrnExtType.ArrayIndex)
         {
             node.Target.Extension?.Accept(this);
             var a = builder.BuildGEP2(llvmValue.TypeRef, llvmValue.ValueRef, new[] { expr.Pop() });
             builder.BuildStore(expression, a);
+        }
+        else if (node.Target.ExtensionType == VariableUsagePlainNode.VrnExtType.RecordMember)
+        {
+            var a = (RecordType)context.GetCustomType(llvmValue.TypeRef.StructName).Type;
+            var b = (VariableUsagePlainNode)node.Target.GetExtensionSafe();
+
+            Console.WriteLine(a.Fields.Keys.ToList().IndexOf(b.Name));
+            var c = builder.BuildStructGEP2(
+                llvmValue.TypeRef,
+                llvmValue.ValueRef,
+                (uint)a.Fields.Keys.ToList().IndexOf(b.Name)
+            );
+            builder.BuildStore(expression, c);
         }
         else
         {
