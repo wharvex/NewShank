@@ -12,9 +12,9 @@ public class BuiltInFunctions
         // the students to do in Java.
         var retVal = new List<BuiltInFunctionNode>
         {
-            MakeNode("write", new VariableDeclarationNode[] { }, Write, true),
-            MakeNode("read", new VariableDeclarationNode[] { }, Read, true),
-            MakeNode("writeToTest", new VariableDeclarationNode[] { }, WriteToTest, true),
+            new BuiltInVariadicFunctionNode("write", Write),
+            new BuiltInVariadicFunctionNode("read", Read, false),
+            new BuiltInVariadicFunctionNode("writeToTest", WriteToTest),
             MakeNode(
                 "squareRoot",
                 new VariableDeclarationNode[]
@@ -32,8 +32,7 @@ public class BuiltInFunctions
                         IsConstant = false
                     },
                 },
-                SquareRoot,
-                false
+                SquareRoot
             ),
             MakeNode(
                 "getRandom",
@@ -46,8 +45,7 @@ public class BuiltInFunctions
                         IsConstant = false
                     },
                 },
-                Random,
-                false
+                Random
             ),
             MakeNode(
                 "integerToReal",
@@ -66,8 +64,7 @@ public class BuiltInFunctions
                         IsConstant = false
                     },
                 },
-                IntegerToReal,
-                false
+                IntegerToReal
             ),
             MakeNode(
                 "realToInteger",
@@ -86,8 +83,7 @@ public class BuiltInFunctions
                         IsConstant = false
                     },
                 },
-                RealToInteger,
-                false
+                RealToInteger
             ),
             MakeNode(
                 "left",
@@ -112,8 +108,7 @@ public class BuiltInFunctions
                         IsConstant = false
                     },
                 },
-                Left,
-                false
+                Left
             ),
             MakeNode(
                 "right",
@@ -138,8 +133,7 @@ public class BuiltInFunctions
                         IsConstant = false
                     },
                 },
-                Right,
-                false
+                Right
             ),
             MakeNode(
                 "substring",
@@ -170,8 +164,7 @@ public class BuiltInFunctions
                         IsConstant = false
                     },
                 },
-                Substring,
-                false
+                Substring
             ),
             MakeNode(
                 "assertIsEqual",
@@ -190,8 +183,7 @@ public class BuiltInFunctions
                         IsConstant = true
                     }
                 },
-                AssertIsEqual,
-                false
+                AssertIsEqual
             ),
             MakeNode(
                 "allocateMemory",
@@ -204,8 +196,7 @@ public class BuiltInFunctions
                         IsConstant = false
                     }
                 },
-                AllocateMemory,
-                false
+                AllocateMemory
             ),
             MakeNode(
                 "freeMemory",
@@ -218,8 +209,7 @@ public class BuiltInFunctions
                         IsConstant = false
                     }
                 },
-                FreeMemory,
-                false
+                FreeMemory
             ),
             MakeNode(
                 "isSet",
@@ -238,8 +228,7 @@ public class BuiltInFunctions
                         IsConstant = false
                     }
                 },
-                IsSet,
-                false
+                IsSet
             ),
             MakeNode(
                 "size",
@@ -258,8 +247,7 @@ public class BuiltInFunctions
                         IsConstant = false
                     }
                 },
-                Size,
-                false
+                Size
             )
         };
         foreach (var f in retVal)
@@ -273,13 +261,11 @@ public class BuiltInFunctions
         //string namePrefix,
         string name,
         VariableDeclarationNode[] parameters,
-        BuiltInFunctionNode.BuiltInCall call,
-        bool isVariadic = false
+        BuiltInFunctionNode.BuiltInCall call
     )
     {
         var retVal = new BuiltInFunctionNode(name, call);
         retVal.ParameterVariables.AddRange(parameters);
-        retVal.IsVariadic = isVariadic;
         return retVal;
     }
 

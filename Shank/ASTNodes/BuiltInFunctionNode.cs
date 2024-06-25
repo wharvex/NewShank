@@ -9,7 +9,6 @@ public class BuiltInFunctionNode : CallableNode
     public BuiltInFunctionNode(string name, BuiltInCall execute)
         : base(name, execute) { }
 
-    public bool IsVariadic = false;
 
     // public override LLVMValueRef Visit(
     //     LLVMVisitor visitor,
@@ -22,4 +21,10 @@ public class BuiltInFunctionNode : CallableNode
     // }
 
     public override void Accept(Visitor v) => throw new NotImplementedException("");
+}
+
+public class BuiltInVariadicFunctionNode( string name, CallableNode.BuiltInCall execute, bool areParametersConstant = true)
+    : BuiltInFunctionNode(name, execute)
+{
+    public bool AreParametersConstant { get; } = areParametersConstant;
 }

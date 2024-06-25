@@ -16,6 +16,7 @@ public class FunctionCallNode : StatementNode
     // generics of the called function that this call site instiated to specific types
     // useful/needed for monomorphization
     public Dictionary<string, Type> InstantiatedGenerics { get; set; } = [];
+    public List<Type> InstantiatedVariadics { get; set; } = [];
 
     public FunctionCallNode(string name)
     {

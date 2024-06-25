@@ -669,7 +669,7 @@ public class Interpreter
 
         if (
             fc.Arguments.Count != ((CallableNode)calledFunction).ParameterVariables.Count
-            && calledFunction is BuiltInFunctionNode { IsVariadic: false }
+            && calledFunction is  not BuiltInVariadicFunctionNode
         ) // make sure that the counts match
             throw new Exception(
                 $"Call of {((CallableNode)calledFunction).Name}, parameter count doesn't match."
@@ -790,7 +790,7 @@ public class Interpreter
         {
             if (
                 (
-                    (calledFunction is BuiltInFunctionNode { IsVariadic: true })
+                    (calledFunction is BuiltInVariadicFunctionNode )
                     || !((CallableNode)calledFunction).ParameterVariables[i].IsConstant
                 ) && fc.Arguments[i] is VariableUsagePlainNode variableUsagePlainNode
             )
