@@ -1052,7 +1052,6 @@ public class SemanticAnalysis
             }
 
             CheckFunctions(module.Value.getFunctions(), module.Value);
-            
         }
 
         var monomorphizationVisitor = new MonomorphizationVisitor();
@@ -1067,7 +1066,7 @@ public class SemanticAnalysis
         }
         foreach (var (key, value) in monomorphizationVisitor.ProgramNode.Functions)
         {
-           Console.WriteLine(value); 
+            Console.WriteLine(value);
         }
     }
 
