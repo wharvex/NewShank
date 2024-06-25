@@ -152,28 +152,49 @@ public class SemanticAnalysis
 
                 if (
                     GetStartModuleSafe().getFunctions().ContainsKey((string)fn.Name)
-                    && GetStartModuleSafe().getFunctions()[(string)fn.Name] is BuiltInFunctionNode builtInFunctionNode
+                    && GetStartModuleSafe().getFunctions()[(string)fn.Name]
+                        is BuiltInFunctionNode builtInFunctionNode
                 )
                 {
                     foundFunction = true;
-                    if (builtInFunctionNode is BuiltInVariadicFunctionNode builtInVariadicFunctionNode)
+                    if (
+                        builtInFunctionNode
+                        is BuiltInVariadicFunctionNode builtInVariadicFunctionNode
+                    )
                     {
                         if (!builtInVariadicFunctionNode.AreParametersConstant) // hack to verify that all parameters are passed in as var
                         {
-                           if ( fn.Arguments.Find(node => node is not VariableUsageNodeTemp temp || !temp.GetPlain().IsVariableFunctionCall) is{} badArgument )
-                           {
-                               throw new SemanticErrorException(
-                                   $"cannot call builtin variadic {builtInVariadicFunctionNode.Name} with non var argument {badArgument}", fn);
-                           }
+                            if (
+                                fn.Arguments.Find(
+                                    node =>
+                                        node is not VariableUsageNodeTemp temp
+                                        || !temp.GetPlain().IsVariableFunctionCall
+                                ) is
+                                { } badArgument
+                            )
+                            {
+                                throw new SemanticErrorException(
+                                    $"cannot call builtin variadic {builtInVariadicFunctionNode.Name} with non var argument {badArgument}",
+                                    fn
+                                );
+                            }
                         }
 
-                        fn.InstantiatedVariadics = fn.Arguments.Select(arg => GetTypeOfExpression(arg, variables)).ToList();
+                        fn.InstantiatedVariadics = fn.Arguments.Select(
+                            arg => GetTypeOfExpression(arg, variables)
+                        )
+                            .ToList();
                         fn.FunctionDefinitionModule = builtInVariadicFunctionNode.parentModuleName!;
                         Console.WriteLine(builtInFunctionNode.parentModuleName);
                     }
                     else
                     {
-                        fn.InstantiatedGenerics = CheckFunctionCall(fn.Arguments, variables, builtInFunctionNode, fn);
+                        fn.InstantiatedGenerics = CheckFunctionCall(
+                            fn.Arguments,
+                            variables,
+                            builtInFunctionNode,
+                            fn
+                        );
                     }
                 }
 
