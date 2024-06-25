@@ -86,30 +86,31 @@ public class MonomorphizationVisitor(
     public override void Visit(FunctionCallNode node)
     {
         var module = nonMonomorphizedProgramNode.GetFromModulesSafe(node.FunctionDefinitionModule);
+        var instantiatedGenerics = node.InstantiatedGenerics.Select(
+                instantiatedType =>
+                (
+                    instantiatedType.Key,
+                    instantiatedType.Value.Accept(
+                        new MonomorphizationTypeVisitor(
+                            instantiatedTypes,
+                            start,
+                            ProgramNode
+                        )
+                    )
+                )
+            )
+            .ToDictionary();
         module
             .Functions[node.Name]
             .Accept(
                 new MonomorphizationVisitor(
-                    node.InstiatedGenerics.Select(
-                        instantiatedType =>
-                            (
-                                instantiatedType.Key,
-                                instantiatedType.Value.Accept(
-                                    new MonomorphizationTypeVisitor(
-                                        instantiatedTypes,
-                                        start,
-                                        ProgramNode
-                                    )
-                                )
-                            )
-                    )
-                        .ToDictionary(),
+                    instantiatedGenerics,
                     nonMonomorphizedProgramNode,
                     start,
                     ProgramNode
                 )
             );
-        Push(node);
+        Push(new FunctionCallNode(node, instantiatedGenerics));
     }
 
     public override void Visit(FunctionNode node)

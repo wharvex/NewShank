@@ -15,12 +15,24 @@ public class FunctionCallNode : StatementNode
 
     // generics of the called function that this call site instiated to specific types
     // useful/needed for monomorphization
-    public Dictionary<string, Type> InstiatedGenerics { get; set; } = [];
+    public Dictionary<string, Type> InstantiatedGenerics { get; set; } = [];
 
     public FunctionCallNode(string name)
     {
         Name = name;
     }
+        // Copy constructor for monomorphization
+        public FunctionCallNode(FunctionCallNode copy, Dictionary<string, Type> instantiatedGenerics)
+        {
+            FileName = copy.FileName;
+            Line = copy.Line;
+            InstantiatedGenerics = instantiatedGenerics;
+            FunctionDefinitionModule = copy.FunctionDefinitionModule;
+            Name = copy.Name;
+            OverloadNameExt = copy.OverloadNameExt;
+            Arguments = copy.Arguments;
+            LineNum = copy.LineNum;
+        }
 
     public bool EqualsWrtNameAndParams(
         CallableNode givenFunction,

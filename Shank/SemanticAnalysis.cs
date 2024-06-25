@@ -126,7 +126,7 @@ public class SemanticAnalysis
                 {
                     foundFunction = true;
                     if (parentModule.getFunctions()[fn.Name] is not BuiltInFunctionNode)
-                        fn.InstiatedGenerics = CheckFunctionCall(
+                        fn.InstantiatedGenerics = CheckFunctionCall(
                             fn.Arguments,
                             variables,
                             (FunctionNode)parentModule.getFunctions()[fn.Name],
@@ -140,7 +140,7 @@ public class SemanticAnalysis
                         if (Modules[import.Key].getExportNames().Contains(fn.Name))
                         {
                             foundFunction = true;
-                            fn.InstiatedGenerics = CheckFunctionCall(
+                            fn.InstantiatedGenerics = CheckFunctionCall(
                                 fn.Arguments,
                                 variables,
                                 (FunctionNode)parentModule.Imported[fn.Name],
