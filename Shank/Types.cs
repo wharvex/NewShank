@@ -74,6 +74,10 @@ public readonly record struct StringType(Range Range) : RangeType
     public override string ToString() => $"string{this.RangeString()}";
 }
 
+/// <summary>
+///      The stucture <c>RealType</c> creates an object holding the range of a real number
+/// </summary>
+/// <param name="Range">The expected range of the data type</param>
 public readonly record struct RealType(Range Range) : RangeType
 {
     public static Range DefaultRange => Range.DefaultFloat;
@@ -174,6 +178,14 @@ public readonly record struct ArrayType(Type Inner, Range Range) : RangeType // 
     public override string ToString() => $"array {this.RangeString()} of {Inner}";
 }
 
+/// <summary>
+///     <para>
+///     Structure <c>UnknownType</c> 
+///     </para>
+/// </summary>
+/// <param name="TypeName"></param>
+/// <param name="TypeParameters"></param>
+
 public readonly record struct UnknownType(string TypeName, List<Type> TypeParameters) : Type // unknown types are those types that we have not found their proper definition during semantic analysis, yet
 // they also need to keep and generics they instantiate like Int, String in HashMap Int, String
 {
@@ -185,7 +197,9 @@ public readonly record struct UnknownType(string TypeName, List<Type> TypeParame
     public bool Equals(UnknownType other) =>
         TypeName == other.TypeName && TypeParameters.SequenceEqual(other.TypeParameters);
 
+    //a hashcode generated based off the name a parameter values of our UnknownType
     public override int GetHashCode() => HashCode.Combine(TypeName, TypeParameters);
+
 
     public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;
 
