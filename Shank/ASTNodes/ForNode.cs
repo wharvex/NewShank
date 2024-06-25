@@ -22,6 +22,17 @@ public class ForNode : StatementNode
         NewVariable = newVariable ?? new VariableUsagePlainNode("empty");
     }
 
+    // Copy constructor for monomorphization
+    public ForNode(ForNode copy, List<StatementNode> children)
+    {
+        Children = children;
+        Variable = copy.Variable;
+        NewVariable = copy.NewVariable;
+        From = copy.From;
+        To = copy.To;
+        FileName = copy.FileName;
+        Line = copy.Line;
+    }
     public VariableUsagePlainNode Variable { get; init; }
     public VariableUsageNodeTemp NewVariable { get; init; }
     public ExpressionNode From { get; init; }

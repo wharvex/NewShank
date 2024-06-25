@@ -13,6 +13,14 @@ public class WhileNode : StatementNode
         Children = children;
     }
 
+    // Copy constructor for monomorphization
+    public WhileNode(WhileNode copy, List<StatementNode> children)
+    {
+        Children = children;
+        FileName = copy.FileName;
+        Line = copy.Line;
+        Expression = copy.Expression;
+    }
     public BooleanExpressionNode Expression { get; init; }
     public List<StatementNode> Children { get; set; }
 

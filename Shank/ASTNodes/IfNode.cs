@@ -25,6 +25,14 @@ public class IfNode : StatementNode
         NextIfNode = nextIfNode;
     }
 
+    public IfNode(IfNode copy, List<StatementNode> children,  IfNode? nextIfNode = null)
+    {
+        Children = children;
+        FileName = copy.FileName;
+        Line = copy.Line;
+        Expression = copy.Expression;
+        NextIfNode = nextIfNode;
+    }
     public BooleanExpressionNode? Expression { get; init; }
     public List<StatementNode> Children { get; init; }
     public IfNode? NextIfNode { get; init; }

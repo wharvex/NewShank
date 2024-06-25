@@ -98,7 +98,6 @@ public class MonomorphizationVisitor(
                                     new MonomorphizationTypeVisitor(
                                         instantiatedTypes,
                                         start,
-                                        nonMonomorphizedProgramNode,
                                         ProgramNode
                                     )
                                 )
@@ -149,7 +148,13 @@ public class MonomorphizationVisitor(
 
     public override void Visit(WhileNode node)
     {
-        throw new NotImplementedException();
+        var children = node.Children.Select(statementNode =>
+        {
+            statementNode.Accept(this);
+            return (StatementNode)Pop();
+        })
+            .ToList();
+        Push(new WhileNode(node, children));
     }
 
     public override void Visit(AssignmentNode node)
@@ -167,12 +172,40 @@ public class MonomorphizationVisitor(
 
     public override void Visit(IfNode node)
     {
-        throw new NotImplementedException();
+        if (node is ElseNode elseNode)
+        {
+            var children = node.Children.Select(statementNode =>
+                {
+                    statementNode.Accept(this);
+                    return (StatementNode)Pop();
+                })
+                .ToList();
+            Push(new ElseNode(elseNode, children));
+        }
+        else
+        {
+            var children = node.Children.Select(statementNode =>
+                {
+                    statementNode.Accept(this);
+                    return (StatementNode)Pop();
+                })
+                .ToList();
+            node.NextIfNode?.Accept(this);
+            var nextIfNode = node.NextIfNode is null ? null : (IfNode)Pop();
+            
+            Push(new IfNode(node, children, nextIfNode));
+        }
     }
 
     public override void Visit(RepeatNode node)
     {
-        throw new NotImplementedException();
+        var children = node.Children.Select(statementNode =>
+        {
+            statementNode.Accept(this);
+            return (StatementNode)Pop();
+        })
+            .ToList();
+        Push(new RepeatNode(node, children));
     }
 
     public override void Visit(VariableDeclarationNode node)
@@ -183,7 +216,6 @@ public class MonomorphizationVisitor(
                 new MonomorphizationTypeVisitor(
                     instantiatedTypes,
                     start,
-                    nonMonomorphizedProgramNode,
                     ProgramNode
                 )
             )
@@ -194,19 +226,24 @@ public class MonomorphizationVisitor(
     public override void Visit(ProgramNode node)
     {
         nonMonomorphizedProgramNode = node;
-        node.StartModule.Accept(this);
+        node.StartModule!.Accept(this);
     }
 
     public override void Visit(ForNode node)
     {
-        throw new NotImplementedException();
+        var children = node.Children.Select(statementNode =>
+        {
+            statementNode.Accept(this);
+            return (StatementNode)Pop();
+        })
+            .ToList();
+        Push(new ForNode(node, children));
     }
 }
 
 public class MonomorphizationTypeVisitor(
     Dictionary<string, Type> instantiatedTypes,
     ModuleNode start,
-    ProgramNode nonMonomorphizedProgramNode,
     MonomorphizedProgramNode programNode
 ) : ITypeVisitor<Type>
 {
@@ -242,7 +279,6 @@ public class MonomorphizationTypeVisitor(
             new MonomorphizationTypeVisitor(
                 type.InstantiatedGenerics,
                 start,
-                nonMonomorphizedProgramNode,
                 programNode
             )
         );

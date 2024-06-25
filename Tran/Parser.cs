@@ -356,7 +356,7 @@ public class Parser
                     condition
                         ?? throw new InvalidOperationException("In ParseIf, condition is null"),
                     block,
-                    new IfNode(null, elseBlock, null)
+                    new ElseNode(elseBlock)
                 );
             }
             // Return just the 'IF' branch without an 'ELSE'
