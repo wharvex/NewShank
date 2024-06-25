@@ -1342,6 +1342,7 @@ public class SemanticAnalysis
         {
             UnknownType u => ResolveType(u, module, generics, genericCollector),
             ReferenceType(UnknownType u) => handleReferenceType(u),
+            ArrayType(UnknownType u, _) => ResolveType(u, module, generics, genericCollector),
             _ => member
         };
 

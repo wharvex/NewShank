@@ -24,10 +24,22 @@ public class OutputHelper
             Formatting = Formatting.Indented,
             TypeNameHandling = TypeNameHandling.All
         };
-        DebugPrintJson(JsonConvert.SerializeObject(program, jSets), "ast_" + postSuffix);
+        DebugPrintJsonOutput(JsonConvert.SerializeObject(program, jSets), "ast_" + postSuffix);
     }
 
-    public static void DebugPrintJson(string output, string suffix)
+    public static void DebugPrintJson(object obj, string postSuffix)
+    {
+        var jSets = new JsonSerializerSettings
+        {
+            ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+            Converters = [new StringEnumConverter()],
+            Formatting = Formatting.Indented,
+            TypeNameHandling = TypeNameHandling.All
+        };
+        DebugPrintJsonOutput(JsonConvert.SerializeObject(obj, jSets), "ast_" + postSuffix);
+    }
+
+    public static void DebugPrintJsonOutput(string output, string suffix)
     {
         using var outputFile = new StreamWriter(
             Path.Combine(DocPath, "ShankDebugOutput_" + suffix + ".json")

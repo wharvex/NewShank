@@ -177,6 +177,12 @@ public class RecordType(
 
     // TODO: should this print newlines for each member as it does not get used by any other Type.ToString
     public override string ToString() => $"{Name} generic {string.Join(", ", Generics)} ";
+
+    public string NewToString()
+    {
+        var genericsSuffix = Generics.Count > 0 ? " generic " + string.Join(", ", Generics) : "";
+        return Name + genericsSuffix;
+    }
 } // records need to keep the types of their members along with any generics they declare
 
 public readonly record struct ArrayType(Type Inner, Range Range) : RangeType // arrays have only one inner type
@@ -295,6 +301,17 @@ public readonly record struct InstantiatedType(
 
     public override string ToString() =>
         $"{Inner}({string.Join(", ", InstantiatedGenerics.Select(typePair => $"{typePair.Value}"))})";
+
+    public string NewToString()
+    {
+        var instGenSuffix =
+            InstantiatedGenerics.Count > 0
+                ? "("
+                    + string.Join(", ", InstantiatedGenerics.Select(typePair => typePair.Value))
+                    + ")"
+                : "";
+        return Inner.NewToString() + instGenSuffix;
+    }
 }
 
 public readonly record struct ReferenceType(Type Inner) : Type

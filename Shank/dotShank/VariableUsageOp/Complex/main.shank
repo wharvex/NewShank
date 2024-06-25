@@ -1,26 +1,13 @@
 record Student
     name : string
-    courses : array from 0 to 9 of integer
+    courses : array from 0 to 9 of Course
 
 record Course
     name : string
     number : integer
 
 define start()
-variables students : array from 0 to 24 of Student
-variables studentIdx, courseIdx : integer
-variables courseNames : array from 0 to 9 of string
-    courseNames[0] := "algorithms"
-    courseNames[1] := "databases"
-    courseNames[2] := "theory"
-    courseNames[3] := "engineering"
-    courseNames[4] := "architecture"
-    courseNames[5] := "calculus"
-    courseNames[6] := "probability"
-    courseNames[7] := "physics"
-    courseNames[8] := "chemistry"
-    courseNames[9] := "history"
-    for studentIdx from 0 to 24
-        for courseIdx from 0 to 9
-            students[studentIdx].courses[courseIdx].name := courseNames[courseIdx]
-            students[studentIdx].courses[courseIdx].number := 100 * courseIdx + 1
+variables student : Student
+variables course : Course
+variables students : array from 0 to 10 of Student
+    student.name := "bob"

@@ -41,25 +41,28 @@ public class MemberExpectingVisitor : IVariableUsageVisitor
     }
 }
 
-public class MemberValidatingVisitor(MemberExpectingVisitor mev, Type expType)
+public class MemberValidatingVisitor(MemberExpectingVisitor mev, Type exprType)
     : IInstantiatedTypeVisitor
 {
     public MemberExpectingVisitor Mev { get; init; } = mev;
-    public Type ExpType { get; init; } = expType;
+    public Type ExprType { get; init; } = exprType;
 
     public void Visit(InstantiatedType it)
     {
         var x = it.GetMember(Mev.Contents.Name);
         if (x is not null)
         {
-            if (!x.Equals(ExpType))
+            if (!x.Equals(ExprType))
             {
                 throw new SemanticErrorException("Wrong member type");
             }
         }
         else
         {
-            throw new SemanticErrorException("Member not found");
+            throw new SemanticErrorException(
+                "Member `" + Mev.Contents.Name + "' not found on record `" + it.NewToString() + "'",
+                Mev.Contents
+            );
         }
     }
 }

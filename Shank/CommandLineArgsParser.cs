@@ -307,7 +307,7 @@ public class CommandLineArgsParser
             Converters = [new StringEnumConverter()],
             Formatting = Formatting.Indented
         };
-        OutputHelper.DebugPrintJson(JsonConvert.SerializeObject(program, jSets), "ast2");
+        OutputHelper.DebugPrintJsonOutput(JsonConvert.SerializeObject(program, jSets), "ast2");
         switch (options.Flat)
         {
             case "":
