@@ -21,6 +21,7 @@ public class WhileNode : StatementNode
         Line = copy.Line;
         Expression = copy.Expression;
     }
+
     public BooleanExpressionNode Expression { get; init; }
     public List<StatementNode> Children { get; set; }
 

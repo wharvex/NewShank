@@ -9,13 +9,15 @@ public class ElseNode : IfNode
         : base(children) { }
 
     // Copy constructor for monomorphization
-    public ElseNode(ElseNode copy, List<StatementNode> children) : base(children)
+    public ElseNode(ElseNode copy, List<StatementNode> children)
+        : base(children)
     {
         FileName = copy.FileName;
         Line = copy.Line;
         Expression = copy.Expression;
         NextIfNode = copy.NextIfNode;
     }
+
     public override string ToString()
     {
         var linePrefix = $"else, line {Line}, ";

@@ -25,7 +25,7 @@ public class IfNode : StatementNode
         NextIfNode = nextIfNode;
     }
 
-    public IfNode(IfNode copy, List<StatementNode> children,  IfNode? nextIfNode = null)
+    public IfNode(IfNode copy, List<StatementNode> children, IfNode? nextIfNode = null)
     {
         Children = children;
         FileName = copy.FileName;
@@ -33,6 +33,7 @@ public class IfNode : StatementNode
         Expression = copy.Expression;
         NextIfNode = nextIfNode;
     }
+
     public BooleanExpressionNode? Expression { get; init; }
     public List<StatementNode> Children { get; init; }
     public IfNode? NextIfNode { get; init; }

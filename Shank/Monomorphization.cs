@@ -87,18 +87,14 @@ public class MonomorphizationVisitor(
     {
         var module = nonMonomorphizedProgramNode.GetFromModulesSafe(node.FunctionDefinitionModule);
         var instantiatedGenerics = node.InstantiatedGenerics.Select(
-                instantiatedType =>
+            instantiatedType =>
                 (
                     instantiatedType.Key,
                     instantiatedType.Value.Accept(
-                        new MonomorphizationTypeVisitor(
-                            instantiatedTypes,
-                            start,
-                            ProgramNode
-                        )
+                        new MonomorphizationTypeVisitor(instantiatedTypes, start, ProgramNode)
                     )
                 )
-            )
+        )
             .ToDictionary();
         module
             .Functions[node.Name]
@@ -176,24 +172,24 @@ public class MonomorphizationVisitor(
         if (node is ElseNode elseNode)
         {
             var children = node.Children.Select(statementNode =>
-                {
-                    statementNode.Accept(this);
-                    return (StatementNode)Pop();
-                })
+            {
+                statementNode.Accept(this);
+                return (StatementNode)Pop();
+            })
                 .ToList();
             Push(new ElseNode(elseNode, children));
         }
         else
         {
             var children = node.Children.Select(statementNode =>
-                {
-                    statementNode.Accept(this);
-                    return (StatementNode)Pop();
-                })
+            {
+                statementNode.Accept(this);
+                return (StatementNode)Pop();
+            })
                 .ToList();
             node.NextIfNode?.Accept(this);
             var nextIfNode = node.NextIfNode is null ? null : (IfNode)Pop();
-            
+
             Push(new IfNode(node, children, nextIfNode));
         }
     }
@@ -213,13 +209,7 @@ public class MonomorphizationVisitor(
     {
         var variableDeclarationNode = new VariableDeclarationNode(
             node,
-            node.Type.Accept(
-                new MonomorphizationTypeVisitor(
-                    instantiatedTypes,
-                    start,
-                    ProgramNode
-                )
-            )
+            node.Type.Accept(new MonomorphizationTypeVisitor(instantiatedTypes, start, ProgramNode))
         );
         Push(variableDeclarationNode);
     }
@@ -277,11 +267,7 @@ public class MonomorphizationTypeVisitor(
     {
         type = (InstantiatedType)type.Instantiate(instantiatedTypes);
         return type.Inner.Accept(
-            new MonomorphizationTypeVisitor(
-                type.InstantiatedGenerics,
-                start,
-                programNode
-            )
+            new MonomorphizationTypeVisitor(type.InstantiatedGenerics, start, programNode)
         );
     }
 

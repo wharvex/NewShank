@@ -33,6 +33,7 @@ public class ForNode : StatementNode
         FileName = copy.FileName;
         Line = copy.Line;
     }
+
     public VariableUsagePlainNode Variable { get; init; }
     public VariableUsageNodeTemp NewVariable { get; init; }
     public ExpressionNode From { get; init; }

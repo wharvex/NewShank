@@ -21,18 +21,19 @@ public class FunctionCallNode : StatementNode
     {
         Name = name;
     }
-        // Copy constructor for monomorphization
-        public FunctionCallNode(FunctionCallNode copy, Dictionary<string, Type> instantiatedGenerics)
-        {
-            FileName = copy.FileName;
-            Line = copy.Line;
-            InstantiatedGenerics = instantiatedGenerics;
-            FunctionDefinitionModule = copy.FunctionDefinitionModule;
-            Name = copy.Name;
-            OverloadNameExt = copy.OverloadNameExt;
-            Arguments = copy.Arguments;
-            LineNum = copy.LineNum;
-        }
+
+    // Copy constructor for monomorphization
+    public FunctionCallNode(FunctionCallNode copy, Dictionary<string, Type> instantiatedGenerics)
+    {
+        FileName = copy.FileName;
+        Line = copy.Line;
+        InstantiatedGenerics = instantiatedGenerics;
+        FunctionDefinitionModule = copy.FunctionDefinitionModule;
+        Name = copy.Name;
+        OverloadNameExt = copy.OverloadNameExt;
+        Arguments = copy.Arguments;
+        LineNum = copy.LineNum;
+    }
 
     public bool EqualsWrtNameAndParams(
         CallableNode givenFunction,
