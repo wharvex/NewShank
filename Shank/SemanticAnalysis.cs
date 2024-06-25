@@ -1239,6 +1239,9 @@ public class SemanticAnalysis
                     currentModule.Value,
                     currentFunction.GenericTypeParameterNames ?? []
                 );
+                currentFunction.LocalVariables.ForEach(
+                    vdn => OutputHelper.DebugPrintJson(vdn, vdn.Name ?? "null")
+                );
                 var generics = currentFunction.GenericTypeParameterNames ?? [];
                 List<string> usedGenerics = [];
                 foreach (var variable in currentFunction.ParameterVariables)
@@ -1385,7 +1388,7 @@ public class SemanticAnalysis
         {
             UnknownType u => ResolveType(u, module, generics, genericCollector),
             ReferenceType(UnknownType u) => handleReferenceType(u),
-            ArrayType(UnknownType u, _) => ResolveType(u, module, generics, genericCollector),
+            ArrayType(UnknownType u, Range r) => HandleArrayType(u, r),
             _ => member
         };
 
@@ -1400,6 +1403,12 @@ public class SemanticAnalysis
                 );
             }
             return new ReferenceType(resolvedType);
+        }
+
+        Type HandleArrayType(UnknownType t, Range r)
+        {
+            var resolvedType = ResolveType(t, module, generics, genericCollector);
+            return new ArrayType(resolvedType, r);
         }
     }
 
