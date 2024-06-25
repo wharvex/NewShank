@@ -1052,7 +1052,6 @@ public class SemanticAnalysis
             }
 
             CheckFunctions(module.Value.getFunctions(), module.Value);
-            
         }
     }
 
