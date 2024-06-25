@@ -14,9 +14,8 @@ public interface Type // our marker interface anything that implements is known 
     public string ToString();
 }
 
-public readonly record struct
-    Range // the type that represents a type range in shank (from … to …), as ranges on types are part of the types
-    (float From, float To)
+public readonly record struct Range // the type that represents a type range in shank (from … to …), as ranges on types are part of the types
+(float From, float To)
 {
     public static Range DefaultFloat => new(float.MinValue, float.MaxValue);
 
@@ -56,6 +55,7 @@ public static class RangeTypeExt
 public readonly struct BooleanType : Type
 {
     public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;
+
     public T Accept<T>(ITypeVisitor<T> v) => v.Visit(this);
 
     public override string ToString() => "boolean";
@@ -64,6 +64,7 @@ public readonly struct BooleanType : Type
 public readonly record struct StringType(Range Range) : RangeType
 {
     public T Accept<T>(ITypeVisitor<T> v) => v.Visit(this);
+
     public static Range DefaultRange => Range.DefaultSmallInteger;
 
     public bool Equals(StringType other) => true; // we do range checking separately as we do not know which is the one with more important range
@@ -85,6 +86,7 @@ public readonly record struct StringType(Range Range) : RangeType
 public readonly record struct RealType(Range Range) : RangeType
 {
     public T Accept<T>(ITypeVisitor<T> v) => v.Visit(this);
+
     public static Range DefaultRange => Range.DefaultFloat;
 
     public bool Equals(RealType other) => true; // we do range checking separately as we do not know which is the one with more important range
@@ -102,6 +104,7 @@ public readonly record struct RealType(Range Range) : RangeType
 public readonly record struct IntegerType(Range Range) : RangeType
 {
     public T Accept<T>(ITypeVisitor<T> v) => v.Visit(this);
+
     public static Range DefaultRange => Range.DefaultInteger;
 
     public bool Equals(IntegerType other) => true; // we do range checking separately as we do not know which is the one with more important range
@@ -120,8 +123,7 @@ public readonly record struct CharacterType(Range Range) : RangeType
 {
     public T Accept<T>(ITypeVisitor<T> v) => v.Visit(this);
 
-    public bool Equals(CharacterType other) =>
-        true; // we do range checking separately as we do not know which is the one with more important range
+    public bool Equals(CharacterType other) => true; // we do range checking separately as we do not know which is the one with more important range
 
     public override int GetHashCode() => 0;
 
@@ -138,6 +140,7 @@ public readonly record struct CharacterType(Range Range) : RangeType
 public class EnumType(string name, string moduleName, List<string> variants) : Type
 {
     public T Accept<T>(ITypeVisitor<T> v) => v.Visit(this);
+
     public string Name { get; } = name;
     public string ModuleName { get; } = moduleName;
     public List<string> Variants { get; } = variants;
@@ -147,9 +150,15 @@ public class EnumType(string name, string moduleName, List<string> variants) : T
     public override string ToString() => $"{Name} [{string.Join(", ", Variants)}]";
 } // enums are just a list of variants
 
-public class RecordType(string name, string moduleName, Dictionary<string, Type> fields, List<string> generics) : Type
+public class RecordType(
+    string name,
+    string moduleName,
+    Dictionary<string, Type> fields,
+    List<string> generics
+) : Type
 {
     public T Accept<T>(ITypeVisitor<T> v) => v.Visit(this);
+
     public List<string> Generics { get; set; } = generics;
 
     public Dictionary<string, Type> Fields { get; set; } = fields;
@@ -167,8 +176,7 @@ public class RecordType(string name, string moduleName, Dictionary<string, Type>
     }
 
     // TODO: should this print newlines for each member as it does not get used by any other Type.ToString
-    public override string ToString() =>
-        $"{Name} generic {string.Join(", ", Generics)} ";
+    public override string ToString() => $"{Name} generic {string.Join(", ", Generics)} ";
 } // records need to keep the types of their members along with any generics they declare
 
 public readonly record struct ArrayType(Type Inner, Range Range) : RangeType // arrays have only one inner type

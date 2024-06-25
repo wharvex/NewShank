@@ -37,7 +37,7 @@ public class VariableDeclarationNode : ASTNode
     public VariableDeclarationNode() { }
 
     // Copy constructor for monomorphization
-    public VariableDeclarationNode(VariableDeclarationNode copy, Type type )
+    public VariableDeclarationNode(VariableDeclarationNode copy, Type type)
     {
         Type = type;
         Name = copy.Name;
@@ -46,7 +46,6 @@ public class VariableDeclarationNode : ASTNode
         InitialValue = copy.InitialValue;
         FileName = copy.FileName;
         Line = copy.Line;
-        
     }
 
     public VariableDeclarationNode(bool isConstant, Type type, string name, string moduleName)

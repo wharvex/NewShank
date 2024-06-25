@@ -25,8 +25,13 @@ public class FunctionNode : CallableNode
     }
 
     // Copy constructor for monomorphization
-    public FunctionNode(FunctionNode function, List<VariableDeclarationNode> parameters,
-        List<VariableDeclarationNode> variables, List<StatementNode> statements) : base(function.Name)
+    public FunctionNode(
+        FunctionNode function,
+        List<VariableDeclarationNode> parameters,
+        List<VariableDeclarationNode> variables,
+        List<StatementNode> statements
+    )
+        : base(function.Name)
     {
         parentModuleName = function.parentModuleName;
         LineNum = function.LineNum;
@@ -37,6 +42,7 @@ public class FunctionNode : CallableNode
         LocalVariables = variables;
         Statements = statements;
     }
+
     public FunctionNode(string name)
         : base(name)
     {

@@ -34,8 +34,7 @@ public record struct TypedModuleIndex(ModuleIndex Index, Dictionary<string, Type
 
     public override string ToString()
     {
-        return
-            $"{Index}({string.Join(", ", InstantiatedTypes.Select(typePair => $"{typePair.Value}"))})";
+        return $"{Index}({string.Join(", ", InstantiatedTypes.Select(typePair => $"{typePair.Value}"))})";
     }
 }
 
@@ -52,73 +51,74 @@ public class MonomorphizationVisitor(
     Dictionary<string, Type> instantiatedTypes,
     ProgramNode nonMonomorphizedProgramNode,
     ModuleNode start,
-    MonomorphizedProgramNode programNode) : Visitor
+    MonomorphizedProgramNode programNode
+) : Visitor
 {
     public MonomorphizedProgramNode ProgramNode = programNode;
 
-    public MonomorphizationVisitor() : this([], null!, null!, new MonomorphizedProgramNode())
-    {
-    }
+    public MonomorphizationVisitor()
+        : this([], null!, null!, new MonomorphizedProgramNode()) { }
 
     private Stack<object> expr = new();
 
-    private object Pop()
-        =>
-            expr.Pop();
+    private object Pop() => expr.Pop();
 
     private void Push(object expr) => this.expr.Push(expr);
 
+    public override void Visit(IntNode node) { }
 
-    public override void Visit(IntNode node)
-    {
-    }
+    public override void Visit(FloatNode node) { }
 
-    public override void Visit(FloatNode node)
-    {
-    }
+    public override void Visit(VariableUsagePlainNode node) { }
 
-    public override void Visit(VariableUsagePlainNode node)
-    {
-    }
+    public override void Visit(CharNode node) { }
 
-    public override void Visit(CharNode node)
-    {
-    }
+    public override void Visit(BoolNode node) { }
 
-    public override void Visit(BoolNode node)
-    {
-    }
+    public override void Visit(StringNode node) { }
 
-    public override void Visit(StringNode node)
-    {
-    }
+    public override void Visit(MathOpNode node) { }
 
-    public override void Visit(MathOpNode node)
-    {
-    }
+    public override void Visit(BooleanExpressionNode node) { }
 
-    public override void Visit(BooleanExpressionNode node)
-    {
-    }
-
-    public override void Visit(RecordNode node)
-    {
-    }
+    public override void Visit(RecordNode node) { }
 
     public override void Visit(FunctionCallNode node)
     {
         var module = nonMonomorphizedProgramNode.GetFromModulesSafe(node.FunctionDefinitionModule);
-        module.Functions[node.Name].Accept(new MonomorphizationVisitor(node.InstiatedGenerics.Select(instantiatedType =>
-            (instantiatedType.Key, instantiatedType.Value.Accept(
-                new MonomorphizationTypeVisitor(instantiatedTypes, start, nonMonomorphizedProgramNode, ProgramNode)
-            ))).ToDictionary(), nonMonomorphizedProgramNode, start, ProgramNode));
+        module
+            .Functions[node.Name]
+            .Accept(
+                new MonomorphizationVisitor(
+                    node.InstiatedGenerics.Select(
+                        instantiatedType =>
+                            (
+                                instantiatedType.Key,
+                                instantiatedType.Value.Accept(
+                                    new MonomorphizationTypeVisitor(
+                                        instantiatedTypes,
+                                        start,
+                                        nonMonomorphizedProgramNode,
+                                        ProgramNode
+                                    )
+                                )
+                            )
+                    )
+                        .ToDictionary(),
+                    nonMonomorphizedProgramNode,
+                    start,
+                    ProgramNode
+                )
+            );
         Push(node);
     }
 
     public override void Visit(FunctionNode node)
     {
-        var typedModuleIndex =
-            new TypedModuleIndex(new ModuleIndex(node.Name, node.parentModuleName!), instantiatedTypes);
+        var typedModuleIndex = new TypedModuleIndex(
+            new ModuleIndex(node.Name, node.parentModuleName!),
+            instantiatedTypes
+        );
         if (ProgramNode.Functions.TryGetValue(typedModuleIndex, out var functionNode))
         {
             return;
@@ -128,23 +128,22 @@ public class MonomorphizationVisitor(
         {
             declarationNode.Accept(this);
             return (VariableDeclarationNode)Pop();
-        }).ToList();
+        })
+            .ToList();
         var variables = node.LocalVariables.Select(declarationNode =>
         {
             declarationNode.Accept(this);
             return (VariableDeclarationNode)Pop();
-        }).ToList();
+        })
+            .ToList();
         var statements = node.Statements.Select(statementNode =>
         {
             statementNode.Accept(this);
             return (StatementNode)Pop();
-        }).ToList();
+        })
+            .ToList();
 
-        var function = new FunctionNode(node,
-            parameters,
-            variables,
-            statements
-        );
+        var function = new FunctionNode(node, parameters, variables, statements);
         ProgramNode.Functions[typedModuleIndex] = function;
     }
 
@@ -158,9 +157,7 @@ public class MonomorphizationVisitor(
         Push(node);
     }
 
-    public override void Visit(EnumNode node)
-    {
-    }
+    public override void Visit(EnumNode node) { }
 
     public override void Visit(ModuleNode node)
     {
@@ -180,8 +177,16 @@ public class MonomorphizationVisitor(
 
     public override void Visit(VariableDeclarationNode node)
     {
-        var variableDeclarationNode = new VariableDeclarationNode(node
-            , node.Type.Accept(new MonomorphizationTypeVisitor(instantiatedTypes, start, nonMonomorphizedProgramNode, ProgramNode))
+        var variableDeclarationNode = new VariableDeclarationNode(
+            node,
+            node.Type.Accept(
+                new MonomorphizationTypeVisitor(
+                    instantiatedTypes,
+                    start,
+                    nonMonomorphizedProgramNode,
+                    ProgramNode
+                )
+            )
         );
         Push(variableDeclarationNode);
     }
@@ -202,24 +207,29 @@ public class MonomorphizationTypeVisitor(
     Dictionary<string, Type> instantiatedTypes,
     ModuleNode start,
     ProgramNode nonMonomorphizedProgramNode,
-    MonomorphizedProgramNode programNode)
-    : ITypeVisitor<Type>
+    MonomorphizedProgramNode programNode
+) : ITypeVisitor<Type>
 {
     public Type Visit(RealType type) => type;
 
     public Type Visit(RecordType type)
     {
-        var typedModuleIndex = new TypedModuleIndex(new ModuleIndex(type.Name, type.ModuleName), instantiatedTypes);
+        var typedModuleIndex = new TypedModuleIndex(
+            new ModuleIndex(type.Name, type.ModuleName),
+            instantiatedTypes
+        );
         if (programNode.Records.TryGetValue(typedModuleIndex, out var recordNode))
         {
             return recordNode.Type;
         }
 
         var record = new RecordNode(type.Name, type.ModuleName, [], []);
-        programNode.Records[typedModuleIndex] =
-            record;
-        var recordType = new RecordType(type.Name, type.ModuleName,
-            type.Fields.Select(field => (field.Key, field.Value.Accept(this))).ToDictionary(), []
+        programNode.Records[typedModuleIndex] = record;
+        var recordType = new RecordType(
+            type.Name,
+            type.ModuleName,
+            type.Fields.Select(field => (field.Key, field.Value.Accept(this))).ToDictionary(),
+            []
         );
         record.Type = recordType;
         return record.Type;
@@ -228,8 +238,14 @@ public class MonomorphizationTypeVisitor(
     public Type Visit(InstantiatedType type)
     {
         type = (InstantiatedType)type.Instantiate(instantiatedTypes);
-        return type.Inner.Accept(new MonomorphizationTypeVisitor(type.InstantiatedGenerics, start,
-            nonMonomorphizedProgramNode, programNode));
+        return type.Inner.Accept(
+            new MonomorphizationTypeVisitor(
+                type.InstantiatedGenerics,
+                start,
+                nonMonomorphizedProgramNode,
+                programNode
+            )
+        );
     }
 
     public Type Visit(ArrayType type)
@@ -240,8 +256,10 @@ public class MonomorphizationTypeVisitor(
     public Type Visit(EnumType type)
     {
         var moduleIndex = new ModuleIndex(type.Name, type.ModuleName);
-        programNode.Enums.TryAdd(moduleIndex,
-            (EnumNode)(start.getEnums().GetValueOrDefault(type.Name) ?? start.Imported[type.Name]));
+        programNode.Enums.TryAdd(
+            moduleIndex,
+            (EnumNode)(start.getEnums().GetValueOrDefault(type.Name) ?? start.Imported[type.Name])
+        );
         return type;
     }
 
@@ -250,22 +268,18 @@ public class MonomorphizationTypeVisitor(
         return new ReferenceType(type.Inner.Accept(this));
     }
 
-    public Type Visit(UnknownType type)
-        => type;
+    public Type Visit(UnknownType type) => type;
 
     public Type Visit(GenericType type)
     {
         return instantiatedTypes[type.Name];
     }
 
-    public Type Visit(BooleanType type)
-        => type;
+    public Type Visit(BooleanType type) => type;
 
     public Type Visit(CharacterType type) => type;
 
-    public Type Visit(StringType type)
-        => type;
+    public Type Visit(StringType type) => type;
 
-    public Type Visit(IntegerType type)
-        => type;
+    public Type Visit(IntegerType type) => type;
 }

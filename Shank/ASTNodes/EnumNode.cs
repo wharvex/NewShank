@@ -7,7 +7,7 @@ public class EnumNode(string type, string parentModuleName, List<string> enumEle
 //required because interpter class on line 572 (if you chamge it back it has an error
 {
     public string TypeName => Type.Name;
-    public EnumType Type = new(type,parentModuleName, enumElements);
+    public EnumType Type = new(type, parentModuleName, enumElements);
     public List<string> EnumElements => Type.Variants;
     public string ParentModuleName { get; set; } = parentModuleName;
     public bool IsPublic { get; set; } = false;
