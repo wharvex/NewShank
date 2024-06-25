@@ -36,6 +36,19 @@ public class VariableDeclarationNode : ASTNode
     // We need this parameterless constructor to ensure all the VDN object initializers still work.
     public VariableDeclarationNode() { }
 
+    // Copy constructor for monomorphization
+    public VariableDeclarationNode(VariableDeclarationNode copy, Type type )
+    {
+        Type = type;
+        Name = copy.Name;
+        ModuleName = copy.ModuleName;
+        IsConstant = copy.IsConstant;
+        InitialValue = copy.InitialValue;
+        FileName = copy.FileName;
+        Line = copy.Line;
+        
+    }
+
     public VariableDeclarationNode(bool isConstant, Type type, string name, string moduleName)
     {
         IsConstant = isConstant;

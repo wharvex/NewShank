@@ -16,6 +16,7 @@ public class RecordNode(
     public RecordType Type =
         new(
             name,
+            moduleName,
             members.Select(member => (member.GetNameSafe(), NewType: member.Type)).ToDictionary(),
             genericTypeParameterNames ?? []
         );

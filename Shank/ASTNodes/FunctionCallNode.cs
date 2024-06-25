@@ -8,6 +8,7 @@ namespace Shank.ASTNodes;
 public class FunctionCallNode : StatementNode
 {
     public string Name { get; set; }
+    public string FunctionDefinitionModule { get; set; }
     public int LineNum { get; set; }
     public List<ExpressionNode> Arguments { get; } = [];
     public string OverloadNameExt { get; set; } = "";

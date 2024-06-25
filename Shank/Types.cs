@@ -10,11 +10,13 @@ public interface Type // our marker interface anything that implements is known 
 {
     // when have a list of generic types and what types replace them we need a function that does the replacement
     Type Instantiate(Dictionary<string, Type> instantiatedGenerics);
+    public T Accept<T>(ITypeVisitor<T> v);
     public string ToString();
 }
 
-public readonly record struct Range // the type that represents a type range in shank (from … to …), as ranges on types are part of the types
-(float From, float To)
+public readonly record struct
+    Range // the type that represents a type range in shank (from … to …), as ranges on types are part of the types
+    (float From, float To)
 {
     public static Range DefaultFloat => new(float.MinValue, float.MaxValue);
 
@@ -51,15 +53,17 @@ public static class RangeTypeExt
         where T : RangeType => T.DefaultRange == range.Range ? "" : $" {range.Range}";
 }
 
-public struct BooleanType : Type
+public readonly struct BooleanType : Type
 {
-    public readonly Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;
+    public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;
+    public T Accept<T>(ITypeVisitor<T> v) => v.Visit(this);
 
-    public override readonly string ToString() => "boolean";
+    public override string ToString() => "boolean";
 }
 
 public readonly record struct StringType(Range Range) : RangeType
 {
+    public T Accept<T>(ITypeVisitor<T> v) => v.Visit(this);
     public static Range DefaultRange => Range.DefaultSmallInteger;
 
     public bool Equals(StringType other) => true; // we do range checking separately as we do not know which is the one with more important range
@@ -80,6 +84,7 @@ public readonly record struct StringType(Range Range) : RangeType
 /// <param name="Range">The expected range of the data type</param>
 public readonly record struct RealType(Range Range) : RangeType
 {
+    public T Accept<T>(ITypeVisitor<T> v) => v.Visit(this);
     public static Range DefaultRange => Range.DefaultFloat;
 
     public bool Equals(RealType other) => true; // we do range checking separately as we do not know which is the one with more important range
@@ -96,6 +101,7 @@ public readonly record struct RealType(Range Range) : RangeType
 
 public readonly record struct IntegerType(Range Range) : RangeType
 {
+    public T Accept<T>(ITypeVisitor<T> v) => v.Visit(this);
     public static Range DefaultRange => Range.DefaultInteger;
 
     public bool Equals(IntegerType other) => true; // we do range checking separately as we do not know which is the one with more important range
@@ -112,7 +118,10 @@ public readonly record struct IntegerType(Range Range) : RangeType
 
 public readonly record struct CharacterType(Range Range) : RangeType
 {
-    public bool Equals(CharacterType other) => true; // we do range checking separately as we do not know which is the one with more important range
+    public T Accept<T>(ITypeVisitor<T> v) => v.Visit(this);
+
+    public bool Equals(CharacterType other) =>
+        true; // we do range checking separately as we do not know which is the one with more important range
 
     public override int GetHashCode() => 0;
 
@@ -126,9 +135,11 @@ public readonly record struct CharacterType(Range Range) : RangeType
     public override string ToString() => $"character{this.RangeString()}";
 }
 
-public class EnumType(string name, List<string> variants) : Type
+public class EnumType(string name, string moduleName, List<string> variants) : Type
 {
+    public T Accept<T>(ITypeVisitor<T> v) => v.Visit(this);
     public string Name { get; } = name;
+    public string ModuleName { get; } = moduleName;
     public List<string> Variants { get; } = variants;
 
     public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;
@@ -136,13 +147,15 @@ public class EnumType(string name, List<string> variants) : Type
     public override string ToString() => $"{Name} [{string.Join(", ", Variants)}]";
 } // enums are just a list of variants
 
-public class RecordType(string name, Dictionary<string, Type> fields, List<string> generics) : Type
+public class RecordType(string name, string moduleName, Dictionary<string, Type> fields, List<string> generics) : Type
 {
+    public T Accept<T>(ITypeVisitor<T> v) => v.Visit(this);
     public List<string> Generics { get; set; } = generics;
 
     public Dictionary<string, Type> Fields { get; set; } = fields;
 
     public string Name { get; } = name;
+    public string ModuleName { get; } = moduleName;
 
     // we don't instantiate records directly, rather we do that indirectly from InstantiatedType
     public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;
@@ -155,11 +168,13 @@ public class RecordType(string name, Dictionary<string, Type> fields, List<strin
 
     // TODO: should this print newlines for each member as it does not get used by any other Type.ToString
     public override string ToString() =>
-        $"{Name} generic {string.Join(", ", Generics)} [{string.Join(", ", Fields.Select(typePair => $"{typePair.Key}: {typePair.Value}"))}]";
+        $"{Name} generic {string.Join(", ", Generics)} ";
 } // records need to keep the types of their members along with any generics they declare
 
 public readonly record struct ArrayType(Type Inner, Range Range) : RangeType // arrays have only one inner type
 {
+    public T Accept<T>(ITypeVisitor<T> v) => v.Visit(this);
+
     public bool Equals(ArrayType other)
     {
         return other.Inner.Equals(Inner);
@@ -189,6 +204,8 @@ public readonly record struct ArrayType(Type Inner, Range Range) : RangeType // 
 public readonly record struct UnknownType(string TypeName, List<Type> TypeParameters) : Type // unknown types are those types that we have not found their proper definition during semantic analysis, yet
 // they also need to keep and generics they instantiate like Int, String in HashMap Int, String
 {
+    public T Accept<T>(ITypeVisitor<T> v) => v.Visit(this);
+
     public UnknownType(string TypeName)
         : this(TypeName, []) { }
 
@@ -230,6 +247,8 @@ public readonly record struct UnknownType(string TypeName, List<Type> TypeParame
 // also generics cannot have type parameters
 public readonly record struct GenericType(string Name) : Type
 {
+    public T Accept<T>(ITypeVisitor<T> v) => v.Visit(this);
+
     public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) =>
         instantiatedGenerics.GetValueOrDefault(Name, this);
 
@@ -245,6 +264,8 @@ public readonly record struct InstantiatedType(
     Dictionary<string, Type> InstantiatedGenerics
 ) : Type
 {
+    public T Accept<T>(ITypeVisitor<T> v) => v.Visit(this);
+
     public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) =>
         this with
         {
@@ -270,6 +291,8 @@ public readonly record struct InstantiatedType(
 
 public readonly record struct ReferenceType(Type Inner) : Type
 {
+    public T Accept<T>(ITypeVisitor<T> v) => v.Visit(this);
+
     public Type Instantiate(Dictionary<string, Type> instantiatedGenerics)
     {
         var instantiate = Inner.Instantiate(instantiatedGenerics);
