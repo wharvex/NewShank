@@ -164,14 +164,17 @@ public class SemanticAnalysis
                 }
             }
             else if (s is ForNode forNode)
-            { 
+            {
                 var iterationVariable = GetVuopTestFlag() ? forNode.NewVariable : forNode.Variable;
-                var typeOfIterationVariable = GetVuopTestFlag() ? GetTypeOfExpression(forNode.NewVariable, variables) : GetTypeOfExpression(forNode.Variable, variables);
+                var typeOfIterationVariable = GetVuopTestFlag()
+                    ? GetTypeOfExpression(forNode.NewVariable, variables)
+                    : GetTypeOfExpression(forNode.Variable, variables);
                 if (variables[iterationVariable.GetPlain().Name].IsConstant)
                 {
                     throw new SemanticErrorException(
                         $"cannot iterate in a for loop with variable {iterationVariable} as it is not declared mutable",
-                        iterationVariable);
+                        iterationVariable
+                    );
                 }
                 switch (typeOfIterationVariable)
                 {
@@ -179,10 +182,15 @@ public class SemanticAnalysis
                     {
                         var from = GetTypeOfExpression(forNode.From, variables);
                         var to = GetTypeOfExpression(forNode.To, variables);
-                        if (to is not IntegerType or RealType || from is not IntegerType or RealType)
+                        if (
+                            to is not IntegerType or RealType
+                            || from is not IntegerType or RealType
+                        )
                         {
                             throw new SemanticErrorException(
-                                $"For loop with iteration variable {iterationVariable} which is an real, must have ranges to and from being integers, or reals, but found ranges \"from {from} to {to}\"", iterationVariable);
+                                $"For loop with iteration variable {iterationVariable} which is an real, must have ranges to and from being integers, or reals, but found ranges \"from {from} to {to}\"",
+                                iterationVariable
+                            );
                         }
 
                         break;
@@ -194,7 +202,9 @@ public class SemanticAnalysis
                         if (to is not IntegerType || from is not IntegerType)
                         {
                             throw new SemanticErrorException(
-                                $"For loop with iteration variable {iterationVariable} which is an integer, must have ranges to and from being integers, but found ranges \"from {from} to {to}\"", iterationVariable);
+                                $"For loop with iteration variable {iterationVariable} which is an integer, must have ranges to and from being integers, but found ranges \"from {from} to {to}\"",
+                                iterationVariable
+                            );
                         }
 
                         break;
@@ -202,9 +212,11 @@ public class SemanticAnalysis
                     default:
                         throw new SemanticErrorException(
                             // what about char?
-                            $"for loop iteration variable {iterationVariable} is not a real or integer, but rather a {typeOfIterationVariable}, shank cannot auto increment this type", iterationVariable);
+                            $"for loop iteration variable {iterationVariable} is not a real or integer, but rather a {typeOfIterationVariable}, shank cannot auto increment this type",
+                            iterationVariable
+                        );
                 }
-                CheckBlock(forNode.Children, variables,parentModule);
+                CheckBlock(forNode.Children, variables, parentModule);
             }
             // for the rest of the cases of statements doing: GetTypeOfExpression(Node.Expression, variables);, is sufficient (no need to check that the type returned is a boolean), because Expression is already known to be BooleanExpressionNode
             // the reason we do it to make sure the underlying types of the boolean expression are fine (to disallow 1 > "5")
@@ -212,12 +224,12 @@ public class SemanticAnalysis
             else if (s is RepeatNode repNode)
             {
                 GetTypeOfExpression(repNode.Expression, variables);
-                CheckBlock(repNode.Children, variables,parentModule);
+                CheckBlock(repNode.Children, variables, parentModule);
             }
             else if (s is WhileNode whileNode)
             {
                 GetTypeOfExpression(whileNode.Expression, variables);
-                CheckBlock(whileNode.Children, variables,parentModule);
+                CheckBlock(whileNode.Children, variables, parentModule);
             }
             else if (s is IfNode ifNode)
             {
