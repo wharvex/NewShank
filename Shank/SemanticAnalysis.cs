@@ -237,7 +237,13 @@ public class SemanticAnalysis
                 while (nextNode is not null and not ElseNode)
                 {
                     GetTypeOfExpression(nextNode.Expression, variables);
+                    CheckBlock(nextNode.Children, variables, parentModule);
                     nextNode = nextNode.NextIfNode;
+                }
+
+                if (nextNode is ElseNode)
+                {
+                    CheckBlock(nextNode.Children, variables, parentModule);
                 }
             }
         }
@@ -1046,6 +1052,22 @@ public class SemanticAnalysis
             }
 
             CheckFunctions(module.Value.getFunctions(), module.Value);
+            
+        }
+
+        var monomorphizationVisitor = new MonomorphizationVisitor();
+        pn.Accept(monomorphizationVisitor);
+        foreach (var programNodeRecord in monomorphizationVisitor.ProgramNode.Records)
+        {
+            Console.WriteLine(programNodeRecord.Value);
+            foreach (var (key, value) in programNodeRecord.Value.Type.Fields)
+            {
+                Console.WriteLine($"\t{key} : {value}");
+            }
+        }
+        foreach (var (key, value) in monomorphizationVisitor.ProgramNode.Functions)
+        {
+           Console.WriteLine(value); 
         }
     }
 
