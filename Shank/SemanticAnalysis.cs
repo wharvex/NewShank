@@ -275,6 +275,7 @@ public class SemanticAnalysis
         FunctionCallNode functionCallNode
     )
     {
+        functionCallNode.FunctionDefinitionModule = fn.parentModuleName!;
         // TODO: overloads and default parameters might have different arrity
         var selectMany = fn.ParameterVariables.Zip(args)
             .SelectMany(paramAndArg =>
