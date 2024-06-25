@@ -180,7 +180,7 @@ public readonly record struct ArrayType(Type Inner, Range Range) : RangeType // 
 
 /// <summary>
 ///     <para>
-///     Structure <c>UnknownType</c> 
+///     Structure <c>UnknownType</c>
 ///     </para>
 /// </summary>
 /// <param name="TypeName"></param>
@@ -199,7 +199,6 @@ public readonly record struct UnknownType(string TypeName, List<Type> TypeParame
 
     //a hashcode generated based off the name a parameter values of our UnknownType
     public override int GetHashCode() => HashCode.Combine(TypeName, TypeParameters);
-
 
     public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;
 

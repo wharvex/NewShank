@@ -341,7 +341,7 @@ public class Parser
     }
 
     /// <summary>
-    ///     Method <c>MemberAccess</c> creATES MemberAccessNode containing the value of the next token  
+    ///     Method <c>MemberAccess</c> creATES MemberAccessNode containing the value of the next token
     /// </summary>
     /// <returns>MemberAccessNode with value</returns>
 
@@ -353,14 +353,14 @@ public class Parser
     /// </summary>
     /// <returns>ModuleNode containing the constructs as its contents</returns>
     /// <exception cref="SyntaxErrorException">
-    ///     <list type="bullet"> 
+    ///     <list type="bullet">
     ///         <item>
     ///             <description>If a module identifier is not present</description>
     ///         </item>
     ///         <item>
     ///             <description>If an indent-zero token to start a construct is not found</description>
     ///         </item>
-    ///         <item> 
+    ///         <item>
     ///             <description>If an import does not have an identifier</description>
     ///         </item>
     ///     </list>
@@ -457,19 +457,19 @@ public class Parser
     }
 
     /// <summary>
-    ///     <para> 
-    ///         Method <c>Function</c> parses a function and returns a node contain its identifier, parameters, and body contents. 
-    ///         An extension for each function name is created based on its parameters so overloads don't produce name collisions. 
+    ///     <para>
+    ///         Method <c>Function</c> parses a function and returns a node contain its identifier, parameters, and body contents.
+    ///         An extension for each function name is created based on its parameters so overloads don't produce name collisions.
     ///     </para>
     /// </summary>
     /// <param name="moduleName">The module that is processed along with the function(string)</param>
     /// <returns>FunctionNode containing the functions contents</returns>
     /// <exception cref="SyntaxErrorException">
-    ///     <list type="bullet"> 
-    ///         <item> 
+    ///     <list type="bullet">
+    ///         <item>
     ///             <description>A functions name is not found</description>
     ///         </item>
-    ///         <item> 
+    ///         <item>
     ///             <description>Functions parameters are not closed in parenthesis</description>
     ///         </item>
     ///     </list>
@@ -645,17 +645,17 @@ public class Parser
     // assumptions you want to parse a type
 
     /// <summary>
-    ///     <para> 
-    ///         Method <c>Type</c> reads a valid construct type 
+    ///     <para>
+    ///         Method <c>Type</c> reads a valid construct type
     ///     </para>
     /// </summary>
     /// <param name="declarationContext"></param>
     /// <returns></returns>
     /// <exception cref="SyntaxErrorException"></exception>
-    
+
     private Type Type(VariableDeclarationNode.DeclarationContext declarationContext)
     {
-        //matching and removing multiple of a valid type token 
+        //matching and removing multiple of a valid type token
         var typeToken =
             MatchAndRemoveMultiple(_shankTokenTypesPlusIdentifier)
             ?? throw new SyntaxErrorException("expected start of a type", Peek(0));
@@ -665,16 +665,20 @@ public class Parser
         {
             //if the type is a real number create a new RealType object
             //Range is checked against float values
-            Token.TokenType.Real => new RealType(CheckRange(true, RealType.DefaultRange)),
+            Token.TokenType.Real
+                => new RealType(CheckRange(true, RealType.DefaultRange)),
 
-            //custom type is returned if an identifier is found 
-            Token.TokenType.Identifier => CustomType(declarationContext, typeToken),
+            //custom type is returned if an identifier is found
+            Token.TokenType.Identifier
+                => CustomType(declarationContext, typeToken),
 
-            //IntegerType is returned if integer type is found 
-            Token.TokenType.Integer => new IntegerType(CheckRange(false, IntegerType.DefaultRange)),
+            //IntegerType is returned if integer type is found
+            Token.TokenType.Integer
+                => new IntegerType(CheckRange(false, IntegerType.DefaultRange)),
 
-            //BooleanType is returned if boolean type is found 
-            Token.TokenType.Boolean => new BooleanType(),
+            //BooleanType is returned if boolean type is found
+            Token.TokenType.Boolean
+                => new BooleanType(),
             Token.TokenType.Character
                 => new CharacterType(CheckRange(false, CharacterType.DefaultRange)),
             Token.TokenType.String => new StringType(CheckRange(false, StringType.DefaultRange)),
@@ -694,7 +698,7 @@ public class Parser
     }
 
     /// <summary>
-    ///     <para> 
+    ///     <para>
     ///         Method <c>Repeat</c> returns the parameter passed in while a next iteration is present
     ///     </para>
     /// </summary>
@@ -707,7 +711,7 @@ public class Parser
     }
 
     /// <summary>
-    ///     <para> 
+    ///     <para>
     ///         Method <c>CustomType</c> parses a list of type parameters to a custom type and if present and returns them as a collection contained\
     ///         within a generic unknown type
     ///     </para>
@@ -811,9 +815,9 @@ public class Parser
     }
 
     /// <summary>
-    ///     <para> 
-    ///         Method <c>CheckRange</c> checks the range passed in by using the functionality provided by <c>CheckRangeInner</c>. 
-    ///         NOTE: Is this function necessary? 
+    ///     <para>
+    ///         Method <c>CheckRange</c> checks the range passed in by using the functionality provided by <c>CheckRangeInner</c>.
+    ///         NOTE: Is this function necessary?
     ///     </para>
     /// </summary>
     /// <param name="isFloat">Whether or not the range provided is measured using float values</param>
@@ -825,8 +829,8 @@ public class Parser
     }
 
     /// <summary>
-    ///     <para> 
-    ///         Method <c>CheckRangeInner</c> parses a range expression (see Shank documentation) and determines whether or not it is valid. If so the range is returned. 
+    ///     <para>
+    ///         Method <c>CheckRangeInner</c> parses a range expression (see Shank documentation) and determines whether or not it is valid. If so the range is returned.
     ///         The types of range values should be consistent (FROM float TO float / FROM int TO int).
     ///     </para>
     /// </summary>
@@ -834,18 +838,18 @@ public class Parser
     /// <param name="defaultRange">The default range expected</param>
     /// <returns>Range object containing its upper and lower bounds</returns>
     /// <exception cref="SyntaxErrorException">
-    ///     <list type="bullet"> 
-    ///         <item> 
+    ///     <list type="bullet">
+    ///         <item>
     ///             <description>If the value for our lower bound is not a number</description>
     ///         </item>
     ///             <description>If the value for our upper bound is not a number</description>
-    ///         <item> 
+    ///         <item>
     ///             <description>If a integer range was expected but the bounds are floats</description>
     ///         </item>
-    ///         <item> 
+    ///         <item>
     ///             <description>If the lower bound is outside of the expected range</description>
     ///         </item>
-    ///         <item> 
+    ///         <item>
     ///             <description>If the upper bound is outside of the expected range</description>
     ///         </item>
     ///     </list>
@@ -1190,8 +1194,8 @@ public class Parser
     }
 
     /// <summary>
-    ///     <para> 
-    ///         Method <c>CreateVariables</c> 
+    ///     <para>
+    ///         Method <c>CreateVariables</c>
     ///     </para>
     /// </summary>
     /// <param name="names"></param>
@@ -1293,7 +1297,7 @@ public class Parser
         };
 
     /// <summary>
-    ///     <para> 
+    ///     <para>
     ///         Method <c>GetMutability</c> determines if a character will remain constant based on its context and whether
     ///         or not the "var" keyword is present
     ///     </para>
@@ -1303,17 +1307,17 @@ public class Parser
     /// <param name="varToken">A token containing the "var" keyword (used for error messages)</param>
     /// <returns></returns>
     /// <exception cref="SyntaxErrorException">
-    ///     <list type="bullet"> 
-    ///         <item> 
+    ///     <list type="bullet">
+    ///         <item>
     ///             <description>Keyword `var' not allowed in a record declaration.</description>
     ///         </item>
-    ///         <item> 
+    ///         <item>
     ///             <description>Keyword `var' not allowed in an enum declaration.</description>
     ///         </item>
-    ///         <item> 
+    ///         <item>
     ///             <description>Keyword `var' not allowed in a variables line.</description>
     ///         </item>
-    ///         <item> 
+    ///         <item>
     ///             <description>Keyword `var' not allowed in a constants line.</description>
     ///         </item>
     ///     </list>
@@ -1361,7 +1365,7 @@ public class Parser
         };
 
     /// <summary>
-    ///     <para> 
+    ///     <para>
     ///         Method <c>GetVariables</c> parses a comma separated list of variables and creates them
     ///     </para>
     /// </summary>
@@ -1427,7 +1431,7 @@ public class Parser
 
     /// <summary>
     ///     <para>
-    ///         Method <c>RequiresAndReturnsToken</c> return a token if the TokenType matches that of the Token passed in 
+    ///         Method <c>RequiresAndReturnsToken</c> return a token if the TokenType matches that of the Token passed in
     ///     </para>
     /// </summary>
     /// <param name="tokenType">TokenType of the requested token</param>
@@ -1439,7 +1443,7 @@ public class Parser
         ?? throw new SyntaxErrorException("Expected a " + tokenType, Peek(0));
 
     /// <summary>
-    ///     <para> 
+    ///     <para>
     ///         Method <c>ParseCommaSeparatedTokens</c> parses a list of tokens separated by commas that matches the list of token types passed in
     ///     </para>
     /// </summary>
@@ -1468,7 +1472,7 @@ public class Parser
     }
 
     /// <summary>
-    ///     <para> 
+    ///     <para>
     ///         Method <c>ParseCommaSeparatedIdentifiers</c> parses a comma separated list of identifiers
     ///     </para>
     /// </summary>
@@ -1855,11 +1859,11 @@ public class Parser
     /// </summary>
     /// <returns>A LinkedList of import statements (string)</returns>
     /// <exception cref="SyntaxErrorException">
-    ///     <list> 
-    ///         <item> 
+    ///     <list>
+    ///         <item>
     ///             <desciption>An import function list does not begin with an identifier</desciption>
     ///         </item>
-    ///         <item> 
+    ///         <item>
     ///             <description>A function identifier list is not separated by commas</description>
     ///         </item>
     ///     </list>
