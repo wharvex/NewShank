@@ -176,9 +176,27 @@ public class VunVsTypeCheckingVisitor(
             case VariableUsageIndexNode i:
                 if (CheckingType is not ArrayType at)
                 {
-                    throw new SemanticErrorException("Cannot index into " + i.BaseName);
+                    throw new SemanticErrorException("Cannot index into ", i);
                 }
                 CheckRange(i, at.Range);
+
+                break;
+            case VariableUsageMemberNode m:
+                if (CheckingType is not InstantiatedType it)
+                {
+                    throw new SemanticErrorException("Cannot dot into ", m);
+                }
+
+                if (it.GetMember(m.Right.Name) is null)
+                {
+                    throw new SemanticErrorException(
+                        "Member `"
+                            + m.Right.Name
+                            + "' not found on record `"
+                            + it.NewToString()
+                            + "'"
+                    );
+                }
 
                 break;
         }
@@ -221,51 +239,38 @@ public class VunVsTypeCheckingVisitor(
     }
 }
 
-public class VuinRangeCheckingVisitor(
-    Range r,
-    Dictionary<string, VariableDeclarationNode> vdns,
-    Func<ASTNode, Dictionary<string, VariableDeclarationNode>, float> afg,
-    Func<ASTNode, Dictionary<string, VariableDeclarationNode>, float> atg
-) : IVariableUsageIndexVisitor
+public class InnerTypeGettingVisitor(VariableUsageNodeTemp vun) : IAstVisitor
 {
-    public Range CheckingRange { get; } = r;
-    public Dictionary<string, VariableDeclarationNode> Vdns { get; } = vdns;
+    public VariableUsageNodeTemp Vun { get; } = vun;
+    public Type? InnerType { get; set; }
 
-    public Func<
-        ASTNode,
-        Dictionary<string, VariableDeclarationNode>,
-        float
-    > ActualFromGetter { get; } = afg;
-
-    public Func<
-        ASTNode,
-        Dictionary<string, VariableDeclarationNode>,
-        float
-    > ActualToGetter { get; } = atg;
-
-    public void Visit(VariableUsageIndexNode i)
+    public void Visit(Type t)
     {
-        var expectedFrom = CheckingRange.From;
-        var expectedTo = CheckingRange.To;
-        var actualFrom = ActualFromGetter(i.Right, Vdns);
-        var actualTo = ActualToGetter(i.Right, Vdns);
-
-        if (actualFrom < expectedFrom || actualTo > expectedTo)
+        switch (t)
         {
-            throw new SemanticErrorException(
-                i.Right
-                    + " invalid as an index into "
-                    + i
-                    + "\n\nexpected index from: "
-                    + expectedFrom
-                    + "\nto: "
-                    + expectedTo
-                    + "\nactual from: "
-                    + actualFrom
-                    + "\nto: "
-                    + actualTo
-                    + "\n\n"
-            );
+            case InstantiatedType it:
+                if (vun is VariableUsageMemberNode m)
+                {
+                    InnerType =
+                        it.GetMember(m.Right.Name)
+                        ?? throw new UnreachableException(
+                            "This should have been caught by VunVsTypeCheckingVisitor."
+                        );
+                }
+                else
+                {
+                    throw new UnreachableException(
+                        "This should have been caught by VunVsTypeCheckingVisitor."
+                    );
+                }
+
+                break;
+            case ArrayType at:
+                InnerType = at.Inner;
+                break;
+            default:
+                InnerType = null;
+                break;
         }
     }
 }
