@@ -17,17 +17,10 @@ public class OutputHelper
 
     public static void DebugPrintAst(ProgramNode program, string postSuffix)
     {
-        var jSets = new JsonSerializerSettings
-        {
-            ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-            Converters = [new StringEnumConverter()],
-            Formatting = Formatting.Indented,
-            TypeNameHandling = TypeNameHandling.All
-        };
-        DebugPrintJsonOutput(JsonConvert.SerializeObject(program, jSets), "ast_" + postSuffix);
+        DebugPrintJson(program, "ast_" + postSuffix);
     }
 
-    public static void DebugPrintJson(object obj, string postSuffix)
+    public static void DebugPrintJson(object obj, string suffix)
     {
         var jSets = new JsonSerializerSettings
         {
@@ -36,7 +29,7 @@ public class OutputHelper
             Formatting = Formatting.Indented,
             TypeNameHandling = TypeNameHandling.All
         };
-        DebugPrintJsonOutput(JsonConvert.SerializeObject(obj, jSets), "ast_" + postSuffix);
+        DebugPrintJsonOutput(JsonConvert.SerializeObject(obj, jSets), suffix);
     }
 
     public static void DebugPrintJsonOutput(string output, string suffix)

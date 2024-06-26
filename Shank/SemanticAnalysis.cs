@@ -335,6 +335,15 @@ public class SemanticAnalysis
         VariableUsageNodeTemp newTarget
     )
     {
+        var vpadGV = new VuPlainAndDepthGettingVisitor();
+        newTarget.Accept(vpadGV);
+
+        var vadGV = new VuAtDepthGettingVisitor(vpadGV.Depth - 1);
+        newTarget.Accept(vadGV);
+
+        OutputHelper.DebugPrintJson(vpadGV, "vpad");
+        OutputHelper.DebugPrintJson(vadGV, "vad");
+
         NewCheckRange(newTarget, targetType, expression, variables);
 
         if (

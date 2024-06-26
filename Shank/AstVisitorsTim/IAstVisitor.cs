@@ -1,4 +1,5 @@
-﻿using Shank.ASTNodes;
+﻿using System.Diagnostics;
+using Shank.ASTNodes;
 
 namespace Shank.AstVisitorsTim;
 
@@ -64,5 +65,76 @@ public class MemberValidatingVisitor(MemberExpectingVisitor mev, Type exprType)
                 Mev.Contents
             );
         }
+    }
+}
+
+public class VuPlainAndDepthGettingVisitor : IVariableUsageVisitor
+{
+    private VariableUsageNodeTemp? _vuPlain;
+    public VariableUsageNodeTemp VuPlain
+    {
+        get =>
+            _vuPlain
+            ?? throw new InvalidOperationException(
+                "Don't try to access my VuPlain property before passing me to a VUN.Accept."
+            );
+        set => _vuPlain = value;
+    }
+
+    public int Depth { get; set; }
+
+    public void Visit(VariableUsageNodeTemp vun)
+    {
+        while (vun is not VariableUsagePlainNode)
+        {
+            vun = vun switch
+            {
+                VariableUsageIndexNode i => i.Left,
+                VariableUsageMemberNode m => m.Left,
+                _
+                    => throw new UnreachableException(
+                        "VUN class hierarchy was altered; please update this switch accordingly."
+                    )
+            };
+            Depth++;
+        }
+
+        VuPlain = vun;
+    }
+}
+
+public class VuAtDepthGettingVisitor(int depth) : IVariableUsageVisitor
+{
+    private int Depth { get; } = depth;
+
+    private VariableUsageNodeTemp? _vuAtDepth;
+    public VariableUsageNodeTemp VuAtDepth
+    {
+        get =>
+            _vuAtDepth
+            ?? throw new InvalidOperationException(
+                "Don't try to access my VuAtDepth property before passing me to a VUN.Accept."
+            );
+        set => _vuAtDepth = value;
+    }
+
+    public void Visit(VariableUsageNodeTemp vun)
+    {
+        var d = 0;
+        while (d < Depth)
+        {
+            vun = vun switch
+            {
+                VariableUsageIndexNode i => i.Left,
+                VariableUsageMemberNode m => m.Left,
+                VariableUsagePlainNode p => p,
+                _
+                    => throw new UnreachableException(
+                        "VUN class hierarchy was altered; please update this switch accordingly."
+                    )
+            };
+            d++;
+        }
+        VuAtDepth = vun;
     }
 }
