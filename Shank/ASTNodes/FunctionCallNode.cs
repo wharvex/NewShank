@@ -8,6 +8,9 @@ namespace Shank.ASTNodes;
 public class FunctionCallNode : StatementNode
 {
     public string Name { get; set; }
+    
+    // the value you need to lookup a function after monomophization
+    public Index MonomphorizedFunctionLocater { get;  }
 
     // If its null then we have a call to a builtin
     public string? FunctionDefinitionModule { get; set; }
@@ -28,11 +31,13 @@ public class FunctionCallNode : StatementNode
     }
 
     // Copy constructor for monomorphization
-    public FunctionCallNode(FunctionCallNode copy, Dictionary<string, Type> instantiatedGenerics)
+    public FunctionCallNode(FunctionCallNode copy, TypedModuleIndex moduleIndex)
     {
+        MonomphorizedFunctionLocater = moduleIndex;
         FileName = copy.FileName;
         Line = copy.Line;
-        InstantiatedGenerics = instantiatedGenerics;
+        InstantiatedGenerics = copy.InstantiatedGenerics;
+        InstantiatedVariadics = copy.InstantiatedVariadics;
         FunctionDefinitionModule = copy.FunctionDefinitionModule;
         Name = copy.Name;
         OverloadNameExt = copy.OverloadNameExt;
@@ -41,8 +46,9 @@ public class FunctionCallNode : StatementNode
     }
 
     // Copy constructor for monomorphization (we need separate one for variadic function calls)
-    public FunctionCallNode(FunctionCallNode copy, List<Type> instantiatedVariadics)
+    public FunctionCallNode(FunctionCallNode copy, TypedBuiltinIndex builtinIndex)
     {
+        MonomphorizedFunctionLocater = builtinIndex;
         FileName = copy.FileName;
         Line = copy.Line;
         InstantiatedGenerics = copy.InstantiatedGenerics;
@@ -51,7 +57,7 @@ public class FunctionCallNode : StatementNode
         OverloadNameExt = copy.OverloadNameExt;
         Arguments = copy.Arguments;
         LineNum = copy.LineNum;
-        InstantiatedVariadics = instantiatedVariadics;
+        InstantiatedVariadics = copy.InstantiatedVariadics;
     }
 
     public bool EqualsWrtNameAndParams(

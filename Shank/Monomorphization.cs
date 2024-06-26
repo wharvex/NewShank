@@ -3,7 +3,14 @@ using Shank.ExprVisitors;
 
 namespace Shank;
 
-public record struct ModuleIndex(string Name, string Module);
+public interface Index;
+public record struct ModuleIndex(string Name, string Module)
+{
+    public override string ToString()
+    {
+        return $"{Module}::{Name}";
+    }
+};
 
 public record struct TypeIndex(List<Type> InstantiatedTypes)
 {
@@ -16,27 +23,28 @@ public record struct TypeIndex(List<Type> InstantiatedTypes)
 
     public override int GetHashCode()
     {
-        if (hashCode == null)
-        {
-            int hash = 17;
-            foreach (var element in InstantiatedTypes)
-            {
-                int h = EqualityComparer<Type>.Default.GetHashCode(element);
-                if (h != 0)
-                    hash = unchecked(hash * h);
-            }
-
-            hashCode = hash;
-        }
+        if (hashCode != null) return (int)hashCode!;
+        var hash = InstantiatedTypes.Select(element => EqualityComparer<Type>.Default.GetHashCode(element)).Where(h => h != 0).Aggregate(17, (current, h) => unchecked(current * h));
+        hashCode = hash;
         return (int)hashCode!;
+
     }
 }
 
-public record struct TypedModuleIndex(ModuleIndex Index, TypeIndex Types)
+public readonly record struct TypedModuleIndex(ModuleIndex Index, TypeIndex Types) : Index
 {
     public override string ToString()
     {
         return $"{Index}({string.Join(", ", Types.InstantiatedTypes.Select(type => $"{type}"))})";
+    }
+}
+
+public readonly record struct TypedBuiltinIndex(string Name, TypeIndex Types) : Index
+{
+    
+    public override string ToString()
+    {
+        return $"{Name}({string.Join(", ", Types.InstantiatedTypes.Select(type => $"{type}"))})";
     }
 }
 
@@ -46,7 +54,7 @@ public class MonomorphizedProgramNode
     public Dictionary<ModuleIndex, EnumNode> Enums { get; } = [];
     public Dictionary<ModuleIndex, VariableDeclarationNode> GlobalVariables { get; } = [];
     public Dictionary<TypedModuleIndex, FunctionNode> Functions { get; } = [];
-    public Dictionary<(string, TypeIndex), BuiltInFunctionNode> BuiltinFunctions { get; } = [];
+    public Dictionary<TypedBuiltinIndex, BuiltInFunctionNode> BuiltinFunctions { get; } = [];
 }
 
 // TODO: maybe use an visitor that return something, as opposed to void as we are not modifying the original ast, but creating a new version of it
@@ -98,6 +106,12 @@ public class MonomorphizationVisitor(
                         )
                 )
                 .ToList();
+            var typedBuiltinIndex = new TypedBuiltinIndex(node.Name, new TypeIndex(instantiatedVariadics));
+            Push(typedBuiltinIndex);
+            if (programNode.BuiltinFunctions.ContainsKey(typedBuiltinIndex))
+            {
+                return;
+            }
             var parameters = instantiatedVariadics
                 .Select(
                     (parameterType, index) =>
@@ -112,9 +126,8 @@ public class MonomorphizationVisitor(
                 .ToList();
             var function = new BuiltInFunctionNode(variadicFunctionNode, parameters);
             // TODO: maybe specialize this further by turning it into multiple individual function calls for each arguement (might be annoying for write, because "write "Foo"" would probably become "writeString "Foo"; writeString "\n"", we would also probalb have a lot of "writeString " "" when we have mutliple arguements)
-            programNode.BuiltinFunctions[(node.Name, new TypeIndex(instantiatedVariadics))] =
+            programNode.BuiltinFunctions[typedBuiltinIndex] =
                 function;
-            Push(new FunctionCallNode(caller, instantiatedVariadics));
         }
         else
         {
@@ -133,6 +146,20 @@ public class MonomorphizationVisitor(
                         )
                 )
                 .ToDictionary();
+            var typedBuiltinIndex = new TypedBuiltinIndex(
+                node.Name,
+                new TypeIndex(
+                    instantiatedGenerics
+                        .OrderBy(pair => pair.Key)
+                        .Select(pair => pair.Value)
+                        .ToList()
+                )
+            );
+            Push(typedBuiltinIndex);
+            if (programNode.BuiltinFunctions.ContainsKey(typedBuiltinIndex))
+            {
+                return;
+            }
             var parameters = node.ParameterVariables.Select(declarationNode =>
             {
                 declarationNode.Accept(this);
@@ -140,17 +167,8 @@ public class MonomorphizationVisitor(
             })
                 .ToList();
             programNode.BuiltinFunctions[
-                (
-                    node.Name,
-                    new TypeIndex(
-                        instantiatedTypes
-                            .OrderBy(pair => pair.Key)
-                            .Select(pair => pair.Value)
-                            .ToList()
-                    )
-                )
+                typedBuiltinIndex
             ] = new BuiltInFunctionNode(node, parameters);
-            Push(new FunctionCallNode(caller, instantiatedGenerics));
         }
     }
 
@@ -164,6 +182,7 @@ public class MonomorphizationVisitor(
                 as BuiltInFunctionNode
             )!;
             Visit(builtInFunctionNode!, node);
+            Push(new FunctionCallNode(node, (TypedBuiltinIndex)Pop()));
         }
         else
         {
@@ -189,8 +208,11 @@ public class MonomorphizationVisitor(
                         start,
                         ProgramNode
                     )
+                    {
+                        expr = expr
+                    }
                 );
-            Push(new FunctionCallNode(node, instantiatedGenerics));
+            Push(new FunctionCallNode(node, (TypedModuleIndex)Pop()));
         }
     }
 
@@ -202,7 +224,8 @@ public class MonomorphizationVisitor(
                 instantiatedTypes.OrderBy(pair => pair.Key).Select(pair => pair.Value).ToList()
             )
         );
-        if (ProgramNode.Functions.TryGetValue(typedModuleIndex, out var functionNode))
+        Push(typedModuleIndex);
+        if (ProgramNode.Functions.TryGetValue(typedModuleIndex, out _ ))
         {
             return;
         }
