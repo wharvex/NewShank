@@ -1322,9 +1322,14 @@ public class Interpreter
                     VariableUsagePlainNode p => ((IntDataType)variables[p.Name]).Value,
 
                     VariableUsageIndexNode i
-                        => ((ArrayDataType)variables[i.GetPlain().Name]).GetElementInteger(
+                        => ((ArrayDataType)variables[i.BaseName]).GetElementInteger(
                             NewResolveInt(i.Right, variables)
                         ),
+                    VariableUsageMemberNode m
+                        => ((RecordDataType)variables[m.GetBaseName()]).GetValueInteger(
+                            m.Right.Name
+                        ),
+
                     _ => throw new NotImplementedException()
                 };
             default:

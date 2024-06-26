@@ -10,6 +10,11 @@ public interface IVariableUsageVisitor : IAstVisitor
     void Visit(VariableUsageNodeTemp vun);
 }
 
+public interface IVariableUsageIndexVisitor : IAstVisitor
+{
+    void Visit(VariableUsageIndexNode i);
+}
+
 public interface IRecordTypeVisitor : IAstVisitor
 {
     void Visit(RecordType rt);
@@ -105,7 +110,7 @@ public class VuPlainAndDepthGettingVisitor : IVariableUsageVisitor
 
 public class VuAtDepthGettingVisitor(int depth) : IVariableUsageVisitor
 {
-    private int Depth { get; } = depth;
+    public int Depth { get; } = depth;
 
     private VariableUsageNodeTemp? _vuAtDepth;
     public VariableUsageNodeTemp VuAtDepth
@@ -136,5 +141,131 @@ public class VuAtDepthGettingVisitor(int depth) : IVariableUsageVisitor
             d++;
         }
         VuAtDepth = vun;
+    }
+}
+
+public class VunVsTypeCheckingVisitor(
+    Type t,
+    Dictionary<string, VariableDeclarationNode> vdns,
+    Func<ASTNode, Dictionary<string, VariableDeclarationNode>, float> afg,
+    Func<ASTNode, Dictionary<string, VariableDeclarationNode>, float> atg
+) : IVariableUsageVisitor
+{
+    public Type CheckingType { get; } = t;
+
+    public Dictionary<string, VariableDeclarationNode> Vdns { get; } = vdns;
+
+    public Func<
+        ASTNode,
+        Dictionary<string, VariableDeclarationNode>,
+        float
+    > ActualFromGetter { get; } = afg;
+
+    public Func<
+        ASTNode,
+        Dictionary<string, VariableDeclarationNode>,
+        float
+    > ActualToGetter { get; } = atg;
+
+    public string Comment { get; set; } = "";
+
+    public void Visit(VariableUsageNodeTemp vun)
+    {
+        switch (vun)
+        {
+            case VariableUsageIndexNode i:
+                if (CheckingType is not ArrayType at)
+                {
+                    throw new SemanticErrorException("Cannot index into " + i.BaseName);
+                }
+                CheckRange(i, at.Range);
+
+                break;
+        }
+    }
+
+    private void CheckRange(VariableUsageIndexNode i, Range checkingRange)
+    {
+        var expectedFrom = checkingRange.From;
+        var expectedTo = checkingRange.To;
+        var actualFrom = ActualFromGetter(i.Right, Vdns);
+        var actualTo = ActualToGetter(i.Right, Vdns);
+
+        Comment =
+            "expected index to be from "
+            + expectedFrom
+            + " to "
+            + expectedTo
+            + " and it was actually from "
+            + actualFrom
+            + " to "
+            + actualTo;
+
+        if (actualFrom < expectedFrom || actualTo > expectedTo)
+        {
+            throw new SemanticErrorException(
+                i.Right
+                    + " invalid as an index into "
+                    + i
+                    + "\n\nexpected index to be from "
+                    + expectedFrom
+                    + "\nto "
+                    + expectedTo
+                    + "\nbut it was actually from "
+                    + actualFrom
+                    + "\nto "
+                    + actualTo
+                    + "\n\n"
+            );
+        }
+    }
+}
+
+public class VuinRangeCheckingVisitor(
+    Range r,
+    Dictionary<string, VariableDeclarationNode> vdns,
+    Func<ASTNode, Dictionary<string, VariableDeclarationNode>, float> afg,
+    Func<ASTNode, Dictionary<string, VariableDeclarationNode>, float> atg
+) : IVariableUsageIndexVisitor
+{
+    public Range CheckingRange { get; } = r;
+    public Dictionary<string, VariableDeclarationNode> Vdns { get; } = vdns;
+
+    public Func<
+        ASTNode,
+        Dictionary<string, VariableDeclarationNode>,
+        float
+    > ActualFromGetter { get; } = afg;
+
+    public Func<
+        ASTNode,
+        Dictionary<string, VariableDeclarationNode>,
+        float
+    > ActualToGetter { get; } = atg;
+
+    public void Visit(VariableUsageIndexNode i)
+    {
+        var expectedFrom = CheckingRange.From;
+        var expectedTo = CheckingRange.To;
+        var actualFrom = ActualFromGetter(i.Right, Vdns);
+        var actualTo = ActualToGetter(i.Right, Vdns);
+
+        if (actualFrom < expectedFrom || actualTo > expectedTo)
+        {
+            throw new SemanticErrorException(
+                i.Right
+                    + " invalid as an index into "
+                    + i
+                    + "\n\nexpected index from: "
+                    + expectedFrom
+                    + "\nto: "
+                    + expectedTo
+                    + "\nactual from: "
+                    + actualFrom
+                    + "\nto: "
+                    + actualTo
+                    + "\n\n"
+            );
+        }
     }
 }

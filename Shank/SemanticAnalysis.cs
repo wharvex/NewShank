@@ -341,8 +341,12 @@ public class SemanticAnalysis
         var vadGV = new VuAtDepthGettingVisitor(vpadGV.Depth - 1);
         newTarget.Accept(vadGV);
 
+        var vvtCV = new VunVsTypeCheckingVisitor(targetType, variables, GetMinRange, GetMaxRange);
+        vadGV.VuAtDepth.Accept(vvtCV);
+
         OutputHelper.DebugPrintJson(vpadGV, "vpad");
         OutputHelper.DebugPrintJson(vadGV, "vad");
+        OutputHelper.DebugPrintJson(vvtCV, "vvt");
 
         NewCheckRange(newTarget, targetType, expression, variables);
 
