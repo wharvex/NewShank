@@ -8,15 +8,17 @@ namespace Shank.ASTNodes;
 public class FunctionCallNode : StatementNode
 {
     public string Name { get; set; }
-    public string FunctionDefinitionModule { get; set; }
+    // If its null then we have a call to a builtin
+    public string? FunctionDefinitionModule { get; set; }
     public int LineNum { get; set; }
     public List<ExpressionNode> Arguments { get; } = [];
     public string OverloadNameExt { get; set; } = "";
 
-    // generics of the called function that this call site instiated to specific types
+    // generics of the called function that this call site instantiated to specific types
     // useful/needed for monomorphization
     public Dictionary<string, Type> InstantiatedGenerics { get; set; } = [];
-    public List<Type> InstantiatedVariadics { get; set; } = [];
+    // if this is not null this must be calling variadic function
+    public List<Type>? InstantiatedVariadics { get; set; } = null;
 
     public FunctionCallNode(string name)
     {
@@ -35,7 +37,19 @@ public class FunctionCallNode : StatementNode
         Arguments = copy.Arguments;
         LineNum = copy.LineNum;
     }
-
+    // Copy constructor for monomorphization (we need separate one for variadic function calls)
+    public FunctionCallNode(FunctionCallNode copy, List<Type> instantiatedVariadics)
+    {
+        FileName = copy.FileName;
+        Line = copy.Line;
+        InstantiatedGenerics = copy.InstantiatedGenerics;
+        FunctionDefinitionModule = copy.FunctionDefinitionModule;
+        Name = copy.Name;
+        OverloadNameExt = copy.OverloadNameExt;
+        Arguments = copy.Arguments;
+        LineNum = copy.LineNum;
+        InstantiatedVariadics = instantiatedVariadics;
+    }
     public bool EqualsWrtNameAndParams(
         CallableNode givenFunction,
         Dictionary<string, VariableDeclarationNode> variablesInScope

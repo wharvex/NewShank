@@ -5,13 +5,13 @@ namespace Shank;
 
 public record struct ModuleIndex(string Name, string Module);
 
-public record struct TypedModuleIndex(ModuleIndex Index, Dictionary<string, Type> InstantiatedTypes)
+public record struct TypeIndex(List<Type> InstantiatedTypes) 
 {
+    
     private int? hashCode = null;
-
-    public bool Equals(TypedModuleIndex other)
+    public bool Equals(TypeIndex other)
     {
-        return other.Index == Index && other.InstantiatedTypes.SequenceEqual(InstantiatedTypes);
+        return  other.InstantiatedTypes.SequenceEqual(InstantiatedTypes);
     }
 
     public override int GetHashCode()
@@ -21,29 +21,31 @@ public record struct TypedModuleIndex(ModuleIndex Index, Dictionary<string, Type
             int hash = 17;
             foreach (var element in InstantiatedTypes)
             {
-                int h = EqualityComparer<KeyValuePair<string, Type>>.Default.GetHashCode(element);
+                int h = EqualityComparer<Type>.Default.GetHashCode(element);
                 if (h != 0)
                     hash = unchecked(hash * h);
             }
 
-            hashCode = Index.GetHashCode() + hash;
+            hashCode = hash;
         }
-
         return (int)hashCode!;
     }
 
+}
+public record struct TypedModuleIndex(ModuleIndex Index, TypeIndex Types)
+{
     public override string ToString()
     {
-        return $"{Index}({string.Join(", ", InstantiatedTypes.Select(typePair => $"{typePair.Value}"))})";
+        return $"{Index}({string.Join(", ", Types.InstantiatedTypes.Select(type => $"{type}"))})";
     }
 }
-
 public class MonomorphizedProgramNode
 {
     public Dictionary<TypedModuleIndex, RecordNode> Records { get; } = [];
     public Dictionary<ModuleIndex, EnumNode> Enums { get; } = [];
     public Dictionary<ModuleIndex, VariableDeclarationNode> GlobalVariables { get; } = [];
     public Dictionary<TypedModuleIndex, FunctionNode> Functions { get; } = [];
+    public Dictionary<(string, TypeIndex), BuiltInFunctionNode> BuiltinFunctions { get; } = [];
 }
 
 // TODO: maybe use an visitor that return something, as opposed to void as we are not modifying the original ast, but creating a new version of it
@@ -83,37 +85,99 @@ public class MonomorphizationVisitor(
 
     public override void Visit(RecordNode node) { }
 
-    public override void Visit(FunctionCallNode node)
+
+    private void Visit(BuiltInFunctionNode node, FunctionCallNode caller)
     {
-        var module = nonMonomorphizedProgramNode.GetFromModulesSafe(node.FunctionDefinitionModule);
-        var instantiatedGenerics = node.InstantiatedGenerics.Select(
-            instantiatedType =>
-                (
-                    instantiatedType.Key,
-                    instantiatedType.Value.Accept(
+        if (node is BuiltInVariadicFunctionNode variadicFunctionNode)
+        {
+            var instantiatedVariadics = caller.InstantiatedVariadics.Select(
+                instantiatedType =>
+                    instantiatedType.Accept(
                         new MonomorphizationTypeVisitor(instantiatedTypes, start, ProgramNode)
                     )
+            ).ToList();
+            var parameters = instantiatedVariadics.Select((parameterType, index) => new VariableDeclarationNode()
+            {
+                // each parameters name is just its index, because we don't actually need the name, as we will usually just iterate through the parameter list 
+                Name = $"Parameter{index}", Type = parameterType, IsConstant = variadicFunctionNode.AreParametersConstant
+            }).ToList();
+            var function = new BuiltInFunctionNode(variadicFunctionNode, parameters);
+            // TODO: maybe specialize this further by turning it into multiple individual function calls for each arguement (might be annoying for write, because "write "Foo"" would probably become "writeString "Foo"; writeString "\n"", we would also probalb have a lot of "writeString " "" when we have mutliple arguements)
+            programNode.BuiltinFunctions[
+                    (node.Name,
+                        new TypeIndex(instantiatedVariadics))] =
+                function;
+            Push(new FunctionCallNode(caller, instantiatedVariadics));
+        }
+        else
+        {
+            var instantiatedGenerics = caller.InstantiatedGenerics.Select(
+                    instantiatedType =>
+                    (
+                        instantiatedType.Key,
+                        instantiatedType.Value.Accept(
+                            new MonomorphizationTypeVisitor(instantiatedTypes, start, ProgramNode)
+                        )
+                    )
                 )
-        )
-            .ToDictionary();
-        module
-            .Functions[node.Name]
-            .Accept(
-                new MonomorphizationVisitor(
-                    instantiatedGenerics,
-                    nonMonomorphizedProgramNode,
-                    start,
-                    ProgramNode
+                .ToDictionary();
+            var parameters = node.ParameterVariables.Select(declarationNode =>
+                {
+                    declarationNode.Accept(this);
+                    return (VariableDeclarationNode)Pop();
+                })
+                .ToList();
+            programNode.BuiltinFunctions[
+                    (node.Name,
+                        new TypeIndex(instantiatedTypes.OrderBy(pair => pair.Key).Select(pair => pair.Value)
+                            .ToList()))] =
+                new BuiltInFunctionNode(node, parameters);
+            Push(new FunctionCallNode(caller, instantiatedGenerics));
+        }
+    }
+    public override void Visit(FunctionCallNode node)
+    {
+        // no module means it is a builtin see FunctionCallNode.FunctionDefinitionModule
+        if (node.FunctionDefinitionModule is null)
+        {
+            BuiltInFunctionNode builtInFunctionNode =
+                (nonMonomorphizedProgramNode.GetStartModuleSafe().getFunction(node.Name) as BuiltInFunctionNode)!;
+            Visit(builtInFunctionNode!, node); 
+        }
+        else
+        {
+            var module = nonMonomorphizedProgramNode.GetFromModulesSafe(node.FunctionDefinitionModule);
+            var instantiatedGenerics = node.InstantiatedGenerics.Select(
+                    instantiatedType =>
+                    (
+                        instantiatedType.Key,
+                        instantiatedType.Value.Accept(
+                            new MonomorphizationTypeVisitor(instantiatedTypes, start, ProgramNode)
+                        )
+                    )
                 )
-            );
-        Push(new FunctionCallNode(node, instantiatedGenerics));
+                .ToDictionary();
+            module
+                .Functions[node.Name]
+                .Accept(
+                    new MonomorphizationVisitor(
+                        instantiatedGenerics,
+                        nonMonomorphizedProgramNode,
+                        start,
+                        ProgramNode
+                    )
+                );
+            Push(new FunctionCallNode(node, instantiatedGenerics));
+        }
     }
 
     public override void Visit(FunctionNode node)
     {
         var typedModuleIndex = new TypedModuleIndex(
             new ModuleIndex(node.Name, node.parentModuleName!),
-            instantiatedTypes
+           new TypeIndex(
+            instantiatedTypes.OrderBy(pair=>pair.Key).Select(pair=> pair.Value).ToList()
+)
         );
         if (ProgramNode.Functions.TryGetValue(typedModuleIndex, out var functionNode))
         {
@@ -244,7 +308,7 @@ public class MonomorphizationTypeVisitor(
     {
         var typedModuleIndex = new TypedModuleIndex(
             new ModuleIndex(type.Name, type.ModuleName),
-            instantiatedTypes
+           new TypeIndex(instantiatedTypes.OrderBy(pair=>pair.Key).Select(pair=> pair.Value).ToList())
         );
         if (programNode.Records.TryGetValue(typedModuleIndex, out var recordNode))
         {
