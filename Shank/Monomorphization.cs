@@ -4,6 +4,7 @@ using Shank.ExprVisitors;
 namespace Shank;
 
 public interface Index;
+
 public record struct ModuleIndex(string Name, string Module)
 {
     public override string ToString()
@@ -23,11 +24,14 @@ public record struct TypeIndex(List<Type> InstantiatedTypes)
 
     public override int GetHashCode()
     {
-        if (hashCode != null) return (int)hashCode!;
-        var hash = InstantiatedTypes.Select(element => EqualityComparer<Type>.Default.GetHashCode(element)).Where(h => h != 0).Aggregate(17, (current, h) => unchecked(current * h));
+        if (hashCode != null)
+            return (int)hashCode!;
+        var hash = InstantiatedTypes
+            .Select(element => EqualityComparer<Type>.Default.GetHashCode(element))
+            .Where(h => h != 0)
+            .Aggregate(17, (current, h) => unchecked(current * h));
         hashCode = hash;
         return (int)hashCode!;
-
     }
 }
 
@@ -41,7 +45,6 @@ public readonly record struct TypedModuleIndex(ModuleIndex Index, TypeIndex Type
 
 public readonly record struct TypedBuiltinIndex(string Name, TypeIndex Types) : Index
 {
-    
     public override string ToString()
     {
         return $"{Name}({string.Join(", ", Types.InstantiatedTypes.Select(type => $"{type}"))})";
@@ -106,7 +109,10 @@ public class MonomorphizationVisitor(
                         )
                 )
                 .ToList();
-            var typedBuiltinIndex = new TypedBuiltinIndex(node.Name, new TypeIndex(instantiatedVariadics));
+            var typedBuiltinIndex = new TypedBuiltinIndex(
+                node.Name,
+                new TypeIndex(instantiatedVariadics)
+            );
             Push(typedBuiltinIndex);
             if (programNode.BuiltinFunctions.ContainsKey(typedBuiltinIndex))
             {
@@ -126,8 +132,7 @@ public class MonomorphizationVisitor(
                 .ToList();
             var function = new BuiltInFunctionNode(variadicFunctionNode, parameters);
             // TODO: maybe specialize this further by turning it into multiple individual function calls for each arguement (might be annoying for write, because "write "Foo"" would probably become "writeString "Foo"; writeString "\n"", we would also probalb have a lot of "writeString " "" when we have mutliple arguements)
-            programNode.BuiltinFunctions[typedBuiltinIndex] =
-                function;
+            programNode.BuiltinFunctions[typedBuiltinIndex] = function;
         }
         else
         {
@@ -166,9 +171,10 @@ public class MonomorphizationVisitor(
                 return (VariableDeclarationNode)Pop();
             })
                 .ToList();
-            programNode.BuiltinFunctions[
-                typedBuiltinIndex
-            ] = new BuiltInFunctionNode(node, parameters);
+            programNode.BuiltinFunctions[typedBuiltinIndex] = new BuiltInFunctionNode(
+                node,
+                parameters
+            );
         }
     }
 
@@ -225,7 +231,7 @@ public class MonomorphizationVisitor(
             )
         );
         Push(typedModuleIndex);
-        if (ProgramNode.Functions.TryGetValue(typedModuleIndex, out _ ))
+        if (ProgramNode.Functions.TryGetValue(typedModuleIndex, out _))
         {
             return;
         }
