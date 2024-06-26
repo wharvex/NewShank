@@ -20,7 +20,7 @@ public class BuiltInFunctionNode : CallableNode
     // }
 
 
-    // Copy constructor for monomorphization 
+    // Copy constructor for monomorphization
     public BuiltInFunctionNode(
         BuiltInFunctionNode function,
         List<VariableDeclarationNode> parameters
@@ -34,6 +34,7 @@ public class BuiltInFunctionNode : CallableNode
         Execute = function.Execute;
         ParameterVariables.AddRange(parameters);
     }
+
     public override void Accept(Visitor v) => throw new NotImplementedException("");
 }
 

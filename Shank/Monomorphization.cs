@@ -5,13 +5,13 @@ namespace Shank;
 
 public record struct ModuleIndex(string Name, string Module);
 
-public record struct TypeIndex(List<Type> InstantiatedTypes) 
+public record struct TypeIndex(List<Type> InstantiatedTypes)
 {
-    
     private int? hashCode = null;
+
     public bool Equals(TypeIndex other)
     {
-        return  other.InstantiatedTypes.SequenceEqual(InstantiatedTypes);
+        return other.InstantiatedTypes.SequenceEqual(InstantiatedTypes);
     }
 
     public override int GetHashCode()
@@ -30,8 +30,8 @@ public record struct TypeIndex(List<Type> InstantiatedTypes)
         }
         return (int)hashCode!;
     }
-
 }
+
 public record struct TypedModuleIndex(ModuleIndex Index, TypeIndex Types)
 {
     public override string ToString()
@@ -39,6 +39,7 @@ public record struct TypedModuleIndex(ModuleIndex Index, TypeIndex Types)
         return $"{Index}({string.Join(", ", Types.InstantiatedTypes.Select(type => $"{type}"))})";
     }
 }
+
 public class MonomorphizedProgramNode
 {
     public Dictionary<TypedModuleIndex, RecordNode> Records { get; } = [];
@@ -85,77 +86,99 @@ public class MonomorphizationVisitor(
 
     public override void Visit(RecordNode node) { }
 
-
     private void Visit(BuiltInFunctionNode node, FunctionCallNode caller)
     {
         if (node is BuiltInVariadicFunctionNode variadicFunctionNode)
         {
-            var instantiatedVariadics = caller.InstantiatedVariadics.Select(
-                instantiatedType =>
-                    instantiatedType.Accept(
-                        new MonomorphizationTypeVisitor(instantiatedTypes, start, ProgramNode)
-                    )
-            ).ToList();
-            var parameters = instantiatedVariadics.Select((parameterType, index) => new VariableDeclarationNode()
-            {
-                // each parameters name is just its index, because we don't actually need the name, as we will usually just iterate through the parameter list 
-                Name = $"Parameter{index}", Type = parameterType, IsConstant = variadicFunctionNode.AreParametersConstant
-            }).ToList();
+            var instantiatedVariadics = caller
+                .InstantiatedVariadics.Select(
+                    instantiatedType =>
+                        instantiatedType.Accept(
+                            new MonomorphizationTypeVisitor(instantiatedTypes, start, ProgramNode)
+                        )
+                )
+                .ToList();
+            var parameters = instantiatedVariadics
+                .Select(
+                    (parameterType, index) =>
+                        new VariableDeclarationNode()
+                        {
+                            // each parameters name is just its index, because we don't actually need the name, as we will usually just iterate through the parameter list
+                            Name = $"Parameter{index}",
+                            Type = parameterType,
+                            IsConstant = variadicFunctionNode.AreParametersConstant
+                        }
+                )
+                .ToList();
             var function = new BuiltInFunctionNode(variadicFunctionNode, parameters);
             // TODO: maybe specialize this further by turning it into multiple individual function calls for each arguement (might be annoying for write, because "write "Foo"" would probably become "writeString "Foo"; writeString "\n"", we would also probalb have a lot of "writeString " "" when we have mutliple arguements)
-            programNode.BuiltinFunctions[
-                    (node.Name,
-                        new TypeIndex(instantiatedVariadics))] =
+            programNode.BuiltinFunctions[(node.Name, new TypeIndex(instantiatedVariadics))] =
                 function;
             Push(new FunctionCallNode(caller, instantiatedVariadics));
         }
         else
         {
-            var instantiatedGenerics = caller.InstantiatedGenerics.Select(
+            var instantiatedGenerics = caller
+                .InstantiatedGenerics.Select(
                     instantiatedType =>
-                    (
-                        instantiatedType.Key,
-                        instantiatedType.Value.Accept(
-                            new MonomorphizationTypeVisitor(instantiatedTypes, start, ProgramNode)
+                        (
+                            instantiatedType.Key,
+                            instantiatedType.Value.Accept(
+                                new MonomorphizationTypeVisitor(
+                                    instantiatedTypes,
+                                    start,
+                                    ProgramNode
+                                )
+                            )
                         )
-                    )
                 )
                 .ToDictionary();
             var parameters = node.ParameterVariables.Select(declarationNode =>
-                {
-                    declarationNode.Accept(this);
-                    return (VariableDeclarationNode)Pop();
-                })
+            {
+                declarationNode.Accept(this);
+                return (VariableDeclarationNode)Pop();
+            })
                 .ToList();
             programNode.BuiltinFunctions[
-                    (node.Name,
-                        new TypeIndex(instantiatedTypes.OrderBy(pair => pair.Key).Select(pair => pair.Value)
-                            .ToList()))] =
-                new BuiltInFunctionNode(node, parameters);
+                (
+                    node.Name,
+                    new TypeIndex(
+                        instantiatedTypes
+                            .OrderBy(pair => pair.Key)
+                            .Select(pair => pair.Value)
+                            .ToList()
+                    )
+                )
+            ] = new BuiltInFunctionNode(node, parameters);
             Push(new FunctionCallNode(caller, instantiatedGenerics));
         }
     }
+
     public override void Visit(FunctionCallNode node)
     {
         // no module means it is a builtin see FunctionCallNode.FunctionDefinitionModule
         if (node.FunctionDefinitionModule is null)
         {
-            BuiltInFunctionNode builtInFunctionNode =
-                (nonMonomorphizedProgramNode.GetStartModuleSafe().getFunction(node.Name) as BuiltInFunctionNode)!;
-            Visit(builtInFunctionNode!, node); 
+            BuiltInFunctionNode builtInFunctionNode = (
+                nonMonomorphizedProgramNode.GetStartModuleSafe().getFunction(node.Name)
+                as BuiltInFunctionNode
+            )!;
+            Visit(builtInFunctionNode!, node);
         }
         else
         {
-            var module = nonMonomorphizedProgramNode.GetFromModulesSafe(node.FunctionDefinitionModule);
+            var module = nonMonomorphizedProgramNode.GetFromModulesSafe(
+                node.FunctionDefinitionModule
+            );
             var instantiatedGenerics = node.InstantiatedGenerics.Select(
-                    instantiatedType =>
+                instantiatedType =>
                     (
                         instantiatedType.Key,
                         instantiatedType.Value.Accept(
                             new MonomorphizationTypeVisitor(instantiatedTypes, start, ProgramNode)
                         )
                     )
-                )
+            )
                 .ToDictionary();
             module
                 .Functions[node.Name]
@@ -175,9 +198,9 @@ public class MonomorphizationVisitor(
     {
         var typedModuleIndex = new TypedModuleIndex(
             new ModuleIndex(node.Name, node.parentModuleName!),
-           new TypeIndex(
-            instantiatedTypes.OrderBy(pair=>pair.Key).Select(pair=> pair.Value).ToList()
-)
+            new TypeIndex(
+                instantiatedTypes.OrderBy(pair => pair.Key).Select(pair => pair.Value).ToList()
+            )
         );
         if (ProgramNode.Functions.TryGetValue(typedModuleIndex, out var functionNode))
         {
@@ -308,7 +331,9 @@ public class MonomorphizationTypeVisitor(
     {
         var typedModuleIndex = new TypedModuleIndex(
             new ModuleIndex(type.Name, type.ModuleName),
-           new TypeIndex(instantiatedTypes.OrderBy(pair=>pair.Key).Select(pair=> pair.Value).ToList())
+            new TypeIndex(
+                instantiatedTypes.OrderBy(pair => pair.Key).Select(pair => pair.Value).ToList()
+            )
         );
         if (programNode.Records.TryGetValue(typedModuleIndex, out var recordNode))
         {

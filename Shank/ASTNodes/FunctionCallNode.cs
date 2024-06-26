@@ -8,6 +8,7 @@ namespace Shank.ASTNodes;
 public class FunctionCallNode : StatementNode
 {
     public string Name { get; set; }
+
     // If its null then we have a call to a builtin
     public string? FunctionDefinitionModule { get; set; }
     public int LineNum { get; set; }
@@ -17,6 +18,7 @@ public class FunctionCallNode : StatementNode
     // generics of the called function that this call site instantiated to specific types
     // useful/needed for monomorphization
     public Dictionary<string, Type> InstantiatedGenerics { get; set; } = [];
+
     // if this is not null this must be calling variadic function
     public List<Type>? InstantiatedVariadics { get; set; } = null;
 
@@ -37,6 +39,7 @@ public class FunctionCallNode : StatementNode
         Arguments = copy.Arguments;
         LineNum = copy.LineNum;
     }
+
     // Copy constructor for monomorphization (we need separate one for variadic function calls)
     public FunctionCallNode(FunctionCallNode copy, List<Type> instantiatedVariadics)
     {
@@ -50,6 +53,7 @@ public class FunctionCallNode : StatementNode
         LineNum = copy.LineNum;
         InstantiatedVariadics = instantiatedVariadics;
     }
+
     public bool EqualsWrtNameAndParams(
         CallableNode givenFunction,
         Dictionary<string, VariableDeclarationNode> variablesInScope
