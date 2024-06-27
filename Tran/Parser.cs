@@ -220,6 +220,10 @@ public class Parser
         {
             return [];
         }
+
+        handler.MatchAndRemove(TokenType.COMMA);
+        variable.IsConstant = isConstant;
+        parameters.Add(variable);
         do
         {
             AcceptSeparators();

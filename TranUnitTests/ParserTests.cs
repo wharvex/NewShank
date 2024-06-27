@@ -81,6 +81,56 @@ class Tran
         }
 
         [TestMethod]
+        public void ParseReturnTest()
+        {
+            CreateParser(
+                @"
+class Tran
+    helloWorld() : number retVal1, string retVal2
+        x = 1 + 1".Replace("    ", "\t")
+            );
+            parser.Parse();
+            Assert.AreEqual("real", parser.thisClass.Functions.First().Value.ParameterVariables[0].Type.ToString());
+            Assert.AreEqual("string", parser.thisClass.Functions.First().Value.ParameterVariables[1].Type.ToString());
+            Assert.AreEqual("retVal1", parser.thisClass.Functions.First().Value.ParameterVariables[0].Name);
+            Assert.AreEqual("retVal2", parser.thisClass.Functions.First().Value.ParameterVariables[1].Name);
+        }
+
+        [TestMethod]
+        public void ParseMembersTest()
+        {
+            CreateParser(
+                @"
+class Tran
+    number w
+    string x
+    boolean y
+    character z".Replace("    ", "\t")
+            );
+            parser.Parse();
+            Assert.AreEqual("w", parser.thisClass.Records.First().Value.Members[0].Name);
+            Assert.AreEqual("x", parser.thisClass.Records.First().Value.Members[1].Name);
+            Assert.AreEqual("y", parser.thisClass.Records.First().Value.Members[2].Name);
+            Assert.AreEqual("z", parser.thisClass.Records.First().Value.Members[3].Name);
+        }
+
+        [TestMethod]
+        public void ParseParametersTest()
+        {
+            CreateParser(
+                @"
+class Tran
+    doStuff(number param1, boolean param2)
+        x = 1+1".Replace("    ", "\t")
+            );
+            parser.Parse();
+            Assert.AreEqual("param1", ((FunctionNode)parser.thisClass.Functions.First().Value).LocalVariables[0].Name);
+            Assert.AreEqual("real", ((FunctionNode)parser.thisClass.Functions.First().Value).LocalVariables[0].Type.ToString());
+            Assert.AreEqual("param2", ((FunctionNode)parser.thisClass.Functions.First().Value).LocalVariables[1].Name);
+            Assert.AreEqual("boolean", ((FunctionNode)parser.thisClass.Functions.First().Value).LocalVariables[1].Type.ToString());
+        }
+
+        [TestMethod]
         //ask about this test
         public void ParseLoopTest()
         {
