@@ -165,7 +165,7 @@ public class VunVsTypeCheckingVisitor(Type t, Dictionary<string, VariableDeclara
             case VariableUsageIndexNode i:
                 if (CheckingType is not ArrayType at)
                 {
-                    throw new SemanticErrorException("Cannot index into ", i);
+                    throw new SemanticErrorException("Cannot index into " + CheckingType, i);
                 }
                 CheckRange(i, at.Range);
 
@@ -173,7 +173,7 @@ public class VunVsTypeCheckingVisitor(Type t, Dictionary<string, VariableDeclara
             case VariableUsageMemberNode m:
                 if (CheckingType is not InstantiatedType it)
                 {
-                    throw new SemanticErrorException("Cannot dot into ", m);
+                    throw new SemanticErrorException("Cannot dot into " + CheckingType, m);
                 }
 
                 if (it.GetMember(m.Right.Name) is null)
@@ -385,5 +385,26 @@ public class ActualRangeGettingVisitor(Dictionary<string, VariableDeclarationNod
     {
         ActualFrom = GetActualLowerOrUpper(e, VDecs, false);
         ActualTo = GetActualLowerOrUpper(e, VDecs, true);
+    }
+}
+
+public class ExpressionTypeGettingVisitor : IAstExpressionVisitor
+{
+    private Type? _exprType;
+    public Type ExprType
+    {
+        get => _exprType ?? throw new InvalidOperationException();
+        set => _exprType = value;
+    }
+
+    public void Visit(ExpressionNode e)
+    {
+        ExprType = e switch
+        {
+            IntNode => new IntegerType(),
+            FloatNode => new RealType(),
+            BoolNode => new BooleanType(),
+            StringNode => new StringType(),
+        };
     }
 }
