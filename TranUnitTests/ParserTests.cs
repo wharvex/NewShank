@@ -174,10 +174,22 @@ class Tran
         x = 1 + 1".Replace("    ", "\t")
             );
             parser.Parse();
-            Assert.AreEqual("real", parser.thisClass.Functions.First().Value.ParameterVariables[0].Type.ToString());
-            Assert.AreEqual("string", parser.thisClass.Functions.First().Value.ParameterVariables[1].Type.ToString());
-            Assert.AreEqual("retVal1", parser.thisClass.Functions.First().Value.ParameterVariables[0].Name);
-            Assert.AreEqual("retVal2", parser.thisClass.Functions.First().Value.ParameterVariables[1].Name);
+            Assert.AreEqual(
+                "real",
+                parser.thisClass.Functions.First().Value.ParameterVariables[0].Type.ToString()
+            );
+            Assert.AreEqual(
+                "string",
+                parser.thisClass.Functions.First().Value.ParameterVariables[1].Type.ToString()
+            );
+            Assert.AreEqual(
+                "retVal1",
+                parser.thisClass.Functions.First().Value.ParameterVariables[0].Name
+            );
+            Assert.AreEqual(
+                "retVal2",
+                parser.thisClass.Functions.First().Value.ParameterVariables[1].Name
+            );
         }
 
         [TestMethod]
@@ -208,10 +220,26 @@ class Tran
         x = 1+1".Replace("    ", "\t")
             );
             parser.Parse();
-            Assert.AreEqual("param1", ((FunctionNode)parser.thisClass.Functions.First().Value).LocalVariables[0].Name);
-            Assert.AreEqual("real", ((FunctionNode)parser.thisClass.Functions.First().Value).LocalVariables[0].Type.ToString());
-            Assert.AreEqual("param2", ((FunctionNode)parser.thisClass.Functions.First().Value).LocalVariables[1].Name);
-            Assert.AreEqual("boolean", ((FunctionNode)parser.thisClass.Functions.First().Value).LocalVariables[1].Type.ToString());
+            Assert.AreEqual(
+                "param1",
+                ((FunctionNode)parser.thisClass.Functions.First().Value).LocalVariables[0].Name
+            );
+            Assert.AreEqual(
+                "real",
+                ((FunctionNode)parser.thisClass.Functions.First().Value)
+                    .LocalVariables[0]
+                    .Type.ToString()
+            );
+            Assert.AreEqual(
+                "param2",
+                ((FunctionNode)parser.thisClass.Functions.First().Value).LocalVariables[1].Name
+            );
+            Assert.AreEqual(
+                "boolean",
+                ((FunctionNode)parser.thisClass.Functions.First().Value)
+                    .LocalVariables[1]
+                    .Type.ToString()
+            );
         }
 
         [TestMethod]
