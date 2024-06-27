@@ -25,6 +25,11 @@ public interface IInstantiatedTypeVisitor : IAstVisitor
     void Visit(InstantiatedType it);
 }
 
+public interface IAstExpressionVisitor : IAstVisitor
+{
+    void Visit(ExpressionNode e);
+}
+
 public class MemberExpectingVisitor : IVariableUsageVisitor
 {
     private MemberAccessNode? _contents;
@@ -144,28 +149,12 @@ public class VuAtDepthGettingVisitor(int depth) : IVariableUsageVisitor
     }
 }
 
-public class VunVsTypeCheckingVisitor(
-    Type t,
-    Dictionary<string, VariableDeclarationNode> vdns,
-    Func<ASTNode, Dictionary<string, VariableDeclarationNode>, float> afg,
-    Func<ASTNode, Dictionary<string, VariableDeclarationNode>, float> atg
-) : IVariableUsageVisitor
+public class VunVsTypeCheckingVisitor(Type t, Dictionary<string, VariableDeclarationNode> vDecs)
+    : IVariableUsageVisitor
 {
     public Type CheckingType { get; } = t;
 
-    public Dictionary<string, VariableDeclarationNode> Vdns { get; } = vdns;
-
-    public Func<
-        ASTNode,
-        Dictionary<string, VariableDeclarationNode>,
-        float
-    > ActualFromGetter { get; } = afg;
-
-    public Func<
-        ASTNode,
-        Dictionary<string, VariableDeclarationNode>,
-        float
-    > ActualToGetter { get; } = atg;
+    public Dictionary<string, VariableDeclarationNode> VDecs { get; } = vDecs;
 
     public string Comment { get; set; } = "";
 
@@ -206,8 +195,12 @@ public class VunVsTypeCheckingVisitor(
     {
         var expectedFrom = checkingRange.From;
         var expectedTo = checkingRange.To;
-        var actualFrom = ActualFromGetter(i.Right, Vdns);
-        var actualTo = ActualToGetter(i.Right, Vdns);
+
+        var arVis = new ActualRangeGettingVisitor(VDecs);
+        i.Right.Accept(arVis);
+
+        var actualFrom = arVis.ActualFrom;
+        var actualTo = arVis.ActualTo;
 
         Comment =
             "expected index to be from "
@@ -272,5 +265,125 @@ public class InnerTypeGettingVisitor(VariableUsageNodeTemp vun) : IAstVisitor
                 InnerType = null;
                 break;
         }
+    }
+}
+
+public class VunTypeGettingVisitor(
+    Type originalType,
+    Dictionary<string, VariableDeclarationNode> vDecs
+) : IVariableUsageVisitor
+{
+    public Dictionary<string, VariableDeclarationNode> VDecs { get; } = vDecs;
+
+    public Type VunType { get; set; } = originalType;
+
+    public void Visit(VariableUsageNodeTemp vun)
+    {
+        // Get the depth d of the innermost vun in the target's vun structure.
+        var padVis = new VuPlainAndDepthGettingVisitor();
+        vun.Accept(padVis);
+        var d = padVis.Depth;
+
+        // Set t to the outermost type in the target's type structure.
+        var t = VunType;
+
+        // Ensure vun and type agree internally, and end up with t set to the type which the
+        // assignment's "expression" (it's RHS) should be.
+        while (true)
+        {
+            // Recurse through the type structure but "reverse-recurse" through the vun structure.
+            d--;
+            if (d < 0)
+            {
+                break;
+            }
+
+            // Get variable usage at depth d of target and store it in vadVis.
+            var vadVis = new VuAtDepthGettingVisitor(d);
+            vun.Accept(vadVis);
+
+            // Ensure the variable usage in vadVis and the type in t "agree internally".
+            vadVis.VuAtDepth.Accept(new VunVsTypeCheckingVisitor(t, vDecs));
+
+            // Set t to its own inner type (forward recursion).
+            var itVis = new InnerTypeGettingVisitor(vadVis.VuAtDepth);
+            t.Accept(itVis);
+            t = itVis.InnerType;
+
+            // itVis.InnerType is null if there are no more inner types (this shouldn't happen).
+            if (t is null)
+            {
+                break;
+            }
+        }
+
+        VunType = t ?? throw new InvalidOperationException();
+    }
+}
+
+public class ActualRangeGettingVisitor(Dictionary<string, VariableDeclarationNode> vDecs)
+    : IAstExpressionVisitor
+{
+    public Dictionary<string, VariableDeclarationNode> VDecs { get; } = vDecs;
+    public float ActualFrom { get; set; }
+    public float ActualTo { get; set; }
+
+    public float GetActualLowerOrUpper(
+        ExpressionNode node,
+        Dictionary<string, VariableDeclarationNode> variables,
+        bool getUpper
+    )
+    {
+        switch (node)
+        {
+            case MathOpNode mon:
+                return mon.Op switch
+                {
+                    MathOpNode.MathOpType.Plus
+                        => GetActualLowerOrUpper(mon.Left, variables, getUpper)
+                            + GetActualLowerOrUpper(mon.Right, variables, getUpper),
+                    MathOpNode.MathOpType.Minus
+                        => GetActualLowerOrUpper(mon.Left, variables, getUpper)
+                            - GetActualLowerOrUpper(mon.Right, variables, !getUpper),
+                    MathOpNode.MathOpType.Times
+                        => GetActualLowerOrUpper(mon.Left, variables, getUpper)
+                            * GetActualLowerOrUpper(mon.Right, variables, getUpper),
+                    MathOpNode.MathOpType.Divide
+                        => GetActualLowerOrUpper(mon.Left, variables, !getUpper)
+                            / GetActualLowerOrUpper(mon.Right, variables, getUpper),
+                    MathOpNode.MathOpType.Modulo => 0,
+                    _ => throw new InvalidOperationException()
+                };
+            case IntNode i:
+                return i.Value;
+            case FloatNode f:
+                return f.Value;
+            case StringNode s:
+                return s.Value.Length;
+            case VariableUsageNodeTemp vun:
+            {
+                var vtVis = new VunTypeGettingVisitor(
+                    variables[vun.GetPlain().Name].Type,
+                    variables
+                );
+                if (vtVis.VunType is RangeType t)
+                {
+                    return getUpper ? t.Range.To : t.Range.From;
+                }
+                throw new Exception(
+                    "Ranged variables can only be assigned variables with a range."
+                );
+            }
+            default:
+                throw new InvalidOperationException(
+                    "Unrecognized node type in math expression while checking range"
+                );
+        }
+    }
+
+    public void Visit(ExpressionNode e)
+    {
+        ActualFrom = GetActualLowerOrUpper(e, VDecs, false);
+        ActualTo = GetActualLowerOrUpper(e, VDecs, true);
     }
 }

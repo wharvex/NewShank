@@ -336,54 +336,11 @@ public class SemanticAnalysis
         VariableUsageNodeTemp target
     )
     {
-        // Get the depth d of the innermost vun in the target's vun structure.
-        var padVis = new VuPlainAndDepthGettingVisitor();
-        target.Accept(padVis);
-        var d = padVis.Depth;
+        var vtVis = new VunTypeGettingVisitor(targetType, vDecs);
+        target.Accept(vtVis);
 
-        // Set t to the outermost type in the target's type structure.
-        var t = targetType;
-
-        // Ensure vun and type agree internally, and end up with t set to the type which the
-        // assignment's "expression" (it's RHS) should be.
-        while (true)
-        {
-            // Recurse through the type structure but "reverse-recurse" through the vun structure.
-            d--;
-            if (d < 0)
-            {
-                break;
-            }
-
-            // Get variable usage at depth d of target and store it in vadVis.
-            var vadVis = new VuAtDepthGettingVisitor(d);
-            target.Accept(vadVis);
-
-            // Ensure the variable usage in vadVis and the type in t "agree internally".
-            vadVis.VuAtDepth.Accept(
-                new VunVsTypeCheckingVisitor(t, vDecs, GetMinRange, GetMaxRange)
-            );
-
-            // Set t to its own inner type (forward recursion).
-            var itVis = new InnerTypeGettingVisitor(vadVis.VuAtDepth);
-            t.Accept(itVis);
-            t = itVis.InnerType;
-
-            // itVis.InnerType is null if there are no more inner types (this shouldn't happen).
-            if (t is null)
-            {
-                break;
-            }
-        }
-
-        if (t is null)
-        {
-            throw new InvalidOperationException();
-        }
-
-        // Check the final computed target type against the expression.
         var expressionType = GetTypeOfExpression(expression, vDecs);
-        if (!t.Equals(expressionType))
+        if (!vtVis.VunType.Equals(expressionType))
         {
             throw new SemanticErrorException(
                 "Type mismatch; cannot assign `"
