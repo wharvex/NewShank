@@ -376,7 +376,10 @@ public class MonomorphizationTypeVisitor(
             type.ModuleName,
             type.Fields.Select(field => (field.Key, field.Value.Accept(this))).ToDictionary(),
             []
-        );
+        )
+        {
+            MonomorphizedIndex = typedModuleIndex
+        };
         record.Type = recordType;
         return record.Type;
     }

@@ -142,6 +142,8 @@ public class EnumType(string name, string moduleName, List<string> variants) : T
 {
     public T Accept<T>(ITypeVisitor<T> v) => v.Visit(this);
 
+    public ModuleIndex MonomorphizedIndex() => new ModuleIndex(name, moduleName);
+
     public string Name { get; } = name;
     public string ModuleName { get; } = moduleName;
     public List<string> Variants { get; } = variants;
@@ -161,7 +163,7 @@ public class RecordType(
     public T Accept<T>(ITypeVisitor<T> v) => v.Visit(this);
 
     public List<string> Generics { get; set; } = generics;
-
+    public TypedModuleIndex MonomorphizedIndex  { get; set; }
     public Dictionary<string, Type> Fields { get; set; } = fields;
 
     public string Name { get; } = name;
@@ -198,7 +200,7 @@ public readonly record struct ArrayType(Type Inner, Range Range) : RangeType // 
     public override int GetHashCode() => Inner.GetHashCode();
 
     public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) =>
-        new ArrayType(Inner.Instantiate(instantiatedGenerics), Range);
+        this with { Inner = Inner.Instantiate(instantiatedGenerics) };
 
     public ArrayType(Type inner, Range? range)
         : this(inner, range ?? DefaultRange) { }
