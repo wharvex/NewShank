@@ -75,8 +75,8 @@ class Tran
             Assert.AreEqual(
                 "x assigned as 1 Plus 1",
                 ((FunctionNode)parser.thisClass.Functions.First().Value)
-                .Statements.First()
-                .ToString()
+                    .Statements.First()
+                    .ToString()
             );
         }
 
@@ -90,26 +90,26 @@ class Tran
             Parser newParser = new Parser(tokens);
             var expression = newParser.ParseLoop();
             Console.Write(expression);
-          //  Assert.AreEqual("temp = loop x.times() console.print (temp)", expression.ToString());
+            //  Assert.AreEqual("temp = loop x.times() console.print (temp)", expression.ToString());
         }
-
 
         [TestMethod]
         public void ParseIfTest()
         {
-                var testString = "if n > 100 keepGoing = false";
-                Lexer newLexer = new Lexer(testString);
-                LinkedList<Token> tokens = newLexer.Lex();
-                Parser newParser = new Parser(tokens);
-                var expression = newParser.ParseIf();
-                var expected = "if, line 0, n gt 100, begin\r\n" +
-                                     "if, line 0, n gt 100, statements begin\r\n" +
-                                     "if, line 0, n gt 100, statements end\r\n" +
-                                     "if, line 0, n gt 100, next begin\r\n" +
-                                     "if, line 0, n gt 100, next end\r\n" +
-                                     "if, line 0, n gt 100, end";
-                
-                Assert.AreEqual(expected, expression.ToString());
+            var testString = "if n > 100 keepGoing = false";
+            Lexer newLexer = new Lexer(testString);
+            LinkedList<Token> tokens = newLexer.Lex();
+            Parser newParser = new Parser(tokens);
+            var expression = newParser.ParseIf();
+            var expected =
+                "if, line 0, n gt 100, begin\r\n"
+                + "if, line 0, n gt 100, statements begin\r\n"
+                + "if, line 0, n gt 100, statements end\r\n"
+                + "if, line 0, n gt 100, next begin\r\n"
+                + "if, line 0, n gt 100, next end\r\n"
+                + "if, line 0, n gt 100, end";
+
+            Assert.AreEqual(expected, expression.ToString());
         }
 
         [TestMethod]
@@ -122,7 +122,7 @@ class Tran
             var expression = newParser.ParseBuiltInFunctionNode();
             Console.Write(expression);
         }
-        
+
         [TestMethod]
         public void ParseBuiltInFunctionNodeTestPrint()
         {
@@ -133,7 +133,7 @@ class Tran
             var expression = newParser.ParseBuiltInFunctionNode();
             Console.Write(expression);
         }
-        
+
         [TestMethod]
         public void ParseBuiltInFunctionNodeTestgetDate()
         {
@@ -144,6 +144,5 @@ class Tran
             var expression = newParser.ParseBuiltInFunctionNode();
             Console.Write(expression);
         }
-        
     }
 }
