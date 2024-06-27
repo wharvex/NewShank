@@ -313,7 +313,7 @@ public class Parser
         if (handler.MatchAndRemove(TokenType.LOOP) != null)
         {
             var conditionLoop = ParseExpression() as BooleanExpressionNode;
-           // var condition = ParseBuiltInFunctionNode();
+            // var condition = ParseBuiltInFunctionNode();
             var LoopBody = ParseBlock();
             if (LoopBody == null)
             {
@@ -321,7 +321,7 @@ public class Parser
             }
             if (conditionLoop != null)
             {
-                return new WhileNode(conditionLoop, LoopBody); 
+                return new WhileNode(conditionLoop, LoopBody);
             }
         }
         return null;
