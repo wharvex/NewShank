@@ -144,7 +144,7 @@ class Tran
             var expression = newParser.ParseBuiltInFunctionNode();
             Console.Write(expression);
         }
-        
+
         [TestMethod]
         public void GeneralParserTest()
         {
@@ -164,10 +164,11 @@ class Tran
             Assert.AreEqual(
                 "x assigned as 1 Plus 1",
                 ((FunctionNode)parser.thisClass.Functions.First().Value)
-                .Statements.First()
-                .ToString()
+                    .Statements.First()
+                    .ToString()
             );
         }
+
         [TestMethod]
         public void FibonacciProgramTest()
         {
@@ -191,8 +192,8 @@ class FibonacciProgram
             Assert.AreEqual(
                 "x assigned as 1 Plus 1",
                 ((FunctionNode)parser.thisClass.Functions.First().Value)
-                .Statements.First()
-                .ToString()
+                    .Statements.First()
+                    .ToString()
             );
         }
     }
