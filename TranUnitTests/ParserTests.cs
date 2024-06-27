@@ -75,22 +75,75 @@ class Tran
             Assert.AreEqual(
                 "x assigned as 1 Plus 1",
                 ((FunctionNode)parser.thisClass.Functions.First().Value)
-                    .Statements.First()
-                    .ToString()
+                .Statements.First()
+                .ToString()
             );
         }
 
         [TestMethod]
-        public void ParseLoop()
+        //ask about this test
+        public void ParseLoopTest()
         {
-            var testString = "loop x < 20 value = value + 1";
-
+            var testString = "temp = loop x.times() console.print (temp)";
             Lexer newLexer = new Lexer(testString);
             LinkedList<Token> tokens = newLexer.Lex();
             Parser newParser = new Parser(tokens);
             var expression = newParser.ParseLoop();
             Console.Write(expression);
-            //Assert.AreEqual("1 Plus 2", expression.ToString());
+          //  Assert.AreEqual("temp = loop x.times() console.print (temp)", expression.ToString());
         }
+
+
+        [TestMethod]
+        public void ParseIfTest()
+        {
+                var testString = "if n > 100 keepGoing = false";
+                Lexer newLexer = new Lexer(testString);
+                LinkedList<Token> tokens = newLexer.Lex();
+                Parser newParser = new Parser(tokens);
+                var expression = newParser.ParseIf();
+                var expected = "if, line 0, n gt 100, begin\r\n" +
+                                     "if, line 0, n gt 100, statements begin\r\n" +
+                                     "if, line 0, n gt 100, statements end\r\n" +
+                                     "if, line 0, n gt 100, next begin\r\n" +
+                                     "if, line 0, n gt 100, next end\r\n" +
+                                     "if, line 0, n gt 100, end";
+                
+                Assert.AreEqual(expected, expression.ToString());
+        }
+
+        [TestMethod]
+        public void ParseBuiltInFunctionNodeTestTimes()
+        {
+            var testString = ".times()";
+            Lexer newLexer = new Lexer(testString);
+            LinkedList<Token> tokens = newLexer.Lex();
+            Parser newParser = new Parser(tokens);
+            var expression = newParser.ParseBuiltInFunctionNode();
+            Console.Write(expression);
+        }
+        
+        [TestMethod]
+        public void ParseBuiltInFunctionNodeTestPrint()
+        {
+            var testString = "console.print (temp)";
+            Lexer newLexer = new Lexer(testString);
+            LinkedList<Token> tokens = newLexer.Lex();
+            Parser newParser = new Parser(tokens);
+            var expression = newParser.ParseBuiltInFunctionNode();
+            Console.Write(expression);
+        }
+        
+        [TestMethod]
+        public void ParseBuiltInFunctionNodeTestgetDate()
+        {
+            var testString = "clock.getDate()";
+            Lexer newLexer = new Lexer(testString);
+            LinkedList<Token> tokens = newLexer.Lex();
+            Parser newParser = new Parser(tokens);
+            var expression = newParser.ParseBuiltInFunctionNode();
+            Console.Write(expression);
+        }
+        
     }
 }
