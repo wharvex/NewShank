@@ -81,35 +81,30 @@ class Tran
         }
 
         [TestMethod]
-        //ask about this test
         public void ParseLoopTest()
         {
-            var testString = "temp = loop x.times() console.print (temp)";
-            Lexer newLexer = new Lexer(testString);
-            LinkedList<Token> tokens = newLexer.Lex();
-            Parser newParser = new Parser(tokens);
-            var expression = newParser.ParseLoop();
+            CreateParser("temp = loop x.times() \r\n"+
+                            "\tconsole.print (temp)");
+            var expression = parser.ParseLoop();
             Console.Write(expression);
-            //  Assert.AreEqual("temp = loop x.times() console.print (temp)", expression.ToString());
         }
 
         [TestMethod]
         public void ParseIfTest()
         {
             CreateParser(
-                @"if n > 100
-    keepGoing = false".Replace("    ", "\t")
-            );
+                "if n > 100\r\n"+
+                 "\tkeepGoing = false");
             var expression = parser.ParseIf();
-            var expected =
-                "if, line 0, n gt 100, begin\r\n"
-                + "if, line 0, n gt 100, statements begin\r\n"
-                + "if, line 0, n gt 100, statements end\r\n"
-                + "if, line 0, n gt 100, next begin\r\n"
-                + "if, line 0, n gt 100, next end\r\n"
-                + "if, line 0, n gt 100, end";
-
-            Assert.AreEqual(expected, expression.ToString());
+            var expected = "if, line 0, n gt 100, begin\r\n"
+                           + "if, line 0, n gt 100, statements begin\r\n"
+                           +"keepGoing assigned as False\r\n"
+                           + "if, line 0, n gt 100, statements end\r\n"
+                           + "if, line 0, n gt 100, next begin\r\n"
+                           + "if, line 0, n gt 100, next end\r\n"
+                           + "if, line 0, n gt 100, end";
+           // Console.Write(expression);
+          Assert.AreEqual(expected, expression.ToString());
         }
 
         [TestMethod]
