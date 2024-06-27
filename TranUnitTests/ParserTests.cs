@@ -30,10 +30,94 @@ namespace TranUnitTests
         }
 
         [TestMethod]
-        public void ParseExpressionTest()
+        public void ParseExpressionTestPlus()
         {
             CreateParser("1 + 2");
             Assert.AreEqual("1 Plus 2", parser.ParseExpression().ToString());
+        }
+
+        [TestMethod]
+        public void ParseExpressionTestTimes()
+        {
+            CreateParser("x * y");
+            Assert.AreEqual("x Times y", parser.ParseExpression().ToString());
+        }
+
+        [TestMethod]
+        public void ParseExpressionTestGreaterEq()
+        {
+            CreateParser("300 >= 46.56");
+            Assert.AreEqual("300 ge 46.56", parser.ParseExpression().ToString());
+        }
+
+        [TestMethod]
+        public void ParseExpressionTestLessThan()
+        {
+            CreateParser("46.56 < 75");
+            Assert.AreEqual("46.56 lt 75", parser.ParseExpression().ToString());
+        }
+
+        [TestMethod]
+        public void ParseExpressionTestNotEqual()
+        {
+            CreateParser("1!=2");
+            Assert.AreEqual("1 ne 2", parser.ParseExpression().ToString());
+        }
+
+        [TestMethod]
+        public void ParseExpressionTestEquals()
+        {
+            CreateParser("8==8");
+            Assert.AreEqual("8 eq 8", parser.ParseExpression().ToString());
+        }
+
+        [TestMethod]
+        public void ParseExpressionTestMinus()
+        {
+            CreateParser("3 - 2");
+            Assert.AreEqual("3 Minus 2", parser.ParseExpression().ToString());
+        }
+
+        [TestMethod]
+        public void ParseExpressionTestDivide()
+        {
+            CreateParser("x/y");
+            Assert.AreEqual("x Divide y", parser.ParseExpression().ToString());
+        }
+
+        [TestMethod]
+        public void ParseExpressionTestLessEquals()
+        {
+            CreateParser("557 <= 4656");
+            Assert.AreEqual("557 le 4656", parser.ParseExpression().ToString());
+        }
+
+        [TestMethod]
+        public void ParseExpressionTestModulo()
+        {
+            CreateParser("4656%40");
+            Assert.AreEqual("4656 Modulo 40", parser.ParseExpression().ToString());
+        }
+
+        [TestMethod]
+        public void ParseExpressionTestTrue()
+        {
+            CreateParser("true");
+            Assert.AreEqual("True", parser.ParseExpression().ToString());
+        }
+
+        [TestMethod]
+        public void ParseExpressionTestFalse()
+        {
+            CreateParser("false");
+            Assert.AreEqual("False", parser.ParseExpression().ToString());
+        }
+
+        [TestMethod]
+        public void ParseExpressionTestGreaterThan()
+        {
+            CreateParser("46.56>2.29");
+            Assert.AreEqual("46.56 gt 2.29", parser.ParseExpression().ToString());
         }
 
         [TestMethod]
@@ -81,6 +165,7 @@ class Tran
         }
 
         [TestMethod]
+<<<<<<< HEAD
         public void ParseReturnTest()
         {
             CreateParser(
@@ -132,33 +217,29 @@ class Tran
 
         [TestMethod]
         //ask about this test
+=======
+>>>>>>> ae8c3eb8db57bb4b7416435d7b0b3db1409635ec
         public void ParseLoopTest()
         {
-            var testString = "temp = loop x.times() console.print (temp)";
-            Lexer newLexer = new Lexer(testString);
-            LinkedList<Token> tokens = newLexer.Lex();
-            Parser newParser = new Parser(tokens);
-            var expression = newParser.ParseLoop();
+            CreateParser("temp = loop x.times() \r\n" + "\tconsole.print (temp)");
+            var expression = parser.ParseLoop();
             Console.Write(expression);
-            //  Assert.AreEqual("temp = loop x.times() console.print (temp)", expression.ToString());
         }
 
         [TestMethod]
         public void ParseIfTest()
         {
-            CreateParser(
-                @"if n > 100
-    keepGoing = false".Replace("    ", "\t")
-            );
+            CreateParser("if n > 100\r\n" + "\tkeepGoing = false");
             var expression = parser.ParseIf();
             var expected =
                 "if, line 0, n gt 100, begin\r\n"
                 + "if, line 0, n gt 100, statements begin\r\n"
+                + "keepGoing assigned as False\r\n"
                 + "if, line 0, n gt 100, statements end\r\n"
                 + "if, line 0, n gt 100, next begin\r\n"
                 + "if, line 0, n gt 100, next end\r\n"
                 + "if, line 0, n gt 100, end";
-
+            // Console.Write(expression);
             Assert.AreEqual(expected, expression.ToString());
         }
 
@@ -193,6 +274,58 @@ class Tran
             Parser newParser = new Parser(tokens);
             var expression = newParser.ParseBuiltInFunctionNode();
             Console.Write(expression);
+        }
+
+        [TestMethod]
+        public void GeneralParserTest()
+        {
+            CreateParser(
+                @"
+class Tran
+    loopsAndIfs()
+        if n > 100
+            keepGoing = false
+            x=5%100
+            temp = loop x.times()
+                console.print (temp)
+        console.print(n)".Replace("    ", "\t")
+            );
+            parser.Parse();
+            Assert.AreEqual("helloWorld", parser.thisClass.Functions.First().Key);
+            Assert.AreEqual(
+                "x assigned as 1 Plus 1",
+                ((FunctionNode)parser.thisClass.Functions.First().Value)
+                    .Statements.First()
+                    .ToString()
+            );
+        }
+
+        [TestMethod]
+        public void FibonacciProgramTest()
+        {
+            CreateParser(
+                @"
+class FibonacciProgram
+    FibonacciMath()
+        number x = 0
+        number y = 1
+        number z = 0
+        number totalCount = 8
+        console.print(x + "" "" + y)
+        loop totalCount.times()
+            z = x+y
+            console.print("" "" + z)
+             x = y
+             y = z".Replace("    ", "\t")
+            );
+            parser.Parse();
+            Assert.AreEqual("helloWorld", parser.thisClass.Functions.First().Key);
+            Assert.AreEqual(
+                "x assigned as 1 Plus 1",
+                ((FunctionNode)parser.thisClass.Functions.First().Value)
+                    .Statements.First()
+                    .ToString()
+            );
         }
     }
 }
