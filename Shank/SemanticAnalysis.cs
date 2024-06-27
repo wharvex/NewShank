@@ -95,7 +95,7 @@ public class SemanticAnalysis
                 // Control flow reroute for vuop testing.
                 if (GetVuopTestFlag())
                 {
-                    var targetType = GetTypeOfExpression(an.NewTarget, variables);
+                    var targetType = variables[an.NewTarget.GetPlain().Name].Type;
                     NewCheckAssignment(
                         an.NewTarget.GetPlain().Name,
                         targetType,
@@ -830,12 +830,13 @@ public class SemanticAnalysis
         {
             var vunPlainName = vun.GetPlain().Name;
 
-            if (vdnByName.TryGetValue(vunPlainName, out var vdn))
+            if (!vdnByName.TryGetValue(vunPlainName, out var vdn))
             {
-                return vdn.Type;
+                throw new SemanticErrorException($"Variable {vunPlainName} not found", vun);
             }
-
-            throw new SemanticErrorException($"Variable {vunPlainName} not found", vun);
+            var vtVis = new VunTypeGettingVisitor(vdn.Type, vdnByName);
+            vun.Accept(vtVis);
+            return vtVis.VunType;
         }
     }
 
