@@ -144,5 +144,56 @@ class Tran
             var expression = newParser.ParseBuiltInFunctionNode();
             Console.Write(expression);
         }
+        
+        [TestMethod]
+        public void GeneralParserTest()
+        {
+            CreateParser(
+                @"
+class Tran
+    loopsAndIfs()
+        if n > 100
+            keepGoing = false
+            x=5%100
+            temp = loop x.times()
+                console.print (temp)
+        console.print(n)".Replace("    ", "\t")
+            );
+            parser.Parse();
+            Assert.AreEqual("helloWorld", parser.thisClass.Functions.First().Key);
+            Assert.AreEqual(
+                "x assigned as 1 Plus 1",
+                ((FunctionNode)parser.thisClass.Functions.First().Value)
+                .Statements.First()
+                .ToString()
+            );
+        }
+        [TestMethod]
+        public void FibonacciProgramTest()
+        {
+            CreateParser(
+                @"
+class FibonacciProgram
+    FibonacciMath()
+        number x = 0
+        number y = 1
+        number z = 0
+        number totalCount = 8
+        console.print(x + "" "" + y)
+        loop totalCount.times()
+            z = x+y
+            console.print("" "" + z)
+             x = y
+             y = z".Replace("    ", "\t")
+            );
+            parser.Parse();
+            Assert.AreEqual("helloWorld", parser.thisClass.Functions.First().Key);
+            Assert.AreEqual(
+                "x assigned as 1 Plus 1",
+                ((FunctionNode)parser.thisClass.Functions.First().Value)
+                .Statements.First()
+                .ToString()
+            );
+        }
     }
 }
