@@ -20,7 +20,7 @@ public class Parser
         program = new ProgramNode();
         sharedNames = new LinkedList<string>();
         members = [];
-        blockLevel = 1;
+        blockLevel = 0;
     }
 
     public bool AcceptSeparators()
@@ -166,6 +166,7 @@ public class Parser
                     throw new Exception("No name provided for implemented class");
                 }
 
+                blockLevel++;
                 return true;
             }
 
@@ -503,6 +504,7 @@ public class Parser
     public StatementNode? ParseFunctionCall()
     {
         AcceptSeparators();
+
         var functionToken = handler.MatchAndRemove(TokenType.FUNCTION);
 
         if (functionToken == null)

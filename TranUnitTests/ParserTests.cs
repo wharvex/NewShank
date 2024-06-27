@@ -96,11 +96,11 @@ class Tran
         [TestMethod]
         public void ParseIfTest()
         {
-            var testString = "if n > 100 keepGoing = false";
-            Lexer newLexer = new Lexer(testString);
-            LinkedList<Token> tokens = newLexer.Lex();
-            Parser newParser = new Parser(tokens);
-            var expression = newParser.ParseIf();
+            CreateParser(
+                @"if n > 100
+    keepGoing = false".Replace("    ", "\t")
+            );
+            var expression = parser.ParseIf();
             var expected =
                 "if, line 0, n gt 100, begin\r\n"
                 + "if, line 0, n gt 100, statements begin\r\n"
