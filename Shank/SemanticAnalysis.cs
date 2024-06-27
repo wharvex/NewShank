@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using System.Diagnostics;
+using System.Linq.Expressions;
 using System.Text;
 using Optional;
 using Optional.Linq;
@@ -331,69 +332,71 @@ public class SemanticAnalysis
         string targetName,
         Type targetType,
         ExpressionNode expression,
-        Dictionary<string, VariableDeclarationNode> variables,
-        VariableUsageNodeTemp newTarget
+        Dictionary<string, VariableDeclarationNode> vDecs,
+        VariableUsageNodeTemp target
     )
     {
-        var vpadGV = new VuPlainAndDepthGettingVisitor();
-        newTarget.Accept(vpadGV);
+        // Get the depth d of the innermost vun in the target's vun structure.
+        var padVis = new VuPlainAndDepthGettingVisitor();
+        target.Accept(padVis);
+        var d = padVis.Depth;
 
-        var vadGV = new VuAtDepthGettingVisitor(vpadGV.Depth - 1);
-        newTarget.Accept(vadGV);
+        // Set t to the outermost type in the target's type structure.
+        var t = targetType;
 
-        var vvtCV = new VunVsTypeCheckingVisitor(targetType, variables, GetMinRange, GetMaxRange);
-        vadGV.VuAtDepth.Accept(vvtCV);
-
-        var itGV = new InnerTypeGettingVisitor(vadGV.VuAtDepth);
-        targetType.Accept(itGV);
-
-        var vadGV2 = new VuAtDepthGettingVisitor(vpadGV.Depth - 2);
-        newTarget.Accept(vadGV2);
-
-        var itGV2 = new InnerTypeGettingVisitor(vadGV2.VuAtDepth);
-        itGV.InnerType?.Accept(itGV2);
-
-        OutputHelper.DebugPrintJson(vpadGV, "vpad");
-        OutputHelper.DebugPrintJson(vadGV, "vad");
-        OutputHelper.DebugPrintJson(vvtCV, "vvt");
-        OutputHelper.DebugPrintJson(itGV, "it");
-        OutputHelper.DebugPrintJson(itGV2, "it2");
-
-        NewCheckRange(newTarget, targetType, expression, variables);
-
-        if (
-            targetType is EnumType e
-            && expression is VariableUsagePlainNode v
-            && e.Variants.Contains(v.Name)
-        )
+        // Ensure vun and type agree internally, and end up with t set to the type which the
+        // assignment's "expression" (it's RHS) should be.
+        while (true)
         {
-            if (v.ExtensionType != VariableUsagePlainNode.VrnExtType.None)
+            // Recurse through the type structure but "reverse-recurse" through the vun structure.
+            d--;
+            if (d < 0)
             {
-                throw new SemanticErrorException($"ambiguous variable name {v.Name}", expression);
+                break;
+            }
+
+            // Get variable usage at depth d of target and store it in vadVis.
+            var vadVis = new VuAtDepthGettingVisitor(d);
+            target.Accept(vadVis);
+
+            // Ensure the variable usage in vadVis and the type in t "agree internally".
+            vadVis.VuAtDepth.Accept(
+                new VunVsTypeCheckingVisitor(t, vDecs, GetMinRange, GetMaxRange)
+            );
+
+            // Set t to its own inner type (forward recursion).
+            var itVis = new InnerTypeGettingVisitor(vadVis.VuAtDepth);
+            t.Accept(itVis);
+            t = itVis.InnerType;
+
+            // itVis.InnerType is null if there are no more inner types (this shouldn't happen).
+            if (t is null)
+            {
+                break;
             }
         }
-        else
+
+        if (t is null)
         {
-            var expressionType = GetTypeOfExpression(expression, variables);
-            if (targetType is ArrayType { Inner: RangeType irt })
-            {
-                targetType = irt;
-            }
-            else if (targetType is InstantiatedType it)
-            {
-                var mev = new MemberExpectingVisitor();
-                newTarget.Accept(mev);
-                var mvv = new MemberValidatingVisitor(mev, expressionType);
-                it.Accept(mvv);
-                return;
-            }
-            if (!targetType.Equals(expressionType))
-            {
-                throw new SemanticErrorException(
-                    $"Type mismatch cannot assign to {targetName}: {targetType} {expression}: {expressionType}",
-                    expression
-                );
-            }
+            throw new InvalidOperationException();
+        }
+
+        // Check the final computed target type against the expression.
+        var expressionType = GetTypeOfExpression(expression, vDecs);
+        if (!t.Equals(expressionType))
+        {
+            throw new SemanticErrorException(
+                "Type mismatch; cannot assign `"
+                    + expression
+                    + " : "
+                    + expressionType
+                    + "' to `"
+                    + targetName
+                    + " : "
+                    + targetType
+                    + "'.",
+                expression
+            );
         }
     }
 
