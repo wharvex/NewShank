@@ -165,7 +165,6 @@ class Tran
         }
 
         [TestMethod]
-<<<<<<< HEAD
         public void ParseReturnTest()
         {
             CreateParser(
@@ -217,8 +216,6 @@ class Tran
 
         [TestMethod]
         //ask about this test
-=======
->>>>>>> ae8c3eb8db57bb4b7416435d7b0b3db1409635ec
         public void ParseLoopTest()
         {
             CreateParser("temp = loop x.times() \r\n" + "\tconsole.print (temp)");
