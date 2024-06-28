@@ -1,8 +1,11 @@
 
-Interpret VariableUsageOp/Complex --vuop-test
-Interpret VariableUsageOp/Assignment/Target/Integer/Index --vuop-test
-Interpret VariableUsageOp/Assignment/Target/Integer/Member --vuop-test
-Interpret VariableUsageOp/Assignment/Target/Integer/Plain --vuop-test
-Interpret VariableUsageOp/FunctionCall/Builtin/Integer/Index --vuop-test
-Interpret VariableUsageOp/FunctionCall/Builtin/Integer/Member --vuop-test
-Interpret VariableUsageOp/FunctionCall/Builtin/Integer/Plain --vuop-test
+Interpret VariableUsageOp/Assignment/LhsIsVuop/Integer/Index/Valid --vuop-test
+Interpret VariableUsageOp/Assignment/LhsIsVuop/Integer/Index/Invalid --vuop-test
+Interpret VariableUsageOp/Assignment/LhsIsVuop/Integer/Member/Valid --vuop-test
+Interpret VariableUsageOp/Assignment/LhsIsVuop/Integer/Member/Invalid --vuop-test
+Interpret VariableUsageOp/Assignment/LhsIsVuop/Integer/Plain/Valid --vuop-test
+Interpret VariableUsageOp/Assignment/LhsIsVuop/Integer/Plain/Invalid --vuop-test
+Interpret VariableUsageOp/Assignment/LhsIsVuop/Integer/NestedMember/Valid --vuop-test
+Interpret VariableUsageOp/Assignment/LhsIsVuop/Integer/NestedMember/Invalid --vuop-test
+Interpret VariableUsageOp/Assignment/LhsIsVuop/Integer/NestedMemberAndIndex/Valid --vuop-test
+Interpret VariableUsageOp/Assignment/LhsIsVuop/Integer/NestedMemberAndIndex/Invalid --vuop-test
