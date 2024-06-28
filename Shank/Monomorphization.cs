@@ -4,9 +4,10 @@ using Shank.ExprVisitors;
 namespace Shank;
 
 public interface Index;
+
 public record struct NamedIndex(string Name) : Index;
 
-public readonly record struct ModuleIndex( NamedIndex Name, string Module) : Index
+public readonly record struct ModuleIndex(NamedIndex Name, string Module) : Index
 {
     public override string ToString()
     {

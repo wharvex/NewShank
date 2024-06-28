@@ -47,7 +47,9 @@ public class VariableUsagePlainNode : VariableUsageNodeTemp
     public bool ReferencesGlobalVariable { get; set; }
 
     public Index MonomorphizedName() =>
-        ReferencesGlobalVariable ? new ModuleIndex(new NamedIndex(Name), ModuleName) : new NamedIndex(Name);
+        ReferencesGlobalVariable
+            ? new ModuleIndex(new NamedIndex(Name), ModuleName)
+            : new NamedIndex(Name);
 
     public ASTNode GetExtensionSafe() =>
         Extension ?? throw new InvalidOperationException("Expected Extension to not be null.");

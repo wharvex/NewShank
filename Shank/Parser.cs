@@ -498,7 +498,8 @@ public class Parser
         while (!done)
         {
             var vars = GetVariables(
-                moduleName, false,
+                moduleName,
+                false,
                 VariableDeclarationNode.DeclarationContext.FunctionSignature
             );
             done = vars == null;
@@ -1160,10 +1161,7 @@ public class Parser
     /// </summary>
     /// <param name="parentModule"></param>
     /// <returns></returns>
-    private List<VariableDeclarationNode> ProcessVariables(string parentModule,
-    
-        bool isGlobal
-    )
+    private List<VariableDeclarationNode> ProcessVariables(string parentModule, bool isGlobal)
     {
         var retVal = new List<VariableDeclarationNode>();
 
@@ -1184,7 +1182,10 @@ public class Parser
         return retVal;
     }
 
-    private List<VariableDeclarationNode> ProcessVariablesDoWhile(string parentModule, bool isGlobal)
+    private List<VariableDeclarationNode> ProcessVariablesDoWhile(
+        string parentModule,
+        bool isGlobal
+    )
     {
         var retVal = new List<VariableDeclarationNode>();
 
@@ -1194,7 +1195,6 @@ public class Parser
                 parentModule,
                 isGlobal,
                 VariableDeclarationNode.DeclarationContext.VariablesLine
-                
             );
 
             // TODO: List.AddRange throws an ArgumentNullException if nextOnes is null.
@@ -1261,15 +1261,19 @@ public class Parser
     {
         // ranges parsed in the type
         return names
-            .Select(n => new VariableDeclarationNode(isConstant, type, n, parentModuleName, isGlobal))
+            .Select(
+                n => new VariableDeclarationNode(isConstant, type, n, parentModuleName, isGlobal)
+            )
             .ToList();
     }
 
-    private List<VariableDeclarationNode> CreateDefaultVariables(List<string> names,
+    private List<VariableDeclarationNode> CreateDefaultVariables(
+        List<string> names,
         bool isConstant,
         bool isGlobal,
         string parentModuleName,
-        Type type)
+        Type type
+    )
     {
         var expression = Expression(parentModuleName);
         if (expression == null)
@@ -1525,7 +1529,10 @@ public class Parser
         return (fromNode, toNode);
     }
 
-    private List<VariableDeclarationNode> ProcessConstants(string? parentModuleName, bool isGlobal = false)
+    private List<VariableDeclarationNode> ProcessConstants(
+        string? parentModuleName,
+        bool isGlobal = false
+    )
     {
         var retVal = new List<VariableDeclarationNode>();
         while (MatchAndRemove(Token.TokenType.Constants) != null)
@@ -1536,7 +1543,10 @@ public class Parser
         return retVal;
     }
 
-    private List<VariableDeclarationNode> ProcessConstantsDoWhile(string? parentModuleName, bool isGlobal = false)
+    private List<VariableDeclarationNode> ProcessConstantsDoWhile(
+        string? parentModuleName,
+        bool isGlobal = false
+    )
     {
         var retVal = new List<VariableDeclarationNode>();
         do
@@ -1547,7 +1557,10 @@ public class Parser
         return retVal;
     }
 
-    private List<VariableDeclarationNode> ProcessConstant(string? parentModuleName, bool isGlobal = false)
+    private List<VariableDeclarationNode> ProcessConstant(
+        string? parentModuleName,
+        bool isGlobal = false
+    )
     {
         var retVal = new List<VariableDeclarationNode>();
         while (true)
@@ -1612,7 +1625,7 @@ public class Parser
                                 Type = new StringType(),
                                 IsConstant = true,
                                 Name = name.Value ?? "",
-                            IsGlobal = isGlobal,
+                                IsGlobal = isGlobal,
                                 ModuleName = parentModuleName
                             }
                         );
@@ -1632,7 +1645,7 @@ public class Parser
                                         Type = new UnknownType(enm.Value),
                                         IsConstant = true,
                                         Name = name.Value ?? "",
-                            IsGlobal = isGlobal,
+                                        IsGlobal = isGlobal,
                                         ModuleName = parentModuleName,
                                     }
                                 );

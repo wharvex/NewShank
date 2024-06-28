@@ -49,7 +49,13 @@ public class VariableDeclarationNode : ASTNode
         IsGlobal = copy.IsGlobal;
     }
 
-    public VariableDeclarationNode(bool isConstant, Type type, string name, string moduleName, bool isGlobal)
+    public VariableDeclarationNode(
+        bool isConstant,
+        Type type,
+        string name,
+        string moduleName,
+        bool isGlobal
+    )
     {
         IsConstant = isConstant;
         Type = type;
