@@ -371,21 +371,20 @@ public class SemanticAnalysis
     {
         functionCallNode.FunctionDefinitionModule = fn.parentModuleName!;
         // TODO: overloads and default parameters might have different arrity
-        // if (fn.ParameterVariables.Count != fn.ParameterVariables.Count)
-        // {
-        //     throw new Exception("type error function call doesnt match");
-        // }
+        // TODO: works for Default.
 
-        int defaultParameterCount = fn.ParameterVariables.Count(
-            parameter => parameter.IsDefaultValue
-        );
-
-        // Ensure the args count matches the params count.
-        if (
-            args.Count < fn.ParameterVariables.Count - defaultParameterCount
-            || args.Count > fn.ParameterVariables.Count
+        foreach (
+            var (
+                param,
+                index
+            ) in fn.ParameterVariables //pull params
+            .Select((param, index) => (param, index)) //pulls params
         )
         {
+            if (param.IsDefaultValue && index > args.Count - 1)
+                args.Add((ExpressionNode)param.InitialValue);
+        }
+        if (args.Count != fn.ParameterVariables.Count)
             throw new SemanticErrorException(
                 "For function "
                     + fn.Name
@@ -395,21 +394,6 @@ public class SemanticAnalysis
                     + fn.ParameterVariables.Count
                     + " are required."
             );
-        }
-
-        for (int i = 0; i < fn.ParameterVariables.Count; i++)
-        {
-            var parameter = fn.ParameterVariables[i];
-
-            if (!parameter.IsDefaultValue)
-                continue;
-            if (i <= args.Count - 1)
-                continue;
-            functionCallNode.Arguments.Add((ExpressionNode)parameter.InitialValue);
-        }
-
-        // fn.ParameterVariables.ForEach(n => Console.WriteLine(n.InitialValue));
-        // Console.WriteLine(defaultParameterCount);
         var selectMany = fn.ParameterVariables.Zip(args)
             .SelectMany(paramAndArg =>
             {

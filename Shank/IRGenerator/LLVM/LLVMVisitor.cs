@@ -457,14 +457,13 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
         }
         else if (node.Target.ExtensionType == VariableUsagePlainNode.VrnExtType.RecordMember)
         {
-            var a = (RecordType)context.GetCustomType(llvmValue.TypeRef.StructName).Type;
-            var b = (VariableUsagePlainNode)node.Target.GetExtensionSafe();
+            var Recordtype = (RecordType)context.GetCustomType(llvmValue.TypeRef.StructName).Type;
+            var RecordExt = (VariableUsagePlainNode)node.Target.GetExtensionSafe();
 
-            Console.WriteLine(a.Fields.Keys.ToList().IndexOf(b.Name));
             var c = builder.BuildStructGEP2(
                 llvmValue.TypeRef,
                 llvmValue.ValueRef,
-                (uint)a.Fields.Keys.ToList().IndexOf(b.Name)
+                (uint)Recordtype.Fields.Keys.ToList().IndexOf(RecordExt.Name)
             );
             builder.BuildStore(expression, c);
         }
