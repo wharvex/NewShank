@@ -1,11 +1,11 @@
 
-Interpret VariableUsageOp/Assignment/LhsIsVuop/Integer/Index/Valid --vuop-test
-Interpret VariableUsageOp/Assignment/LhsIsVuop/Integer/Index/Invalid --vuop-test
-Interpret VariableUsageOp/Assignment/LhsIsVuop/Integer/Member/Valid --vuop-test
-Interpret VariableUsageOp/Assignment/LhsIsVuop/Integer/Member/Invalid --vuop-test
-Interpret VariableUsageOp/Assignment/LhsIsVuop/Integer/Plain/Valid --vuop-test
-Interpret VariableUsageOp/Assignment/LhsIsVuop/Integer/Plain/Invalid --vuop-test
-Interpret VariableUsageOp/Assignment/LhsIsVuop/Integer/NestedMember/Valid --vuop-test
-Interpret VariableUsageOp/Assignment/LhsIsVuop/Integer/NestedMember/Invalid --vuop-test
-Interpret VariableUsageOp/Assignment/LhsIsVuop/Integer/NestedMemberAndIndex/Valid --vuop-test
-Interpret VariableUsageOp/Assignment/LhsIsVuop/Integer/NestedMemberAndIndex/Invalid --vuop-test
+Interpret VariableUsageOp/Assignment/LhsIsVuop/Integer/NonMathOp/Index/Valid --vuop-test
+Interpret VariableUsageOp/Assignment/LhsIsVuop/Integer/NonMathOp/Index/Invalid --vuop-test
+Interpret VariableUsageOp/Assignment/LhsIsVuop/Integer/NonMathOp/Member/Valid --vuop-test
+Interpret VariableUsageOp/Assignment/LhsIsVuop/Integer/NonMathOp/Member/Invalid --vuop-test
+Interpret VariableUsageOp/Assignment/LhsIsVuop/Integer/NonMathOp/Plain/Valid --vuop-test
+Interpret VariableUsageOp/Assignment/LhsIsVuop/Integer/NonMathOp/Plain/Invalid --vuop-test
+Interpret VariableUsageOp/Assignment/LhsIsVuop/Integer/NonMathOp/NestedMember/Valid --vuop-test
+Interpret VariableUsageOp/Assignment/LhsIsVuop/Integer/NonMathOp/NestedMember/Invalid --vuop-test
+Interpret VariableUsageOp/Assignment/LhsIsVuop/Integer/NonMathOp/NestedMemberAndIndex/Valid --vuop-test
+Interpret VariableUsageOp/Assignment/LhsIsVuop/Integer/NonMathOp/NestedMemberAndIndex/Invalid --vuop-test

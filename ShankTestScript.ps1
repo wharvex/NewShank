@@ -50,11 +50,16 @@ function st {
         $args_list[1] = "$($ds)$($args_list[1])"
 
         $progress = if ($null -ne $i) `
-        { "($i of $($path_list.Length - 1))" } `
-            else { '' }
+        { "(Test $i of $($path_list.Length - 1))" } `
+            else { '(Test 1 of 1)' }
 
-        "`n**** Running The Following Command $($progress) ****`n"
-        "dotnet run $($args_list -join ' ') --project $sp`n"
+        $shank_files = Get-ChildItem $args_list[1] -r -filter *.shank
+
+        "`n**** Shank File(s) To Run $progress ****`n"
+        $shank_files | ForEach-Object -Process {"`nFILE: $_`n"; "`nCONTENTS:`n"; Get-Content $_}
+        "`n**** Running The Following Command $progress ****`n"
+        "dotnet run $($args_list -join ' ') --project $sp"
+        "`n**** Output $progress ****`n"
         dotnet run @args_list --project $sp
     }
 
