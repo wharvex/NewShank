@@ -16,6 +16,8 @@ public class Program
         // RunCompiler(args);
         var cmdLineParser = new CommandLineArgsParser(args);
         // bool a = true;
+
+        //     Console.WriteLine(item);
         // if (a)
         // return;
 

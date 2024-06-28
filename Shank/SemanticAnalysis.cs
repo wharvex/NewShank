@@ -220,6 +220,7 @@ public class SemanticAnalysis
                         iterationVariable
                     );
                 }
+
                 switch (typeOfIterationVariable)
                 {
                     case RealType:
@@ -260,6 +261,7 @@ public class SemanticAnalysis
                             iterationVariable
                         );
                 }
+
                 CheckBlock(forNode.Children, variables, parentModule);
             }
             // for the rest of the cases of statements doing: GetTypeOfExpression(Node.Expression, variables);, is sufficient (no need to check that the type returned is a boolean), because Expression is already known to be BooleanExpressionNode
@@ -369,9 +371,50 @@ public class SemanticAnalysis
     {
         functionCallNode.FunctionDefinitionModule = fn.parentModuleName!;
         // TODO: overloads and default parameters might have different arrity
+        // if (fn.ParameterVariables.Count != fn.ParameterVariables.Count)
+        // {
+        //     throw new Exception("type error function call doesnt match");
+        // }
+
+        int defaultParameterCount = fn.ParameterVariables.Count(
+            parameter => parameter.IsDefaultValue
+        );
+
+        // Ensure the args count matches the params count.
+        if (
+            args.Count < fn.ParameterVariables.Count - defaultParameterCount
+            || args.Count > fn.ParameterVariables.Count
+        )
+        {
+            throw new SemanticErrorException(
+                "For function "
+                    + fn.Name
+                    + ", "
+                    + args.Count
+                    + " parameters were passed in, but "
+                    + fn.ParameterVariables.Count
+                    + " are required."
+            );
+        }
+
+        for (int i = 0; i < fn.ParameterVariables.Count; i++)
+        {
+            var parameter = fn.ParameterVariables[i];
+            Console.WriteLine(parameter.IsDefaultValue);
+            Console.WriteLine(i + "," + args.Count);
+            if (!parameter.IsDefaultValue)
+                continue;
+            if (i <= args.Count - 1)
+                continue;
+            functionCallNode.Arguments.Add((ExpressionNode)parameter.InitialValue);
+        }
+
+        // fn.ParameterVariables.ForEach(n => Console.WriteLine(n.InitialValue));
+        // Console.WriteLine(defaultParameterCount);
         var selectMany = fn.ParameterVariables.Zip(args)
             .SelectMany(paramAndArg =>
             {
+                Console.WriteLine(paramAndArg);
                 var param = paramAndArg.First;
                 var arguement = paramAndArg.Second;
                 //
@@ -385,7 +428,12 @@ public class SemanticAnalysis
                 return typeCheckAndInstiateGenericParameter;
             })
             .Distinct();
+        // selectMany.ToList().ForEach(n => Console.WriteLine(n.Item1));
 
+        // .ParameterVariables.ForEach((n, n1) =>
+        // {
+        //
+        // });
         return
             selectMany.GroupBy(pair => pair.Item1).FirstOrDefault(group => group.Count() > 1)
                 is { } bad
@@ -418,6 +466,7 @@ public class SemanticAnalysis
             {
                 throw new SemanticErrorException($"ambiguous variable name {v.Name}", expression);
             }
+
             return [];
         }
 
@@ -447,6 +496,7 @@ public class SemanticAnalysis
                 ({ } a, { } b)
                     => Option.Some(Enumerable.Empty<(string, Type)>()).Where(_ => !a.Equals(b))
             };
+
         Option<IEnumerable<(string, Type)>> MatchTypesInstantiated(
             InstantiatedType paramType,
             InstantiatedType type
@@ -513,7 +563,7 @@ public class SemanticAnalysis
             }
             catch (InvalidCastException e)
             {
-                
+
                 throw new Exception("String types can only be assigned a range of two integers.", e);
             }
         }*/
@@ -619,8 +669,10 @@ public class SemanticAnalysis
             {
                 return t.Range.To;
             }
+
             throw new Exception("Ranged variables can only be assigned variables with a range.");
         }
+
         throw new Exception(
             "Unrecognized node type on line "
                 + node.Line
@@ -663,6 +715,7 @@ public class SemanticAnalysis
             {
                 return t.Range.From;
             }
+
             throw new Exception("Ranged variables can only be assigned variables with a range.");
         }
 
@@ -717,6 +770,7 @@ public class SemanticAnalysis
 
                 return new BooleanType();
             }
+
             var rightType = GetTypeOfExpression(booleanExpressionNode.Right, variables);
             return leftType.Equals(rightType)
                 ? new BooleanType()
@@ -834,6 +888,7 @@ public class SemanticAnalysis
             {
                 throw new SemanticErrorException($"Variable {vunPlainName} not found", vun);
             }
+
             var vtVis = new VunTypeGettingVisitor(vdn.Type, vdnByName);
             vun.Accept(vtVis);
             return vtVis.VunType;
@@ -1243,6 +1298,7 @@ public class SemanticAnalysis
                         }
                     );
                 }
+
                 // if not all generics are used in the parameters that means those generics cannot be infered, but they could be used for variables which is bad
                 if (!usedGenerics.Distinct().SequenceEqual(generics))
                 {
@@ -1387,6 +1443,7 @@ public class SemanticAnalysis
                     module
                 );
             }
+
             return new ReferenceType(resolvedType);
         }
 
@@ -1431,6 +1488,7 @@ public class SemanticAnalysis
                     module
                 );
             }
+
             var instantiatedGenerics = record
                 .Generics.Zip(
                     member.TypeParameters.Select(
@@ -1440,6 +1498,7 @@ public class SemanticAnalysis
                 .ToDictionary();
             resolveType = new InstantiatedType(record, instantiatedGenerics);
         }
+
         return resolveType;
     }
 

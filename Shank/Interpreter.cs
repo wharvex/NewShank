@@ -45,39 +45,30 @@ public class Interpreter
     {
         Dictionary<string, InterpreterDataType> ret = [];
 
-        int defaultParameterCount = 0;
-        foreach (var parameter in fn.ParameterVariables)
-            if (parameter.IsDefaultValue)
-                defaultParameterCount++;
+        // int defaultParameterCount = fn.ParameterVariables.Count(
+        //     parameter => parameter.IsDefaultValue
+        // );
+        //
+        // // Ensure the args count matches the params count.
+        // if (
+        //     parameters.Count < fn.ParameterVariables.Count - defaultParameterCount
+        //     || parameters.Count > fn.ParameterVariables.Count
+        // )
+        // {
+        //     throw new InvalidOperationException(
+        //         "For function "
+        //             + fn.Name
+        //             + ", "
+        //             + parameters.Count
+        //             + " parameters were passed in, but "
+        //             + fn.ParameterVariables.Count
+        //             + " are required."
+        //     );
+        // }
 
-        // Ensure the args count matches the params count.
-        if (
-            parameters.Count < fn.ParameterVariables.Count - defaultParameterCount
-            || parameters.Count > fn.ParameterVariables.Count
-        )
-        {
-            throw new InvalidOperationException(
-                "For function "
-                    + fn.Name
-                    + ", "
-                    + parameters.Count
-                    + " parameters were passed in, but "
-                    + fn.ParameterVariables.Count
-                    + " are required."
-            );
-        }
-
-        for (int i = 0; i < fn.ParameterVariables.Count(); i++)
+        for (int i = 0; i < fn.ParameterVariables.Count; i++)
         {
             var parameter = fn.ParameterVariables[i];
-            if (parameter.IsDefaultValue)
-            {
-                if (i >= parameters.Count)
-                {
-                    ret.Add(parameter.GetNameSafe(), VariableNodeToActivationRecord(parameter));
-                    continue;
-                }
-            }
             ret.Add(parameter.GetNameSafe(), parameters[i]);
         }
 

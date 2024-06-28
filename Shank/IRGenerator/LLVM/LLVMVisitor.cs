@@ -161,19 +161,22 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
         }
         else if (node.ExtensionType == VariableUsagePlainNode.VrnExtType.RecordMember)
         {
-            var a = (RecordType)context.GetCustomType(value.TypeRef.StructName).Type;
-            var b = (VariableUsagePlainNode)node.GetExtensionSafe();
-
-            Console.WriteLine(a.Fields.Keys.ToList().IndexOf(b.Name));
-            var c = builder.BuildStructGEP2(
+            var varType = (RecordType)context.GetCustomType(value.TypeRef.StructName).Type;
+            var varField = (VariableUsagePlainNode)node.GetExtensionSafe();
+            var structField = builder.BuildStructGEP2(
                 value.TypeRef,
                 value.ValueRef,
-                (uint)a.Fields.Keys.ToList().IndexOf(b.Name)
+                (uint)varType.Fields.Keys.ToList().IndexOf(varField.Name)
             );
-            expr.Push(builder.BuildLoad2(value.TypeRef, c));
-            // builder.BuildStore(node.e, c);
+            expr.Push(builder.BuildLoad2(value.TypeRef, structField));
         }
-        else
+        else if (node.ExtensionType == VariableUsagePlainNode.VrnExtType.Enum)
+        {
+            var varType = (EnumType)context.GetCustomType(value.TypeRef.StructName).Type;
+            Console.WriteLine(varType.Variants);
+            Console.WriteLine(node.Extension);
+        }
+        else if (node.ExtensionType == VariableUsagePlainNode.VrnExtType.None)
         {
             expr.Push(builder.BuildLoad2(value.TypeRef, value.ValueRef));
         }
@@ -334,19 +337,6 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
         record.LlvmTypeRef.StructSetBody(args.Select(s => s.Item2).ToArray(), false);
     }
 
-    // public override void Visit(ParameterNode node)
-    // {
-    //     if (node.IsVariable)
-    //     {
-    //         var vars = context.GetVariable(node.Variable?.Name);
-    //         expr.Push(vars.ValueRef);
-    //     }
-    //     else
-    //     {
-    //         node.Constant?.Accept(this);
-    //     }
-    // }
-
     public override void Visit(FunctionCallNode node)
     {
         if (node.Name == "write")
@@ -362,6 +352,7 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
                     {
                         b = builder.BuildExtractValue(b, 1);
                     }
+
                     return b;
                 })
                     .ToArray()
@@ -394,13 +385,14 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
                 p.Accept(this);
                 return expr.Pop();
             });
+            // function.
             builder.BuildCall2(function.TypeOf, function.Function, parameters.ToArray());
         }
     }
 
     public override void Visit(FunctionNode node)
     {
-        var function = (LLVMFunction)context.GetFunction(node.Name);
+        var function = context.GetFunction(node.Name);
         context.CurrentFunction = function;
         context.ResetLocal();
         var block = function.AppendBasicBlock("entry");
@@ -450,10 +442,9 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
         var llvmValue = context.GetVariable(node.Target.Name);
         // context.GetCustomType(node.)
         Console.WriteLine(node.ToString());
-
         node.Expression.Accept(this);
         var expression = expr.Pop();
-        if (!llvmValue.IsMutable) // :')
+        if (!llvmValue.IsMutable)
         {
             throw new Exception($"tried to mutate non mutable variable {node.Target.Name}");
         }
@@ -477,6 +468,7 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
             );
             builder.BuildStore(expression, c);
         }
+        else if (node.Target.ExtensionType == VariableUsagePlainNode.VrnExtType.Enum) { }
         else
         {
             builder.BuildStore(expression, llvmValue.ValueRef);
