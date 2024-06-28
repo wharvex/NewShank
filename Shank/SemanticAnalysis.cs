@@ -715,7 +715,7 @@ public class SemanticAnalysis
     }
 
     private static Type GetTypeOfExpression(
-        ASTNode expression,
+        ExpressionNode expression,
         Dictionary<string, VariableDeclarationNode> variables
     )
     {
@@ -726,6 +726,7 @@ public class SemanticAnalysis
                 => GetTypeOfBooleanExpression(booleanExpressionNode, variables),
             CharNode charNode => new CharacterType(),
             FloatNode floatNode => new RealType(),
+            BoolNode boolNode => new BooleanType(),
             MathOpNode mathOpNode => GetTypeOfMathOp(mathOpNode, variables),
             StringNode stringNode => new StringType(),
             // Control flow reroute for vuop testing.

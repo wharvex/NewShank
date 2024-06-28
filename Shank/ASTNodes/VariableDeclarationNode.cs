@@ -61,7 +61,7 @@ public class VariableDeclarationNode : ASTNode
     //     ?? throw new Exception($"Type {type} doesnt exist");
 
     public bool IsConstant { get; set; }
-    public ASTNode? InitialValue { get; set; }
+    public ExpressionNode? InitialValue { get; set; }
 
     public string GetNameSafe() =>
         Name ?? throw new InvalidOperationException("Expected Name to not be null");

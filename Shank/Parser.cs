@@ -1648,7 +1648,7 @@ public class Parser
     /// </summary>
     /// <param name="num">The number being processed</param>
     /// <returns>FloatNode or IntNode containing the value of the number</returns>
-    private ASTNode ProcessNumericConstant(Token num)
+    private ExpressionNode ProcessNumericConstant(Token num)
     {
         return (num.Value ?? "").Contains('.')
             ? new FloatNode(float.Parse(num.Value ?? ""))
