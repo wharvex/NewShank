@@ -400,8 +400,7 @@ public class SemanticAnalysis
         for (int i = 0; i < fn.ParameterVariables.Count; i++)
         {
             var parameter = fn.ParameterVariables[i];
-            Console.WriteLine(parameter.IsDefaultValue);
-            Console.WriteLine(i + "," + args.Count);
+
             if (!parameter.IsDefaultValue)
                 continue;
             if (i <= args.Count - 1)
@@ -414,7 +413,6 @@ public class SemanticAnalysis
         var selectMany = fn.ParameterVariables.Zip(args)
             .SelectMany(paramAndArg =>
             {
-                Console.WriteLine(paramAndArg);
                 var param = paramAndArg.First;
                 var arguement = paramAndArg.Second;
                 //
@@ -428,12 +426,6 @@ public class SemanticAnalysis
                 return typeCheckAndInstiateGenericParameter;
             })
             .Distinct();
-        // selectMany.ToList().ForEach(n => Console.WriteLine(n.Item1));
-
-        // .ParameterVariables.ForEach((n, n1) =>
-        // {
-        //
-        // });
         return
             selectMany.GroupBy(pair => pair.Item1).FirstOrDefault(group => group.Count() > 1)
                 is { } bad
