@@ -521,7 +521,6 @@ public class Parser
             return null;
         }
 
-        
         var functionName = ParseBuiltInFunctionNode() ?? functionToken.GetValue();
         FunctionCallNode functionCallNode = new FunctionCallNode(functionName);
         var functionLineNumber = functionToken.GetTokenLineNumber();
