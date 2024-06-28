@@ -34,4 +34,6 @@ public abstract class Visitor
     public abstract void Visit(VariableDeclarationNode node); //
     public abstract void Visit(ProgramNode node); //
     public abstract void Visit(ForNode node); //
+
+    public abstract void Visit(BuiltInFunctionNode node);
 }

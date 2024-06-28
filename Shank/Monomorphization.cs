@@ -348,6 +348,11 @@ public class MonomorphizationVisitor(
             .ToList();
         Push(new ForNode(node, children));
     }
+
+    public override void Visit(BuiltInFunctionNode node)
+    {
+        throw new NotImplementedException();
+    }
 }
 
 public class MonomorphizationTypeVisitor(

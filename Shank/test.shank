@@ -1,10 +1,5 @@
 define start()
-variables a : integer
-	tester a
-	
-define tester(a : integer)
-    tester2 a
+	tester 'c'
     
-define tester2(a : integer)
+define tester(a : character)
     write a
-    

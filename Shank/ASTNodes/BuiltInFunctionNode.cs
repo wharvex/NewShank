@@ -35,7 +35,7 @@ public class BuiltInFunctionNode : CallableNode
         ParameterVariables.AddRange(parameters);
     }
 
-    public override void Accept(Visitor v) => throw new NotImplementedException("");
+    public override void Accept(Visitor v) => v.Visit(this);
 }
 
 public class BuiltInVariadicFunctionNode(

@@ -658,9 +658,17 @@ public class Interpreter
                     + callingFunction.parentModuleName
             );
 
+        int requiredArgumentCount = 0;
+        foreach (var variableDeclarationNode in ((CallableNode)calledFunction).ParameterVariables)
+        {
+            if (variableDeclarationNode.IsDefaultValue)
+                requiredArgumentCount++;
+        }
+
         if (
-            fc.Arguments.Count != ((CallableNode)calledFunction).ParameterVariables.Count
-            && calledFunction is not BuiltInVariadicFunctionNode
+            fc.Arguments.Count < requiredArgumentCount
+            || fc.Arguments.Count > ((CallableNode)calledFunction).ParameterVariables.Count //!= ((CallableNode)calledFunction).ParameterVariables.Count
+                && calledFunction is not BuiltInVariadicFunctionNode
         ) // make sure that the counts match
             throw new Exception(
                 $"Call of {((CallableNode)calledFunction).Name}, parameter count doesn't match."
@@ -756,6 +764,49 @@ public class Interpreter
                         break;
                     case EnumNode enumVal:
                         // passed.Add(new EnumDataType(enumVal.Type, enumVal.Value));
+                        break;
+                    case MathOpNode mathVal:
+                        switch (mathVal.Left)
+                        {
+                            case IntNode:
+                                passed.Add(new IntDataType(ResolveInt(value, variables)));
+                                break;
+                            case FloatNode:
+                                passed.Add(new FloatDataType(ResolveFloat(value, variables)));
+                                break;
+                            case StringNode:
+                                passed.Add(new StringDataType(ResolveString(value, variables)));
+                                break;
+                            case VariableUsagePlainNode variableUsage:
+                                switch (variables[variableUsage.Name])
+                                {
+                                    case IntDataType:
+                                        passed.Add(new IntDataType(ResolveInt(value, variables)));
+                                        break;
+                                    case FloatDataType:
+                                        passed.Add(
+                                            new FloatDataType(ResolveFloat(value, variables))
+                                        );
+                                        break;
+                                    case StringDataType:
+                                        passed.Add(
+                                            new StringDataType(ResolveString(value, variables))
+                                        );
+                                        break;
+                                    case CharDataType:
+                                        passed.Add(new CharDataType(ResolveChar(value, variables)));
+                                        break;
+                                    default:
+                                        throw new Exception(
+                                            $"Call of {((CallableNode)calledFunction).Name}, constant parameter of unknown type."
+                                        );
+                                }
+                                break;
+                            default:
+                                throw new Exception(
+                                    $"Call of {((CallableNode)calledFunction).Name}, constant parameter of unknown type."
+                                );
+                        }
                         break;
                     default:
                         throw new Exception(
