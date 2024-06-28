@@ -46,9 +46,16 @@ public class VariableDeclarationNode : ASTNode
         InitialValue = copy.InitialValue;
         FileName = copy.FileName;
         Line = copy.Line;
+        IsGlobal = copy.IsGlobal;
     }
 
-    public VariableDeclarationNode(bool isConstant, Type type, string name, string moduleName)
+    public VariableDeclarationNode(
+        bool isConstant,
+        Type type,
+        string name,
+        string moduleName,
+        bool isGlobal
+    )
     {
         IsConstant = isConstant;
         Type = type;
@@ -62,6 +69,7 @@ public class VariableDeclarationNode : ASTNode
 
     public bool IsConstant { get; set; }
     public ExpressionNode? InitialValue { get; set; }
+    public bool IsGlobal { get; set; } = false;
 
     public string GetNameSafe() =>
         Name ?? throw new InvalidOperationException("Expected Name to not be null");

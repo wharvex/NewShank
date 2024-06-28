@@ -142,7 +142,7 @@ public class EnumType(string name, string moduleName, List<string> variants) : T
 {
     public T Accept<T>(ITypeVisitor<T> v) => v.Visit(this);
 
-    public ModuleIndex MonomorphizedIndex() => new ModuleIndex(name, moduleName);
+    public ModuleIndex MonomorphizedIndex() => new ModuleIndex(new NamedIndex(name), moduleName);
 
     public string Name { get; } = name;
     public string ModuleName { get; } = moduleName;
