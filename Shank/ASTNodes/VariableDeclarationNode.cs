@@ -61,6 +61,7 @@ public class VariableDeclarationNode : ASTNode
         Type = type;
         Name = name;
         ModuleName = moduleName;
+        IsGlobal = isGlobal;
     }
 
     // public LLVMTypeRef GetLLVMType(Context context, Type type) =>
