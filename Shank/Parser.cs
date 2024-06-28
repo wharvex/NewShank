@@ -23,6 +23,7 @@ public class Parser
         Token.TokenType.Record,
         Token.TokenType.Enum,
         Token.TokenType.Variables,
+        Token.TokenType.Constants,
         Token.TokenType.Export,
         Token.TokenType.Import,
         Token.TokenType.Test
@@ -440,6 +441,9 @@ public class Parser
                     break;
                 case Token.TokenType.Variables:
                     ret.AddToGlobalVariables(ProcessVariablesDoWhile(moduleName));
+                    break;
+                case Token.TokenType.Constants:
+                    ret.AddToGlobalVariables(ProcessConstantsDoWhile(moduleName));
                     break;
                 default:
                     throw new NotImplementedException(
@@ -1515,6 +1519,26 @@ public class Parser
         var retVal = new List<VariableDeclarationNode>();
         while (MatchAndRemove(Token.TokenType.Constants) != null)
         {
+            retVal.AddRange(ProcessConstant(parentModuleName));
+        }
+
+        return retVal;
+    }
+private List<VariableDeclarationNode> ProcessConstantsDoWhile(string? parentModuleName)
+    {
+        var retVal = new List<VariableDeclarationNode>();
+        do
+        {
+            retVal.AddRange(ProcessConstant(parentModuleName));
+        }
+        while (MatchAndRemove(Token.TokenType.Constants) != null);
+
+        return retVal;
+    }
+    private List<VariableDeclarationNode> ProcessConstant(string? parentModuleName)
+    {
+        
+        var retVal = new List<VariableDeclarationNode>();
             while (true)
             {
                 var name = MatchAndRemove(Token.TokenType.Identifier);
@@ -1613,11 +1637,8 @@ public class Parser
             }
 
             RequiresEndOfLine();
-        }
-
         return retVal;
     }
-
     /// <summary>
     ///     <para>
     ///         Method <c>ProcessNumericConstant</c> processes a number that is passed in and returns an appropriate node based on whether or not
