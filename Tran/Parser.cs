@@ -61,6 +61,13 @@ public class Parser
         thisClass.UpdateExports();
 
         //TODO: how do we pass the record into every function if we can't parse every field before parsing functions (e.g. how do we pass in the record if it is incomplete?)
+        //Loop through functions and add this to the parameters
+        //Test object-oriented stuff
+        //Interfaces after were done 
+        //Semantic Analysis: check scope of variables (local, member, shared)
+        //Built-in functions should only be in interpreter, probably remove all the parser stuff
+        //Function call to built-in function node
+        //Append strings should be built in
         RecordNode? record = new RecordNode(thisClass.Name, thisClass.Name, members, null);
         thisClass.AddRecord(record);
         return program;
@@ -372,7 +379,7 @@ public class Parser
         return null;
     }
 
-    public LinkedList<ASTNode> ParseBuiltInFunctionNode()
+    public string ParseBuiltInFunctionNode()
     {
         LinkedList<ASTNode> expressions = new LinkedList<ASTNode>();
 
@@ -514,7 +521,7 @@ public class Parser
             return null;
         }
 
-        var functionName = functionToken.GetValue();
+        var functionName = ParseBuiltInFunctionNode() ?? functionToken.GetValue();
         var functionLineNumber = functionToken.GetTokenLineNumber();
 
         if (handler.MatchAndRemove(TokenType.OPENPARENTHESIS) == null)
@@ -524,8 +531,6 @@ public class Parser
             );
         }
 
-        List<ExpressionNode> parameters = ParseArguments();
-
         if (handler.MatchAndRemove(TokenType.CLOSEDPARENTHESIS) == null)
         {
             throw new InvalidOperationException(
@@ -534,7 +539,7 @@ public class Parser
         }
 
         FunctionCallNode functionCallNode = new FunctionCallNode(functionName);
-        functionCallNode.Arguments.AddRange(parameters);
+        functionCallNode.Arguments.AddRange(ParseArguments());
         functionCallNode.LineNum = functionLineNumber;
         return functionCallNode;
     }
