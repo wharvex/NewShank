@@ -13,7 +13,7 @@ public class AssignmentNode : StatementNode
     {
         Target = target;
         Expression = expression;
-        NewTarget = new VariableUsagePlainNode("emptyNewTarget");
+        NewTarget = new VariableUsagePlainNode("emptyNewTarget", "default");
     }
 
     public AssignmentNode(
@@ -24,7 +24,7 @@ public class AssignmentNode : StatementNode
     {
         NewTarget = target;
         Expression = expression;
-        Target = new VariableUsagePlainNode("emptyOldTarget");
+        Target = new VariableUsagePlainNode("emptyOldTarget", "default");
     }
 
     /// <summary>

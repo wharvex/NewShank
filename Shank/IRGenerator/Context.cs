@@ -262,10 +262,10 @@ public class Context
                 RealType => (LLVMReal.New, LLVMTypeRef.Double),
                 InstantiatedType recordType => NewRecordValue(recordType.Inner),
                 Shank.StringType => (LLVMString.New, LLVMStringType: StringType),
-                UnknownType unknownType => throw new NotImplementedException(),
+                UnknownType unknownType => throw new TypeAccessException($"{type} doesnt exist"),
                 BooleanType => (LLVMBoolean.New, LLVMTypeRef.Int1),
                 CharacterType => (LLVMCharacter.New, LLVMTypeRef.Int8),
-                EnumType enumType => throw new NotImplementedException(),
+                EnumType enumType => (LLVMInteger.New, LLVMTypeRef.Int64),
                 // if it's a custom type we look it up in the context
                 ReferenceType => null,
                 ArrayType

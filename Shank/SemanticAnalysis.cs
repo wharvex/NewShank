@@ -83,18 +83,28 @@ public class SemanticAnalysis
             var foundFunction = false;
             if (s is AssignmentNode an)
             {
-                if (variables.TryGetValue(an.Target.Name, out var targetDeclaration))
-                    if (targetDeclaration.IsConstant)
-                    {
-                        throw new SemanticErrorException(
-                            $"Variable {an.Target.Name} is not mutable, you cannot assign to it.",
-                            an
-                        );
-                    }
-
                 // Control flow reroute for vuop testing.
                 if (GetVuopTestFlag())
                 {
+                    if (
+                        variables.TryGetValue(
+                            an.NewTarget.GetPlain().Name,
+                            out var targetDeclaration
+                        )
+                    )
+                    {
+                        if (targetDeclaration.IsConstant)
+                        {
+                            throw new SemanticErrorException(
+                                $"Variable {an.Target.Name} is not mutable, you cannot assign to it.",
+                                an
+                            );
+                        }
+
+                        an.NewTarget.GetPlain().ReferencesGlobalVariable =
+                            targetDeclaration.IsGlobal;
+                    }
+
                     var targetType = variables[an.NewTarget.GetPlain().Name].Type;
                     NewCheckAssignment(
                         an.NewTarget.GetPlain().Name,
@@ -106,6 +116,19 @@ public class SemanticAnalysis
                 }
                 else
                 {
+                    if (variables.TryGetValue(an.Target.Name, out var targetDeclaration))
+                    {
+                        if (targetDeclaration.IsConstant)
+                        {
+                            throw new SemanticErrorException(
+                                $"Variable {an.Target.Name} is not mutable, you cannot assign to it.",
+                                an
+                            );
+                        }
+
+                        an.Target.ReferencesGlobalVariable = targetDeclaration.IsGlobal;
+                    }
+
                     var targetType = GetTypeOfExpression(an.Target, variables);
                     CheckAssignment(an.Target.Name, targetType, an.Expression, variables);
                 }
@@ -220,6 +243,7 @@ public class SemanticAnalysis
                         iterationVariable
                     );
                 }
+
                 switch (typeOfIterationVariable)
                 {
                     case RealType:
@@ -260,6 +284,7 @@ public class SemanticAnalysis
                             iterationVariable
                         );
                 }
+
                 CheckBlock(forNode.Children, variables, parentModule);
             }
             // for the rest of the cases of statements doing: GetTypeOfExpression(Node.Expression, variables);, is sufficient (no need to check that the type returned is a boolean), because Expression is already known to be BooleanExpressionNode
@@ -369,6 +394,29 @@ public class SemanticAnalysis
     {
         functionCallNode.FunctionDefinitionModule = fn.parentModuleName!;
         // TODO: overloads and default parameters might have different arrity
+        // TODO: works for Default.
+
+        foreach (
+            var (
+                param,
+                index
+            ) in fn.ParameterVariables //pull params
+            .Select((param, index) => (param, index)) //pulls params
+        )
+        {
+            if (param.IsDefaultValue && index > args.Count - 1)
+                args.Add((ExpressionNode)param.InitialValue);
+        }
+        if (args.Count != fn.ParameterVariables.Count)
+            throw new SemanticErrorException(
+                "For function "
+                    + fn.Name
+                    + ", "
+                    + args.Count
+                    + " parameters were passed in, but "
+                    + fn.ParameterVariables.Count
+                    + " are required."
+            );
         var selectMany = fn.ParameterVariables.Zip(args)
             .SelectMany(paramAndArg =>
             {
@@ -385,7 +433,6 @@ public class SemanticAnalysis
                 return typeCheckAndInstiateGenericParameter;
             })
             .Distinct();
-
         return
             selectMany.GroupBy(pair => pair.Item1).FirstOrDefault(group => group.Count() > 1)
                 is { } bad
@@ -418,6 +465,7 @@ public class SemanticAnalysis
             {
                 throw new SemanticErrorException($"ambiguous variable name {v.Name}", expression);
             }
+
             return [];
         }
 
@@ -447,6 +495,7 @@ public class SemanticAnalysis
                 ({ } a, { } b)
                     => Option.Some(Enumerable.Empty<(string, Type)>()).Where(_ => !a.Equals(b))
             };
+
         Option<IEnumerable<(string, Type)>> MatchTypesInstantiated(
             InstantiatedType paramType,
             InstantiatedType type
@@ -513,7 +562,7 @@ public class SemanticAnalysis
             }
             catch (InvalidCastException e)
             {
-                
+
                 throw new Exception("String types can only be assigned a range of two integers.", e);
             }
         }*/
@@ -619,8 +668,10 @@ public class SemanticAnalysis
             {
                 return t.Range.To;
             }
+
             throw new Exception("Ranged variables can only be assigned variables with a range.");
         }
+
         throw new Exception(
             "Unrecognized node type on line "
                 + node.Line
@@ -663,6 +714,7 @@ public class SemanticAnalysis
             {
                 return t.Range.From;
             }
+
             throw new Exception("Ranged variables can only be assigned variables with a range.");
         }
 
@@ -670,7 +722,7 @@ public class SemanticAnalysis
     }
 
     private static Type GetTypeOfExpression(
-        ASTNode expression,
+        ExpressionNode expression,
         Dictionary<string, VariableDeclarationNode> variables
     )
     {
@@ -681,6 +733,7 @@ public class SemanticAnalysis
                 => GetTypeOfBooleanExpression(booleanExpressionNode, variables),
             CharNode charNode => new CharacterType(),
             FloatNode floatNode => new RealType(),
+            BoolNode boolNode => new BooleanType(),
             MathOpNode mathOpNode => GetTypeOfMathOp(mathOpNode, variables),
             StringNode stringNode => new StringType(),
             // Control flow reroute for vuop testing.
@@ -717,6 +770,7 @@ public class SemanticAnalysis
 
                 return new BooleanType();
             }
+
             var rightType = GetTypeOfExpression(booleanExpressionNode.Right, variables);
             return leftType.Equals(rightType)
                 ? new BooleanType()
@@ -788,6 +842,7 @@ public class SemanticAnalysis
                     $"Variable {variableReferenceNode.Name} not found",
                     variableReferenceNode
                 );
+            variableReferenceNode.ReferencesGlobalVariable = variable.IsGlobal;
             return (variableReferenceNode.ExtensionType, NewType: variable.Type) switch
             {
                 (ExtensionType: VariableUsagePlainNode.VrnExtType.None, _) => variable.Type,
@@ -834,6 +889,8 @@ public class SemanticAnalysis
             {
                 throw new SemanticErrorException($"Variable {vunPlainName} not found", vun);
             }
+
+            vun.GetPlain().ReferencesGlobalVariable = vdn.IsGlobal;
             var vtVis = new VunTypeGettingVisitor(vdn.Type, vdnByName);
             vun.Accept(vtVis);
             return vtVis.VunType;
@@ -1243,6 +1300,7 @@ public class SemanticAnalysis
                         }
                     );
                 }
+
                 // if not all generics are used in the parameters that means those generics cannot be infered, but they could be used for variables which is bad
                 if (!usedGenerics.Distinct().SequenceEqual(generics))
                 {
@@ -1387,6 +1445,7 @@ public class SemanticAnalysis
                     module
                 );
             }
+
             return new ReferenceType(resolvedType);
         }
 
@@ -1431,6 +1490,7 @@ public class SemanticAnalysis
                     module
                 );
             }
+
             var instantiatedGenerics = record
                 .Generics.Zip(
                     member.TypeParameters.Select(
@@ -1440,6 +1500,7 @@ public class SemanticAnalysis
                 .ToDictionary();
             resolveType = new InstantiatedType(record, instantiatedGenerics);
         }
+
         return resolveType;
     }
 

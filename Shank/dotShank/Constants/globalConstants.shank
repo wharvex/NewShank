@@ -1,0 +1,4 @@
+constants foo = "true"
+
+define start()
+    write foo, bar

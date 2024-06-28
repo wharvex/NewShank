@@ -1,8 +1,0 @@
-
-Interpret VariableUsageOp/Complex --vuop-test
-Interpret VariableUsageOp/Assignment/Target/Integer/Index --vuop-test
-Interpret VariableUsageOp/Assignment/Target/Integer/Member --vuop-test
-Interpret VariableUsageOp/Assignment/Target/Integer/Plain --vuop-test
-Interpret VariableUsageOp/FunctionCall/Builtin/Integer/Index --vuop-test
-Interpret VariableUsageOp/FunctionCall/Builtin/Integer/Member --vuop-test
-Interpret VariableUsageOp/FunctionCall/Builtin/Integer/Plain --vuop-test

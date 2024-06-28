@@ -6,14 +6,20 @@ namespace Shank.ASTNodes;
 
 public class VariableUsagePlainNode : VariableUsageNodeTemp
 {
-    public VariableUsagePlainNode(string name)
+    public VariableUsagePlainNode(string name, string moduleName)
     {
         Name = name;
         Extension = null;
         ExtensionType = VrnExtType.None;
+        ModuleName = moduleName;
     }
 
-    public VariableUsagePlainNode(string name, ExpressionNode extension, VrnExtType extensionType)
+    public VariableUsagePlainNode(
+        string name,
+        ExpressionNode extension,
+        VrnExtType extensionType,
+        string moduleName
+    )
     {
         Name = name;
         Extension = extension;
@@ -22,9 +28,11 @@ public class VariableUsagePlainNode : VariableUsageNodeTemp
         {
             ((VariableUsagePlainNode)Extension).EnclosingVrnName = Name;
         }
+        ModuleName = moduleName;
     }
 
     public string Name { get; init; }
+    public string ModuleName { get; init; }
 
     /// <summary>
     /// Represents an extension of the base variable reference (e.g. an array subscript or a record member).
@@ -36,6 +44,12 @@ public class VariableUsagePlainNode : VariableUsageNodeTemp
     public string? EnclosingVrnName { get; set; }
 
     public bool IsVariableFunctionCall { get; set; }
+    public bool ReferencesGlobalVariable { get; set; }
+
+    public Index MonomorphizedName() =>
+        ReferencesGlobalVariable
+            ? new ModuleIndex(new NamedIndex(Name), ModuleName)
+            : new NamedIndex(Name);
 
     public ASTNode GetExtensionSafe() =>
         Extension ?? throw new InvalidOperationException("Expected Extension to not be null.");

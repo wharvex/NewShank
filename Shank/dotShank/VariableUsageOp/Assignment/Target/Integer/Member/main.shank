@@ -1,7 +1,0 @@
-record Student
-    courseLoad : integer
-
-define start()
-variables student : Student
-    student.courseLoad := 5
-    write "hello from vuop assignment target integer member test"
