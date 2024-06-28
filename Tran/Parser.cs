@@ -521,7 +521,9 @@ public class Parser
             return null;
         }
 
+        
         var functionName = ParseBuiltInFunctionNode() ?? functionToken.GetValue();
+        FunctionCallNode functionCallNode = new FunctionCallNode(functionName);
         var functionLineNumber = functionToken.GetTokenLineNumber();
 
         if (handler.MatchAndRemove(TokenType.OPENPARENTHESIS) == null)
@@ -531,6 +533,8 @@ public class Parser
             );
         }
 
+        functionCallNode.Arguments.AddRange(ParseArguments());
+
         if (handler.MatchAndRemove(TokenType.CLOSEDPARENTHESIS) == null)
         {
             throw new InvalidOperationException(
@@ -538,8 +542,6 @@ public class Parser
             );
         }
 
-        FunctionCallNode functionCallNode = new FunctionCallNode(functionName);
-        functionCallNode.Arguments.AddRange(ParseArguments());
         functionCallNode.LineNum = functionLineNumber;
         return functionCallNode;
     }
