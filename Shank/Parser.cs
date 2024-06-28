@@ -1524,62 +1524,78 @@ public class Parser
 
         return retVal;
     }
-private List<VariableDeclarationNode> ProcessConstantsDoWhile(string? parentModuleName)
+
+    private List<VariableDeclarationNode> ProcessConstantsDoWhile(string? parentModuleName)
     {
         var retVal = new List<VariableDeclarationNode>();
         do
         {
             retVal.AddRange(ProcessConstant(parentModuleName));
-        }
-        while (MatchAndRemove(Token.TokenType.Constants) != null);
+        } while (MatchAndRemove(Token.TokenType.Constants) != null);
 
         return retVal;
     }
+
     private List<VariableDeclarationNode> ProcessConstant(string? parentModuleName)
     {
-        
         var retVal = new List<VariableDeclarationNode>();
-            while (true)
+        while (true)
+        {
+            var name = MatchAndRemove(Token.TokenType.Identifier);
+            if (name == null)
+                throw new SyntaxErrorException("Expected a name", Peek(0));
+            if (MatchAndRemove(Token.TokenType.Equal) == null)
+                throw new SyntaxErrorException("Expected an equal sign", Peek(0));
+            var num = MatchAndRemove(Token.TokenType.Number);
+            if (num != null)
             {
-                var name = MatchAndRemove(Token.TokenType.Identifier);
-                if (name == null)
-                    throw new SyntaxErrorException("Expected a name", Peek(0));
-                if (MatchAndRemove(Token.TokenType.Equal) == null)
-                    throw new SyntaxErrorException("Expected an equal sign", Peek(0));
-                var num = MatchAndRemove(Token.TokenType.Number);
-                if (num != null)
+                var node = ProcessNumericConstant(num);
+                retVal.Add(
+                    node is FloatNode
+                        ? new VariableDeclarationNode()
+                        {
+                            InitialValue = node,
+                            Type = new RealType(),
+                            IsConstant = true,
+                            Name = name.Value ?? "",
+                            ModuleName = parentModuleName
+                        }
+                        : new VariableDeclarationNode()
+                        {
+                            InitialValue = node,
+                            Type = new IntegerType(),
+                            IsConstant = true,
+                            Name = name.Value ?? "",
+                            ModuleName = parentModuleName
+                        }
+                );
+            }
+            else
+            {
+                var chr = MatchAndRemove(Token.TokenType.CharContents);
+                if (chr != null)
                 {
-                    var node = ProcessNumericConstant(num);
                     retVal.Add(
-                        node is FloatNode
-                            ? new VariableDeclarationNode()
-                            {
-                                InitialValue = node,
-                                Type = new RealType(),
-                                IsConstant = true,
-                                Name = name.Value ?? "",
-                                ModuleName = parentModuleName
-                            }
-                            : new VariableDeclarationNode()
-                            {
-                                InitialValue = node,
-                                Type = new IntegerType(),
-                                IsConstant = true,
-                                Name = name.Value ?? "",
-                                ModuleName = parentModuleName
-                            }
+                        new VariableDeclarationNode()
+                        {
+                            InitialValue = new CharNode((chr?.Value ?? " ")[0]),
+                            Type = new CharacterType(),
+                            IsConstant = true,
+                            Name = name.Value ?? "",
+                            ModuleName = parentModuleName
+                        }
                     );
                 }
                 else
                 {
-                    var chr = MatchAndRemove(Token.TokenType.CharContents);
-                    if (chr != null)
+                    var str = MatchAndRemove(Token.TokenType.StringContents);
+                    if (str != null)
                     {
                         retVal.Add(
                             new VariableDeclarationNode()
                             {
-                                InitialValue = new CharNode((chr?.Value ?? " ")[0]),
-                                Type = new CharacterType(),
+                                InitialValue = new StringNode(str?.Value ?? ""),
+                                Type = new StringType(),
                                 IsConstant = true,
                                 Name = name.Value ?? "",
                                 ModuleName = parentModuleName
@@ -1588,57 +1604,42 @@ private List<VariableDeclarationNode> ProcessConstantsDoWhile(string? parentModu
                     }
                     else
                     {
-                        var str = MatchAndRemove(Token.TokenType.StringContents);
-                        if (str != null)
+                        var enm = MatchAndRemove(Token.TokenType.Identifier);
+                        var paren = MatchAndRemove(Token.TokenType.LeftParen);
+                        if (enm != null)
                         {
-                            retVal.Add(
-                                new VariableDeclarationNode()
-                                {
-                                    InitialValue = new StringNode(str?.Value ?? ""),
-                                    Type = new StringType(),
-                                    IsConstant = true,
-                                    Name = name.Value ?? "",
-                                    ModuleName = parentModuleName
-                                }
-                            );
-                        }
-                        else
-                        {
-                            var enm = MatchAndRemove(Token.TokenType.Identifier);
-                            var paren = MatchAndRemove(Token.TokenType.LeftParen);
-                            if (enm != null)
+                            if (paren == null)
                             {
-                                if (paren == null)
-                                {
-                                    retVal.Add(
-                                        new VariableDeclarationNode()
-                                        {
-                                            InitialValue = new StringNode(enm.Value),
-                                            Type = new UnknownType(enm.Value),
-                                            IsConstant = true,
-                                            Name = name.Value ?? "",
-                                            ModuleName = parentModuleName,
-                                        }
-                                    );
-                                }
-                                else
-                                    throw new Exception(
-                                        "Constant records have not been implemented yet"
-                                    );
+                                retVal.Add(
+                                    new VariableDeclarationNode()
+                                    {
+                                        InitialValue = new StringNode(enm.Value),
+                                        Type = new UnknownType(enm.Value),
+                                        IsConstant = true,
+                                        Name = name.Value ?? "",
+                                        ModuleName = parentModuleName,
+                                    }
+                                );
                             }
                             else
-                                throw new SyntaxErrorException("Expected a value", Peek(0));
+                                throw new Exception(
+                                    "Constant records have not been implemented yet"
+                                );
                         }
+                        else
+                            throw new SyntaxErrorException("Expected a value", Peek(0));
                     }
                 }
-
-                if (MatchAndRemove(Token.TokenType.Comma) == null)
-                    break;
             }
 
-            RequiresEndOfLine();
+            if (MatchAndRemove(Token.TokenType.Comma) == null)
+                break;
+        }
+
+        RequiresEndOfLine();
         return retVal;
     }
+
     /// <summary>
     ///     <para>
     ///         Method <c>ProcessNumericConstant</c> processes a number that is passed in and returns an appropriate node based on whether or not
