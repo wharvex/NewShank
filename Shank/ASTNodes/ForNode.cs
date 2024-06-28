@@ -19,7 +19,7 @@ public class ForNode : StatementNode
         From = from;
         To = to;
         Children = children;
-        NewVariable = newVariable ?? new VariableUsagePlainNode("empty");
+        NewVariable = newVariable ?? new VariableUsagePlainNode("empty" , "default");
     }
 
     // Copy constructor for monomorphization

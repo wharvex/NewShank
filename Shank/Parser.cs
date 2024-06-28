@@ -209,14 +209,14 @@ public class Parser
     ///     </list>
     /// </exception>
 
-    private VariableUsagePlainNode? GetVariableUsagePlainNode()
+    private VariableUsagePlainNode? GetVariableUsagePlainNode(string moduleName)
     {
         //array index indentifier case
         if (MatchAndRemove(Token.TokenType.Identifier) is { } id)
         {
             if (MatchAndRemove(Token.TokenType.LeftBracket) is not null)
             {
-                var exp = Expression();
+                var exp = Expression(moduleName);
 
                 if (exp == null)
                     throw new SyntaxErrorException(
@@ -233,14 +233,13 @@ public class Parser
                 return new VariableUsagePlainNode(
                     id.GetValueSafe(),
                     exp,
-                    VariableUsagePlainNode.VrnExtType.ArrayIndex
-                );
+                    VariableUsagePlainNode.VrnExtType.ArrayIndex, moduleName);
             }
 
             //record member case
             if (MatchAndRemove(Token.TokenType.Dot) is not null)
             {
-                VariableUsagePlainNode? varRef = GetVariableUsagePlainNode();
+                VariableUsagePlainNode? varRef = GetVariableUsagePlainNode(moduleName);
 
                 if (varRef is null)
                     throw new SyntaxErrorException(
@@ -251,12 +250,11 @@ public class Parser
                 return new VariableUsagePlainNode(
                     id.GetValueSafe(),
                     varRef,
-                    VariableUsagePlainNode.VrnExtType.RecordMember
-                );
+                    VariableUsagePlainNode.VrnExtType.RecordMember, moduleName);
             }
 
             //return the variable name as is
-            return new VariableUsagePlainNode(id.GetValueSafe());
+            return new VariableUsagePlainNode(id.GetValueSafe(), moduleName);
         }
 
         return null;
@@ -275,7 +273,7 @@ public class Parser
     /// <returns>VariableUsageTempNode or VariableUsageIndexNode or VariableUsageMemberNode else exception</returns>
     /// <exception cref="SyntaxErrorException">Expression is not present in an array index</exception>
     /// <exception cref="UnreachableException">if neither an index or member is encountered (should never be reached)</exception>
-    private VariableUsageNodeTemp? GetVariableUsageNode()
+    private VariableUsageNodeTemp? GetVariableUsageNode(string moduleName)
     {
         //get the identifier
         var vupToken = MatchAndRemove(Token.TokenType.Identifier);
@@ -287,7 +285,7 @@ public class Parser
         }
 
         //get the first plain variable usage
-        var vupNode = new VariableUsagePlainNode(vupToken.GetValueSafe());
+        var vupNode = new VariableUsagePlainNode(vupToken.GetValueSafe(), moduleName);
 
         //remove either a left bracket or a dot
         var nextToken = MatchAndRemoveMultiple(Token.TokenType.LeftBracket, Token.TokenType.Dot);
@@ -312,7 +310,7 @@ public class Parser
                 case Token.TokenType.LeftBracket:
                     leftRight = new VariableUsageIndexNode(
                         left,
-                        Expression()
+                        Expression(moduleName)
                             ?? throw new SyntaxErrorException("Expected expression", Peek(0))
                     );
                     RequiresToken(Token.TokenType.RightBracket);
@@ -524,7 +522,7 @@ public class Parser
         funcNode.LocalVariables.AddRange(ProcessVariables(moduleName));
 
         // Process function body and return function node.
-        BodyFunction(funcNode);
+        BodyFunction(funcNode, moduleName);
 
         return funcNode;
     }
@@ -563,9 +561,9 @@ public class Parser
         return ret;
     }
 
-    private void BodyFunction(FunctionNode function)
+    private void BodyFunction(FunctionNode function, string moduleName)
     {
-        StatementsBody(function.Statements);
+        StatementsBody(function.Statements, moduleName);
     }
 
     private List<VariableDeclarationNode> BodyRecord(string parentModule)
@@ -576,11 +574,11 @@ public class Parser
         return bodyContents.Cast<VariableDeclarationNode>().ToList();
     }
 
-    private void StatementsBody(List<StatementNode> statements)
+    private void StatementsBody(List<StatementNode> statements, string moduleName)
     {
         RequiresToken(Token.TokenType.Indent);
 
-        Statements(statements);
+        Statements(statements, moduleName);
 
         RequiresToken(Token.TokenType.Dedent);
     }
@@ -598,11 +596,11 @@ public class Parser
         RequiresToken(Token.TokenType.Dedent);
     }
 
-    private void Statements(List<StatementNode> statements)
+    private void Statements(List<StatementNode> statements, string moduleName)
     {
         do
         {
-            var s = Statement();
+            var s = Statement(moduleName);
 
             if (s is null)
             {
@@ -613,18 +611,18 @@ public class Parser
         } while (true);
     }
 
-    private StatementNode? Statement()
+    private StatementNode? Statement(string moduleName)
     {
         return (
                 InterpreterOptions is not null && InterpreterOptions.VuOpTest
-                    ? NewAssignment()
-                    : Assignment()
+                    ? NewAssignment(moduleName)
+                    : Assignment(moduleName)
             )
-            ?? While()
-            ?? Repeat()
-            ?? For()
-            ?? If()
-            ?? FunctionCall();
+            ?? While(moduleName)
+            ?? Repeat(moduleName)
+            ?? For(moduleName)
+            ?? If(moduleName)
+            ?? FunctionCall(moduleName);
     }
 
     public static Type GetDataTypeFromConstantNodeType(ASTNode constantNode) =>
@@ -913,7 +911,7 @@ public class Parser
         return new Range(fromValue, toValue);
     }
 
-    private FunctionCallNode? FunctionCall()
+    private FunctionCallNode? FunctionCall(string moduleName)
     {
         var name = MatchAndRemove(Token.TokenType.Identifier);
         if (name == null)
@@ -925,7 +923,7 @@ public class Parser
             var isVariable = MatchAndRemove(Token.TokenType.Var) != null;
             if (!isVariable)
             {
-                var e = Expression();
+                var e = Expression(moduleName);
                 if (e == null)
                     throw new SyntaxErrorException(
                         $"Expected a constant or a variable instead of {_tokens[0]}",
@@ -937,7 +935,7 @@ public class Parser
             }
             else
             {
-                var variable = GetVariableUsagePlainNode();
+                var variable = GetVariableUsagePlainNode(moduleName);
                 variable.IsVariableFunctionCall = true;
                 arguments.Add(variable);
             }
@@ -951,11 +949,11 @@ public class Parser
         return retVal;
     }
 
-    private StatementNode? If()
+    private StatementNode? If(string moduleName)
     {
         if (MatchAndRemove(Token.TokenType.If) == null)
             return null;
-        var boolExp = BooleanExpression();
+        var boolExp = BooleanExpression(moduleName);
         if (boolExp == null)
             throw new SyntaxErrorException("Expected a boolean expression in the if.", Peek(0));
         if (MatchAndRemove(Token.TokenType.Then) == null)
@@ -964,16 +962,16 @@ public class Parser
         RequiresEndOfLine();
 
         var body = new List<StatementNode>();
-        StatementsBody(body);
-        return new IfNode(boolExp, body, ElseAndElseIf());
+        StatementsBody(body, moduleName);
+        return new IfNode(boolExp, body, ElseAndElseIf(moduleName));
     }
 
-    private IfNode? ElseAndElseIf()
+    private IfNode? ElseAndElseIf(string moduleName)
     {
         if (MatchAndRemove(Token.TokenType.Elsif) != null)
         {
             var boolExp =
-                BooleanExpression()
+                BooleanExpression(moduleName)
                 ?? throw new SyntaxErrorException(
                     "Expected a boolean expression in the elsif.",
                     Peek(0)
@@ -981,8 +979,8 @@ public class Parser
             RequiresToken(Token.TokenType.Then);
             RequiresEndOfLine();
             var body = new List<StatementNode>();
-            StatementsBody(body);
-            return new IfNode(boolExp, body, ElseAndElseIf());
+            StatementsBody(body, moduleName);
+            return new IfNode(boolExp, body, ElseAndElseIf(moduleName));
         }
 
         if (MatchAndRemove(Token.TokenType.Else) != null)
@@ -990,27 +988,27 @@ public class Parser
             RequiresEndOfLine();
 
             var body = new List<StatementNode>();
-            StatementsBody(body);
+            StatementsBody(body, moduleName);
             return new ElseNode(body);
         }
 
         return null;
     }
 
-    private StatementNode? While()
+    private StatementNode? While(string moduleName)
     {
         if (MatchAndRemove(Token.TokenType.While) == null)
             return null;
-        var boolExp = BooleanExpression();
+        var boolExp = BooleanExpression(moduleName);
 
         RequiresEndOfLine();
 
         var statements = new List<StatementNode>();
-        StatementsBody(statements);
+        StatementsBody(statements, moduleName);
         return new WhileNode(boolExp, statements);
     }
 
-    private StatementNode? Repeat()
+    private StatementNode? Repeat(string moduleName)
     {
         if (MatchAndRemove(Token.TokenType.Repeat) == null)
             return null;
@@ -1018,10 +1016,10 @@ public class Parser
         RequiresEndOfLine();
 
         var statements = new List<StatementNode>();
-        StatementsBody(statements);
+        StatementsBody(statements, moduleName);
         if (MatchAndRemove(Token.TokenType.Until) == null)
             throw new SyntaxErrorException("Expected an until to end the repeat.", Peek(0));
-        var boolExp = BooleanExpression();
+        var boolExp = BooleanExpression(moduleName);
         if (boolExp == null)
             throw new SyntaxErrorException(
                 "Expected a boolean expression at the end of the repeat.",
@@ -1033,16 +1031,16 @@ public class Parser
         return new RepeatNode(boolExp, statements);
     }
 
-    private StatementNode? For()
+    private StatementNode? For(string moduleName)
     {
         if (MatchAndRemove(Token.TokenType.For) == null)
             return null;
-        var indexVariable = GetVariableUsagePlainNode();
+        var indexVariable = GetVariableUsagePlainNode(moduleName);
         if (indexVariable == null)
             throw new SyntaxErrorException("Expected a variable in the for statement.", Peek(0));
         if (MatchAndRemove(Token.TokenType.From) == null)
             throw new SyntaxErrorException("Expected a from in the for statement.", Peek(0));
-        var fromExp = Expression();
+        var fromExp = Expression(moduleName);
         if (fromExp == null)
             throw new SyntaxErrorException(
                 "Expected a from expression in the for statement.",
@@ -1050,7 +1048,7 @@ public class Parser
             );
         if (MatchAndRemove(Token.TokenType.To) == null)
             throw new SyntaxErrorException("Expected a to in the for statement.", Peek(0));
-        var toExp = Expression();
+        var toExp = Expression(moduleName);
         if (toExp == null)
             throw new SyntaxErrorException(
                 "Expected a to expression in the for statement.",
@@ -1060,19 +1058,19 @@ public class Parser
         RequiresEndOfLine();
 
         var statements = new List<StatementNode>();
-        StatementsBody(statements);
+        StatementsBody(statements, moduleName);
         return new ForNode(indexVariable, fromExp, toExp, statements);
     }
 
-    private BooleanExpressionNode BooleanExpression()
+    private BooleanExpressionNode BooleanExpression(string moduleName)
     {
-        var expression = Expression();
+        var expression = Expression(moduleName);
         if (expression is not BooleanExpressionNode ben)
             throw new SyntaxErrorException("Expected a boolean expression", Peek(0));
         return ben;
     }
 
-    private StatementNode? Assignment()
+    private StatementNode? Assignment(string moduleName)
     {
         if (
             Peek(1)?.Type
@@ -1081,14 +1079,14 @@ public class Parser
                 or Token.TokenType.Dot
         )
         {
-            var target = GetVariableUsagePlainNode();
+            var target = GetVariableUsagePlainNode(moduleName);
             if (target == null)
                 throw new SyntaxErrorException(
                     "Found an assignment without a valid identifier.",
                     Peek(0)
                 );
             MatchAndRemove(Token.TokenType.Assignment);
-            var expression = ParseExpressionLine();
+            var expression = ParseExpressionLine(moduleName);
             if (expression == null)
                 throw new SyntaxErrorException(
                     "Found an assignment without a valid right hand side.",
@@ -1102,7 +1100,7 @@ public class Parser
         }
     }
 
-    private StatementNode? NewAssignment()
+    private StatementNode? NewAssignment(string moduleName)
     {
         OutputHelper.DebugPrintTxt("hello from new assignment", "vuop", true);
         OutputHelper.DebugPrintTxt(
@@ -1119,13 +1117,13 @@ public class Parser
         }
 
         var target =
-            GetVariableUsageNode()
+            GetVariableUsageNode(moduleName)
             ?? throw new SyntaxErrorException("Expected variable usage", Peek(0));
 
         RequiresToken(Token.TokenType.Assignment);
 
         var expression =
-            ParseExpressionLine() ?? throw new SyntaxErrorException("Expected expression", Peek(0));
+            ParseExpressionLine(moduleName) ?? throw new SyntaxErrorException("Expected expression", Peek(0));
 
         return new AssignmentNode(target, expression, true);
     }
@@ -1257,7 +1255,7 @@ public class Parser
         Type type
     )
     {
-        var expression = Expression();
+        var expression = Expression(parentModuleName);
         if (expression == null)
             throw new SyntaxErrorException(
                 "Found an assignment without a valid right hand side.",
@@ -1630,42 +1628,42 @@ public class Parser
             : new IntNode(int.Parse(num.Value ?? ""));
     }
 
-    public ExpressionNode? ParseExpressionLine()
+    public ExpressionNode? ParseExpressionLine(string moduleName)
     {
-        var retVal = Expression();
+        var retVal = Expression(moduleName);
         RequiresEndOfLine();
         return retVal;
     }
 
-    public ExpressionNode? Expression()
+    public ExpressionNode? Expression(string moduleName)
     {
-        var lt = Term();
+        var lt = Term(moduleName);
         if (lt == null)
             return null;
-        return ExpressionRHS(lt);
+        return ExpressionRHS(lt, moduleName);
     }
 
-    public ExpressionNode? ExpressionRHS(ExpressionNode lt)
+    public ExpressionNode? ExpressionRHS(ExpressionNode lt, string moduleName)
     {
         if (MatchAndRemove(Token.TokenType.Plus) != null)
         {
-            var rt = Term();
+            var rt = Term(moduleName);
             if (rt == null)
                 throw new SyntaxErrorException("Expected a term.", Peek(0));
             lt = new MathOpNode(lt, MathOpNode.MathOpType.Plus, rt);
-            return ExpressionRHS(lt);
+            return ExpressionRHS(lt, moduleName);
         }
         else if (MatchAndRemove(Token.TokenType.Minus) != null)
         {
-            var rt = Term();
+            var rt = Term(moduleName);
             if (rt == null)
                 throw new SyntaxErrorException("Expected a term.", Peek(0));
             lt = new MathOpNode(lt, MathOpNode.MathOpType.Minus, rt);
-            return ExpressionRHS(lt);
+            return ExpressionRHS(lt, moduleName);
         }
         else if (MatchAndRemove(Token.TokenType.LessEqual) != null)
         {
-            var rt = Term();
+            var rt = Term(moduleName);
             if (rt == null)
                 throw new SyntaxErrorException("Expected a term.", Peek(0));
             return new BooleanExpressionNode(
@@ -1676,7 +1674,7 @@ public class Parser
         }
         else if (MatchAndRemove(Token.TokenType.LessThan) != null)
         {
-            var rt = Term();
+            var rt = Term(moduleName);
             if (rt == null)
                 throw new SyntaxErrorException("Expected a term.", Peek(0));
             return new BooleanExpressionNode(
@@ -1687,7 +1685,7 @@ public class Parser
         }
         else if (MatchAndRemove(Token.TokenType.GreaterEqual) != null)
         {
-            var rt = Term();
+            var rt = Term(moduleName);
             if (rt == null)
                 throw new SyntaxErrorException("Expected a term.", Peek(0));
             return new BooleanExpressionNode(
@@ -1698,7 +1696,7 @@ public class Parser
         }
         else if (MatchAndRemove(Token.TokenType.Greater) != null)
         {
-            var rt = Term();
+            var rt = Term(moduleName);
             if (rt == null)
                 throw new SyntaxErrorException("Expected a term.", Peek(0));
             return new BooleanExpressionNode(
@@ -1709,7 +1707,7 @@ public class Parser
         }
         else if (MatchAndRemove(Token.TokenType.Equal) != null)
         {
-            var rt = Term();
+            var rt = Term(moduleName);
             if (rt == null)
                 throw new SyntaxErrorException("Expected a term.", Peek(0));
             return new BooleanExpressionNode(
@@ -1720,7 +1718,7 @@ public class Parser
         }
         else if (MatchAndRemove(Token.TokenType.NotEqual) != null)
         {
-            var rt = Term();
+            var rt = Term(moduleName);
             if (rt == null)
                 throw new SyntaxErrorException("Expected a term.", Peek(0));
             return new BooleanExpressionNode(
@@ -1735,39 +1733,39 @@ public class Parser
         }
     }
 
-    private ExpressionNode? Term()
+    private ExpressionNode? Term(string moduleName)
     {
-        var lt = Factor();
+        var lt = Factor(moduleName);
         if (lt == null)
             return null;
-        return TermRHS(lt);
+        return TermRHS(lt, moduleName);
     }
 
-    private ExpressionNode? TermRHS(ExpressionNode lt)
+    private ExpressionNode? TermRHS(ExpressionNode lt, string moduleName)
     {
         if (MatchAndRemove(Token.TokenType.Times) != null)
         {
-            var rt = Factor();
+            var rt = Factor(moduleName);
             if (rt == null)
                 throw new SyntaxErrorException("Expected a factor.", Peek(0));
             lt = new MathOpNode(lt, MathOpNode.MathOpType.Times, rt);
-            return TermRHS(lt);
+            return TermRHS(lt, moduleName);
         }
         else if (MatchAndRemove(Token.TokenType.Divide) != null)
         {
-            var rt = Factor();
+            var rt = Factor(moduleName);
             if (rt == null)
                 throw new SyntaxErrorException("Expected a factor.", Peek(0));
             lt = new MathOpNode(lt, MathOpNode.MathOpType.Divide, rt);
-            return TermRHS(lt);
+            return TermRHS(lt, moduleName);
         }
         else if (MatchAndRemove(Token.TokenType.Mod) != null)
         {
-            var rt = Factor();
+            var rt = Factor(moduleName);
             if (rt == null)
                 throw new SyntaxErrorException("Expected a factor.", Peek(0));
             lt = new MathOpNode(lt, MathOpNode.MathOpType.Modulo, rt);
-            return TermRHS(lt);
+            return TermRHS(lt, moduleName);
         }
         else
         {
@@ -1775,17 +1773,17 @@ public class Parser
         }
     }
 
-    private ExpressionNode? Factor()
+    private ExpressionNode? Factor(string moduleName)
     {
         if (MatchAndRemove(Token.TokenType.LeftParen) != null)
         {
-            var exp = Expression();
+            var exp = Expression(moduleName);
             if (MatchAndRemove(Token.TokenType.RightParen) == null)
                 throw new SyntaxErrorException("Expected a right paren.", Peek(0));
             return exp;
         }
 
-        if (GetVariableUsagePlainNode() is { } variable)
+        if (GetVariableUsagePlainNode(moduleName) is { } variable)
         {
             return variable;
         }
@@ -1962,7 +1960,7 @@ public class Parser
 
         // Process function body and return function node.
 
-        BodyFunction(test);
+        BodyFunction(test, parentModuleName);
         return test;
     }
 
