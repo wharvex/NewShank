@@ -14,7 +14,12 @@ public class VariableUsagePlainNode : VariableUsageNodeTemp
         ModuleName = moduleName;
     }
 
-    public VariableUsagePlainNode(string name, ExpressionNode extension, VrnExtType extensionType, string moduleName)
+    public VariableUsagePlainNode(
+        string name,
+        ExpressionNode extension,
+        VrnExtType extensionType,
+        string moduleName
+    )
     {
         Name = name;
         Extension = extension;

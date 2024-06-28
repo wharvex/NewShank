@@ -233,7 +233,9 @@ public class Parser
                 return new VariableUsagePlainNode(
                     id.GetValueSafe(),
                     exp,
-                    VariableUsagePlainNode.VrnExtType.ArrayIndex, moduleName);
+                    VariableUsagePlainNode.VrnExtType.ArrayIndex,
+                    moduleName
+                );
             }
 
             //record member case
@@ -250,7 +252,9 @@ public class Parser
                 return new VariableUsagePlainNode(
                     id.GetValueSafe(),
                     varRef,
-                    VariableUsagePlainNode.VrnExtType.RecordMember, moduleName);
+                    VariableUsagePlainNode.VrnExtType.RecordMember,
+                    moduleName
+                );
             }
 
             //return the variable name as is
@@ -1123,7 +1127,8 @@ public class Parser
         RequiresToken(Token.TokenType.Assignment);
 
         var expression =
-            ParseExpressionLine(moduleName) ?? throw new SyntaxErrorException("Expected expression", Peek(0));
+            ParseExpressionLine(moduleName)
+            ?? throw new SyntaxErrorException("Expected expression", Peek(0));
 
         return new AssignmentNode(target, expression, true);
     }
