@@ -622,4 +622,9 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
         builder.BuildBr(forStart);
         builder.PositionAtEnd(afterFor);
     }
+
+    public override void Visit(BuiltInFunctionNode node)
+    {
+        throw new NotImplementedException();
+    }
 }
