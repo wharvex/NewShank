@@ -92,6 +92,8 @@ public class SemanticAnalysis
                         );
                     }
 
+                an.NewTarget.GetPlain().ReferencesGlobalVariable = targetDeclaration.IsGlobal;
+                an.Target.ReferencesGlobalVariable = targetDeclaration.IsGlobal;
                 // Control flow reroute for vuop testing.
                 if (GetVuopTestFlag())
                 {
@@ -835,6 +837,7 @@ public class SemanticAnalysis
                     $"Variable {variableReferenceNode.Name} not found",
                     variableReferenceNode
                 );
+            variableReferenceNode.ReferencesGlobalVariable = variable.IsGlobal;
             return (variableReferenceNode.ExtensionType, NewType: variable.Type) switch
             {
                 (ExtensionType: VariableUsagePlainNode.VrnExtType.None, _) => variable.Type,
@@ -882,6 +885,7 @@ public class SemanticAnalysis
                 throw new SemanticErrorException($"Variable {vunPlainName} not found", vun);
             }
 
+            vun.GetPlain().ReferencesGlobalVariable = vdn.IsGlobal;
             var vtVis = new VunTypeGettingVisitor(vdn.Type, vdnByName);
             vun.Accept(vtVis);
             return vtVis.VunType;

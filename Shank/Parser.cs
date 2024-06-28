@@ -440,7 +440,7 @@ public class Parser
                     ret.addEnum(MakeEnum(moduleName));
                     break;
                 case Token.TokenType.Variables:
-                    ret.AddToGlobalVariables(ProcessVariablesDoWhile(moduleName));
+                    ret.AddToGlobalVariables(ProcessVariablesDoWhile(moduleName, true));
                     break;
                 case Token.TokenType.Constants:
                     ret.AddToGlobalVariables(ProcessConstantsDoWhile(moduleName));
@@ -498,7 +498,7 @@ public class Parser
         while (!done)
         {
             var vars = GetVariables(
-                moduleName,
+                moduleName, false,
                 VariableDeclarationNode.DeclarationContext.FunctionSignature
             );
             done = vars == null;
@@ -527,7 +527,7 @@ public class Parser
 
         // Process local variables .
         funcNode.LocalVariables.AddRange(ProcessConstants(moduleName));
-        funcNode.LocalVariables.AddRange(ProcessVariables(moduleName));
+        funcNode.LocalVariables.AddRange(ProcessVariables(moduleName, false));
 
         // Process function body and return function node.
         BodyFunction(funcNode, moduleName);
@@ -1160,7 +1160,10 @@ public class Parser
     /// </summary>
     /// <param name="parentModule"></param>
     /// <returns></returns>
-    private List<VariableDeclarationNode> ProcessVariables(string parentModule)
+    private List<VariableDeclarationNode> ProcessVariables(string parentModule,
+    
+        bool isGlobal
+    )
     {
         var retVal = new List<VariableDeclarationNode>();
 
@@ -1168,6 +1171,7 @@ public class Parser
         {
             var nextOnes = GetVariables(
                 parentModule,
+                isGlobal,
                 VariableDeclarationNode.DeclarationContext.VariablesLine
             );
 
@@ -1180,7 +1184,7 @@ public class Parser
         return retVal;
     }
 
-    private List<VariableDeclarationNode> ProcessVariablesDoWhile(string parentModule)
+    private List<VariableDeclarationNode> ProcessVariablesDoWhile(string parentModule, bool isGlobal)
     {
         var retVal = new List<VariableDeclarationNode>();
 
@@ -1188,7 +1192,9 @@ public class Parser
         {
             var nextOnes = GetVariables(
                 parentModule,
+                isGlobal,
                 VariableDeclarationNode.DeclarationContext.VariablesLine
+                
             );
 
             // TODO: List.AddRange throws an ArgumentNullException if nextOnes is null.
@@ -1214,6 +1220,7 @@ public class Parser
     private List<VariableDeclarationNode> CreateVariables(
         List<string> names,
         bool isConstant,
+        bool isGlobal,
         string parentModuleName,
         VariableDeclarationNode.DeclarationContext declarationContext
     )
@@ -1223,7 +1230,7 @@ public class Parser
         if (MatchAndRemove(Token.TokenType.Equal) == null)
         {
             if (!afterDefault)
-                return CreateVariablesBasic(names, isConstant, parentModuleName, type);
+                return CreateVariablesBasic(names, isConstant, isGlobal, parentModuleName, type);
             throw new SyntaxErrorException(
                 "Only default values can be after a default value in a function declaration",
                 Peek(0)
@@ -1233,36 +1240,36 @@ public class Parser
         if (declarationContext == VariableDeclarationNode.DeclarationContext.VariablesLine)
         {
             // Creates the variables with their default values added unto them
-            return CreateDefaultVariables(names, isConstant, parentModuleName, type);
+            return CreateDefaultVariables(names, isConstant, isGlobal, parentModuleName, type);
         }
 
         if (declarationContext == VariableDeclarationNode.DeclarationContext.FunctionSignature)
         {
             afterDefault = true;
-            return CreateDefaultVariables(names, isConstant, parentModuleName, type);
+            return CreateDefaultVariables(names, isConstant, isGlobal, parentModuleName, type);
         }
-        return CreateVariablesBasic(names, isConstant, parentModuleName, type);
+        return CreateVariablesBasic(names, isConstant, isGlobal, parentModuleName, type);
     }
 
     private List<VariableDeclarationNode> CreateVariablesBasic(
         List<string> names,
         bool isConstant,
+        bool isGlobal,
         string parentModuleName,
         Type type
     )
     {
         // ranges parsed in the type
         return names
-            .Select(n => new VariableDeclarationNode(isConstant, type, n, parentModuleName))
+            .Select(n => new VariableDeclarationNode(isConstant, type, n, parentModuleName, isGlobal))
             .ToList();
     }
 
-    private List<VariableDeclarationNode> CreateDefaultVariables(
-        List<string> names,
+    private List<VariableDeclarationNode> CreateDefaultVariables(List<string> names,
         bool isConstant,
+        bool isGlobal,
         string parentModuleName,
-        Type type
-    )
+        Type type)
     {
         var expression = Expression(parentModuleName);
         if (expression == null)
@@ -1282,7 +1289,8 @@ public class Parser
                         Name = n,
                         ModuleName = parentModuleName,
                         InitialValue = expression,
-                        IsDefaultValue = true
+                        IsDefaultValue = true,
+                        IsGlobal = isGlobal,
                     }
             )
             .ToList();
@@ -1381,6 +1389,7 @@ public class Parser
     /// <returns>List of variable declartions</returns>
     private List<VariableDeclarationNode>? GetVariables(
         string parentModuleName,
+        bool isGlobal,
         VariableDeclarationNode.DeclarationContext declarationContext
     )
     {
@@ -1402,7 +1411,7 @@ public class Parser
         // Require a colon.
         RequiresToken(Token.TokenType.Colon);
 
-        return CreateVariables(names, isConstant, parentModuleName, declarationContext);
+        return CreateVariables(names, isConstant, isGlobal, parentModuleName, declarationContext);
     }
 
     private void GetVariablesRecord(List<ASTNode> vars, string parentModuleName)
@@ -1410,6 +1419,7 @@ public class Parser
         var newVars =
             GetVariables(
                 parentModuleName,
+                false,
                 VariableDeclarationNode.DeclarationContext.RecordDeclaration
             )
             ?? throw new SyntaxErrorException(
@@ -1423,6 +1433,7 @@ public class Parser
             vars.AddRange(newVars);
             newVars = GetVariables(
                 parentModuleName,
+                false,
                 VariableDeclarationNode.DeclarationContext.RecordDeclaration
             );
         } while (newVars is not null);
@@ -1514,29 +1525,29 @@ public class Parser
         return (fromNode, toNode);
     }
 
-    private List<VariableDeclarationNode> ProcessConstants(string? parentModuleName)
+    private List<VariableDeclarationNode> ProcessConstants(string? parentModuleName, bool isGlobal = false)
     {
         var retVal = new List<VariableDeclarationNode>();
         while (MatchAndRemove(Token.TokenType.Constants) != null)
         {
-            retVal.AddRange(ProcessConstant(parentModuleName));
+            retVal.AddRange(ProcessConstant(parentModuleName, isGlobal));
         }
 
         return retVal;
     }
 
-    private List<VariableDeclarationNode> ProcessConstantsDoWhile(string? parentModuleName)
+    private List<VariableDeclarationNode> ProcessConstantsDoWhile(string? parentModuleName, bool isGlobal = false)
     {
         var retVal = new List<VariableDeclarationNode>();
         do
         {
-            retVal.AddRange(ProcessConstant(parentModuleName));
+            retVal.AddRange(ProcessConstant(parentModuleName, isGlobal));
         } while (MatchAndRemove(Token.TokenType.Constants) != null);
 
         return retVal;
     }
 
-    private List<VariableDeclarationNode> ProcessConstant(string? parentModuleName)
+    private List<VariableDeclarationNode> ProcessConstant(string? parentModuleName, bool isGlobal = false)
     {
         var retVal = new List<VariableDeclarationNode>();
         while (true)
@@ -1558,6 +1569,7 @@ public class Parser
                             Type = new RealType(),
                             IsConstant = true,
                             Name = name.Value ?? "",
+                            IsGlobal = isGlobal,
                             ModuleName = parentModuleName
                         }
                         : new VariableDeclarationNode()
@@ -1566,6 +1578,7 @@ public class Parser
                             Type = new IntegerType(),
                             IsConstant = true,
                             Name = name.Value ?? "",
+                            IsGlobal = isGlobal,
                             ModuleName = parentModuleName
                         }
                 );
@@ -1582,6 +1595,7 @@ public class Parser
                             Type = new CharacterType(),
                             IsConstant = true,
                             Name = name.Value ?? "",
+                            IsGlobal = isGlobal,
                             ModuleName = parentModuleName
                         }
                     );
@@ -1598,6 +1612,7 @@ public class Parser
                                 Type = new StringType(),
                                 IsConstant = true,
                                 Name = name.Value ?? "",
+                            IsGlobal = isGlobal,
                                 ModuleName = parentModuleName
                             }
                         );
@@ -1617,6 +1632,7 @@ public class Parser
                                         Type = new UnknownType(enm.Value),
                                         IsConstant = true,
                                         Name = name.Value ?? "",
+                            IsGlobal = isGlobal,
                                         ModuleName = parentModuleName,
                                     }
                                 );
@@ -1964,6 +1980,7 @@ public class Parser
         {
             var vars = GetVariables(
                 parentModuleName,
+                false,
                 VariableDeclarationNode.DeclarationContext.FunctionSignature
             );
             done = vars == null;
@@ -1983,7 +2000,7 @@ public class Parser
         // Process local variables.
 
         test.LocalVariables.AddRange(ProcessConstants(parentModuleName));
-        test.LocalVariables.AddRange(ProcessVariables(parentModuleName));
+        test.LocalVariables.AddRange(ProcessVariables(parentModuleName, false));
 
         // Process function body and return function node.
 

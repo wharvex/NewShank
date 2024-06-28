@@ -4,12 +4,13 @@ using Shank.ExprVisitors;
 namespace Shank;
 
 public interface Index;
+public record struct NamedIndex(string Name) : Index;
 
-public record struct ModuleIndex(string Name, string Module)
+public readonly record struct ModuleIndex( NamedIndex Name, string Module) : Index
 {
     public override string ToString()
     {
-        return $"{Module}::{Name}";
+        return $"{Module}::{Name.Name}";
     }
 };
 
@@ -225,7 +226,7 @@ public class MonomorphizationVisitor(
     public override void Visit(FunctionNode node)
     {
         var typedModuleIndex = new TypedModuleIndex(
-            new ModuleIndex(node.Name, node.parentModuleName!),
+            new ModuleIndex(new NamedIndex(node.Name), node.parentModuleName!),
             new TypeIndex(
                 instantiatedTypes.OrderBy(pair => pair.Key).Select(pair => pair.Value).ToList()
             )
@@ -359,7 +360,7 @@ public class MonomorphizationTypeVisitor(
     public Type Visit(RecordType type)
     {
         var typedModuleIndex = new TypedModuleIndex(
-            new ModuleIndex(type.Name, type.ModuleName),
+            new ModuleIndex(new NamedIndex(type.Name), type.ModuleName),
             new TypeIndex(
                 instantiatedTypes.OrderBy(pair => pair.Key).Select(pair => pair.Value).ToList()
             )
@@ -399,7 +400,7 @@ public class MonomorphizationTypeVisitor(
 
     public Type Visit(EnumType type)
     {
-        var moduleIndex = new ModuleIndex(type.Name, type.ModuleName);
+        var moduleIndex = new ModuleIndex(new NamedIndex(type.Name), type.ModuleName);
         programNode.Enums.TryAdd(
             moduleIndex,
             (EnumNode)(start.getEnums().GetValueOrDefault(type.Name) ?? start.Imported[type.Name])
