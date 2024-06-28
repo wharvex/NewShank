@@ -83,20 +83,28 @@ public class SemanticAnalysis
             var foundFunction = false;
             if (s is AssignmentNode an)
             {
-                if (variables.TryGetValue(an.Target.Name, out var targetDeclaration))
-                    if (targetDeclaration.IsConstant)
-                    {
-                        throw new SemanticErrorException(
-                            $"Variable {an.Target.Name} is not mutable, you cannot assign to it.",
-                            an
-                        );
-                    }
-
-                an.NewTarget.GetPlain().ReferencesGlobalVariable = targetDeclaration.IsGlobal;
-                an.Target.ReferencesGlobalVariable = targetDeclaration.IsGlobal;
                 // Control flow reroute for vuop testing.
                 if (GetVuopTestFlag())
                 {
+                    if (
+                        variables.TryGetValue(
+                            an.NewTarget.GetPlain().Name,
+                            out var targetDeclaration
+                        )
+                    )
+                    {
+                        if (targetDeclaration.IsConstant)
+                        {
+                            throw new SemanticErrorException(
+                                $"Variable {an.Target.Name} is not mutable, you cannot assign to it.",
+                                an
+                            );
+                        }
+
+                        an.NewTarget.GetPlain().ReferencesGlobalVariable =
+                            targetDeclaration.IsGlobal;
+                    }
+
                     var targetType = variables[an.NewTarget.GetPlain().Name].Type;
                     NewCheckAssignment(
                         an.NewTarget.GetPlain().Name,
@@ -108,6 +116,19 @@ public class SemanticAnalysis
                 }
                 else
                 {
+                    if (variables.TryGetValue(an.Target.Name, out var targetDeclaration))
+                    {
+                        if (targetDeclaration.IsConstant)
+                        {
+                            throw new SemanticErrorException(
+                                $"Variable {an.Target.Name} is not mutable, you cannot assign to it.",
+                                an
+                            );
+                        }
+
+                        an.Target.ReferencesGlobalVariable = targetDeclaration.IsGlobal;
+                    }
+
                     var targetType = GetTypeOfExpression(an.Target, variables);
                     CheckAssignment(an.Target.Name, targetType, an.Expression, variables);
                 }
