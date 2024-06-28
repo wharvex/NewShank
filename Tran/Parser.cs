@@ -381,35 +381,28 @@ public class Parser
 
     public string ParseBuiltInFunctionNode()
     {
-        LinkedList<ASTNode> expressions = new LinkedList<ASTNode>();
-
         if (handler.MatchAndRemove(TokenType.PERIOD) != null)
         {
             if (handler.MatchAndRemove(TokenType.TIMES) != null)
             {
                 if (handler.MatchAndRemove(TokenType.OPENPARENTHESIS) != null)
                 {
-                    if (handler.MatchAndRemove(TokenType.CLOSEDPARENTHESIS) == null)
+                    if (handler.MatchAndRemove(TokenType.CLOSEDPARENTHESIS) != null)
                     {
-                        throw new Exception(
-                            "In ParseBuiltInFunctionNode method, Expected a closing parenthesis after .Times( "
-                        );
+                        return "Times Function";
                     }
                 }
             }
         }
-        //double check if I should return a string
         if (handler.MatchAndRemove(TokenType.PERIOD) != null)
         {
             if (handler.MatchAndRemove(TokenType.CLONE) != null)
             {
                 if (handler.MatchAndRemove(TokenType.OPENPARENTHESIS) != null)
                 {
-                    if (handler.MatchAndRemove(TokenType.CLOSEDPARENTHESIS) == null)
+                    if (handler.MatchAndRemove(TokenType.CLOSEDPARENTHESIS) != null)
                     {
-                        throw new Exception(
-                            "In ParseBuiltInFunctionNode method, Expected a closing parenthesis after .Clone( "
-                        );
+                        return "Clone";
                     }
                 }
             }
@@ -420,11 +413,9 @@ public class Parser
             {
                 if (handler.MatchAndRemove(TokenType.OPENPARENTHESIS) != null)
                 {
-                    if (handler.MatchAndRemove(TokenType.CLOSEDPARENTHESIS) == null)
+                    if (handler.MatchAndRemove(TokenType.CLOSEDPARENTHESIS) != null)
                     {
-                        throw new Exception(
-                            "In ParseBuiltInFunctionNode method, Expected a closing parenthesis after .GetDate( "
-                        );
+                        return "GetDate Function";
                     }
                 }
             }
@@ -438,16 +429,9 @@ public class Parser
                 {
                     if (handler.MatchAndRemove(TokenType.OPENPARENTHESIS) != null)
                     {
-                        do
+                        if (handler.MatchAndRemove(TokenType.CLOSEDPARENTHESIS) != null)
                         {
-                            expressions.AddLast(ParseExpression());
-                        } while (handler.MatchAndRemove(TokenType.COMMA) != null);
-
-                        if (handler.MatchAndRemove(TokenType.CLOSEDPARENTHESIS) == null)
-                        {
-                            throw new Exception(
-                                "In ParseBuiltInFunctionNode method, Expected a closing parenthesis"
-                            );
+                            return "String";
                         }
                     }
                     else
@@ -471,7 +455,7 @@ public class Parser
                 );
             }
         }
-        return expressions;
+        return "";
     }
 
     public List<StatementNode> ParseBlock()
