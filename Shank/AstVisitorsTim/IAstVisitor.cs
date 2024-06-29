@@ -25,6 +25,11 @@ public interface IInstantiatedTypeVisitor : IAstVisitor
     void Visit(InstantiatedType it);
 }
 
+public interface IAstTypeVisitor : IAstVisitor
+{
+    void Visit(Type t);
+}
+
 public interface IAstExpressionVisitor : IAstVisitor
 {
     void Visit(ExpressionNode e);
@@ -406,5 +411,70 @@ public class ExpressionTypeGettingVisitor : IAstExpressionVisitor
             BoolNode => new BooleanType(),
             StringNode => new StringType(),
         };
+    }
+}
+
+public class TypeToInterpreterDataTypeConvertingVisitor(ExpressionNode? initVal) : IAstTypeVisitor
+{
+    private ExpressionNode? InitVal { get; } = initVal;
+    private InterpreterDataType? _idt;
+    public InterpreterDataType Idt
+    {
+        get => _idt ?? throw new InvalidOperationException();
+        set => _idt = value;
+    }
+
+    public void Visit(Type t)
+    {
+        switch (t)
+        {
+            case IntegerType:
+                Idt = new IntDataType(((IntNode)(InitVal ?? new IntNode(default))).Value);
+                break;
+            case RealType:
+                Idt = new FloatDataType(((FloatNode)(InitVal ?? new FloatNode(default))).Value);
+                break;
+            case CharacterType:
+                Idt = new CharDataType(((CharNode)(InitVal ?? new CharNode(default))).Value);
+                break;
+            case BooleanType:
+                Idt = new BooleanDataType(((BoolNode)(InitVal ?? new BoolNode(default))).Value);
+                break;
+            case StringType:
+                Idt = new StringDataType(((StringNode)(InitVal ?? new StringNode(""))).Value);
+                break;
+            case InstantiatedType it:
+                var itrVis = new InstantiatedTypeToRecordDataTypeConvertingVisitor();
+                it.Accept(itrVis);
+                Idt = itrVis.Rdt;
+                break;
+            case ArrayType at:
+                // ArrayTypeToArrayDataTypeConvertingVisitor
+                break;
+        }
+    }
+}
+
+public class InstantiatedTypeToRecordDataTypeConvertingVisitor : IInstantiatedTypeVisitor
+{
+    private RecordDataType? _rdt;
+    public RecordDataType Rdt
+    {
+        get => _rdt ?? throw new InvalidOperationException();
+        set => _rdt = value;
+    }
+
+    public void Visit(InstantiatedType it)
+    {
+        Rdt = new RecordDataType(
+            it,
+            it.Inner.Fields.Select(kvp =>
+            {
+                var vtiVis = new TypeToInterpreterDataTypeConvertingVisitor(null);
+                kvp.Value.Accept(vtiVis);
+                return new KeyValuePair<string, object>(kvp.Key, vtiVis.Idt);
+            })
+                .ToDictionary()
+        );
     }
 }

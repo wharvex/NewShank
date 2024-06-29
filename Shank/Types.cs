@@ -13,6 +13,7 @@ public interface Type // our marker interface anything that implements is known 
     public T Accept<T>(ITypeVisitor<T> v);
     public string ToString();
     public void Accept(InnerTypeGettingVisitor visitor) => visitor.Visit(this);
+    public void Accept(IAstTypeVisitor visitor) => visitor.Visit(this);
 }
 
 public readonly record struct Range // the type that represents a type range in shank (from … to …), as ranges on types are part of the types

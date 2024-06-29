@@ -269,6 +269,12 @@ public class RecordDataType : InterpreterDataType
         MemberTypes = members;
     }
 
+    public RecordDataType(InstantiatedType ty, Dictionary<string, object> val)
+    {
+        MemberTypes = ty;
+        Value = val;
+    }
+
     // public RecordDataType(List<StatementNode> members)
     // {
     //     members.ForEach(s =>
