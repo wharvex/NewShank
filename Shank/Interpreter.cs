@@ -36,70 +36,40 @@ public class Interpreter
     /// <returns>A dictionary for getting IDTs by name of all the variables which a function can
     /// access</returns>
     /// <exception cref="InvalidOperationException"></exception>
-    /// <remarks>Author: Tim Gudlewski</remarks>
     private static Dictionary<string, InterpreterDataType> GetVariablesDictionary(
         FunctionNode fn,
         List<InterpreterDataType> parameters,
         ModuleNode? maybeModule = null
-    )
-    {
-        Dictionary<string, InterpreterDataType> ret = [];
-
-        // int defaultParameterCount = fn.ParameterVariables.Count(
-        //     parameter => parameter.IsDefaultValue
-        // );
-        //
-        // // Ensure the args count matches the params count.
-        // if (
-        //     parameters.Count < fn.ParameterVariables.Count - defaultParameterCount
-        //     || parameters.Count > fn.ParameterVariables.Count
-        // )
-        // {
-        //     throw new InvalidOperationException(
-        //         "For function "
-        //             + fn.Name
-        //             + ", "
-        //             + parameters.Count
-        //             + " parameters were passed in, but "
-        //             + fn.ParameterVariables.Count
-        //             + " are required."
-        //     );
-        // }
-
-        for (int i = 0; i < fn.ParameterVariables.Count; i++)
-        {
-            var parameter = fn.ParameterVariables[i];
-            ret.Add(parameter.GetNameSafe(), parameters[i]);
-        }
-
-        // If module was passed in, add its global variables to ret.
-        maybeModule
-            ?.GlobalVariables
-            .ToList()
-            .ForEach(kvp =>
-            {
-                if (!ret.TryAdd(kvp.Key, VariableNodeToActivationRecord(kvp.Value)))
-                {
-                    throw new InvalidOperationException(
-                        "Uncaught namespace conflict with name " + kvp.Key
-                    );
-                }
-            });
-
-        // Add local variables to ret.
-        fn.LocalVariables.ForEach(lv =>
-        {
-            if (!ret.TryAdd(lv.GetNameSafe(), VariableNodeToActivationRecord(lv)))
-            {
-                throw new InvalidOperationException(
-                    "Uncaught namespace conflict with name " + lv.GetNameSafe()
-                );
-            }
-        });
-
-        // Return the dictionary of all the variables which the function can access.
-        return ret;
-    }
+    ) =>
+        // Return dictionary with the names of the VDNs in fn.ParameterVariables, fn.LocalVariables,
+        // and maybeModule.GlobalVariables as the keys, and with the IDTs from `parameters' and from
+        // converting the VDNs in fn.LocalVariables and maybeModule.GlobalVariables as the values.
+        fn.LocalVariables.Select(
+            lv =>
+                new KeyValuePair<string, InterpreterDataType>(
+                    lv.GetNameSafe(),
+                    VariableNodeToActivationRecord(lv)
+                )
+        )
+            .Concat(
+                fn.ParameterVariables.Zip(
+                    parameters,
+                    (vdn, idt) =>
+                        new KeyValuePair<string, InterpreterDataType>(vdn.GetNameSafe(), idt)
+                )
+            )
+            .Concat(
+                maybeModule
+                    ?.GlobalVariables
+                    .Select(
+                        kvp =>
+                            new KeyValuePair<string, InterpreterDataType>(
+                                kvp.Key,
+                                VariableNodeToActivationRecord(kvp.Value)
+                            )
+                    ) ?? []
+            )
+            .ToDictionary();
 
     private static ModuleNode GetStartModuleSafe() =>
         StartModule
@@ -474,6 +444,7 @@ public class Interpreter
                         + " to a record variable member is not implemented yet."
                 )
         };
+        OutputHelper.DebugPrintJson(rdt, "rdt");
     }
 
     private static void AssignToArray(

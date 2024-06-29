@@ -55,11 +55,11 @@ function st {
 
         $shank_files = Get-ChildItem $args_list[1] -r -filter *.shank
 
-        "`n**** Shank File(s) To Run $progress ****`n"
+        Write-Host "`n**** Shank File(s) To Run $progress ****`n" -ForegroundColor green
         $shank_files | ForEach-Object -Process {"`nFILE: $_`n"; "`nCONTENTS:`n"; Get-Content $_}
         "`n**** Running The Following Command $progress ****`n"
         "dotnet run $($args_list -join ' ') --project $sp"
-        "`n**** Output $progress ****`n"
+        Write-Host "`n**** Output $progress ****`n" -ForegroundColor blue
         dotnet run @args_list --project $sp
     }
 
