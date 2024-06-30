@@ -13,15 +13,17 @@ public class Parser
     private LinkedList<string> sharedNames;
     public List<VariableDeclarationNode> members;
     private int blockLevel;
+    private FunctionNode currentFunction;
 
     public Parser(LinkedList<Token> tokens)
     {
-        thisClass = new ModuleNode("default");
         handler = new TokenHandler(tokens);
         program = new ProgramNode();
         sharedNames = new LinkedList<string>();
         members = [];
         blockLevel = 0;
+        currentFunction = new FunctionNode("default");
+        thisClass = new ModuleNode("default");
     }
 
     public bool AcceptSeparators()
@@ -71,6 +73,7 @@ public class Parser
         //Append strings should be built in
         RecordNode? record = new RecordNode(thisClass.Name, thisClass.Name, members, null);
         thisClass.AddRecord(record);
+        program.AddToModules(thisClass);
         return program;
     }
 
@@ -110,6 +113,7 @@ public class Parser
                 thisClass.Name,
                 true
             );
+            currentFunction = property;
             property.Statements = ParseBlock();
             var retVal = new VariableDeclarationNode { IsConstant = true, Name = "value" };
             property.ParameterVariables.Add(retVal);
@@ -191,14 +195,17 @@ public class Parser
         Token? function;
         var isPublic = handler.MatchAndRemove(TokenType.PRIVATE) == null;
         var isShared = (isPublic && handler.MatchAndRemove(TokenType.SHARED) != null);
+
         if ((function = handler.MatchAndRemove(TokenType.FUNCTION)) != null)
         {
             functionNode = new FunctionNode(function.GetValue(), thisClass.Name, isPublic);
+            
             thisClass.addFunction(functionNode);
             if (isShared)
             {
                 sharedNames.AddLast(function.GetValue());
             }
+
             if (handler.MatchAndRemove(TokenType.OPENPARENTHESIS) != null)
             {
                 functionNode.LocalVariables = ParseParameters(false);
@@ -209,10 +216,13 @@ public class Parser
             {
                 throw new Exception("Function declaration missing open parenthesis");
             }
+
             if (handler.MatchAndRemove(TokenType.COLON) != null)
             {
                 functionNode.ParameterVariables.AddRange(ParseParameters(true));
             }
+
+            currentFunction = functionNode;
             functionNode.Statements = ParseBlock();
             return true;
         }
@@ -463,10 +473,12 @@ public class Parser
     public List<StatementNode> ParseBlock()
     {
         blockLevel++;
-        int currentLevel = 0;
+        int currentLevel;
         var statements = new List<StatementNode>();
         while (handler.MatchAndRemove(TokenType.NEWLINE) != null)
         {
+            AcceptNewlines();
+            currentLevel = 0;
             while (handler.MatchAndRemove(TokenType.TAB) != null)
             {
                 currentLevel++;
@@ -481,7 +493,14 @@ public class Parser
             {
                 statements.Add((StatementNode)statement);
             }
-            AcceptNewlines();
+            else
+            {
+                var variableDec = ParseVariableDeclaration();
+                if(variableDec != null)
+                {
+                    currentFunction.LocalVariables.Add(variableDec);
+                }
+            }
         }
 
         blockLevel--;
@@ -787,11 +806,7 @@ public class Parser
         {
             throw new Exception("Variable declaration missing a name");
         }
-        VariableDeclarationNode variableNode = new VariableDeclarationNode
-        {
-            Type = variableType,
-            Name = nameToken.GetValue()
-        };
+        VariableDeclarationNode variableNode = new VariableDeclarationNode(false, variableType, nameToken.GetValue(), thisClass.Name, false);
         return variableNode;
     }
 
