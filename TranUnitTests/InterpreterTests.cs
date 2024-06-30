@@ -1,11 +1,11 @@
-﻿using Shank.ASTNodes;
-using Shank;
-using Shank.Tran;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Shank;
+using Shank.ASTNodes;
+using Shank.Tran;
 
 namespace TranUnitTests
 {
@@ -72,11 +72,13 @@ namespace TranUnitTests
         [TestMethod]
         public void InterpreterTest()
         {
-            InitializeInterpreter(@"
+            InitializeInterpreter(
+                @"
 class start
     start()
         boolean x
-        x = true".Replace("    ", "\t"));
+        x = true".Replace("    ", "\t")
+            );
             RunInterpreter();
         }
     }

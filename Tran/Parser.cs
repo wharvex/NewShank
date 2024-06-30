@@ -199,7 +199,7 @@ public class Parser
         if ((function = handler.MatchAndRemove(TokenType.FUNCTION)) != null)
         {
             functionNode = new FunctionNode(function.GetValue(), thisClass.Name, isPublic);
-            
+
             thisClass.addFunction(functionNode);
             if (isShared)
             {
@@ -496,7 +496,7 @@ public class Parser
             else
             {
                 var variableDec = ParseVariableDeclaration();
-                if(variableDec != null)
+                if (variableDec != null)
                 {
                     currentFunction.LocalVariables.Add(variableDec);
                 }
@@ -806,7 +806,13 @@ public class Parser
         {
             throw new Exception("Variable declaration missing a name");
         }
-        VariableDeclarationNode variableNode = new VariableDeclarationNode(false, variableType, nameToken.GetValue(), thisClass.Name, false);
+        VariableDeclarationNode variableNode = new VariableDeclarationNode(
+            false,
+            variableType,
+            nameToken.GetValue(),
+            thisClass.Name,
+            false
+        );
         return variableNode;
     }
 
