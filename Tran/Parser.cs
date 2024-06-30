@@ -16,6 +16,7 @@ public class Parser
 
     public Parser(LinkedList<Token> tokens)
     {
+        thisClass = new ModuleNode("default");
         handler = new TokenHandler(tokens);
         program = new ProgramNode();
         sharedNames = new LinkedList<string>();
@@ -268,20 +269,21 @@ public class Parser
         var wordToken = handler.MatchAndRemove(TokenType.WORD);
         if (wordToken != null)
         {
-            if (handler.MatchAndRemove(TokenType.PERIOD) != null)
-            {
-                VariableUsagePlainNode? variableReference = ParseVariableReference();
+            //TODO: wat?
+            //if (handler.MatchAndRemove(TokenType.PERIOD) != null)
+            //{
+            //    VariableUsagePlainNode? variableReference = ParseVariableReference();
 
-                if (variableReference != null)
-                {
-                    return new VariableUsagePlainNode(
-                        wordToken.GetValue(),
-                        variableReference,
-                        VariableUsagePlainNode.VrnExtType.RecordMember
-                    );
-                }
-            }
-            return new VariableUsagePlainNode(wordToken.GetValue());
+            //    if (variableReference != null)
+            //    {
+            //        return new VariableUsagePlainNode(
+            //            wordToken.GetValue(),
+            //            variableReference,
+            //            VariableUsagePlainNode.VrnExtType.RecordMember
+            //        );
+            //    }
+            //}
+            return new VariableUsagePlainNode(wordToken.GetValue(), thisClass.Name);
         }
         return null;
     }
@@ -488,7 +490,7 @@ public class Parser
 
     public void AcceptNewlines()
     {
-        while (handler.Peek(0) != null && handler.Peek(0).GetTokenType() == TokenType.NEWLINE)
+        while (handler.Peek(0) != null && handler.Peek(0)!.GetTokenType() == TokenType.NEWLINE)
         {
             handler.MatchAndRemove(TokenType.NEWLINE);
         }
@@ -775,7 +777,7 @@ public class Parser
 
     public VariableDeclarationNode? ParseVariableDeclaration()
     {
-        Type variableType = ParseType();
+        Type? variableType = ParseType();
         if (variableType == null)
         {
             return null;

@@ -10,10 +10,10 @@ namespace TranUnitTests
     [TestClass]
     public class ParserTests
     {
-        private Parser parser;
-        private Lexer lexer;
-        private TokenHandler handler;
-        private LinkedList<Token> tokens;
+        private Parser parser = null!;
+        private Lexer lexer = null!;
+        private TokenHandler handler = null!;
+        private LinkedList<Token> tokens = null!;
 
         [TestInitialize]
         public void Setup()
@@ -33,91 +33,91 @@ namespace TranUnitTests
         public void ParseExpressionTestPlus()
         {
             CreateParser("1 + 2");
-            Assert.AreEqual("1 Plus 2", parser.ParseExpression().ToString());
+            Assert.AreEqual("1 Plus 2", parser.ParseExpression()!.ToString());
         }
 
         [TestMethod]
         public void ParseExpressionTestTimes()
         {
             CreateParser("x * y");
-            Assert.AreEqual("x Times y", parser.ParseExpression().ToString());
+            Assert.AreEqual("x Times y", parser.ParseExpression()!.ToString());
         }
 
         [TestMethod]
         public void ParseExpressionTestGreaterEq()
         {
             CreateParser("300 >= 46.56");
-            Assert.AreEqual("300 ge 46.56", parser.ParseExpression().ToString());
+            Assert.AreEqual("300 ge 46.56", parser.ParseExpression()!.ToString());
         }
 
         [TestMethod]
         public void ParseExpressionTestLessThan()
         {
             CreateParser("46.56 < 75");
-            Assert.AreEqual("46.56 lt 75", parser.ParseExpression().ToString());
+            Assert.AreEqual("46.56 lt 75", parser.ParseExpression()!.ToString());
         }
 
         [TestMethod]
         public void ParseExpressionTestNotEqual()
         {
             CreateParser("1!=2");
-            Assert.AreEqual("1 ne 2", parser.ParseExpression().ToString());
+            Assert.AreEqual("1 ne 2", parser.ParseExpression()!.ToString());
         }
 
         [TestMethod]
         public void ParseExpressionTestEquals()
         {
             CreateParser("8==8");
-            Assert.AreEqual("8 eq 8", parser.ParseExpression().ToString());
+            Assert.AreEqual("8 eq 8", parser.ParseExpression()!.ToString());
         }
 
         [TestMethod]
         public void ParseExpressionTestMinus()
         {
             CreateParser("3 - 2");
-            Assert.AreEqual("3 Minus 2", parser.ParseExpression().ToString());
+            Assert.AreEqual("3 Minus 2", parser.ParseExpression()!.ToString());
         }
 
         [TestMethod]
         public void ParseExpressionTestDivide()
         {
             CreateParser("x/y");
-            Assert.AreEqual("x Divide y", parser.ParseExpression().ToString());
+            Assert.AreEqual("x Divide y", parser.ParseExpression()!.ToString());
         }
 
         [TestMethod]
         public void ParseExpressionTestLessEquals()
         {
             CreateParser("557 <= 4656");
-            Assert.AreEqual("557 le 4656", parser.ParseExpression().ToString());
+            Assert.AreEqual("557 le 4656", parser.ParseExpression()!.ToString());
         }
 
         [TestMethod]
         public void ParseExpressionTestModulo()
         {
             CreateParser("4656%40");
-            Assert.AreEqual("4656 Modulo 40", parser.ParseExpression().ToString());
+            Assert.AreEqual("4656 Modulo 40", parser.ParseExpression()!.ToString());
         }
 
         [TestMethod]
         public void ParseExpressionTestTrue()
         {
             CreateParser("true");
-            Assert.AreEqual("True", parser.ParseExpression().ToString());
+            Assert.AreEqual("True", parser.ParseExpression()!.ToString());
         }
 
         [TestMethod]
         public void ParseExpressionTestFalse()
         {
             CreateParser("false");
-            Assert.AreEqual("False", parser.ParseExpression().ToString());
+            Assert.AreEqual("False", parser.ParseExpression()!.ToString());
         }
 
         [TestMethod]
         public void ParseExpressionTestGreaterThan()
         {
             CreateParser("46.56>2.29");
-            Assert.AreEqual("46.56 gt 2.29", parser.ParseExpression().ToString());
+            Assert.AreEqual("46.56 gt 2.29", parser.ParseExpression()!.ToString());
         }
 
         [TestMethod]
@@ -265,7 +265,7 @@ class Tran
                 + "if, line 0, n gt 100, next end\r\n"
                 + "if, line 0, n gt 100, end";
             // Console.Write(expression);
-            Assert.AreEqual(expected, expression.ToString());
+            Assert.AreEqual(expected, expression!.ToString());
         }
 
         [TestMethod]
@@ -291,7 +291,7 @@ class Tran
         }
 
         [TestMethod]
-        public void ParseBuiltInFunctionNodeTestgetDate()
+        public void ParseBuiltInFunctionNodeTestGetDate()
         {
             var testString = "clock.getDate()";
             Lexer newLexer = new Lexer(testString);
