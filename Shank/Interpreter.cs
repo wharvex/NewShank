@@ -159,54 +159,6 @@ public class Interpreter
         }
     }
 
-    /// <summary>
-    /// Convert the given FunctionNode and its contents into their associated InterpreterDataTypes.
-    /// </summary>
-    /// <param name="fn">The FunctionNode being converted</param>
-    /// <param name="ps">Parameters passed in (already in IDT form)</param>
-    /// <exception cref="Exception"></exception>
-    public static void InterpretFunction2(FunctionNode fn, List<InterpreterDataType> ps)
-    {
-        var variables = new Dictionary<string, InterpreterDataType>();
-        if (ps.Count != fn.ParameterVariables.Count)
-            throw new Exception(
-                $"Function {fn.Name}, {ps.Count} parameters passed in, {fn.ParameterVariables.Count} required"
-            );
-        for (var i = 0; i < fn.ParameterVariables.Count; i++)
-        {
-            // Create the parameters as "locals"
-            variables[fn.ParameterVariables[i].Name ?? string.Empty] = ps[i];
-        }
-
-        foreach (var l in fn.LocalVariables)
-        {
-            // TODO: When would the Name of a local variable be null? When would the Name of any VariableNode be null?
-            // set up the declared variables as locals
-            variables[l.Name ?? string.Empty] = VariableNodeToActivationRecord(l);
-        }
-        if (fn is TestNode)
-        {
-            bool foundTestResult = false;
-            foreach (var testResult in Program.UnitTestResults)
-            {
-                if (testResult.parentFunctionName == (((TestNode)fn).targetFunctionName))
-                {
-                    foundTestResult = true;
-                    break;
-                }
-            }
-            if (!foundTestResult)
-            {
-                Program.UnitTestResults.AddLast(
-                    new TestResult(((TestNode)fn).Name, ((TestNode)fn).targetFunctionName)
-                );
-                Program.UnitTestResults.Last().lineNum = fn.LineNum;
-            }
-        }
-        // Interpret instructions
-        InterpretBlock(fn.Statements, variables, fn);
-    }
-
     private static void InterpretBlock(
         List<StatementNode> fnStatements,
         Dictionary<string, InterpreterDataType> variables,
@@ -242,7 +194,7 @@ public class Interpreter
                         AssignToRecord(rt, an, variables);
                         break;
                     case EnumDataType et:
-                        et.Value = ResolveEnum((EnumDataType)target, an.Expression, variables);
+                        et.Value = ResolveEnum(et, an.Expression, variables);
                         break;
                     case ReferenceDataType rt:
                         if (rt.Record == null)

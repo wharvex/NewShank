@@ -25,6 +25,11 @@ public interface IInstantiatedTypeVisitor : IAstVisitor
     void Visit(InstantiatedType it);
 }
 
+public interface IArrayTypeVisitor : IAstVisitor
+{
+    void Visit(ArrayType at);
+}
+
 public interface IAstTypeVisitor : IAstVisitor
 {
     void Visit(Type t);
@@ -449,8 +454,13 @@ public class TypeToInterpreterDataTypeConvertingVisitor(ExpressionNode? initVal)
                 Idt = itrVis.Rdt;
                 break;
             case ArrayType at:
-                // ArrayTypeToArrayDataTypeConvertingVisitor
+                var ataVis = new ArrayTypeToArrayDataTypeConvertingVisitor();
+                at.Accept(ataVis);
+                Idt = ataVis.Adt;
                 break;
+            // TODO: Cases for Enums and References.
+            default:
+                throw new UnreachableException("Type not recognized");
         }
     }
 }
@@ -478,3 +488,29 @@ public class InstantiatedTypeToRecordDataTypeConvertingVisitor : IInstantiatedTy
         );
     }
 }
+
+public class ArrayTypeToArrayDataTypeConvertingVisitor : IArrayTypeVisitor
+{
+    private ArrayDataType? _adt;
+    public ArrayDataType Adt
+    {
+        get => _adt ?? throw new InvalidOperationException();
+        set => _adt = value;
+    }
+
+    public void Visit(ArrayType at)
+    {
+        List<object> adtList = [];
+        Enumerable
+            .Range((int)at.Range.From, (int)at.Range.To)
+            .ToList()
+            .ForEach(i =>
+            {
+                var ttiVis = new TypeToInterpreterDataTypeConvertingVisitor(null);
+                at.Inner.Accept(ttiVis);
+                adtList.Insert(i, ttiVis.Idt);
+            });
+        Adt = new ArrayDataType(adtList, at.Inner);
+    }
+}
+// TODO: IdtFromVunResolvingVisitor

@@ -193,6 +193,10 @@ public readonly record struct ArrayType(Type Inner, Range Range) : RangeType // 
 {
     public T Accept<T>(ITypeVisitor<T> v) => v.Visit(this);
 
+    public void Accept(IAstTypeVisitor visitor) => visitor.Visit(this);
+
+    public void Accept(IArrayTypeVisitor visitor) => visitor.Visit(this);
+
     public bool Equals(ArrayType other)
     {
         return other.Inner.Equals(Inner);
