@@ -352,7 +352,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         record.LlvmTypeRef.StructSetBody(args.Select(s => s.Item2).ToArray(), false);
     }
 
-    public  void Visit(FunctionCallNode node)
+    public  void CompileFunctionCall(FunctionCallNode node)
     {
         {
             var function =
@@ -412,7 +412,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         context.ResetLocal();
     }
 
-    public  void Visit(WhileNode node)
+    public  void CompileWhile(WhileNode node)
     {
         var whileCond = context.CurrentFunction.AppendBasicBlock("while.cond");
         var whileBody = context.CurrentFunction.AppendBasicBlock("while.body");
@@ -432,29 +432,29 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         switch (node)
         {
             case AssignmentNode assignmentNode:
-                Visit(assignmentNode);
+                CompileAssignment(assignmentNode);
                 break;
             case ForNode forNode:
-                Visit(forNode);
+                CompileFor(forNode);
                 break;
             case FunctionCallNode functionCallNode:
-                Visit(functionCallNode);
+                CompileFunctionCall(functionCallNode);
                 break;
             case IfNode ifNode:
-                Visit(ifNode);
+                CompileIf(ifNode);
                 break;
             case RepeatNode repeatNode:
-                Visit(repeatNode);
+                CompileRepeat(repeatNode);
                 break;
             case WhileNode whileNode:
-                Visit(whileNode);
+                CompileWhile(whileNode);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(node));
         }
     }
 
-    public  void Visit(AssignmentNode node)
+    public  void CompileAssignment(AssignmentNode node)
     {
         var llvmValue = context.GetVariable(node.Target.MonomorphizedName());
         // context.GetCustomType(node.)
@@ -490,10 +490,10 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         }
     }
 
-    public  void Visit(EnumNode node)
-    {
-        throw new NotImplementedException();
-    }
+    // public  void Visit(EnumNode node)
+    // {
+    //     throw new NotImplementedException();
+    // }
 
     /*public  void Visit(ModuleNode node)
     {
@@ -521,7 +521,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
             .ForEach(f => f.Accept(this));
     }*/
 
-    public  void Visit(IfNode node)
+    public  void CompileIf(IfNode node)
     {
         if (node.Expression != null)
         // if the condition is null then it's an else statement, which can
@@ -551,7 +551,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
             builder.PositionAtEnd(elseBlock);
             if (node.NextIfNode is { } nonnull)
             {
-                Visit(nonnull);
+                CompileIf(nonnull);
             }
             builder.BuildBr(afterBlock);
             builder.PositionAtEnd(afterBlock);
@@ -562,7 +562,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         }
     }
 
-    public  void Visit(RepeatNode node)
+    public  void CompileRepeat(RepeatNode node)
     {
         var whileBody = context.CurrentFunction.AppendBasicBlock("while.body");
         var whileDone = context.CurrentFunction.AppendBasicBlock("while.done");
@@ -594,7 +594,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
     {
 
         
-            var protoTypeCompiler = new LLVMVisitPrototype(context, builder, module);
+            var protoTypeCompiler = new PrototypeCompiler(context, builder, module);
             protoTypeCompiler.CompilePrototypes(node);
 
         node.Records.Values.ToList().ForEach(CompileRecord);
@@ -602,7 +602,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         node.BuiltinFunctions.Values.ToList().ForEach(CompileBuiltinFunction);
     }
 
-    public  void Visit(ForNode node)
+    public  void CompileFor(ForNode node)
     {
         var forStart = context.CurrentFunction.AppendBasicBlock("for.start");
         var afterFor = context.CurrentFunction.AppendBasicBlock("for.after");

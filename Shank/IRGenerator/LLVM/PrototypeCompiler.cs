@@ -4,7 +4,7 @@ using Shank.IRGenerator;
 
 namespace Shank.ExprVisitors;
 
-public class LLVMVisitPrototype(Context context, LLVMBuilderRef builder, LLVMModuleRef module)
+public class PrototypeCompiler(Context context, LLVMBuilderRef builder, LLVMModuleRef module)
 {
     public void DebugRuntime(string format, LLVMValueRef value)
     {
