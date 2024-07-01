@@ -51,7 +51,7 @@ public class LLVMExpr(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
 
     public override LLVMValueRef Visit(VariableUsagePlainNode node)
     {
-        LLVMValue value = context.GetVariable(node.Name);
+        LLVMValue value = context.GetVariable(node.MonomorphizedName());
         if (node.Extension != null)
         {
             var a = builder.BuildGEP2(

@@ -12,9 +12,8 @@ public enum Types
     STRING,
 }
 
-public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef module) : Visitor
+public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef module) 
 {
-    private Stack<LLVMValueRef> expr = new();
 
     public void DebugRuntime(string format, LLVMValueRef value)
     {
@@ -23,6 +22,24 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
             context.CFuntions.printf.Function,
             [builder.BuildGlobalStringPtr(format), value]
         );
+    }
+
+    private LLVMValueRef CompileExpression(ExpressionNode expression)
+    {
+        return expression switch {
+            BooleanExpressionNode booleanExpressionNode => CompileBooleanExpression(booleanExpressionNode),
+            BoolNode boolNode => CompileBoolean(boolNode),
+            CharNode charNode => CompileCharacter(charNode),
+            FloatNode floatNode => CompileReal(floatNode),
+            IntNode intNode => CompileInteger(intNode),
+            MathOpNode mathOpNode => CompileMathExpression(mathOpNode),
+            StringNode stringNode => CompileString(stringNode),
+            // VariableUsageIndexNode variableUsageIndexNode => Visit(),
+            // VariableUsageMemberNode variableUsageMemberNode => Visit(),
+            VariableUsagePlainNode variableUsagePlainNode => CompileVariableUsage(variableUsagePlainNode),
+            // VariableUsageNodeTemp variableUsageNodeTemp => Visit(),
+            _ => throw new ArgumentOutOfRangeException(nameof(expression))
+        };
     }
 
     private Types _types(LLVMTypeRef typeRef)
@@ -130,61 +147,62 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
         return builder.BuildFCmp(Op, L, R);
     }
 
-    public override void Visit(IntNode node)
+    public  LLVMValueRef CompileInteger(IntNode node)
     {
-        expr.Push(
-            LLVMValueRef.CreateConstInt(
-                LLVMTypeRef.Int64, //
-                (ulong)node.Value
-            )
-        ); //
+
+        return LLVMValueRef.CreateConstInt(
+            LLVMTypeRef.Int64, //
+            (ulong)node.Value
+        );
+
     }
 
-    public override void Visit(FloatNode node)
+    public  LLVMValueRef CompileReal(FloatNode node)
     {
-        expr.Push(
+        return
             LLVMValueRef.CreateConstReal(
+
                 LLVMTypeRef.Double, //
                 (ulong)node.Value
-            )
-        ); //a
+            );
     }
 
-    public override void Visit(VariableUsagePlainNode node)
+    public  LLVMValueRef CompileVariableUsage(VariableUsagePlainNode node)
     {
-        LLVMValue value = context.GetVariable(node.Name);
+        LLVMValue value = context.GetVariable(node.MonomorphizedName());
         if (node.ExtensionType == VariableUsagePlainNode.VrnExtType.ArrayIndex)
         {
-            node.Extension?.Accept(this);
-            var a = builder.BuildGEP2(value.TypeRef, value.ValueRef, new[] { expr.Pop() });
-            expr.Push(builder.BuildLoad2(value.TypeRef, a));
+            var a = builder.BuildGEP2(value.TypeRef, value.ValueRef, new[] { CompileExpression(node.Extension) });
+            return (builder.BuildLoad2(value.TypeRef, a));
         }
         else if (node.ExtensionType == VariableUsagePlainNode.VrnExtType.RecordMember)
         {
-            var varType = (RecordType)context.GetCustomType(value.TypeRef.StructName).Type;
+            var varType = (LLVMStruct)(value);
             var varField = (VariableUsagePlainNode)node.GetExtensionSafe();
             var structField = builder.BuildStructGEP2(
                 value.TypeRef,
                 value.ValueRef,
-                (uint)varType.Fields.Keys.ToList().IndexOf(varField.Name)
+                (uint)varType.Access(varField.Name)
             );
-            expr.Push(builder.BuildLoad2(value.TypeRef, structField));
+            return (builder.BuildLoad2(value.TypeRef, structField));
         }
-        else if (node.ExtensionType == VariableUsagePlainNode.VrnExtType.Enum)
-        {
-            var varType = (EnumType)context.GetCustomType(value.TypeRef.StructName).Type;
-            Console.WriteLine(varType.Variants);
-            Console.WriteLine(node.Extension);
-        }
+        // else if (node.ExtensionType == VariableUsagePlainNode.VrnExtType.Enum)
+        // {
+        //     var varType = (EnumType)context.GetCustomType(value.TypeRef.StructName).Type;
+        //     Console.WriteLine(varType.Variants);
+        //     Console.WriteLine(node.Extension);
+        // }
         else if (node.ExtensionType == VariableUsagePlainNode.VrnExtType.None)
         {
-            expr.Push(builder.BuildLoad2(value.TypeRef, value.ValueRef));
+            return (builder.BuildLoad2(value.TypeRef, value.ValueRef));
         }
+
+        throw new NotImplementedException();
     }
 
-    public override void Visit(CharNode node)
+    public  LLVMValueRef CompileCharacter(CharNode node)
     {
-        expr.Push(
+        return (
             LLVMValueRef.CreateConstInt(
                 module.Context.Int8Type, //a
                 (ulong)(node.Value)
@@ -192,9 +210,9 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
         );
     }
 
-    public override void Visit(BoolNode node)
+    public  LLVMValueRef CompileBoolean(BoolNode node)
     {
-        expr.Push(
+        return (
             LLVMValueRef.CreateConstInt(
                 module.Context.Int1Type, //a
                 (ulong)(
@@ -204,7 +222,7 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
         );
     }
 
-    public override void Visit(StringNode node)
+    public  LLVMValueRef CompileString(StringNode node)
     {
         var stringLength = LLVMValueRef.CreateConstInt(
             module.Context.Int32Type,
@@ -234,40 +252,36 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
         );
         String = builder.BuildInsertValue(String, stringLength, 0);
         String = builder.BuildInsertValue(String, stringPointer, 1);
-        expr.Push(String);
+        return String;
     }
 
-    public override void Visit(MathOpNode node)
+    public  LLVMValueRef CompileMathExpression(MathOpNode node)
     {
-        node.Left.Accept(this);
-        node.Right.Accept(this);
-
-        LLVMValueRef R = expr.Pop();
-        LLVMValueRef L = expr.Pop();
+        LLVMValueRef R = CompileExpression(node.Right);
+        LLVMValueRef L = CompileExpression(node.Left);
         if (_types(L.TypeOf) == Types.INTEGER)
         {
-            expr.Push(HandleIntOp(L, node.Op, R));
+            return (HandleIntOp(L, node.Op, R));
         }
         else if (_types(L.TypeOf) == Types.FLOAT)
         {
-            expr.Push(HandleFloatOp(L, node.Op, R));
+            return (HandleFloatOp(L, node.Op, R));
         }
         else if (_types(L.TypeOf) == Types.STRING)
         {
-            expr.Push(HandleString(L, R));
+            return (HandleString(L, R));
         }
+
+        throw new NotImplementedException();
     }
 
-    public override void Visit(BooleanExpressionNode node)
+    public  LLVMValueRef CompileBooleanExpression(BooleanExpressionNode node)
     {
-        node.Left.Accept(this);
-        node.Right.Accept(this);
-
-        LLVMValueRef R = expr.Pop();
-        LLVMValueRef L = expr.Pop();
+        LLVMValueRef R = CompileExpression(node.Right);
+        LLVMValueRef L = CompileExpression(node.Left);
         if (_types(L.TypeOf) == Types.INTEGER)
         {
-            expr.Push(
+            return
                 HandleIntBoolOp(
                     L,
                     node.Op switch
@@ -286,12 +300,11 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
                             => LLVMIntPredicate.LLVMIntSGE,
                     },
                     R
-                )
-            );
+                );
         }
         else if (_types(L.TypeOf) == Types.FLOAT)
         {
-            expr.Push(
+            return 
                 HandleFloatBoolOp(
                     L,
                     node.Op switch
@@ -311,15 +324,17 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
                     },
                     R
                 )
-            );
+            ;
         }
+
+        throw new NotImplementedException();
     }
 
-    public override void Visit(RecordNode node)
+    public  void CompileRecord(RecordNode node)
     {
         // this cannot be done from the prototype becuase we cannot attach llvm types to Type without putting dependency of llvm for the Types file
         // also we do not know the order by which types are added to the llvm module
-        var record = context.GetCustomType(node.Name);
+        var record = context.GetCustomType(node.Type.MonomorphizedIndex);
         var args = node.Type.Fields.Select(
             s =>
                 // for records (and eventually references) we do not hold the actual type of the record, but rather a pointer to it, because llvm does not like direct recursive types
@@ -337,31 +352,11 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
         record.LlvmTypeRef.StructSetBody(args.Select(s => s.Item2).ToArray(), false);
     }
 
-    public override void Visit(FunctionCallNode node)
+    public  void Visit(FunctionCallNode node)
     {
-        if (node.Name == "write")
-        {
-            builder.BuildCall2(
-                context.CFuntions.printf.TypeOf,
-                context.CFuntions.printf.Function,
-                node.Arguments.Select(p => //).Parameters.Select(p =>
-                {
-                    p.Accept(this);
-                    LLVMValueRef b = expr.Pop();
-                    if (_types(b.TypeOf) == Types.STRING)
-                    {
-                        b = builder.BuildExtractValue(b, 1);
-                    }
-
-                    return b;
-                })
-                    .ToArray()
-            );
-        }
-        else
         {
             var function =
-                context.GetFunction(node.Name)
+                context.GetFunction(node.MonomphorizedFunctionLocater)
                 ?? throw new Exception($"function {node.Name} not found");
             // if any arguement is not mutable, but is required to be mutable
             if (
@@ -380,19 +375,15 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
                 throw new Exception($"call to {node.Name} has a mismatch of mutability");
             }
 
-            var parameters = node.Arguments.Select(p => //).Parameters.Select(p =>
-            {
-                p.Accept(this);
-                return expr.Pop();
-            });
+            var parameters = node.Arguments.Select(CompileExpression);
             // function.
             builder.BuildCall2(function.TypeOf, function.Function, parameters.ToArray());
         }
     }
 
-    public override void Visit(FunctionNode node)
+    public  void CompileFunction(FunctionNode node)
     {
-        var function = context.GetFunction(node.Name);
+        var function = context.GetFunction(node.MonomorphizedName);
         context.CurrentFunction = function;
         context.ResetLocal();
         var block = function.AppendBasicBlock("entry");
@@ -410,40 +401,65 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
             );
 
             builder.BuildStore(llvmParam, paramAllocation);
-            context.AddVariable(name, parameter, false);
+            context.AddVariable(param.MonomorphizedName(), parameter);
         }
 
         function.Linkage = LLVMLinkage.LLVMExternalLinkage;
 
-        node.LocalVariables.ForEach(variable => variable.Accept(this));
-        node.Statements.ForEach(s => s.Accept(this));
+        node.LocalVariables.ForEach(CompileVariableDeclaration);
+        node.Statements.ForEach(CompileStatement);
         builder.BuildRet(LLVMValueRef.CreateConstInt(module.Context.Int32Type, (ulong)0));
         context.ResetLocal();
     }
 
-    public override void Visit(WhileNode node)
+    public  void Visit(WhileNode node)
     {
         var whileCond = context.CurrentFunction.AppendBasicBlock("while.cond");
         var whileBody = context.CurrentFunction.AppendBasicBlock("while.body");
         var whileDone = context.CurrentFunction.AppendBasicBlock("while.done");
         builder.BuildBr(whileCond);
         builder.PositionAtEnd(whileCond);
-        node.Expression.Accept(this);
-        var condition = expr.Pop();
+        var condition = CompileExpression(node.Expression);
         builder.BuildCondBr(condition, whileBody, whileDone);
         builder.PositionAtEnd(whileBody);
-        node.Children.ForEach(c => c.Accept(this));
+        node.Children.ForEach(CompileStatement);
         builder.BuildBr(whileCond);
         builder.PositionAtEnd(whileDone);
     }
 
-    public override void Visit(AssignmentNode node)
+    private void CompileStatement(StatementNode node)
     {
-        var llvmValue = context.GetVariable(node.Target.Name);
+        switch (node)
+        {
+            case AssignmentNode assignmentNode:
+                Visit(assignmentNode);
+                break;
+            case ForNode forNode:
+                Visit(forNode);
+                break;
+            case FunctionCallNode functionCallNode:
+                Visit(functionCallNode);
+                break;
+            case IfNode ifNode:
+                Visit(ifNode);
+                break;
+            case RepeatNode repeatNode:
+                Visit(repeatNode);
+                break;
+            case WhileNode whileNode:
+                Visit(whileNode);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(node));
+        }
+    }
+
+    public  void Visit(AssignmentNode node)
+    {
+        var llvmValue = context.GetVariable(node.Target.MonomorphizedName());
         // context.GetCustomType(node.)
         Console.WriteLine(node.ToString());
-        node.Expression.Accept(this);
-        var expression = expr.Pop();
+        var expression = CompileExpression(node.Expression);
         if (!llvmValue.IsMutable)
         {
             throw new Exception($"tried to mutate non mutable variable {node.Target.Name}");
@@ -451,19 +467,19 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
 
         if (node.Target.ExtensionType == VariableUsagePlainNode.VrnExtType.ArrayIndex)
         {
-            node.Target.Extension?.Accept(this);
-            var a = builder.BuildGEP2(llvmValue.TypeRef, llvmValue.ValueRef, new[] { expr.Pop() });
+            var a = builder.BuildGEP2(llvmValue.TypeRef, llvmValue.ValueRef, new[] { CompileExpression(node.Target.Extension) });
             builder.BuildStore(expression, a);
         }
         else if (node.Target.ExtensionType == VariableUsagePlainNode.VrnExtType.RecordMember)
         {
-            var Recordtype = (RecordType)context.GetCustomType(llvmValue.TypeRef.StructName).Type;
+            var Recordtype = (LLVMStruct)(llvmValue);
             var RecordExt = (VariableUsagePlainNode)node.Target.GetExtensionSafe();
 
             var c = builder.BuildStructGEP2(
                 llvmValue.TypeRef,
                 llvmValue.ValueRef,
-                (uint)Recordtype.Fields.Keys.ToList().IndexOf(RecordExt.Name)
+                
+                (uint)Recordtype.Access(RecordExt.Name)
             );
             builder.BuildStore(expression, c);
         }
@@ -474,12 +490,12 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
         }
     }
 
-    public override void Visit(EnumNode node)
+    public  void Visit(EnumNode node)
     {
         throw new NotImplementedException();
     }
 
-    public override void Visit(ModuleNode node)
+    /*public  void Visit(ModuleNode node)
     {
         context.SetCurrentModule(node.Name);
         // then we add to our scope all our imports
@@ -503,9 +519,9 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
         node //modnode
         .GetFunctionsAsList() //list
             .ForEach(f => f.Accept(this));
-    }
+    }*/
 
-    public override void Visit(IfNode node)
+    public  void Visit(IfNode node)
     {
         if (node.Expression != null)
         // if the condition is null then it's an else statement, which can
@@ -523,43 +539,44 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
         // if needed, followed by a goto to the after branch
         // note we could make this a bit better by checking if next is null and then make the conditional branch to after block in the false cas
         {
-            node.Expression.Accept(this);
-            var condition = expr.Pop();
+            var condition =CompileExpression( node.Expression);
             var ifBlock = context.CurrentFunction.AppendBasicBlock("if block");
             var elseBlock = context.CurrentFunction.AppendBasicBlock("else block");
             var afterBlock = context.CurrentFunction.AppendBasicBlock("after if statement");
             builder.BuildCondBr(condition, ifBlock, elseBlock);
 
             builder.PositionAtEnd(ifBlock);
-            node.Children.ForEach(c => c.Accept(this));
+            node.Children.ForEach(CompileStatement);
             builder.BuildBr(afterBlock);
             builder.PositionAtEnd(elseBlock);
-            node.NextIfNode?.Accept(this);
+            if (node.NextIfNode is { } nonnull)
+            {
+                Visit(nonnull);
+            }
             builder.BuildBr(afterBlock);
             builder.PositionAtEnd(afterBlock);
         }
         else
         {
-            node.Children.ForEach(c => c.Accept(this));
+            node.Children.ForEach(CompileStatement);
         }
     }
 
-    public override void Visit(RepeatNode node)
+    public  void Visit(RepeatNode node)
     {
         var whileBody = context.CurrentFunction.AppendBasicBlock("while.body");
         var whileDone = context.CurrentFunction.AppendBasicBlock("while.done");
         // first execute the body
         builder.BuildBr(whileBody);
         builder.PositionAtEnd(whileBody);
-        node.Children.ForEach(c => c.Accept(this));
+        node.Children.ForEach(CompileStatement);
         // and then test the condition
-        node.Expression.Accept(this);
-        var condition = expr.Pop();
+            var condition = CompileExpression(node.Expression);
         builder.BuildCondBr(condition, whileBody, whileDone);
         builder.PositionAtEnd(whileDone);
     }
 
-    public override void Visit(VariableDeclarationNode node)
+    public  void CompileVariableDeclaration(VariableDeclarationNode node)
     {
         var name = node.GetNameSafe();
         // TODO: only alloca when !isConstant
@@ -570,25 +587,22 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
             name
         );
         var variable = context.NewVariable(node.Type);
-        context.AddVariable(name, variable(v, !node.IsConstant), false);
+        context.AddVariable(node.MonomorphizedName(), variable(v, !node.IsConstant));
     }
 
-    public override void Visit(ProgramNode node)
+    public  void Compile(MonomorphizedProgramNode node)
     {
-        context.SetModules(node.Modules.Keys);
 
-        foreach (var keyValuePair in node.Modules)
-        {
-            keyValuePair.Value.VisitProto(new LLVMVisitPrototype(context, builder, module));
-        }
+        
+            var protoTypeCompiler = new LLVMVisitPrototype(context, builder, module);
+            protoTypeCompiler.CompilePrototypes(node);
 
-        foreach (var keyValuePair in node.Modules)
-        {
-            keyValuePair.Value.Accept(this);
-        }
+        node.Records.Values.ToList().ForEach(CompileRecord);
+        node.Functions.Values.ToList().ForEach(CompileFunction);
+        node.BuiltinFunctions.Values.ToList().ForEach(CompileBuiltinFunction);
     }
 
-    public override void Visit(ForNode node)
+    public  void Visit(ForNode node)
     {
         var forStart = context.CurrentFunction.AppendBasicBlock("for.start");
         var afterFor = context.CurrentFunction.AppendBasicBlock("for.after");
@@ -600,12 +614,12 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
         // we have to compile the to and from in the loop so that the get run each time, we go through the loop
         // in case we modify them in the loop
 
-        node.From.Accept(this);
-        var fromValue = expr.Pop();
-        node.To.Accept(this);
-        var toValue = expr.Pop();
-        node.Variable.Accept(new LLVMExpr(context, builder, module));
-        var currentIterable = expr.Pop();
+        
+        
+        var fromValue = CompileExpression(node.From);
+        var toValue = CompileExpression(node.To);
+        
+        var currentIterable = node.Variable.Accept(new LLVMExpr(context, builder, module));
         // right now we assume, from, to, and the variable are all integers
         // in the future we should check and give some error at runtime/compile time if not
         // TODO: signed or unsigned comparison
@@ -615,7 +629,7 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
         );
         builder.BuildCondBr(condition, forBody, afterFor);
         builder.PositionAtEnd(forBody);
-        node.Children.ForEach(c => c.Accept(this));
+        node.Children.ForEach(CompileStatement);
         builder.BuildBr(forIncremnet);
         builder.PositionAtEnd(forIncremnet);
         // TODO: increment
@@ -623,7 +637,7 @@ public class LLVMVisitor(Context context, LLVMBuilderRef builder, LLVMModuleRef 
         builder.PositionAtEnd(afterFor);
     }
 
-    public override void Visit(BuiltInFunctionNode node)
+    public  void CompileBuiltinFunction(BuiltInFunctionNode node)
     {
         throw new NotImplementedException();
     }

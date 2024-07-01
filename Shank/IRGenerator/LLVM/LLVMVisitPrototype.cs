@@ -5,7 +5,6 @@ using Shank.IRGenerator;
 namespace Shank.ExprVisitors;
 
 public class LLVMVisitPrototype(Context context, LLVMBuilderRef builder, LLVMModuleRef module)
-    : VisitPrototype
 {
     public void DebugRuntime(string format, LLVMValueRef value)
     {
@@ -16,7 +15,7 @@ public class LLVMVisitPrototype(Context context, LLVMBuilderRef builder, LLVMMod
         );
     }
 
-    public override void Accept(FunctionNode node)
+    public  void CompileFunctionPrototype(FunctionNode node)
     {
         var fnRetTy = module.Context.Int32Type;
         var args = node.ParameterVariables.Select(
@@ -43,18 +42,11 @@ public class LLVMVisitPrototype(Context context, LLVMBuilderRef builder, LLVMMod
             llvmParam.Name = name;
         }
 
-        context.AddFunction(node.Name, function);
+        context.AddFunction((TypedModuleIndex)node.MonomorphizedName, function);
     }
 
-    public override void Accept(ModuleNode node)
-    {
-        context.SetCurrentModule(node.Name);
-        node.Records.Values.ToList().ForEach(f => f.VisitProto(this));
-        node.GetFunctionsAsList().ForEach(f => f.VisitProto(this));
-        node.GlobalVariables.Values.ToList().ForEach(f => f.VisitProto(this));
-    }
 
-    public override void Accept(RecordNode node)
+    public  void CompileRecordPrototype(RecordNode node)
     {
         var llvmRecord = module.Context.CreateNamedStruct(node.Name);
         var record = new LLVMStructType(
@@ -62,10 +54,10 @@ public class LLVMVisitPrototype(Context context, LLVMBuilderRef builder, LLVMMod
             llvmRecord,
             node.Type.Fields.Select(s => s.Key).ToList()
         );
-        context.CurrentModule.CustomTypes.Add(node.Name, record);
+        context.Records.Add(node.Type.MonomorphizedIndex, record);
     }
 
-    public override void Accept(VariableDeclarationNode node)
+    public  void CompilePrototypeGlobalVariable(VariableDeclarationNode node)
     {
         var a = module.AddGlobal(
             context.GetLLVMTypeFromShankType(node.Type) ?? throw new Exception("null type"),
@@ -79,6 +71,23 @@ public class LLVMVisitPrototype(Context context, LLVMBuilderRef builder, LLVMMod
         a.Initializer = LLVMValueRef.CreateConstNull(
             context.GetLLVMTypeFromShankType(node.Type) ?? throw new Exception("null type")
         );
-        context.AddVariable(node.GetNameSafe(), variable(a, !node.IsConstant), true);
+        context.AddVariable(node.MonomorphizedName(), variable(a, !node.IsConstant));
     }
+
+    public void CompilePrototypes(MonomorphizedProgramNode programNode)
+    {
+        
+        programNode.Records.Values.ToList().ForEach(CompileRecordPrototype);
+        programNode.Enums.Values.ToList().ForEach(CompileEnumPrototype);
+        programNode.Functions.Values.ToList().ForEach(CompileFunctionPrototype);
+        programNode.BuiltinFunctions.Values.ToList().ForEach(CompileBuiltinFunctionPrototype);
+        programNode.GlobalVariables.Values.ToList().ForEach(CompilePrototypeGlobalVariable);
+    }
+
+    private void CompileEnumPrototype(EnumNode obj)
+    {
+        throw new NotImplementedException();
+    }
+
+    private void CompileBuiltinFunctionPrototype(BuiltInFunctionNode obj) => throw new NotImplementedException();
 }

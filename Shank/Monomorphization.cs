@@ -132,7 +132,10 @@ public class MonomorphizationVisitor(
                         }
                 )
                 .ToList();
-            var function = new BuiltInFunctionNode(variadicFunctionNode, parameters);
+            var function = new BuiltInFunctionNode(variadicFunctionNode, parameters)
+            {
+                MonomorphizedName = typedBuiltinIndex
+            };
             // TODO: maybe specialize this further by turning it into multiple individual function calls for each arguement (might be annoying for write, because "write "Foo"" would probably become "writeString "Foo"; writeString "\n"", we would also probalb have a lot of "writeString " "" when we have mutliple arguements)
             programNode.BuiltinFunctions[typedBuiltinIndex] = function;
         }
@@ -173,10 +176,14 @@ public class MonomorphizationVisitor(
                 return (VariableDeclarationNode)Pop();
             })
                 .ToList();
-            programNode.BuiltinFunctions[typedBuiltinIndex] = new BuiltInFunctionNode(
+            var function = new BuiltInFunctionNode(
                 node,
                 parameters
-            );
+            )
+            {
+                MonomorphizedName = typedBuiltinIndex
+            };
+            programNode.BuiltinFunctions[typedBuiltinIndex] = function;
         }
     }
 
@@ -257,7 +264,10 @@ public class MonomorphizationVisitor(
         })
             .ToList();
 
-        var function = new FunctionNode(node, parameters, variables, statements);
+        var function = new FunctionNode(node, parameters, variables, statements)
+        {
+            MonomorphizedName = typedModuleIndex
+        };
         ProgramNode.Functions[typedModuleIndex] = function;
     }
 

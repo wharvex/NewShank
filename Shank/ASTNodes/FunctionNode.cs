@@ -641,7 +641,7 @@ public class FunctionNode : CallableNode
         File.WriteAllText(outPath, updatedIrContent);
     }
 
-    // we separate function prototype compilation from function body
+    /*// we separate function prototype compilation from function body
     public void VisitPrototype(Context context, LLVMModuleRef module)
     {
         // we could also return errors from the return type as it is not being used any where
@@ -665,8 +665,8 @@ public class FunctionNode : CallableNode
             llvmParam.Name = name;
         }
 
-        context.AddFunction(Name, function);
-    }
+        context.AddFunction(function, function);
+    }*/
 
     // public override LLVMValueRef Visit(
     //     LLVMVisitor visitor,
