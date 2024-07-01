@@ -93,7 +93,9 @@ class start
         x = 10
         number y
         y = 15
-        addStuff(x, y)
+        number temp
+        temp = 0
+        addStuff(x, y, temp)
     
     addStuff(number a, number b) : number ret
         ret = a+b".Replace("    ", "\t")
