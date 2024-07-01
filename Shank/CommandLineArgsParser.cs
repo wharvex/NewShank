@@ -259,9 +259,10 @@ public class CommandLineArgsParser
         program.SetStartModule();
         BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
         SemanticAnalysis.CheckModules(program);
+        var monomorphization = new MonomorphizationVisitor();
+        program.Accept(monomorphization);
+        var monomorphizedProgram= monomorphization.ProgramNode;
 
-        Interpreter.Modules = program.Modules;
-        Interpreter.StartModule = program.GetStartModuleSafe();
         a.CodeGen(options, program);
     }
 
