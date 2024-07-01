@@ -639,6 +639,6 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
 
     public  void CompileBuiltinFunction(BuiltInFunctionNode node)
     {
-        throw new NotImplementedException();
+        // throw new NotImplementedException();
     }
 }

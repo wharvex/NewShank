@@ -15,7 +15,7 @@ public class LLVMVisitPrototype(Context context, LLVMBuilderRef builder, LLVMMod
         );
     }
 
-    public  void CompileFunctionPrototype(FunctionNode node)
+    public void CompileFunctionPrototype(FunctionNode node)
     {
         var fnRetTy = module.Context.Int32Type;
         var args = node.ParameterVariables.Select(
@@ -46,7 +46,7 @@ public class LLVMVisitPrototype(Context context, LLVMBuilderRef builder, LLVMMod
     }
 
 
-    public  void CompileRecordPrototype(RecordNode node)
+    public void CompileRecordPrototype(RecordNode node)
     {
         var llvmRecord = module.Context.CreateNamedStruct(node.Name);
         var record = new LLVMStructType(
@@ -57,7 +57,7 @@ public class LLVMVisitPrototype(Context context, LLVMBuilderRef builder, LLVMMod
         context.Records.Add(node.Type.MonomorphizedIndex, record);
     }
 
-    public  void CompilePrototypeGlobalVariable(VariableDeclarationNode node)
+    public void CompilePrototypeGlobalVariable(VariableDeclarationNode node)
     {
         var a = module.AddGlobal(
             context.GetLLVMTypeFromShankType(node.Type) ?? throw new Exception("null type"),
@@ -76,7 +76,7 @@ public class LLVMVisitPrototype(Context context, LLVMBuilderRef builder, LLVMMod
 
     public void CompilePrototypes(MonomorphizedProgramNode programNode)
     {
-        
+
         programNode.Records.Values.ToList().ForEach(CompileRecordPrototype);
         programNode.Enums.Values.ToList().ForEach(CompileEnumPrototype);
         programNode.Functions.Values.ToList().ForEach(CompileFunctionPrototype);
@@ -89,5 +89,36 @@ public class LLVMVisitPrototype(Context context, LLVMBuilderRef builder, LLVMMod
         throw new NotImplementedException();
     }
 
-    private void CompileBuiltinFunctionPrototype(BuiltInFunctionNode obj) => throw new NotImplementedException();
+    private void CompileBuiltinFunctionPrototype(BuiltInFunctionNode node) {
+        var fnRetTy = module.Context.Int32Type;
+
+    var args = node.ParameterVariables.Select(
+        s =>
+            context.GetLLVMTypeFromShankType(s.Type)
+            ?? throw new CompilerException(
+                $"" + $"type of parameter {s.Name} is not found",
+                s.Line
+            )
+    );
+
+    var arguementMutability = node.ParameterVariables.Select(p => !p.IsConstant);
+    node.Name = (node.Name.Equals("start")? "main" : node.Name);
+
+    var function = module.addFunction(
+            node.Name,
+            LLVMTypeRef.CreateFunction(fnRetTy, args.ToArray()),
+            arguementMutability
+        );
+        foreach (
+    var (param, index) in node.ParameterVariables.Select((param, index) => (param, index))
+    )
+    {
+        var llvmParam = function.GetParam((uint)index);
+        var name = param.GetNameSafe();
+        llvmParam.Name = name;
+    }
+
+    context.AddBuiltinFunction((TypedBuiltinIndex)node.MonomorphizedName, function);
+}
+
 }
