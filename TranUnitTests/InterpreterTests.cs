@@ -100,5 +100,42 @@ class start
             );
             RunInterpreter();
         }
+
+        [TestMethod]
+        public void InterpreterTestIfsAndLoops()
+        {
+            InitializeInterpreter(
+                @"
+class Tran
+    loopsAndIfs()
+        if n > 100
+            keepGoing = false
+            x=5%100
+            temp = loop x.times()
+                console.print (temp)
+        console.print(n)".Replace("    ", "\t")
+            );
+            RunInterpreter();
+        }
+        [TestMethod]
+        public void InterpreterTestFibonacci()
+        {
+            InitializeInterpreter(
+                @"
+class FibonacciProgram
+    FibonacciMath()
+        number x = 0
+        number y = 1
+        number z = 0
+        number totalCount = 8
+        console.print(x + "" "" + y)
+        loop totalCount.times()
+            z = x+y
+            console.print("" "" + z)
+             x = y
+             y = z".Replace("    ", "\t")
+            );
+            RunInterpreter();
+        }
     }
 }
