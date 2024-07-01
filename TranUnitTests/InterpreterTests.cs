@@ -117,6 +117,7 @@ class Tran
             );
             RunInterpreter();
         }
+
         [TestMethod]
         public void InterpreterTestFibonacci()
         {
