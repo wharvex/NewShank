@@ -220,13 +220,19 @@ public class MonomorphizationVisitor(
                     new MonomorphizationVisitor(
                         instantiatedGenerics,
                         nonMonomorphizedProgramNode,
-                        start,
+                        module,
                         ProgramNode
                     )
                     {
                         expr = expr
                     }
                 );
+        // TODO: less hacky solution to demodulize global variables, maybe only add them when they are used
+            foreach (var (key, value) in module.GlobalVariables)
+            {
+                value.Accept(this);
+                programNode.GlobalVariables[(ModuleIndex)value.MonomorphizedName()] = (VariableDeclarationNode)Pop();
+            }
             Push(new FunctionCallNode(node, (TypedModuleIndex)Pop()));
         }
     }
@@ -292,6 +298,12 @@ public class MonomorphizationVisitor(
     public override void Visit(ModuleNode node)
     {
         start = node;
+        // TODO: less hacky solution to demodulize global variables, maybe only add them when they are used
+            foreach (var (key, value) in node.GlobalVariables)
+            {
+                value.Accept(this);
+                programNode.GlobalVariables[(ModuleIndex)value.MonomorphizedName()] = (VariableDeclarationNode)Pop();
+            }
         node.GetStartFunctionSafe().Accept(this);
     }
 
