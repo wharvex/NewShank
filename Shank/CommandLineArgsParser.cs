@@ -261,7 +261,7 @@ public class CommandLineArgsParser
         SemanticAnalysis.CheckModules(program);
         var monomorphization = new MonomorphizationVisitor();
         program.Accept(monomorphization);
-        var monomorphizedProgram= monomorphization.ProgramNode;
+        var monomorphizedProgram = monomorphization.ProgramNode;
 
         a.CodeGen(options, program);
     }
