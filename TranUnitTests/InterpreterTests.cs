@@ -106,13 +106,13 @@ class start
         {
             InitializeInterpreter(
                 @"
-class Tran
-    loopsAndIfs()
+class start
+    start()
         if n > 100
             keepGoing = false
             x=5%100
             temp = loop x.times()
-                console.print (temp)
+                console.print(temp)
         console.print(n)".Replace("    ", "\t")
             );
             RunInterpreter();
@@ -123,12 +123,16 @@ class Tran
         {
             InitializeInterpreter(
                 @"
-class FibonacciProgram
-    FibonacciMath()
-        number x = 0
-        number y = 1
-        number z = 0
-        number totalCount = 8
+class start
+    start()
+        number x
+        number y
+        number z
+        number totalCount
+        x=0
+        y=1
+        z=0
+        totalCount=8
         console.print(x + "" "" + y)
         loop totalCount.times()
             z = x+y
