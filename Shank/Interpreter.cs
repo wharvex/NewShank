@@ -275,6 +275,8 @@ public class Interpreter
             if (stmt is AssignmentNode an)
             {
                 var target = variables[an.NewTarget.GetPlain().Name];
+                OutputHelper.DebugPrintJson(target, "nestedIdtTarget");
+                OutputHelper.DebugPrintJson(an.NewTarget, "nestedAnTarget");
                 switch (target)
                 {
                     case IntDataType it:

@@ -308,6 +308,13 @@ public readonly record struct InstantiatedType(
 
     public Type? GetMember(string name) => Inner.GetMember(name, InstantiatedGenerics);
 
+    public Type GetMemberSafe(string name, ASTNode node) =>
+        Inner.GetMember(name, InstantiatedGenerics)
+        ?? throw new SemanticErrorException(
+            "No member `" + name + "' on `" + Inner.Name + "'",
+            node
+        );
+
     public void Accept(IInstantiatedTypeVisitor visitor) => visitor.Visit(this);
 
     public override string ToString() =>

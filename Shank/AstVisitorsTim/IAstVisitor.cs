@@ -20,6 +20,11 @@ public interface IRecordTypeVisitor : IAstVisitor
     void Visit(RecordType rt);
 }
 
+public interface IRecordDataTypeVisitor : IAstVisitor
+{
+    void Visit(RecordDataType rt);
+}
+
 public interface IInstantiatedTypeVisitor : IAstVisitor
 {
     void Visit(InstantiatedType it);
@@ -38,6 +43,11 @@ public interface IAstTypeVisitor : IAstVisitor
 public interface IAstExpressionVisitor : IAstVisitor
 {
     void Visit(ExpressionNode e);
+}
+
+public interface IInterpreterDataTypeVisitor
+{
+    void Visit(InterpreterDataType idt);
 }
 
 public class MemberExpectingVisitor : IVariableUsageVisitor
@@ -513,4 +523,22 @@ public class ArrayTypeToArrayDataTypeConvertingVisitor : IArrayTypeVisitor
         Adt = new ArrayDataType(adtList, at.Inner);
     }
 }
-// TODO: IdtFromVunResolvingVisitor
+
+public class VunToInterpreterDataTypeConvertingVisitor : IVariableUsageVisitor
+{
+    public void Visit(VariableUsageNodeTemp vun)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class InnerIdtGettingVisitor(VariableUsageNodeTemp vun) : IInterpreterDataTypeVisitor
+{
+    public VariableUsageNodeTemp Vun { get; } = vun;
+    public InterpreterDataType? InnerIdt { get; set; }
+
+    public void Visit(InterpreterDataType idt)
+    {
+        throw new NotImplementedException();
+    }
+}
