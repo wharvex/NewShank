@@ -70,14 +70,75 @@ namespace TranUnitTests
         }
 
         [TestMethod]
-        public void InterpreterTest()
+        public void InterpreterTest1()
         {
             InitializeInterpreter(
                 @"
 class start
     start()
-        boolean x
-        x = true".Replace("    ", "\t")
+        number x
+        x = 1+1".Replace("    ", "\t")
+            );
+            RunInterpreter();
+        }
+
+        [TestMethod]
+        public void InterpreterTest2()
+        {
+            InitializeInterpreter(
+                @"
+class start
+    start()
+        number x
+        x = 10
+        number y
+        y = 15
+        addStuff(x, y)
+    
+    addStuff(number a, number b) : number ret
+        ret = a+b".Replace("    ", "\t")
+            );
+            RunInterpreter();
+        }
+
+        [TestMethod]
+        public void InterpreterTestIfsAndLoops()
+        {
+            InitializeInterpreter(
+                @"
+class start
+    start()
+        if n > 100
+            keepGoing = false
+            x=5%100
+            temp = loop x.times()
+                console.print(temp)
+        console.print(n)".Replace("    ", "\t")
+            );
+            RunInterpreter();
+        }
+
+        [TestMethod]
+        public void InterpreterTestFibonacci()
+        {
+            InitializeInterpreter(
+                @"
+class start
+    start()
+        number x
+        number y
+        number z
+        number totalCount
+        x=0
+        y=1
+        z=0
+        totalCount=8
+        console.print(x + "" "" + y)
+        loop totalCount.times()
+            z = x+y
+            console.print("" "" + z)
+             x = y
+             y = z".Replace("    ", "\t")
             );
             RunInterpreter();
         }

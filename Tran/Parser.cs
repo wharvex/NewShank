@@ -238,11 +238,9 @@ public class Parser
         {
             return [];
         }
-
-        handler.MatchAndRemove(TokenType.COMMA);
         variable.IsConstant = isConstant;
         parameters.Add(variable);
-        do
+        while (handler.MatchAndRemove(TokenType.COMMA) != null)
         {
             AcceptSeparators();
             if ((variable = ParseVariableDeclaration()) != null)
@@ -252,7 +250,7 @@ public class Parser
                 continue;
             }
             throw new Exception("No name provided for variable in parameters");
-        } while (handler.MatchAndRemove(TokenType.COMMA) != null);
+        }
         return parameters;
     }
 
@@ -483,12 +481,16 @@ public class Parser
             {
                 currentLevel++;
             }
+            var statement = ParseStatement();
             if (currentLevel != blockLevel)
             {
-                throw new Exception("Invalid indentation in block");
+                if (statement != null)
+                {
+                    throw new Exception("Invalid indentation in block");
+                }
+                break;
             }
 
-            var statement = ParseStatement();
             if (statement != null)
             {
                 statements.Add((StatementNode)statement);
@@ -517,8 +519,6 @@ public class Parser
 
     public StatementNode? ParseFunctionCall()
     {
-        AcceptSeparators();
-
         var functionToken = handler.MatchAndRemove(TokenType.FUNCTION);
 
         if (functionToken == null)
@@ -736,11 +736,7 @@ public class Parser
         var token = handler.MatchAndRemove(TokenType.NUMERAL);
         if (token == null)
             return null;
-        if (token.GetValue().Contains('.'))
-        {
-            return new FloatNode(float.Parse(token.GetValue()));
-        }
-        return new IntNode(int.Parse(token.GetValue()));
+        return new FloatNode(float.Parse(token.GetValue()));
     }
 
     public static Type GetDataTypeFromConstantNodeType(ASTNode constantNode) =>
