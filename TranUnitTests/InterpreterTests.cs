@@ -70,14 +70,33 @@ namespace TranUnitTests
         }
 
         [TestMethod]
-        public void InterpreterTest()
+        public void InterpreterTest1()
         {
             InitializeInterpreter(
                 @"
 class start
     start()
-        boolean x
-        x = true".Replace("    ", "\t")
+        number x
+        x = 1+1".Replace("    ", "\t")
+            );
+            RunInterpreter();
+        }
+
+        [TestMethod]
+        public void InterpreterTest2()
+        {
+            InitializeInterpreter(
+                @"
+class start
+    start()
+        number x
+        x = 10
+        number y
+        y = 15
+        addStuff(x, y)
+    
+    addStuff(number a, number b) : number ret
+        ret = a+b".Replace("    ", "\t")
             );
             RunInterpreter();
         }
