@@ -208,7 +208,8 @@ public class Parser
 
             if (handler.MatchAndRemove(TokenType.OPENPARENTHESIS) != null)
             {
-                functionNode.LocalVariables = ParseParameters(false);
+                var parameters = ParseParameters(true);
+                functionNode.ParameterVariables.AddRange(parameters);
                 if (handler.MatchAndRemove(TokenType.CLOSEDPARENTHESIS) == null)
                     throw new Exception("Function declaration missing end parenthesis");
             }
@@ -219,7 +220,7 @@ public class Parser
 
             if (handler.MatchAndRemove(TokenType.COLON) != null)
             {
-                functionNode.ParameterVariables.AddRange(ParseParameters(true));
+                functionNode.ParameterVariables.AddRange(ParseParameters(false));
             }
 
             currentFunction = functionNode;
@@ -465,7 +466,7 @@ public class Parser
                 );
             }
         }
-        return "";
+        return null;
     }
 
     public List<StatementNode> ParseBlock()
@@ -547,6 +548,7 @@ public class Parser
         }
 
         functionCallNode.LineNum = functionLineNumber;
+        functionCallNode.Name = functionName;
         return functionCallNode;
     }
 
