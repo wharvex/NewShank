@@ -85,6 +85,7 @@
     <Folder Include="dotShank\Records\" />
     <Folder Include="dotShank\UnitTestTests1\" />
     <Folder Include="AstVisitorsTim\" />
+    <Folder Include="WalkingVisitors\" />
   </ItemGroup>
 
   <ItemGroup>
