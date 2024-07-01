@@ -110,6 +110,9 @@ class start
                 @"
 class start
     start()
+        number x
+        number n
+        n=101
         if n > 100
             keepGoing = false
             x=5%100
