@@ -80,16 +80,15 @@ public class Parser
     public bool ParseField()
     {
         var variable = ParseVariableDeclaration();
-        if (variable != null)
+        if (variable != null || members.Count > 0)
         {
-            members.Add(variable);
-            var property = ParseProperty(TokenType.ACCESSOR, variable.Name);
+            var property = ParseProperty(TokenType.ACCESSOR, members.Last().Name);
             if (property != null)
             {
                 thisClass.addFunction(property);
             }
 
-            property = ParseProperty(TokenType.MUTATOR, variable.Name);
+            property = ParseProperty(TokenType.MUTATOR, members.Last().Name);
             if (property != null)
             {
                 thisClass.addFunction(property);
@@ -811,6 +810,7 @@ public class Parser
             thisClass.Name,
             false
         );
+        members.Add(variableNode);
         return variableNode;
     }
 
