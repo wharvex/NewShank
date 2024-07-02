@@ -1006,6 +1006,8 @@ public class SemanticAnalysis
     }
 
     // Only used by ShankUnitTests project.
+    // TODO: Convert all calls of this overload to calls of the overload that accepts a ProgramNode
+    // argument, and then delete this overload.
     public static void CheckModules()
     {
         Modules = Interpreter.getModules();

@@ -137,10 +137,30 @@ public class WalkCompliantVisitor
     public virtual ASTNode? Final(VariableDeclarationNode n) => null;
 
     public Dictionary<string, T> VisitDictionary<T>(Dictionary<string, T> d)
-        where T : ASTNode =>
-        d.Select(kvp => new KeyValuePair<string, T>(kvp.Key, (T)kvp.Value.Walk(this)))
-            .ToDictionary();
+        where T : ASTNode
+    {
+        var ret = new Dictionary<string, T>();
+        foreach (var p in d)
+        {
+            ret[p.Key] = (T)p.Value.Walk(this);
+        }
+
+        return ret;
+
+        //return d.Select(kvp => new KeyValuePair<string, T>(kvp.Key, (T)kvp.Value.Walk(this)))
+        //    .ToDictionary();
+    }
 
     public List<T> VisitList<T>(List<T> l)
-        where T : ASTNode => [..l.Select(e => (T)e.Walk(this))];
+        where T : ASTNode
+    {
+        var ret = new List<T>();
+        foreach (var n in l)
+        {
+            ret.Add((T)n.Walk(this));
+        }
+
+        return ret;
+        //return [..l.Select(e => (T)e.Walk(this))];
+    }
 }

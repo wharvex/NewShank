@@ -1,14 +1,13 @@
-using System;
 using System.Diagnostics;
-using System.Text.RegularExpressions;
 using CommandLine;
 using LLVMSharp.Interop;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using Shank;
 using Shank.ASTNodes;
 using Shank.IRGenerator.CompilerPractice;
-using Parser = Shank.Parser;
+using Shank.WalkCompliantVisitors;
+
+namespace Shank;
 
 [Verb("Settings", isDefault: false, HelpText = "sets settings for you")]
 public class Settings
@@ -268,6 +267,8 @@ public class CommandLineArgsParser
 
     public void RunInterpreter(InterpretOptions options, ProgramNode program)
     {
+        var vgVis = new VariablesGettingVisitor();
+
         options
             .InputFiles.ToList()
             .ForEach(
@@ -283,6 +284,7 @@ public class CommandLineArgsParser
         // SemanticAnalysisVisitor.InterpreterOptions = options;
         // sm.Visit(program);
         SemanticAnalysis.CheckModules(program);
+        program.Walk(vgVis);
         OutputHelper.DebugPrintAst(program, "post-SA");
         Interpreter.InterpreterOptions = options;
         Interpreter.Modules = program.Modules;

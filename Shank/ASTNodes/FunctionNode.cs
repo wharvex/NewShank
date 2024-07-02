@@ -61,6 +61,8 @@ public class FunctionNode : CallableNode
 
     public List<string>? GenericTypeParameterNames { get; set; }
 
+    public Dictionary<string, VariableDeclarationNode> VariablesInScope { get; set; } = [];
+
     public void ApplyActionToTests(
         Action<TestNode, List<InterpreterDataType>, ModuleNode?> action,
         ModuleNode module

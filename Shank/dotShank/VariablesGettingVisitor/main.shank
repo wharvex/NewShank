@@ -1,0 +1,7 @@
+define start()
+variables greeting : string
+variables times, i : integer
+    greeting := "hello"
+    times := 5
+    for i from 1 to 10
+        write greeting
