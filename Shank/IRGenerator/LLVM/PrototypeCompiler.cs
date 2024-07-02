@@ -76,7 +76,6 @@ public class PrototypeCompiler(Context context, LLVMBuilderRef builder, LLVMModu
 
     public void CompilePrototypes(MonomorphizedProgramNode programNode)
     {
-
         programNode.Records.Values.ToList().ForEach(CompileRecordPrototype);
         programNode.Enums.Values.ToList().ForEach(CompileEnumPrototype);
         programNode.Functions.Values.ToList().ForEach(CompileFunctionPrototype);
@@ -89,36 +88,36 @@ public class PrototypeCompiler(Context context, LLVMBuilderRef builder, LLVMModu
         throw new NotImplementedException();
     }
 
-    private void CompileBuiltinFunctionPrototype(BuiltInFunctionNode node) {
+    private void CompileBuiltinFunctionPrototype(BuiltInFunctionNode node)
+    {
         var fnRetTy = module.Context.Int32Type;
 
-    var args = node.ParameterVariables.Select(
-        s =>
-            context.GetLLVMTypeFromShankType(s.Type)
-            ?? throw new CompilerException(
-                $"" + $"type of parameter {s.Name} is not found",
-                s.Line
-            )
-    );
+        var args = node.ParameterVariables.Select(
+            s =>
+                context.GetLLVMTypeFromShankType(s.Type)
+                ?? throw new CompilerException(
+                    $"" + $"type of parameter {s.Name} is not found",
+                    s.Line
+                )
+        );
 
-    var arguementMutability = node.ParameterVariables.Select(p => !p.IsConstant);
-    node.Name = (node.Name.Equals("start")? "main" : node.Name);
+        var arguementMutability = node.ParameterVariables.Select(p => !p.IsConstant);
+        node.Name = (node.Name.Equals("start") ? "main" : node.Name);
 
-    var function = module.addFunction(
+        var function = module.addFunction(
             node.Name,
             LLVMTypeRef.CreateFunction(fnRetTy, args.ToArray()),
             arguementMutability
         );
         foreach (
-    var (param, index) in node.ParameterVariables.Select((param, index) => (param, index))
-    )
-    {
-        var llvmParam = function.GetParam((uint)index);
-        var name = param.GetNameSafe();
-        llvmParam.Name = name;
+            var (param, index) in node.ParameterVariables.Select((param, index) => (param, index))
+        )
+        {
+            var llvmParam = function.GetParam((uint)index);
+            var name = param.GetNameSafe();
+            llvmParam.Name = name;
+        }
+
+        context.AddBuiltinFunction((TypedBuiltinIndex)node.MonomorphizedName, function);
     }
-
-    context.AddBuiltinFunction((TypedBuiltinIndex)node.MonomorphizedName, function);
-}
-
 }

@@ -12,9 +12,8 @@ public enum Types
     STRING,
 }
 
-public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef module) 
+public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef module)
 {
-
     public void DebugRuntime(string format, LLVMValueRef value)
     {
         builder.BuildCall2(
@@ -26,7 +25,8 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
 
     private LLVMValueRef CompileExpression(ExpressionNode expression)
     {
-        return expression switch {
+        return expression switch
+        {
             BooleanExpressionNode booleanExpressionNode => CompileBooleanExpression(booleanExpressionNode),
             BoolNode boolNode => CompileBoolean(boolNode),
             CharNode charNode => CompileCharacter(charNode),
@@ -147,27 +147,24 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         return builder.BuildFCmp(Op, L, R);
     }
 
-    public  LLVMValueRef CompileInteger(IntNode node)
+    public LLVMValueRef CompileInteger(IntNode node)
     {
-
         return LLVMValueRef.CreateConstInt(
             LLVMTypeRef.Int64, //
             (ulong)node.Value
         );
-
     }
 
-    public  LLVMValueRef CompileReal(FloatNode node)
+    public LLVMValueRef CompileReal(FloatNode node)
     {
         return
             LLVMValueRef.CreateConstReal(
-
                 LLVMTypeRef.Double, //
                 (ulong)node.Value
             );
     }
 
-    public  LLVMValueRef CompileVariableUsage(VariableUsagePlainNode node)
+    public LLVMValueRef CompileVariableUsage(VariableUsagePlainNode node)
     {
         LLVMValue value = context.GetVariable(node.MonomorphizedName());
         if (node.ExtensionType == VariableUsagePlainNode.VrnExtType.ArrayIndex)
@@ -200,7 +197,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         throw new NotImplementedException();
     }
 
-    public  LLVMValueRef CompileCharacter(CharNode node)
+    public LLVMValueRef CompileCharacter(CharNode node)
     {
         return (
             LLVMValueRef.CreateConstInt(
@@ -210,7 +207,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         );
     }
 
-    public  LLVMValueRef CompileBoolean(BoolNode node)
+    public LLVMValueRef CompileBoolean(BoolNode node)
     {
         return (
             LLVMValueRef.CreateConstInt(
@@ -222,7 +219,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         );
     }
 
-    public  LLVMValueRef CompileString(StringNode node)
+    public LLVMValueRef CompileString(StringNode node)
     {
         var stringLength = LLVMValueRef.CreateConstInt(
             module.Context.Int32Type,
@@ -255,7 +252,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         return String;
     }
 
-    public  LLVMValueRef CompileMathExpression(MathOpNode node)
+    public LLVMValueRef CompileMathExpression(MathOpNode node)
     {
         LLVMValueRef R = CompileExpression(node.Right);
         LLVMValueRef L = CompileExpression(node.Left);
@@ -275,7 +272,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         throw new NotImplementedException();
     }
 
-    public  LLVMValueRef CompileBooleanExpression(BooleanExpressionNode node)
+    public LLVMValueRef CompileBooleanExpression(BooleanExpressionNode node)
     {
         LLVMValueRef R = CompileExpression(node.Right);
         LLVMValueRef L = CompileExpression(node.Left);
@@ -304,7 +301,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         }
         else if (_types(L.TypeOf) == Types.FLOAT)
         {
-            return 
+            return
                 HandleFloatBoolOp(
                     L,
                     node.Op switch
@@ -324,35 +321,35 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
                     },
                     R
                 )
-            ;
+                ;
         }
 
         throw new NotImplementedException();
     }
 
-    public  void CompileRecord(RecordNode node)
+    public void CompileRecord(RecordNode node)
     {
         // this cannot be done from the prototype becuase we cannot attach llvm types to Type without putting dependency of llvm for the Types file
         // also we do not know the order by which types are added to the llvm module
         var record = context.GetCustomType(node.Type.MonomorphizedIndex);
         var args = node.Type.Fields.Select(
-            s =>
-                // for records (and eventually references) we do not hold the actual type of the record, but rather a pointer to it, because llvm does not like direct recursive types
-                (
-                    s.Key,
-                    s.Value is RecordType
-                        ? LLVMTypeRef.CreatePointer(
-                            (LLVMTypeRef)context.GetLLVMTypeFromShankType(s.Value)!,
-                            0
-                        )
-                        : (LLVMTypeRef)context.GetLLVMTypeFromShankType(s.Value)!
-                )
-        )
+                s =>
+                    // for records (and eventually references) we do not hold the actual type of the record, but rather a pointer to it, because llvm does not like direct recursive types
+                    (
+                        s.Key,
+                        s.Value is RecordType
+                            ? LLVMTypeRef.CreatePointer(
+                                (LLVMTypeRef)context.GetLLVMTypeFromShankType(s.Value)!,
+                                0
+                            )
+                            : (LLVMTypeRef)context.GetLLVMTypeFromShankType(s.Value)!
+                    )
+            )
             .ToArray();
         record.LlvmTypeRef.StructSetBody(args.Select(s => s.Item2).ToArray(), false);
     }
 
-    public  void CompileFunctionCall(FunctionCallNode node)
+    public void CompileFunctionCall(FunctionCallNode node)
     {
         {
             var function =
@@ -361,15 +358,15 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
             // if any arguement is not mutable, but is required to be mutable
             if (
                 function
-                    .ArguementMutability.Zip( //mutable
-                        node.Arguments //Parameters //multable
+                .ArguementMutability.Zip( //mutable
+                    node.Arguments //Parameters //multable
                         .Select(
                             p =>
                                 p is VariableUsagePlainNode variableUsagePlainNode
                                 && variableUsagePlainNode.IsVariableFunctionCall
                         ) //.IsVariable)
-                    )
-                    .Any(a => a is { First: true, Second: false })
+                )
+                .Any(a => a is { First: true, Second: false })
             )
             {
                 throw new Exception($"call to {node.Name} has a mismatch of mutability");
@@ -381,7 +378,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         }
     }
 
-    public  void CompileFunction(FunctionNode node)
+    public void CompileFunction(FunctionNode node)
     {
         var function = context.GetFunction(node.MonomorphizedName);
         context.CurrentFunction = function;
@@ -412,7 +409,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         context.ResetLocal();
     }
 
-    public  void CompileWhile(WhileNode node)
+    public void CompileWhile(WhileNode node)
     {
         var whileCond = context.CurrentFunction.AppendBasicBlock("while.cond");
         var whileBody = context.CurrentFunction.AppendBasicBlock("while.body");
@@ -454,7 +451,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         }
     }
 
-    public  void CompileAssignment(AssignmentNode node)
+    public void CompileAssignment(AssignmentNode node)
     {
         var llvmValue = context.GetVariable(node.Target.MonomorphizedName());
         // context.GetCustomType(node.)
@@ -467,7 +464,8 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
 
         if (node.Target.ExtensionType == VariableUsagePlainNode.VrnExtType.ArrayIndex)
         {
-            var a = builder.BuildGEP2(llvmValue.TypeRef, llvmValue.ValueRef, new[] { CompileExpression(node.Target.Extension) });
+            var a = builder.BuildGEP2(llvmValue.TypeRef, llvmValue.ValueRef,
+                new[] { CompileExpression(node.Target.Extension) });
             builder.BuildStore(expression, a);
         }
         else if (node.Target.ExtensionType == VariableUsagePlainNode.VrnExtType.RecordMember)
@@ -478,12 +476,13 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
             var c = builder.BuildStructGEP2(
                 llvmValue.TypeRef,
                 llvmValue.ValueRef,
-                
                 (uint)Recordtype.Access(RecordExt.Name)
             );
             builder.BuildStore(expression, c);
         }
-        else if (node.Target.ExtensionType == VariableUsagePlainNode.VrnExtType.Enum) { }
+        else if (node.Target.ExtensionType == VariableUsagePlainNode.VrnExtType.Enum)
+        {
+        }
         else
         {
             builder.BuildStore(expression, llvmValue.ValueRef);
@@ -521,25 +520,25 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
             .ForEach(f => f.Accept(this));
     }*/
 
-    public  void CompileIf(IfNode node)
+    public void CompileIf(IfNode node)
     {
         if (node.Expression != null)
-        // if the condition is null then it's an else statement, which can
-        // only happen after an if statement
-        // so is it's an if statement, and since we compile
-        // if statements recursively, like how we parse them
-        // we know that we already created the block for the
-        // else statement, when compiling the if part
-        // so we just compile the statements in the else block
-        // if the condition is not null we compile the condition,
-        // create two blocks one for if it's true, and for when the condition is false
-        // we then just compile the statements for when the condition
-        // is true under the true block, followed by a goto to an after block
-        // and we visit(compile) the IfNode for when the condition is false
-        // if needed, followed by a goto to the after branch
-        // note we could make this a bit better by checking if next is null and then make the conditional branch to after block in the false cas
+            // if the condition is null then it's an else statement, which can
+            // only happen after an if statement
+            // so is it's an if statement, and since we compile
+            // if statements recursively, like how we parse them
+            // we know that we already created the block for the
+            // else statement, when compiling the if part
+            // so we just compile the statements in the else block
+            // if the condition is not null we compile the condition,
+            // create two blocks one for if it's true, and for when the condition is false
+            // we then just compile the statements for when the condition
+            // is true under the true block, followed by a goto to an after block
+            // and we visit(compile) the IfNode for when the condition is false
+            // if needed, followed by a goto to the after branch
+            // note we could make this a bit better by checking if next is null and then make the conditional branch to after block in the false cas
         {
-            var condition =CompileExpression( node.Expression);
+            var condition = CompileExpression(node.Expression);
             var ifBlock = context.CurrentFunction.AppendBasicBlock("if block");
             var elseBlock = context.CurrentFunction.AppendBasicBlock("else block");
             var afterBlock = context.CurrentFunction.AppendBasicBlock("after if statement");
@@ -553,6 +552,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
             {
                 CompileIf(nonnull);
             }
+
             builder.BuildBr(afterBlock);
             builder.PositionAtEnd(afterBlock);
         }
@@ -562,7 +562,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         }
     }
 
-    public  void CompileRepeat(RepeatNode node)
+    public void CompileRepeat(RepeatNode node)
     {
         var whileBody = context.CurrentFunction.AppendBasicBlock("while.body");
         var whileDone = context.CurrentFunction.AppendBasicBlock("while.done");
@@ -571,12 +571,12 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         builder.PositionAtEnd(whileBody);
         node.Children.ForEach(CompileStatement);
         // and then test the condition
-            var condition = CompileExpression(node.Expression);
+        var condition = CompileExpression(node.Expression);
         builder.BuildCondBr(condition, whileBody, whileDone);
         builder.PositionAtEnd(whileDone);
     }
 
-    public  void CompileVariableDeclaration(VariableDeclarationNode node)
+    public void CompileVariableDeclaration(VariableDeclarationNode node)
     {
         var name = node.GetNameSafe();
         // TODO: only alloca when !isConstant
@@ -590,19 +590,17 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         context.AddVariable(node.MonomorphizedName(), variable(v, !node.IsConstant));
     }
 
-    public  void Compile(MonomorphizedProgramNode node)
+    public void Compile(MonomorphizedProgramNode node)
     {
-
-        
-            var protoTypeCompiler = new PrototypeCompiler(context, builder, module);
-            protoTypeCompiler.CompilePrototypes(node);
+        var protoTypeCompiler = new PrototypeCompiler(context, builder, module);
+        protoTypeCompiler.CompilePrototypes(node);
 
         node.Records.Values.ToList().ForEach(CompileRecord);
         node.Functions.Values.ToList().ForEach(CompileFunction);
         node.BuiltinFunctions.Values.ToList().ForEach(CompileBuiltinFunction);
     }
 
-    public  void CompileFor(ForNode node)
+    public void CompileFor(ForNode node)
     {
         var forStart = context.CurrentFunction.AppendBasicBlock("for.start");
         var afterFor = context.CurrentFunction.AppendBasicBlock("for.after");
@@ -614,11 +612,10 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         // we have to compile the to and from in the loop so that the get run each time, we go through the loop
         // in case we modify them in the loop
 
-        
-        
+
         var fromValue = CompileExpression(node.From);
         var toValue = CompileExpression(node.To);
-        
+
         var currentIterable = node.Variable.Accept(new LLVMExpr(context, builder, module));
         // right now we assume, from, to, and the variable are all integers
         // in the future we should check and give some error at runtime/compile time if not
@@ -637,7 +634,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         builder.PositionAtEnd(afterFor);
     }
 
-    public  void CompileBuiltinFunction(BuiltInFunctionNode node)
+    public void CompileBuiltinFunction(BuiltInFunctionNode node)
     {
         // throw new NotImplementedException();
     }
