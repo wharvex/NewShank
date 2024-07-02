@@ -115,7 +115,7 @@ public class CompileOptions
 }
 
 [Verb("Interpret", isDefault: false, HelpText = "runs the shank interpreter")]
-public class InterptOptions
+public class InterpretOptions
 {
     [Value(index: 0, MetaName = "inputFile", HelpText = "The Shank source file", Required = true)]
     public IEnumerable<string> InputFiles { get; set; }
@@ -153,12 +153,12 @@ public class CommandLineArgsParser
             .Parser.Default.ParseArguments<
                 CompileOptions,
                 Settings,
-                InterptOptions,
+                InterpretOptions,
                 CompilePracticeOptions
             >(args)
             .WithParsed<Settings>(options => SealizeSettings(options))
             .WithParsed<CompileOptions>(options => RunCompiler(options, program))
-            .WithParsed<InterptOptions>(options => RunInterptrer(options, program))
+            .WithParsed<InterpretOptions>(options => RunInterpreter(options, program))
             .WithParsed<CompilePracticeOptions>(options => RunCompilePractice(options, program))
             .WithNotParsed(errors => Console.WriteLine($"error with running Shank"));
     }
@@ -266,13 +266,8 @@ public class CommandLineArgsParser
         a.CodeGen(options, program);
     }
 
-    public void RunInterptrer(InterptOptions options, ProgramNode program)
+    public void RunInterpreter(InterpretOptions options, ProgramNode program)
     {
-        // scan and parse :p
-
-
-        // GetFiles(options.file).ForEach(ip => ScanAndParse(ip, program));
-
         options
             .InputFiles.ToList()
             .ForEach(
@@ -283,7 +278,7 @@ public class CommandLineArgsParser
         program.SetStartModule();
         OutputHelper.DebugPrintAst(program, "pre-SA");
         BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
-        SemanticAnalysis.InterpreterOptions = options;
+        SemanticAnalysis.ActiveInterpretOptions = options;
         // SemanticAnalysisVisitor sm = new SemanticAnalysisVisitor();
         // SemanticAnalysisVisitor.InterpreterOptions = options;
         // sm.Visit(program);
@@ -347,7 +342,7 @@ public class CommandLineArgsParser
         );
     }
 
-    private void ScanAndParse(string inPath, ProgramNode program, InterptOptions? options = null)
+    private void ScanAndParse(string inPath, ProgramNode program, InterpretOptions? options = null)
     {
         List<Token> tokens = [];
         var lexer = new Lexer();

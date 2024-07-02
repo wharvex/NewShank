@@ -13,11 +13,11 @@ public class SemanticAnalysis
     public static ProgramNode? AstRoot { get; set; }
     public static Dictionary<string, ModuleNode>? Modules { get; set; }
     public static ModuleNode? StartModule { get; set; }
-    public static InterptOptions? InterpreterOptions { get; set; }
+    public static InterpretOptions? ActiveInterpretOptions { get; set; }
 
     public static bool GetVuopTestFlag()
     {
-        return InterpreterOptions?.VuOpTest ?? false;
+        return ActiveInterpretOptions?.VuOpTest ?? false;
     }
 
     private static ProgramNode GetAstRootSafe() =>

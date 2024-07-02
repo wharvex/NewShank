@@ -2,7 +2,7 @@ using System.Text;
 using LLVMSharp.Interop;
 using Shank.ExprVisitors;
 using Shank.IRGenerator;
-using Shank.WalkingVisitors;
+using Shank.WalkCompliantVisitors;
 
 namespace Shank.ASTNodes;
 

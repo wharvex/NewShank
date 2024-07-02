@@ -29,9 +29,9 @@ public class Parser
         Token.TokenType.Test
     ];
 
-    public InterptOptions? InterpreterOptions { get; set; }
+    public InterpretOptions? InterpreterOptions { get; set; }
 
-    public Parser(List<Token> tokens, InterptOptions? options = null)
+    public Parser(List<Token> tokens, InterpretOptions? options = null)
     {
         _tokens = tokens;
         InterpreterOptions = options;

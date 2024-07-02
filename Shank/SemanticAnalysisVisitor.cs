@@ -29,7 +29,7 @@ public class SemanticAnalysisVisitor : Visitor
     public static Stack<Dictionary<string, VariableDeclarationNode>> variableStack { get; set; }
     public static Dictionary<string, VariableDeclarationNode> variables { get; set; }
 
-    public static InterptOptions? InterpreterOptions { get; set; }
+    public static InterpretOptions? InterpreterOptions { get; set; }
 
     public static bool GetVuopTestFlag()
     {
