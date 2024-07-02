@@ -1,6 +1,6 @@
 ﻿using Shank.ASTNodes;
 
-namespace Shank.WalkingVisitors;
+namespace Shank.WalkCompliantVisitors;
 
 public class WalkCompliantVisitor
 {

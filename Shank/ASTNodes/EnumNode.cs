@@ -1,5 +1,5 @@
 using Shank.ExprVisitors;
-using Shank.WalkingVisitors;
+using Shank.WalkCompliantVisitors;
 
 namespace Shank.ASTNodes;
 

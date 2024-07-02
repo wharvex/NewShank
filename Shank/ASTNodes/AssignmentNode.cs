@@ -1,6 +1,7 @@
 using LLVMSharp.Interop;
 using Shank.ExprVisitors;
 using Shank.IRGenerator;
+using Shank.WalkCompliantVisitors;
 
 namespace Shank.ASTNodes;
 
@@ -30,14 +31,14 @@ public class AssignmentNode : StatementNode
     /// <summary>
     /// The target variable to which the expression is assigned (LHS of the :=).
     /// </summary>
-    public VariableUsagePlainNode Target { get; init; }
+    public VariableUsagePlainNode Target { get; set; }
 
-    public VariableUsageNodeTemp NewTarget { get; init; }
+    public VariableUsageNodeTemp NewTarget { get; set; }
 
     /// <summary>
     /// The expression assigned to the target variable (RHS of the :=).
     /// </summary>
-    public ExpressionNode Expression { get; init; }
+    public ExpressionNode Expression { get; set; }
 
     public override object[] returnStatementTokens()
     {
@@ -67,5 +68,20 @@ public class AssignmentNode : StatementNode
     public override string ToString()
     {
         return $"{Target} assigned as {Expression}";
+    }
+
+    public override ASTNode Walk(WalkCompliantVisitor v)
+    {
+        var ret = v.Visit(this);
+        if (ret is not null)
+        {
+            return ret;
+        }
+
+        NewTarget = (VariableUsageNodeTemp)NewTarget.Walk(v);
+        Expression = (ExpressionNode)Expression.Walk(v);
+
+        ret = v.Final(this);
+        return ret ?? this;
     }
 }
