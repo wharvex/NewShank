@@ -1,4 +1,5 @@
 using Shank.ExprVisitors;
+using Shank.WalkingVisitors;
 
 namespace Shank.ASTNodes;
 
@@ -36,4 +37,16 @@ public class EnumNode(string type, string parentModuleName, List<string> enumEle
     }
 
     public override void Accept(Visitor v) => v.Visit(this);
+
+    public override ASTNode Walk(WalkCompliantVisitor v)
+    {
+        var ret = v.Visit(this);
+        if (ret is not null)
+        {
+            return ret;
+        }
+
+        ret = v.Final(this);
+        return ret ?? this;
+    }
 }

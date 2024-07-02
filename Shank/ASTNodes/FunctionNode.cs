@@ -2,6 +2,7 @@ using System.Text;
 using LLVMSharp.Interop;
 using Shank.ExprVisitors;
 using Shank.IRGenerator;
+using Shank.WalkingVisitors;
 
 namespace Shank.ASTNodes;
 
@@ -10,7 +11,6 @@ public class FunctionNode : CallableNode
     public FunctionNode(string name, string moduleName, bool isPublic)
         : base(name, moduleName, isPublic)
     {
-        // This is a delegate instance, like an anonymous interface implementation in Java.
         Execute = (List<InterpreterDataType> paramList) =>
             Interpreter.InterpretFunction(this, paramList);
         Name = name;
@@ -51,11 +51,10 @@ public class FunctionNode : CallableNode
         Name = name;
     }
 
-    //DEPRECIATED
+    //DEPRECATED
     public string OverloadNameExt { get; set; } = "";
 
     public List<VariableDeclarationNode> LocalVariables { get; set; } = [];
-    public string FunctionName;
     public List<StatementNode> Statements { get; set; } = [];
 
     public Dictionary<string, TestNode> Tests { get; set; } = [];
@@ -693,4 +692,21 @@ public class FunctionNode : CallableNode
     }
 
     public override void Accept(Visitor v) => v.Visit(this);
+
+    public override ASTNode Walk(WalkCompliantVisitor v)
+    {
+        var ret = v.Visit(this);
+        if (ret is not null)
+        {
+            return ret;
+        }
+
+        ParameterVariables = v.VisitList(ParameterVariables);
+        LocalVariables = v.VisitList(LocalVariables);
+        Statements = v.VisitList(Statements);
+        Tests = v.VisitDictionary(Tests);
+
+        ret = v.Final(this);
+        return ret ?? this;
+    }
 }

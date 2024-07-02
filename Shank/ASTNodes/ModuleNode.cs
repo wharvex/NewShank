@@ -2,17 +2,18 @@ using LLVMSharp.Interop;
 using Shank.ASTNodes;
 using Shank.ExprVisitors;
 using Shank.IRGenerator;
+using Shank.WalkingVisitors;
 
 namespace Shank.ASTNodes;
 
 public class ModuleNode : ASTNode
 {
-    public Dictionary<string, EnumNode> Enums { get; init; }
+    public Dictionary<string, EnumNode> Enums { get; set; }
     public string Name { get; set; }
-    public Dictionary<string, CallableNode> Functions { get; init; }
+    public Dictionary<string, CallableNode> Functions { get; set; }
     public Dictionary<string, List<CallableNode>> Functions2 { get; } = []; //not finished for overloaded functions
-    public Dictionary<string, RecordNode> Records { get; init; }
-    public Dictionary<string, VariableDeclarationNode> GlobalVariables { get; } = [];
+    public Dictionary<string, RecordNode> Records { get; set; }
+    public Dictionary<string, VariableDeclarationNode> GlobalVariables { get; set; } = [];
 
     public Dictionary<string, ASTNode> Exported { get; set; }
     public Dictionary<string, ASTNode> Imported { get; set; }
@@ -451,4 +452,24 @@ public class ModuleNode : ASTNode
     }
 
     public override void Accept(Visitor v) => v.Visit(this);
+
+    public override ASTNode Walk(WalkCompliantVisitor v)
+    {
+        var ret = v.Visit(this);
+        if (ret is not null)
+        {
+            return ret;
+        }
+
+        Enums = v.VisitDictionary(Enums);
+        Functions = v.VisitDictionary(Functions);
+        Records = v.VisitDictionary(Records);
+        GlobalVariables = v.VisitDictionary(GlobalVariables);
+        Exported = v.VisitDictionary(Exported);
+        Imported = v.VisitDictionary(Imported);
+        Tests = v.VisitDictionary(Tests);
+
+        ret = v.Final(this);
+        return ret ?? this;
+    }
 }
