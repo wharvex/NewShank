@@ -74,6 +74,22 @@ public class Parser
         RecordNode? record = new RecordNode(thisClass.Name, thisClass.Name, members, null);
         thisClass.AddRecord(record);
         program.AddToModules(thisClass);
+
+        foreach (var function in thisClass.Functions)
+        {
+            foreach (var member in record.Members)
+            {
+                ((FunctionNode)function.Value).LocalVariables.Add(
+                    new VariableDeclarationNode(
+                        false,
+                        member.Type,
+                        member.Name,
+                        thisClass.Name,
+                        false
+                    )
+                );
+            }
+        }
         return program;
     }
 
@@ -722,6 +738,21 @@ public class Parser
             if (handler.MatchAndRemove(TokenType.CLOSEDPARENTHESIS) == null)
                 throw new Exception("Closing parenthesis expected after.");
             return exp;
+        }
+
+        if (handler.MatchAndRemove(TokenType.QUOTE) != null)
+        {
+            string value = "";
+            Token? word;
+            while ((word = handler.MatchAndRemove(TokenType.WORD)) != null)
+            {
+                value += word.GetValue();
+            }
+            if (handler.MatchAndRemove(TokenType.QUOTE) != null)
+            {
+                return new StringNode(value);
+            }
+            throw new Exception("String literal missing end quotes");
         }
 
         VariableUsagePlainNode? variable;

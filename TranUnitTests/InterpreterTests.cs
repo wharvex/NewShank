@@ -104,6 +104,22 @@ class start
         }
 
         [TestMethod]
+        public void InterpreterTest3()
+        {
+            InitializeInterpreter(
+                @"
+class start
+    number x
+    string y
+
+    start()
+        x = 100
+        y = ""helloworld""".Replace("    ", "\t")
+            );
+            RunInterpreter();
+        }
+
+        [TestMethod]
         public void InterpreterTestIfsAndLoops()
         {
             InitializeInterpreter(
