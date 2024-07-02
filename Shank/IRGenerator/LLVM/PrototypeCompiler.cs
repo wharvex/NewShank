@@ -20,7 +20,7 @@ public class PrototypeCompiler(Context context, LLVMBuilderRef builder, LLVMModu
         var fnRetTy = module.Context.Int32Type;
         var args = node.ParameterVariables.Select(
             s =>
-                context.GetLLVMTypeFromShankType(s.Type)
+                context.GetLLVMTypeFromShankType(s.Type, !s.IsConstant)
                 ?? throw new CompilerException(
                     $"" + $"type of parameter {s.Name} is not found",
                     s.Line

@@ -24,7 +24,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         );
     }
 
-    private LLVMValueRef CompileExpression(ExpressionNode expression)
+    private LLVMValueRef CompileExpression(ExpressionNode expression, bool load = true)
     {
         return expression switch
         {
@@ -37,7 +37,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
             StringNode stringNode => CompileString(stringNode),
             // VariableUsageIndexNode variableUsageIndexNode => Visit(),
             // VariableUsageMemberNode variableUsageMemberNode => Visit(),
-            VariableUsagePlainNode variableUsagePlainNode => CompileVariableUsage(variableUsagePlainNode),
+            VariableUsagePlainNode variableUsagePlainNode => CompileVariableUsage(variableUsagePlainNode, load),
             // VariableUsageNodeTemp variableUsageNodeTemp => Visit(),
             _ => throw new ArgumentOutOfRangeException(nameof(expression))
         };
@@ -166,15 +166,16 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
             );
     }
 
-    public LLVMValueRef CompileVariableUsage(VariableUsagePlainNode node)
+    public LLVMValueRef CompileVariableUsage(VariableUsagePlainNode node, bool load = true)
     {
         LLVMValue value = context.GetVariable(node.MonomorphizedName());
         if (node.ExtensionType == VariableUsagePlainNode.VrnExtType.ArrayIndex)
         {
             var a = builder.BuildGEP2(value.TypeRef, value.ValueRef, new[] { CompileExpression(node.Extension) });
-            return (builder.BuildLoad2(value.TypeRef, a));
+            return (load ?builder.BuildLoad2(value.TypeRef, a): a);
         }
-        else if (node.ExtensionType == VariableUsagePlainNode.VrnExtType.RecordMember)
+
+        if (node.ExtensionType == VariableUsagePlainNode.VrnExtType.RecordMember)
         {
             var varType = (LLVMStruct)(value);
             var varField = (VariableUsagePlainNode)node.GetExtensionSafe();
@@ -183,7 +184,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
                 value.ValueRef,
                 (uint)varType.Access(varField.Name)
             );
-            return (builder.BuildLoad2(value.TypeRef, structField));
+            return (load? builder.BuildLoad2(value.TypeRef, structField): value.ValueRef);
         }
         // else if (node.ExtensionType == VariableUsagePlainNode.VrnExtType.Enum)
         // {
@@ -191,9 +192,10 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         //     Console.WriteLine(varType.Variants);
         //     Console.WriteLine(node.Extension);
         // }
-        else if (node.ExtensionType == VariableUsagePlainNode.VrnExtType.None)
+
+        if (node.ExtensionType == VariableUsagePlainNode.VrnExtType.None)
         {
-            return (builder.BuildLoad2(value.TypeRef, value.ValueRef));
+            return (load?builder.BuildLoad2(value.TypeRef, value.ValueRef):value.ValueRef);
         }
 
         throw new NotImplementedException();
@@ -364,9 +366,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
                     node.Arguments //Parameters //multable
                         .Select(
                             p =>
-                                p is VariableUsagePlainNode variableUsagePlainNode
-                                && variableUsagePlainNode.IsVariableFunctionCall
-                        ) //.IsVariable)
+                                p is VariableUsagePlainNode { IsVariableFunctionCall: true }) //.IsVariable)
                 )
                 .Any(a => a is { First: true, Second: false })
             )
@@ -374,7 +374,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
                 throw new Exception($"call to {node.Name} has a mismatch of mutability");
             }
 
-            var parameters = node.Arguments.Select(CompileExpression);
+            var parameters = node.Arguments.Zip(function.ArguementMutability).Select((arguementAndMutability)=>CompileExpression(arguementAndMutability.First, !arguementAndMutability.Second));
             // function.
             builder.BuildCall2(function.TypeOf, function.Function, parameters.ToArray());
         }
@@ -391,16 +391,30 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
             var (param, index) in node.ParameterVariables.Select((param, index) => (param, index))
         )
         {
-            var llvmParam = function.GetParam((uint)index);
-            var name = param.GetNameSafe();
-            LLVMValueRef paramAllocation = builder.BuildAlloca(llvmParam.TypeOf, name);
-            var parameter = context.NewVariable(param.Type)(
-                paramAllocation, //a
-                !param.IsConstant
-            );
+            if (param.IsConstant)
+            {
+                var llvmParam = function.GetParam((uint)index);
+                var name = param.GetNameSafe();
+                LLVMValueRef paramAllocation = builder.BuildAlloca(llvmParam.TypeOf, name);
+                var parameter = context.NewVariable(param.Type)(
+                    paramAllocation, //a
+                    !param.IsConstant
+                );
+                builder.BuildStore(llvmParam, paramAllocation);
+                context.AddVariable(param.MonomorphizedName(), parameter);
+            }
+            else
+            {
+                var llvmParam = function.GetParam((uint)index);
+                var name = param.GetNameSafe();
+                var parameter = context.NewVariable(param.Type)(
+                    llvmParam, //a
+                    !param.IsConstant
+                );
+                context.AddVariable(param.MonomorphizedName(), parameter);
+                
+            }
 
-            builder.BuildStore(llvmParam, paramAllocation);
-            context.AddVariable(param.MonomorphizedName(), parameter);
         }
 
         function.Linkage = LLVMLinkage.LLVMExternalLinkage;
@@ -459,36 +473,13 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         // context.GetCustomType(node.)
         Console.WriteLine(node.ToString());
         var expression = CompileExpression(node.Expression);
+        var target = CompileExpression(node.Target, false);
         if (!llvmValue.IsMutable)
         {
             throw new Exception($"tried to mutate non mutable variable {node.Target.Name}");
         }
 
-        if (node.Target.ExtensionType == VariableUsagePlainNode.VrnExtType.ArrayIndex)
-        {
-            var a = builder.BuildGEP2(llvmValue.TypeRef, llvmValue.ValueRef,
-                new[] { CompileExpression(node.Target.Extension) });
-            builder.BuildStore(expression, a);
-        }
-        else if (node.Target.ExtensionType == VariableUsagePlainNode.VrnExtType.RecordMember)
-        {
-            var Recordtype = (LLVMStruct)(llvmValue);
-            var RecordExt = (VariableUsagePlainNode)node.Target.GetExtensionSafe();
-
-            var c = builder.BuildStructGEP2(
-                llvmValue.TypeRef,
-                llvmValue.ValueRef,
-                (uint)Recordtype.Access(RecordExt.Name)
-            );
-            builder.BuildStore(expression, c);
-        }
-        else if (node.Target.ExtensionType == VariableUsagePlainNode.VrnExtType.Enum)
-        {
-        }
-        else
-        {
-            builder.BuildStore(expression, llvmValue.ValueRef);
-        }
+        builder.BuildStore(expression, target);
     }
 
     // public  void Visit(EnumNode node)
@@ -608,6 +599,11 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         var afterFor = context.CurrentFunction.AppendBasicBlock("for.after");
         var forBody = context.CurrentFunction.AppendBasicBlock("for.body");
         var forIncremnet = context.CurrentFunction.AppendBasicBlock("for.inc");
+        var mutableCurrentIterable = CompileExpression(node.Variable, false);
+        var fromValue = CompileExpression(node.From);
+        builder.BuildStore(fromValue, mutableCurrentIterable);
+        
+        
         // TODO: assign loop variable initial from value
         builder.BuildBr(forStart);
         builder.PositionAtEnd(forStart);
@@ -615,23 +611,22 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         // in case we modify them in the loop
 
 
-        var fromValue = CompileExpression(node.From);
         var toValue = CompileExpression(node.To);
 
-        var currentIterable = node.Variable.Accept(new LLVMExpr(context, builder, module));
+        var currentIterable = CompileExpression(node.Variable);
         // right now we assume, from, to, and the variable are all integers
         // in the future we should check and give some error at runtime/compile time if not
         // TODO: signed or unsigned comparison
-        var condition = builder.BuildAnd(
-            builder.BuildICmp(LLVMIntPredicate.LLVMIntSGE, currentIterable, fromValue),
-            builder.BuildICmp(LLVMIntPredicate.LLVMIntSLE, currentIterable, toValue)
-        );
+        var condition =
+            builder.BuildICmp(LLVMIntPredicate.LLVMIntSLE, currentIterable, toValue);
         builder.BuildCondBr(condition, forBody, afterFor);
         builder.PositionAtEnd(forBody);
         node.Children.ForEach(CompileStatement);
         builder.BuildBr(forIncremnet);
         builder.PositionAtEnd(forIncremnet);
-        // TODO: increment
+
+        var incremented = builder.BuildAdd(currentIterable, LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, 1));
+        builder.BuildStore(incremented, mutableCurrentIterable);
         builder.BuildBr(forStart);
         builder.PositionAtEnd(afterFor);
     }
@@ -665,7 +660,6 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
                builder.BuildCall2(context.CFuntions.printf.TypeOf,
                    context.CFuntions.printf.Function,
                    parameters.ToArray());
-               module.Dump();
                builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
                break;
            default:
