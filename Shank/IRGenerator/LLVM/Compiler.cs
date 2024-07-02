@@ -9,6 +9,7 @@ public enum Types
     STRUCT,
     FLOAT,
     INTEGER,
+    BOOLEAN,
     STRING,
 }
 
@@ -46,10 +47,11 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
     {
         if (
             typeRef == LLVMTypeRef.Int64
-            || typeRef == LLVMTypeRef.Int1
             || typeRef == LLVMTypeRef.Int8
         )
             return Types.INTEGER;
+        else if (typeRef == LLVMTypeRef.Int1)
+            return Types.BOOLEAN;
         else if (typeRef == LLVMTypeRef.Double)
             return Types.FLOAT;
         else if (typeRef == context.StringType)
@@ -160,7 +162,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         return
             LLVMValueRef.CreateConstReal(
                 LLVMTypeRef.Double, //
-                (ulong)node.Value
+                node.Value
             );
     }
 
@@ -636,6 +638,39 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
 
     public void CompileBuiltinFunction(BuiltInFunctionNode node)
     {
+        var function = context.BuiltinFunctions[(TypedBuiltinIndex)node.MonomorphizedName];
+        var block = function.AppendBasicBlock("entry");
+        builder.PositionAtEnd(block);
+        switch (node.Name)
+        {
+           case "write":
+               var formatList = node.ParameterVariables.Select(param => param.Type).Select(type => type switch
+               {
+                   BooleanType booleanType => "%s",
+                   CharacterType characterType => "%c",
+                   IntegerType integerType => "%d",
+                   RealType realType => "%.2f",
+                   StringType stringType => "%.*s",
+                   _ => throw new NotImplementedException(nameof(type))
+               });
+               var format = $"{string.Join(" ", formatList)}\n";
+               var parameters = function.Function.GetParams().SelectMany<LLVMValueRef, LLVMValueRef>(p => _types(p.TypeOf) switch
+               {
+                   // TODO: do not dispatch based (only) on llvm type b/c especially for records, it will be hard to obtain the record type via llvm rather use the parameter list of the function from the ast
+                   Types.FLOAT => [p],
+                   Types.INTEGER => [p],
+                   Types.BOOLEAN => [builder.BuildSelect(p, builder.BuildGlobalStringPtr("true"), builder.BuildGlobalStringPtr("false"))],
+                   Types.STRING => [builder.BuildExtractValue(p, 0), builder.BuildExtractValue(p, 1)],
+               }).Prepend(builder.BuildGlobalStringPtr(format, "printf-format"));
+               builder.BuildCall2(context.CFuntions.printf.TypeOf,
+                   context.CFuntions.printf.Function,
+                   parameters.ToArray());
+               module.Dump();
+               builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
+               break;
+           default:
+               throw new CompilerException("Undefined builtin", 0);
+        }
         // throw new NotImplementedException();
     }
 }
