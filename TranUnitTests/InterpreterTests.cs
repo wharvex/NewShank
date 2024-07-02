@@ -114,7 +114,8 @@ class start
 
     start()
         x = 100
-        y = ""helloworld""".Replace("    ", "\t"));
+        y = ""helloworld""".Replace("    ", "\t")
+            );
             RunInterpreter();
         }
 

@@ -75,13 +75,20 @@ public class Parser
         thisClass.AddRecord(record);
         program.AddToModules(thisClass);
 
-        foreach(var function in thisClass.Functions)
+        foreach (var function in thisClass.Functions)
         {
-            foreach(var member in record.Members)
+            foreach (var member in record.Members)
             {
-                ((FunctionNode)function.Value).LocalVariables.Add(new VariableDeclarationNode(false, member.Type, member.Name, thisClass.Name, false));
+                ((FunctionNode)function.Value).LocalVariables.Add(
+                    new VariableDeclarationNode(
+                        false,
+                        member.Type,
+                        member.Name,
+                        thisClass.Name,
+                        false
+                    )
+                );
             }
-            
         }
         return program;
     }
@@ -734,15 +741,15 @@ public class Parser
             return exp;
         }
 
-        if(handler.MatchAndRemove(TokenType.QUOTE) != null)
+        if (handler.MatchAndRemove(TokenType.QUOTE) != null)
         {
             string value = "";
             Token? word;
-            while((word = handler.MatchAndRemove(TokenType.WORD)) != null)
+            while ((word = handler.MatchAndRemove(TokenType.WORD)) != null)
             {
                 value += word.GetValue();
             }
-            if(handler.MatchAndRemove(TokenType.QUOTE) != null)
+            if (handler.MatchAndRemove(TokenType.QUOTE) != null)
             {
                 return new StringNode(value);
             }
