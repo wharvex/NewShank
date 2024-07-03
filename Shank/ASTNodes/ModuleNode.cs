@@ -294,7 +294,7 @@ public class ModuleNode : ASTNode
     }
 
     /// <summary>
-    ///     <para> 
+    ///     <para>
     ///         Method <c>AddRecord</c> adds a record to our Dictionary of records in ModuleNode which includes the name and contents of the record
     ///     </para>
     /// </summary>
@@ -335,8 +335,8 @@ public class ModuleNode : ASTNode
     }
 
     /// <summary>
-    ///     <para> 
-    ///         Method <c>addImportName</c> adds an import to a dictionary in ModuleNode. 
+    ///     <para>
+    ///         Method <c>addImportName</c> adds an import to a dictionary in ModuleNode.
     ///         Since a list of functions is not present, it is left as an empty list of type "string"
     ///     </para>
     /// </summary>
@@ -347,7 +347,7 @@ public class ModuleNode : ASTNode
     }
 
     /// <summary>
-    ///     <para> 
+    ///     <para>
     ///         Method <c>addImportNames</c> adds an import to a dictionary in ModuleNode along with its list of functions
     ///     </para>
     /// </summary>

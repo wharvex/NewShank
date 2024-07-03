@@ -537,7 +537,7 @@ public class Parser
     }
 
     /// <summary>
-    ///     <para> 
+    ///     <para>
     ///         Method <c>Record</c> parses a record along consisting of its identifier, parameters, and body contents
     ///     </para>
     /// </summary>
@@ -548,7 +548,6 @@ public class Parser
     {
         //identifier of the record is caught
         var name = RequiresAndReturnsToken(Token.TokenType.Identifier);
-
 
         var genericTypeParameterNames = ParseGenericKeywordAndTypeParams();
 
@@ -565,7 +564,7 @@ public class Parser
     }
 
     /// <summary>
-    ///     <para> 
+    ///     <para>
     ///         Method <c>ParseGenericKeywordAndTypeParams</c> parses a generic keyword along with its list of type parameters (identifiers)
     ///     </para>
     /// </summary>
@@ -573,7 +572,7 @@ public class Parser
     /// <exception cref="SyntaxErrorException">A generic is not immediately followed by an identifier token</exception>
     private List<string>? ParseGenericKeywordAndTypeParams()
     {
-        //match and remove the generic 
+        //match and remove the generic
         if (MatchAndRemove(Token.TokenType.Generic) is null)
         {
             return null;
@@ -597,7 +596,7 @@ public class Parser
     }
 
     /// <summary>
-    ///     <para> 
+    ///     <para>
     ///         Method <c>BodyRecord</c> parses the body of a record and returns its contents
     ///     </para>
     /// </summary>
@@ -622,7 +621,7 @@ public class Parser
     }
 
     /// <summary>
-    ///     <para> 
+    ///     <para>
     ///         Method <c>Body</c> parses the contents of a generic body
     ///     </para>
     /// </summary>
@@ -1482,7 +1481,7 @@ public class Parser
         do
         {
             RequiresEndOfLine();
-            
+
             //range is defined for each variable
             vars.AddRange(newVars);
 
@@ -1496,7 +1495,7 @@ public class Parser
     }
 
     /// <summary>
-    ///     <para> 
+    ///     <para>
     ///         Method <c>RequiresToken</c> attempts to match and remove the next token if it matches the tokentype passed in. If not, an exception is thrown.
     ///     </para>
     /// </summary>
@@ -1934,11 +1933,11 @@ public class Parser
     /// </summary>
     /// <returns>The list of export identifiers</returns>
     /// <exception cref="SyntaxErrorException">
-    /// <list type="bullet"> 
-    ///     <item> 
+    /// <list type="bullet">
+    ///     <item>
     ///         <description>Export call is not followed by an identifier</description>
     ///     </item>
-    ///     <item> 
+    ///     <item>
     ///         <description>Comma in an export call is not followed by another identifier</description>
     ///     </item>
     /// </list>

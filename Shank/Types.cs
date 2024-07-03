@@ -17,7 +17,7 @@ public interface Type // our marker interface anything that implements is known 
 }
 
 /// <summary>
-///     <para> 
+///     <para>
 ///         Record <c>Range</c> is the type that represents a type range in shank (from … to …), as ranges on types are part of the types
 ///     </para>
 /// </summary>
