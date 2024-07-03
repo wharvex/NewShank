@@ -1,3 +1,4 @@
+using LLVMSharp;
 using LLVMSharp.Interop;
 using Shank.ASTNodes;
 
@@ -103,11 +104,12 @@ public class LLVMString(LLVMValueRef valueRef, bool isMutable, LLVMTypeRef typeR
         new LLVMString(valueRef, isMutable, type);
 }
 
-public class LLVMArray(LLVMValueRef valueRef, bool isMutable, LLVMTypeRef typeRef)
-    : LLVMValue(valueRef, isMutable, typeRef)
+public class LLVMArray(LLVMValueRef valueRef, bool isMutable, LLVMArrayType typeRef)
+    : LLVMValue(valueRef, isMutable, typeRef.LlvmTypeRef)
 {
-    public static LLVMValue New(LLVMValueRef valueRef, bool isMutable, LLVMTypeRef type) =>
-        new LLVMString(valueRef, isMutable, type);
+    public Type Inner() => typeRef.Inner();
+    public static LLVMValue New(LLVMValueRef valueRef, bool isMutable, LLVMArrayType type) =>
+        new LLVMArray(valueRef, isMutable, type);
 }
 
 public class LLVMCharacter(LLVMValueRef valueRef, bool isMutable, LLVMTypeRef typeRef)
@@ -146,6 +148,11 @@ public class LLVMStructType(RecordType type, LLVMTypeRef llvmtype, List<string> 
     public int GetMemberIndex(string member) => members.IndexOf(member);
 }
 
+public class LLVMArrayType(ArrayType type, LLVMTypeRef llvmtype)
+    : LLVMType(type, llvmtype)
+{
+    public Type Inner() => type.Inner;
+}
 public class  LLVMEnumType(EnumType type, LLVMTypeRef llvmtype) : LLVMType(type, llvmtype)
 {
 }
@@ -250,13 +257,11 @@ public class Context
             ReferenceType r
                 => LLVMTypeRef.CreatePointer((LLVMTypeRef)GetLLVMTypeFromShankType(r.Inner), 0),
             ArrayType a
-                => LLVMTypeRef.CreatePointer(
+                => 
                     LLVMTypeRef.CreateStruct(
-                        [(LLVMTypeRef)GetLLVMTypeFromShankType(a.Inner), LLVMTypeRef.Int32],
+                        [LLVMTypeRef.CreatePointer((LLVMTypeRef)GetLLVMTypeFromShankType(a.Inner), 0), LLVMTypeRef.Int32],
                         false
                     ),
-                    0
-                ),
             // UnknownType t => CurrentModule.CustomTypes[t.TypeName], // TODO: instiate type parameters if needed
         };
     }
@@ -270,26 +275,27 @@ public class Context
                 IntegerType => (LLVMInteger.New, LLVMTypeRef.Int64),
                 RealType => (LLVMReal.New, LLVMTypeRef.Double),
                 RecordType recordType => NewRecordValue(recordType),
-                Shank.StringType => (LLVMString.New, LLVMStringType: StringType),
+                Shank.StringType => (LLVMString.New, StringType),
                 UnknownType unknownType => throw new TypeAccessException($"{type} doesnt exist"),
                 BooleanType => (LLVMBoolean.New, LLVMTypeRef.Int1),
                 CharacterType => (LLVMCharacter.New, LLVMTypeRef.Int8),
                 EnumType enumType => (LLVMInteger.New, LLVMTypeRef.Int64),
                 // if it's a custom type we look it up in the context
                 ReferenceType => null,
-                ArrayType
+                ArrayType arrayType
                     => (
-                        LLVMArray.New,
-                        LLVMTypeRef.CreatePointer(
+                       (value, mutable, type)  => LLVMArray.New(value, mutable, new LLVMArrayType(arrayType,  type)),
                             LLVMTypeRef.CreateStruct(
                                 [
-                                    GetLLVMTypeFromShankType(((ArrayType)type).Inner).Value,
+                                    
+                        LLVMTypeRef.CreatePointer(
+                                    GetLLVMTypeFromShankType(arrayType.Inner).Value,
+                            0
+                        ),
                                     LLVMTypeRef.Int32
                                 ],
                                 false
-                            ),
-                            0
-                        )
+                            )
                     )
             };
 
@@ -299,7 +305,7 @@ public class Context
         {
             var type = Records[recordType.MonomorphizedIndex];
             return (
-                (Value, mutable, _type) => LLVMStruct.New(Value, mutable, (LLVMStructType)type),
+                (Value, mutable, _type) => LLVMStruct.New(Value, mutable, type),
                 type.LlvmTypeRef
             );
         }

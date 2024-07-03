@@ -171,20 +171,26 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         LLVMValue value = context.GetVariable(node.MonomorphizedName());
         if (node.ExtensionType == VariableUsagePlainNode.VrnExtType.ArrayIndex)
         {
-            var a = builder.BuildGEP2(value.TypeRef, value.ValueRef, new[] { CompileExpression(node.Extension) });
-            return (load ? builder.BuildLoad2(value.TypeRef, a) : a);
+            var elementType =  (LLVMTypeRef)context.GetLLVMTypeFromShankType( ((LLVMArray)value).Inner());
+            var array = builder.BuildGEP2( LLVMTypeRef.CreatePointer(elementType, 0), value.ValueRef, [LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, 1),
+            ]);
+            var a = builder.BuildGEP2(elementType, array, [
+                CompileExpression(node.Extension)
+            ]);
+            return (load ? builder.BuildLoad2(elementType, a) : a);
         }
 
         if (node.ExtensionType == VariableUsagePlainNode.VrnExtType.RecordMember)
         {
-            var varType = (LLVMStruct)(value);
+            LLVMStruct varType = (LLVMStruct)value;
             var varField = (VariableUsagePlainNode)node.GetExtensionSafe();
+            var fieldType =  (LLVMTypeRef)context.GetLLVMTypeFromShankType(varType.GetTypeOf(varField.Name) );
             var structField = builder.BuildStructGEP2(
                 value.TypeRef,
                 value.ValueRef,
-                (uint)varType.Access(varField.Name)
+                 (uint)varType.Access(varField.Name)
             );
-            return (load ? builder.BuildLoad2(value.TypeRef, structField) : value.ValueRef);
+            return (load ? builder.BuildLoad2(fieldType, structField) : structField);
         }
         // else if (node.ExtensionType == VariableUsagePlainNode.VrnExtType.Enum)
         // {
