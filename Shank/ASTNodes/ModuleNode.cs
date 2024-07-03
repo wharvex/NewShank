@@ -480,9 +480,9 @@ public class ModuleNode : ASTNode
         }
 
         Enums = Enums.WalkDictionary(v);
+        GlobalVariables = GlobalVariables.WalkDictionary(v);
         Functions = Functions.WalkDictionary(v);
         Records = Records.WalkDictionary(v);
-        GlobalVariables = GlobalVariables.WalkDictionary(v);
         Exported = Exported.WalkDictionary(v);
         Imported = Imported.WalkDictionary(v);
         Tests = Tests.WalkDictionary(v);

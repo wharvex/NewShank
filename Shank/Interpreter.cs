@@ -108,6 +108,29 @@ public class Interpreter
             )
             .ToDictionary();
 
+    private static Dictionary<string, InterpreterDataType> NewNewGetVariablesDictionary(
+        FunctionNode fn,
+        List<InterpreterDataType> args
+    )
+    {
+        return fn.VariablesInScope.Select(kvp =>
+        {
+            var paramIdx = Enumerable
+                .Range(0, fn.ParameterVariables.Count)
+                .FirstOrDefault(i => kvp.Key.Equals(fn.ParameterVariables[i].GetNameSafe()), -1);
+            if (paramIdx >= 0)
+            {
+                return new KeyValuePair<string, InterpreterDataType>(kvp.Key, args[paramIdx]);
+            }
+
+            return new KeyValuePair<string, InterpreterDataType>(
+                kvp.Key,
+                kvp.Value.Type.ToIdt(kvp.Value.InitialValue)
+            );
+        })
+            .ToDictionary();
+    }
+
     private static ModuleNode GetStartModuleSafe() =>
         StartModule
         ?? throw new InvalidOperationException("Expected Interpreter._startModule to not be Null.");
@@ -127,7 +150,7 @@ public class Interpreter
     {
         var variables = GetVuopTestFlag()
             ? NewGetVariablesDictionary(fn, parametersIDTs, maybeModule)
-            : GetVariablesDictionary(fn, parametersIDTs, maybeModule);
+            : NewNewGetVariablesDictionary(fn, parametersIDTs);
 
         if (fn is TestNode)
         {
