@@ -293,6 +293,13 @@ public class ModuleNode : ASTNode
         }
     }
 
+    /// <summary>
+    ///     <para> 
+    ///         Method <c>AddRecord</c> adds a record to our Dictionary of records in ModuleNode which includes the name and contents of the record
+    ///     </para>
+    /// </summary>
+    /// <param name="record">The contents of the record</param>
+
     public void AddRecord(RecordNode? record)
     {
         if (record is not null)
@@ -328,13 +335,24 @@ public class ModuleNode : ASTNode
     }
 
     /// <summary>
-    ///
+    ///     <para> 
+    ///         Method <c>addImportName</c> adds an import to a dictionary in ModuleNode. 
+    ///         Since a list of functions is not present, it is left as an empty list of type "string"
+    ///     </para>
     /// </summary>
-    /// <param name="name"></param>
+    /// <param name="name">The import's name</param>
     public void addImportName(string? name)
     {
         ImportTargetNames.Add(name, new LinkedList<string>());
     }
+
+    /// <summary>
+    ///     <para> 
+    ///         Method <c>addImportNames</c> adds an import to a dictionary in ModuleNode along with its list of functions
+    ///     </para>
+    /// </summary>
+    /// <param name="moduleName">The name of the import</param>
+    /// <param name="functions">The list of corresponding functions</param>
 
     public void addImportNames(string moduleName, LinkedList<string> functions)
     {

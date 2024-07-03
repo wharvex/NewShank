@@ -536,9 +536,19 @@ public class Parser
         return funcNode;
     }
 
+    /// <summary>
+    ///     <para> 
+    ///         Method <c>Record</c> parses a record along consisting of its identifier, parameters, and body contents
+    ///     </para>
+    /// </summary>
+    /// <param name="moduleName">The name of the parent module</param>
+    /// <returns>A RecordNode containing its contents</returns>
+
     private RecordNode Record(string moduleName)
     {
+        //identifier of the record is caught
         var name = RequiresAndReturnsToken(Token.TokenType.Identifier);
+
 
         var genericTypeParameterNames = ParseGenericKeywordAndTypeParams();
 
@@ -550,20 +560,31 @@ public class Parser
             BodyRecord(moduleName),
             genericTypeParameterNames
         );
+
         return recNode;
     }
 
+    /// <summary>
+    ///     <para> 
+    ///         Method <c>ParseGenericKeywordAndTypeParams</c> parses a generic keyword along with its list of type parameters (identifiers)
+    ///     </para>
+    /// </summary>
+    /// <returns>List of type parameters</returns>
+    /// <exception cref="SyntaxErrorException">A generic is not immediately followed by an identifier token</exception>
     private List<string>? ParseGenericKeywordAndTypeParams()
     {
+        //match and remove the generic 
         if (MatchAndRemove(Token.TokenType.Generic) is null)
         {
             return null;
         }
 
+        //find the identifier
         var typeParam =
             MatchAndRemove(Token.TokenType.Identifier)
             ?? throw new SyntaxErrorException("Expected an identifier", Peek(0));
 
+        //parse the list of identifiers
         List<string> ret = [];
         ParseCommaSeparatedIdentifiers(typeParam, ret);
 
@@ -574,6 +595,14 @@ public class Parser
     {
         StatementsBody(function.Statements, moduleName);
     }
+
+    /// <summary>
+    ///     <para> 
+    ///         Method <c>BodyRecord</c> parses the body of a record and returns its contents
+    ///     </para>
+    /// </summary>
+    /// <param name="parentModule">The name of the parent module</param>
+    /// <returns>List of the contents of the body</returns>
 
     private List<VariableDeclarationNode> BodyRecord(string parentModule)
     {
@@ -592,6 +621,14 @@ public class Parser
         RequiresToken(Token.TokenType.Dedent);
     }
 
+    /// <summary>
+    ///     <para> 
+    ///         Method <c>Body</c> parses the contents of a generic body
+    ///     </para>
+    /// </summary>
+    /// <param name="bodyContents">Template for the contents of the body</param>
+    /// <param name="parentModuleName">The name of the parent module</param>
+    /// <param name="bodyContentsParser">The parsable body contents (refer to <c>BodyRecord</c> method for source)</param>
     private void Body(
         List<ASTNode> bodyContents,
         string parentModuleName,
@@ -600,6 +637,7 @@ public class Parser
     {
         RequiresToken(Token.TokenType.Indent);
 
+        //fancy method encapsulation that generates the parameters for the method passed in as bodyContentsParser
         bodyContentsParser(bodyContents, parentModuleName);
 
         RequiresToken(Token.TokenType.Dedent);
@@ -1418,8 +1456,18 @@ public class Parser
         return CreateVariables(names, isConstant, isGlobal, parentModuleName, declarationContext);
     }
 
+    /// <summary>
+    ///     <para>
+    ///         Method <c>GetVariablesRecord</c> finds all variables and their defined ranges and constructs them
+    ///     </para>
+    /// </summary>
+    /// <param name="vars">List of variables in the record</param>
+    /// <param name="parentModuleName">The name of the parent module to which the record belongs</param>
+    /// <exception cref="SyntaxErrorException">If the record does not contain any constituent members</exception>
+
     private void GetVariablesRecord(List<ASTNode> vars, string parentModuleName)
     {
+        //get all variable declarations for the record
         var newVars =
             GetVariables(
                 parentModuleName,
@@ -1434,7 +1482,11 @@ public class Parser
         do
         {
             RequiresEndOfLine();
+            
+            //range is defined for each variable
             vars.AddRange(newVars);
+
+            //get the rest of the variables until we have none
             newVars = GetVariables(
                 parentModuleName,
                 false,
@@ -1442,6 +1494,14 @@ public class Parser
             );
         } while (newVars is not null);
     }
+
+    /// <summary>
+    ///     <para> 
+    ///         Method <c>RequiresToken</c> attempts to match and remove the next token if it matches the tokentype passed in. If not, an exception is thrown.
+    ///     </para>
+    /// </summary>
+    /// <param name="tokenType">The inputted tokentype</param>
+    /// <exception cref="SyntaxErrorException">If the tokentype passed in does not match the expected tokentype</exception>
 
     private void RequiresToken(Token.TokenType tokenType)
     {
@@ -1869,15 +1929,35 @@ public class Parser
         return new IntNode(int.Parse(token.Value));
     }
 
+    /// <summary>
+    ///     Method <c>Export</c> parses a list of export identifiers which are separated by commas
+    /// </summary>
+    /// <returns>The list of export identifiers</returns>
+    /// <exception cref="SyntaxErrorException">
+    /// <list type="bullet"> 
+    ///     <item> 
+    ///         <description>Export call is not followed by an identifier</description>
+    ///     </item>
+    ///     <item> 
+    ///         <description>Comma in an export call is not followed by another identifier</description>
+    ///     </item>
+    /// </list>
+    /// </exception>
+
     //private string? Export()
     private LinkedList<string> Export()
     {
+        //match and remove its identifier
         var token = MatchAndRemove(Token.TokenType.Identifier);
+
+        //catch if missing
         if (token == null || token.Value == null)
             throw new SyntaxErrorException(
                 "An export call must be followed by an identifier, not ",
                 Peek(0)
             );
+
+        //parses our list of exports (comma separated)
         LinkedList<string> exports = new LinkedList<string>();
         exports.AddLast(token.Value);
         while (MatchAndRemove(Token.TokenType.Comma) != null)
