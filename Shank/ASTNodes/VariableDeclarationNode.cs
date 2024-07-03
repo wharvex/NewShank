@@ -171,16 +171,26 @@ public class VariableDeclarationNode : ASTNode
 
     public override ASTNode Walk(WalkCompliantVisitor v)
     {
-        var ret = v.Visit(this);
-        if (ret is not null)
+        var ret = v.Visit(this, out var shortCircuit);
+        if (shortCircuit)
         {
             return ret;
         }
 
-        // TODO: Fix this (make every Visit overload accept a nullable?)
-        InitialValue = (ExpressionNode)v.Visit(InitialValue);
+        InitialValue = (ExpressionNode?)InitialValue?.Walk(v);
 
-        ret = v.Final(this);
-        return ret ?? this;
+        return v.Final(this);
+
+        //var ret = v.Visit(this);
+        //if (ret is not null)
+        //{
+        //    return ret;
+        //}
+
+        //// TODO: Fix this (make every Visit overload accept a nullable?)
+        //InitialValue = (ExpressionNode)v.Visit(InitialValue);
+
+        //ret = v.Final(this);
+        //return ret ?? this;
     }
 }

@@ -473,21 +473,37 @@ public class ModuleNode : ASTNode
 
     public override ASTNode Walk(WalkCompliantVisitor v)
     {
-        var ret = v.Visit(this);
-        if (ret is not null)
+        var ret = v.Visit(this, out var shortCircuit);
+        if (shortCircuit)
         {
             return ret;
         }
 
-        Enums = v.VisitDictionary(Enums);
-        Functions = v.VisitDictionary(Functions);
-        Records = v.VisitDictionary(Records);
-        GlobalVariables = v.VisitDictionary(GlobalVariables);
-        Exported = v.VisitDictionary(Exported);
-        Imported = v.VisitDictionary(Imported);
-        Tests = v.VisitDictionary(Tests);
+        Enums = Enums.WalkDictionary(v);
+        Functions = Functions.WalkDictionary(v);
+        Records = Records.WalkDictionary(v);
+        GlobalVariables = GlobalVariables.WalkDictionary(v);
+        Exported = Exported.WalkDictionary(v);
+        Imported = Imported.WalkDictionary(v);
+        Tests = Tests.WalkDictionary(v);
 
-        ret = v.Final(this);
-        return ret ?? this;
+        return v.Final(this);
+
+        //var ret = v.Visit(this);
+        //if (ret is not null)
+        //{
+        //    return ret;
+        //}
+
+        //Enums = v.VisitDictionary(Enums);
+        //Functions = v.VisitDictionary(Functions);
+        //Records = v.VisitDictionary(Records);
+        //GlobalVariables = v.VisitDictionary(GlobalVariables);
+        //Exported = v.VisitDictionary(Exported);
+        //Imported = v.VisitDictionary(Imported);
+        //Tests = v.VisitDictionary(Tests);
+
+        //ret = v.Final(this);
+        //return ret ?? this;
     }
 }

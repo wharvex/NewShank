@@ -108,15 +108,25 @@ public class ProgramNode : ASTNode
 
     public override ASTNode Walk(WalkCompliantVisitor v)
     {
-        var ret = v.Visit(this);
-        if (ret is not null)
+        var ret = v.Visit(this, out var shortCircuit);
+        if (shortCircuit)
         {
             return ret;
         }
 
-        Modules = v.VisitDictionary(Modules);
+        Modules = Modules.WalkDictionary(v);
 
-        ret = v.Final(this);
-        return ret ?? this;
+        return v.Final(this);
+
+        //var ret = v.Visit(this);
+        //if (ret is not null)
+        //{
+        //    return ret;
+        //}
+
+        //Modules = v.VisitDictionary(Modules);
+
+        //ret = v.Final(this);
+        //return ret ?? this;
     }
 }

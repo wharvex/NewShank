@@ -697,18 +697,31 @@ public class FunctionNode : CallableNode
 
     public override ASTNode Walk(WalkCompliantVisitor v)
     {
-        var ret = v.Visit(this);
-        if (ret is not null)
+        var ret = v.Visit(this, out var shortCircuit);
+        if (shortCircuit)
         {
             return ret;
         }
 
-        ParameterVariables = v.VisitList(ParameterVariables);
-        LocalVariables = v.VisitList(LocalVariables);
-        Statements = v.VisitList(Statements);
-        Tests = v.VisitDictionary(Tests);
+        ParameterVariables = ParameterVariables.WalkList(v);
+        LocalVariables = LocalVariables.WalkList(v);
+        Statements = Statements.WalkList(v);
+        Tests = Tests.WalkDictionary(v);
 
-        ret = v.Final(this);
-        return ret ?? this;
+        return v.Final(this);
+
+        //var ret = v.Visit(this);
+        //if (ret is not null)
+        //{
+        //    return ret;
+        //}
+
+        //ParameterVariables = v.VisitList(ParameterVariables);
+        //LocalVariables = v.VisitList(LocalVariables);
+        //Statements = v.VisitList(Statements);
+        //Tests = v.VisitDictionary(Tests);
+
+        //ret = v.Final(this);
+        //return ret ?? this;
     }
 }
