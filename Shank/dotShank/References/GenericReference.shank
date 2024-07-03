@@ -1,0 +1,9 @@
+record student
+    name: string
+    
+define allocate(var a: refersTo T) generic T
+    allocateMemory a
+  
+define start()
+variables me: refersTo student
+    allocate var me

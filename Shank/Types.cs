@@ -188,7 +188,7 @@ public class RecordType(
     }
 
     // TODO: should this print newlines for each member as it does not get used by any other Type.ToString
-    public override string ToString() => $"{Name} generic {string.Join(", ", Generics)} ";
+    public override string ToString() => $"{Name}{(generics.Count == 0 ? "" : $"generic {string.Join(", ", Generics)}")}";
 
     public string NewToString()
     {
@@ -325,8 +325,7 @@ public readonly record struct InstantiatedType(
 
     public void Accept(IInstantiatedTypeVisitor visitor) => visitor.Visit(this);
 
-    public override string ToString() =>
-        $"{Inner}({string.Join(", ", InstantiatedGenerics.Select(typePair => $"{typePair.Value}"))})";
+    public override string ToString() => $"{Inner}{(InstantiatedGenerics.Count == 0 ? "" : $"({string.Join(", ", InstantiatedGenerics.Select(typePair => $"{typePair.Value}"))})")}";
 
     public string NewToString()
     {
