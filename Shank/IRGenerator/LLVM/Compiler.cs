@@ -638,72 +638,105 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         switch (node.Name)
         {
             case "write":
-                var formatList = node.ParameterVariables.Select(param => param.Type).Select(type => type switch
-                {
-                    BooleanType booleanType => "%s",
-                    CharacterType characterType => "%c",
-                    IntegerType integerType => "%d",
-                    RealType realType => "%.2f",
-                    StringType stringType => "%.*s",
-                    _ => throw new NotImplementedException(nameof(type))
-                });
-                var format = $"{string.Join(" ", formatList)}\n";
-                var parameters = function.Function.GetParams().SelectMany<LLVMValueRef, LLVMValueRef>(p =>
-                    _types(p.TypeOf) switch
-                    {
-                        // TODO: do not dispatch based (only) on llvm type b/c especially for records, it will be hard to obtain the record type via llvm rather use the parameter list of the function from the ast
-                        Types.FLOAT => [p],
-                        Types.INTEGER => [p],
-                        Types.BOOLEAN =>
-                        [
-                            builder.BuildSelect(p, builder.BuildGlobalStringPtr("true"),
-                                builder.BuildGlobalStringPtr("false"))
-                        ],
-                        Types.STRING => [builder.BuildExtractValue(p, 0), builder.BuildExtractValue(p, 1)],
-                    }).Prepend(builder.BuildGlobalStringPtr(format, "printf-format"));
-                builder.BuildCall2(context.CFuntions.printf.TypeOf,
-                    context.CFuntions.printf.Function,
-                    parameters.ToArray());
-                builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
+                CompileBuiltinWrite(node, function);
                 break;
             case "substring":
-                // SubString someString, index, length, var resultString
-
-                // resultString = length characters from someString, starting at index
-                // TODO: bounds checking
-                var SomeString = function.Function.GetParam(0);
-                var SomeStringInner = builder.BuildExtractValue(SomeString, 1);
-                var index = function.Function.GetParam(1);
-                var length = function.Function.GetParam(2);
-                var ResultString = function.Function.GetParam(3);
-
-                var newContent = builder.BuildCall2(
-                    context.CFuntions.malloc.TypeOf,
-                    context.CFuntions.malloc.Function,
-                    [length]
-                );
-                var subString = builder.BuildInBoundsGEP2(LLVMTypeRef.Int8, SomeStringInner, [index]);
-                builder.BuildCall2(
-                    context.CFuntions.memcpy.TypeOf,
-                    context.CFuntions.memcpy.Function,
-                    [newContent, subString, length]
-                );
-                var String = LLVMValueRef.CreateConstStruct(
-                    [
-                        LLVMValueRef.CreateConstNull(LLVMTypeRef.Int32),
-                        LLVMValueRef.CreateConstNull(LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0))
-                    ],
-                    false
-                );
-                String = builder.BuildInsertValue(String, builder.BuildIntCast(length, LLVMTypeRef.Int32), 0);
-                String = builder.BuildInsertValue(String, newContent, 1);
-                builder.BuildStore(String, ResultString);
-
-                builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
+                CompileBuiltinSubString(function);
+                break;
+            case "realToInteger":
+                CompileBuiltinRealToInteger(function);
+                break;
+            case "integerToReal":
+                CompileBuiltinIntegerToReal(function);
                 break;
             default:
                 throw new CompilerException("Undefined builtin", 0);
         }
-        // throw new NotImplementedException();
+    }
+
+    private void CompileBuiltinWrite(BuiltInFunctionNode node, LLVMShankFunction function)
+    {
+        var formatList = node.ParameterVariables.Select(param => param.Type).Select(type => type switch
+        {
+            BooleanType booleanType => "%s",
+            CharacterType characterType => "%c",
+            IntegerType integerType => "%d",
+            RealType realType => "%.2f",
+            StringType stringType => "%.*s",
+            _ => throw new NotImplementedException(nameof(type))
+        });
+        var format = $"{string.Join(" ", formatList)}\n";
+        var parameters = function.Function.GetParams().SelectMany<LLVMValueRef, LLVMValueRef>(p =>
+            _types(p.TypeOf) switch
+            {
+                // TODO: do not dispatch based (only) on llvm type b/c especially for records, it will be hard to obtain the record type via llvm rather use the parameter list of the function from the ast
+                Types.FLOAT => [p],
+                Types.INTEGER => [p],
+                Types.BOOLEAN =>
+                [
+                    builder.BuildSelect(p, builder.BuildGlobalStringPtr("true"),
+                        builder.BuildGlobalStringPtr("false"))
+                ],
+                Types.STRING => [builder.BuildExtractValue(p, 0), builder.BuildExtractValue(p, 1)],
+            }).Prepend(builder.BuildGlobalStringPtr(format, "printf-format"));
+        builder.BuildCall2(context.CFuntions.printf.TypeOf,
+            context.CFuntions.printf.Function,
+            parameters.ToArray());
+        builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
+    }
+
+    private void CompileBuiltinSubString(LLVMShankFunction function)
+    {
+        // SubString someString, index, length, var resultString
+
+        // resultString = length characters from someString, starting at index
+        // TODO: bounds checking
+        var SomeString = function.Function.GetParam(0);
+        var SomeStringInner = builder.BuildExtractValue(SomeString, 1);
+        var index = function.Function.GetParam(1);
+        var length = function.Function.GetParam(2);
+        var ResultString = function.Function.GetParam(3);
+
+        var newContent = builder.BuildCall2(
+            context.CFuntions.malloc.TypeOf,
+            context.CFuntions.malloc.Function,
+            [length]
+        );
+        var subString = builder.BuildInBoundsGEP2(LLVMTypeRef.Int8, SomeStringInner, [index]);
+        builder.BuildCall2(
+            context.CFuntions.memcpy.TypeOf,
+            context.CFuntions.memcpy.Function,
+            [newContent, subString, length]
+        );
+        var String = LLVMValueRef.CreateConstStruct(
+            [
+                LLVMValueRef.CreateConstNull(LLVMTypeRef.Int32),
+                LLVMValueRef.CreateConstNull(LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0))
+            ],
+            false
+        );
+        String = builder.BuildInsertValue(String, builder.BuildIntCast(length, LLVMTypeRef.Int32), 0);
+        String = builder.BuildInsertValue(String, newContent, 1);
+        builder.BuildStore(String, ResultString);
+
+        builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
+    }
+
+    private void CompileBuiltinRealToInteger(LLVMShankFunction function)
+    {
+        var value = function.Function.GetParam(0);
+        var result = function.Function.GetParam(1);
+        var converted = builder.BuildFPToSI(value, LLVMTypeRef.Int64);
+        builder.BuildStore(converted, result);
+        builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
+    }
+
+    private void CompileBuiltinIntegerToReal(LLVMShankFunction function)
+    {
+        var value = function.Function.GetParam(0);
+        var result = function.Function.GetParam(1);
+        var converted = builder.BuildSIToFP(value, LLVMTypeRef.Double);
+        builder.BuildStore(converted, result);
+        builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
     }
 }
