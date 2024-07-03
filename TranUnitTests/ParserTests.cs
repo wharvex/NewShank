@@ -300,5 +300,20 @@ class Tran
             //  var expression = newParser.ParseBuiltInFunctionNode();
             //  Console.Write(expression);
         }
+
+        [TestMethod]
+        public void ParseAccessorAndMutatorTest()
+        {
+            CreateParser(
+                @"
+class Tran
+    helloWorld()
+        string y
+            accessor: value = y
+            mutator: y = value".Replace("    ", "\t")
+            );
+            parser.Parse();
+            Assert.AreEqual("J", parser.thisClass.Functions.Skip(1).ToString());
+        }
     }
 }

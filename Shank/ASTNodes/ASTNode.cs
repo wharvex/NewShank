@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using LLVMSharp.Interop;
 using Shank.ExprVisitors;
 using Shank.IRGenerator;
+using Shank.WalkCompliantVisitors;
 
 namespace Shank.ASTNodes;
 
@@ -32,4 +33,6 @@ public abstract class ASTNode
     public abstract void Accept<T>(StatementVisitor v);
 
     public abstract void Accept(Visitor v);
+
+    public virtual ASTNode Walk(WalkCompliantVisitor v) => this;
 }

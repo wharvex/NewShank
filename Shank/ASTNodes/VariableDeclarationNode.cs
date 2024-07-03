@@ -3,6 +3,7 @@ using System.Text;
 using LLVMSharp.Interop;
 using Shank.ExprVisitors;
 using Shank.IRGenerator;
+using Shank.WalkCompliantVisitors;
 using Exception = System.Exception;
 
 namespace Shank.ASTNodes;
@@ -171,4 +172,29 @@ public class VariableDeclarationNode : ASTNode
     }
 
     public override void Accept(Visitor v) => v.Visit(this);
+
+    public override ASTNode Walk(WalkCompliantVisitor v)
+    {
+        var ret = v.Visit(this, out var shortCircuit);
+        if (shortCircuit)
+        {
+            return ret;
+        }
+
+        InitialValue = (ExpressionNode?)InitialValue?.Walk(v);
+
+        return v.Final(this);
+
+        //var ret = v.Visit(this);
+        //if (ret is not null)
+        //{
+        //    return ret;
+        //}
+
+        //// TODO: Fix this (make every Visit overload accept a nullable?)
+        //InitialValue = (ExpressionNode)v.Visit(InitialValue);
+
+        //ret = v.Final(this);
+        //return ret ?? this;
+    }
 }

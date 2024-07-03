@@ -1,10 +1,11 @@
 ﻿using Shank.ExprVisitors;
+using Shank.WalkCompliantVisitors;
 
 namespace Shank.ASTNodes;
 
 public class ProgramNode : ASTNode
 {
-    public Dictionary<string, ModuleNode> Modules { get; } = [];
+    public Dictionary<string, ModuleNode> Modules { get; set; } = [];
     public ModuleNode? StartModule { get; set; }
 
     public ModuleNode GetStartModuleSafe() =>
@@ -104,4 +105,28 @@ public class ProgramNode : ASTNode
     }
 
     public override void Accept(Visitor v) => v.Visit(this);
+
+    public override ASTNode Walk(WalkCompliantVisitor v)
+    {
+        var ret = v.Visit(this, out var shortCircuit);
+        if (shortCircuit)
+        {
+            return ret;
+        }
+
+        Modules = Modules.WalkDictionary(v);
+
+        return v.Final(this);
+
+        //var ret = v.Visit(this);
+        //if (ret is not null)
+        //{
+        //    return ret;
+        //}
+
+        //Modules = v.VisitDictionary(Modules);
+
+        //ret = v.Final(this);
+        //return ret ?? this;
+    }
 }

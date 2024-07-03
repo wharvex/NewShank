@@ -13,7 +13,7 @@ public class Interpreter
 
     public static ModuleNode? StartModule { get; set; }
     public static StringBuilder testOutput = new StringBuilder();
-    public static InterptOptions? InterpreterOptions { get; set; }
+    public static InterpretOptions? InterpreterOptions { get; set; }
 
     public static bool GetVuopTestFlag()
     {

@@ -16,6 +16,14 @@ public interface Type // our marker interface anything that implements is known 
     public void Accept(IAstTypeVisitor visitor) => visitor.Visit(this);
 }
 
+/// <summary>
+///     <para>
+///         Record <c>Range</c> is the type that represents a type range in shank (from … to …), as ranges on types are part of the types
+///     </para>
+/// </summary>
+/// <param name="From">Lower bound of the range</param>
+/// <param name="To">Upper bound of the range</param>
+
 public readonly record struct Range // the type that represents a type range in shank (from … to …), as ranges on types are part of the types
 (float From, float To)
 {

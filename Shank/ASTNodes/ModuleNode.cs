@@ -2,17 +2,18 @@ using LLVMSharp.Interop;
 using Shank.ASTNodes;
 using Shank.ExprVisitors;
 using Shank.IRGenerator;
+using Shank.WalkCompliantVisitors;
 
 namespace Shank.ASTNodes;
 
 public class ModuleNode : ASTNode
 {
-    public Dictionary<string, EnumNode> Enums { get; init; }
+    public Dictionary<string, EnumNode> Enums { get; set; }
     public string Name { get; set; }
-    public Dictionary<string, CallableNode> Functions { get; init; }
+    public Dictionary<string, CallableNode> Functions { get; set; }
     public Dictionary<string, List<CallableNode>> Functions2 { get; } = []; //not finished for overloaded functions
-    public Dictionary<string, RecordNode> Records { get; init; }
-    public Dictionary<string, VariableDeclarationNode> GlobalVariables { get; } = [];
+    public Dictionary<string, RecordNode> Records { get; set; }
+    public Dictionary<string, VariableDeclarationNode> GlobalVariables { get; set; } = [];
 
     public Dictionary<string, ASTNode> Exported { get; set; }
     public Dictionary<string, ASTNode> Imported { get; set; }
@@ -292,6 +293,13 @@ public class ModuleNode : ASTNode
         }
     }
 
+    /// <summary>
+    ///     <para>
+    ///         Method <c>AddRecord</c> adds a record to our Dictionary of records in ModuleNode which includes the name and contents of the record
+    ///     </para>
+    /// </summary>
+    /// <param name="record">The contents of the record</param>
+
     public void AddRecord(RecordNode? record)
     {
         if (record is not null)
@@ -327,13 +335,24 @@ public class ModuleNode : ASTNode
     }
 
     /// <summary>
-    ///
+    ///     <para>
+    ///         Method <c>addImportName</c> adds an import to a dictionary in ModuleNode.
+    ///         Since a list of functions is not present, it is left as an empty list of type "string"
+    ///     </para>
     /// </summary>
-    /// <param name="name"></param>
+    /// <param name="name">The import's name</param>
     public void addImportName(string? name)
     {
         ImportTargetNames.Add(name, new LinkedList<string>());
     }
+
+    /// <summary>
+    ///     <para>
+    ///         Method <c>addImportNames</c> adds an import to a dictionary in ModuleNode along with its list of functions
+    ///     </para>
+    /// </summary>
+    /// <param name="moduleName">The name of the import</param>
+    /// <param name="functions">The list of corresponding functions</param>
 
     public void addImportNames(string moduleName, LinkedList<string> functions)
     {
@@ -451,4 +470,40 @@ public class ModuleNode : ASTNode
     }
 
     public override void Accept(Visitor v) => v.Visit(this);
+
+    public override ASTNode Walk(WalkCompliantVisitor v)
+    {
+        var ret = v.Visit(this, out var shortCircuit);
+        if (shortCircuit)
+        {
+            return ret;
+        }
+
+        Enums = Enums.WalkDictionary(v);
+        Functions = Functions.WalkDictionary(v);
+        Records = Records.WalkDictionary(v);
+        GlobalVariables = GlobalVariables.WalkDictionary(v);
+        Exported = Exported.WalkDictionary(v);
+        Imported = Imported.WalkDictionary(v);
+        Tests = Tests.WalkDictionary(v);
+
+        return v.Final(this);
+
+        //var ret = v.Visit(this);
+        //if (ret is not null)
+        //{
+        //    return ret;
+        //}
+
+        //Enums = v.VisitDictionary(Enums);
+        //Functions = v.VisitDictionary(Functions);
+        //Records = v.VisitDictionary(Records);
+        //GlobalVariables = v.VisitDictionary(GlobalVariables);
+        //Exported = v.VisitDictionary(Exported);
+        //Imported = v.VisitDictionary(Imported);
+        //Tests = v.VisitDictionary(Tests);
+
+        //ret = v.Final(this);
+        //return ret ?? this;
+    }
 }
