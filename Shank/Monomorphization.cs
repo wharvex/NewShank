@@ -165,14 +165,13 @@ public class MonomorphizationVisitor(
                         .ToList()
                 )
             );
-            Push(typedBuiltinIndex);
             if (programNode.BuiltinFunctions.ContainsKey(typedBuiltinIndex))
             {
                 return;
             }
             var parameters = node.ParameterVariables.Select(declarationNode =>
             {
-                declarationNode.Accept(this);
+                declarationNode.Accept(new MonomorphizationVisitor(instantiatedGenerics, nonMonomorphizedProgramNode, start, programNode) {expr =  expr});
                 return (VariableDeclarationNode)Pop();
             })
                 .ToList();
@@ -184,6 +183,7 @@ public class MonomorphizationVisitor(
                 MonomorphizedName = typedBuiltinIndex
             };
             programNode.BuiltinFunctions[typedBuiltinIndex] = function;
+            Push(typedBuiltinIndex);
         }
     }
 
@@ -245,7 +245,6 @@ public class MonomorphizationVisitor(
                 instantiatedTypes.OrderBy(pair => pair.Key).Select(pair => pair.Value).ToList()
             )
         );
-        Push(typedModuleIndex);
         if (ProgramNode.Functions.TryGetValue(typedModuleIndex, out _))
         {
             return;
@@ -275,6 +274,7 @@ public class MonomorphizationVisitor(
             MonomorphizedName = typedModuleIndex
         };
         ProgramNode.Functions[typedModuleIndex] = function;
+        Push(typedModuleIndex);
     }
 
     public override void Visit(WhileNode node)

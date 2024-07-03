@@ -16,7 +16,7 @@ public abstract class CallableNode : ASTNode
 
     public int LineNum { get; set; }
 
-    public List<VariableDeclarationNode> ParameterVariables { get; } = [];
+    public List<VariableDeclarationNode> ParameterVariables { get; set; } = [];
 
     protected CallableNode(string name)
     {

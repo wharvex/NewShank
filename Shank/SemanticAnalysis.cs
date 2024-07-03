@@ -486,7 +486,8 @@ public class SemanticAnalysis
         Option<IEnumerable<(string, Type)>> MatchTypes(Type paramType, Type type) =>
             (paramType, type) switch
             {
-                (GenericType g, _) => Option.Some(Enumerable.Repeat((g.Name, type), 1)),
+                (GenericType g, _) => MatchTypesGeneric(g, type),
+                (ReferenceType (GenericType g), _) => MatchTypesGeneric(g, type),
                 (InstantiatedType param, InstantiatedType arg) when arg.Inner.Equals(param.Inner)
                     => MatchTypesInstantiated(param, arg),
                 (ReferenceType(InstantiatedType param), ReferenceType(InstantiatedType arg))
@@ -495,6 +496,12 @@ public class SemanticAnalysis
                 ({ } a, { } b)
                     => Option.Some(Enumerable.Empty<(string, Type)>()).Where(_ => !a.Equals(b))
             };
+
+        Option<IEnumerable<(string, Type)>> MatchTypesGeneric(GenericType g, Type type) 
+        {
+          return  Option.Some(Enumerable.Repeat((g.Name, type), 1));
+        }
+        
 
         Option<IEnumerable<(string, Type)>> MatchTypesInstantiated(
             InstantiatedType paramType,

@@ -10,6 +10,7 @@ public class BuiltInFunctions
     { // Note to the reader - this implementation is different than what I have the students writing in Java.
         // The concepts are the same, but this is more language appropriate. This would be too hard for
         // the students to do in Java.
+        CallableNode.BuiltInCall call = FreeMemory;
         var retVal = new List<BuiltInFunctionNode>
         {
             new BuiltInVariadicFunctionNode("write", Write),
@@ -185,40 +186,42 @@ public class BuiltInFunctions
                 },
                 AssertIsEqual
             ),
-            MakeNode(
-                "allocateMemory",
-                new VariableDeclarationNode[]
-                {
+            new("allocateMemory", call)
+            {
+                Line = 0,
+                ParameterVariables = [
                     new VariableDeclarationNode()
                     {
                         Name = "refersTo",
-                        Type = new ReferenceType(),
+                        Type = new ReferenceType(new GenericType("R")),
                         IsConstant = false
                     }
-                },
-                AllocateMemory
-            ),
-            MakeNode(
-                "freeMemory",
-                new VariableDeclarationNode[]
-                {
+                ], 
+                GenericTypeParameterNames = ["R"],
+                Execute = AllocateMemory
+            },
+            new("freeMemory", call)
+            {
+                Line = 0,
+                ParameterVariables = [
                     new VariableDeclarationNode()
                     {
                         Name = "refersTo",
-                        Type = new ReferenceType(),
+                        Type = new ReferenceType(new GenericType("R")),
                         IsConstant = false
                     }
-                },
-                FreeMemory
-            ),
-            MakeNode(
-                "isSet",
-                new VariableDeclarationNode[]
-                {
+                ], 
+                GenericTypeParameterNames = ["R"],
+                Execute = FreeMemory
+            },
+            new("isSet", call)
+            {
+                Line = 0,
+                ParameterVariables = [
                     new VariableDeclarationNode()
                     {
                         Name = "refersTo",
-                        Type = new ReferenceType(),
+                        Type = new ReferenceType(new GenericType("R")),
                         IsConstant = true
                     },
                     new VariableDeclarationNode()
@@ -227,17 +230,18 @@ public class BuiltInFunctions
                         Type = new BooleanType(),
                         IsConstant = false
                     }
-                },
-                IsSet
-            ),
-            MakeNode(
-                "size",
-                new VariableDeclarationNode[]
-                {
+                ], 
+                GenericTypeParameterNames = ["R"],
+                Execute = IsSet
+            },
+            new("size", call)
+            {
+                Line = 0,
+                ParameterVariables = [
                     new VariableDeclarationNode()
                     {
                         Name = "refersTo",
-                        Type = new ReferenceType(),
+                        Type = new ReferenceType(new GenericType("R")),
                         IsConstant = true
                     },
                     new VariableDeclarationNode()
@@ -246,9 +250,10 @@ public class BuiltInFunctions
                         Type = new IntegerType(),
                         IsConstant = false
                     }
-                },
-                Size
-            )
+                ], 
+                GenericTypeParameterNames = ["R"],
+                Execute = Size
+            },
         };
         foreach (var f in retVal)
         {

@@ -1,0 +1,5 @@
+define start()
+variables i: integer
+    for i from 5 to 10
+        write i
+    write "done"
