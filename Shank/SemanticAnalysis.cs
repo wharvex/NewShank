@@ -487,7 +487,8 @@ public class SemanticAnalysis
             (paramType, type) switch
             {
                 (GenericType g, _) => MatchTypesGeneric(g, type),
-                (ReferenceType (GenericType g), _) => MatchTypesGeneric(g, type),
+                (ReferenceType (GenericType g), ReferenceType referenceType) => MatchTypesGeneric(g, referenceType.Inner),
+                (ReferenceType (GenericType g), GenericType) => MatchTypesGeneric(g, type),
                 (InstantiatedType param, InstantiatedType arg) when arg.Inner.Equals(param.Inner)
                     => MatchTypesInstantiated(param, arg),
                 (ReferenceType(InstantiatedType param), ReferenceType(InstantiatedType arg))

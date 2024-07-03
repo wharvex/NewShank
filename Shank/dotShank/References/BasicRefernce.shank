@@ -1,0 +1,6 @@
+record person
+    age: integer
+    
+define start()
+variables me: refersTo person
+    allocateMemory var me
