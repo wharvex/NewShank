@@ -172,7 +172,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         if (node.ExtensionType == VariableUsagePlainNode.VrnExtType.ArrayIndex)
         {
             var a = builder.BuildGEP2(value.TypeRef, value.ValueRef, new[] { CompileExpression(node.Extension) });
-            return (load ?builder.BuildLoad2(value.TypeRef, a): a);
+            return (load ? builder.BuildLoad2(value.TypeRef, a) : a);
         }
 
         if (node.ExtensionType == VariableUsagePlainNode.VrnExtType.RecordMember)
@@ -184,7 +184,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
                 value.ValueRef,
                 (uint)varType.Access(varField.Name)
             );
-            return (load? builder.BuildLoad2(value.TypeRef, structField): value.ValueRef);
+            return (load ? builder.BuildLoad2(value.TypeRef, structField) : value.ValueRef);
         }
         // else if (node.ExtensionType == VariableUsagePlainNode.VrnExtType.Enum)
         // {
@@ -195,7 +195,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
 
         if (node.ExtensionType == VariableUsagePlainNode.VrnExtType.None)
         {
-            return (load?builder.BuildLoad2(value.TypeRef, value.ValueRef):value.ValueRef);
+            return (load ? builder.BuildLoad2(value.TypeRef, value.ValueRef) : value.ValueRef);
         }
 
         throw new NotImplementedException();
@@ -374,7 +374,8 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
                 throw new Exception($"call to {node.Name} has a mismatch of mutability");
             }
 
-            var parameters = node.Arguments.Zip(function.ArguementMutability).Select((arguementAndMutability)=>CompileExpression(arguementAndMutability.First, !arguementAndMutability.Second));
+            var parameters = node.Arguments.Zip(function.ArguementMutability).Select((arguementAndMutability) =>
+                CompileExpression(arguementAndMutability.First, !arguementAndMutability.Second));
             // function.
             builder.BuildCall2(function.TypeOf, function.Function, parameters.ToArray());
         }
@@ -412,9 +413,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
                     !param.IsConstant
                 );
                 context.AddVariable(param.MonomorphizedName(), parameter);
-                
             }
-
         }
 
         function.Linkage = LLVMLinkage.LLVMExternalLinkage;
@@ -602,8 +601,8 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         var mutableCurrentIterable = CompileExpression(node.Variable, false);
         var fromValue = CompileExpression(node.From);
         builder.BuildStore(fromValue, mutableCurrentIterable);
-        
-        
+
+
         // TODO: assign loop variable initial from value
         builder.BuildBr(forStart);
         builder.PositionAtEnd(forStart);
@@ -638,32 +637,72 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         builder.PositionAtEnd(block);
         switch (node.Name)
         {
-           case "write":
-               var formatList = node.ParameterVariables.Select(param => param.Type).Select(type => type switch
-               {
-                   BooleanType booleanType => "%s",
-                   CharacterType characterType => "%c",
-                   IntegerType integerType => "%d",
-                   RealType realType => "%.2f",
-                   StringType stringType => "%.*s",
-                   _ => throw new NotImplementedException(nameof(type))
-               });
-               var format = $"{string.Join(" ", formatList)}\n";
-               var parameters = function.Function.GetParams().SelectMany<LLVMValueRef, LLVMValueRef>(p => _types(p.TypeOf) switch
-               {
-                   // TODO: do not dispatch based (only) on llvm type b/c especially for records, it will be hard to obtain the record type via llvm rather use the parameter list of the function from the ast
-                   Types.FLOAT => [p],
-                   Types.INTEGER => [p],
-                   Types.BOOLEAN => [builder.BuildSelect(p, builder.BuildGlobalStringPtr("true"), builder.BuildGlobalStringPtr("false"))],
-                   Types.STRING => [builder.BuildExtractValue(p, 0), builder.BuildExtractValue(p, 1)],
-               }).Prepend(builder.BuildGlobalStringPtr(format, "printf-format"));
-               builder.BuildCall2(context.CFuntions.printf.TypeOf,
-                   context.CFuntions.printf.Function,
-                   parameters.ToArray());
-               builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
-               break;
-           default:
-               throw new CompilerException("Undefined builtin", 0);
+            case "write":
+                var formatList = node.ParameterVariables.Select(param => param.Type).Select(type => type switch
+                {
+                    BooleanType booleanType => "%s",
+                    CharacterType characterType => "%c",
+                    IntegerType integerType => "%d",
+                    RealType realType => "%.2f",
+                    StringType stringType => "%.*s",
+                    _ => throw new NotImplementedException(nameof(type))
+                });
+                var format = $"{string.Join(" ", formatList)}\n";
+                var parameters = function.Function.GetParams().SelectMany<LLVMValueRef, LLVMValueRef>(p =>
+                    _types(p.TypeOf) switch
+                    {
+                        // TODO: do not dispatch based (only) on llvm type b/c especially for records, it will be hard to obtain the record type via llvm rather use the parameter list of the function from the ast
+                        Types.FLOAT => [p],
+                        Types.INTEGER => [p],
+                        Types.BOOLEAN =>
+                        [
+                            builder.BuildSelect(p, builder.BuildGlobalStringPtr("true"),
+                                builder.BuildGlobalStringPtr("false"))
+                        ],
+                        Types.STRING => [builder.BuildExtractValue(p, 0), builder.BuildExtractValue(p, 1)],
+                    }).Prepend(builder.BuildGlobalStringPtr(format, "printf-format"));
+                builder.BuildCall2(context.CFuntions.printf.TypeOf,
+                    context.CFuntions.printf.Function,
+                    parameters.ToArray());
+                builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
+                break;
+            case "substring":
+                // SubString someString, index, length, var resultString
+
+                // resultString = length characters from someString, starting at index
+                // TODO: bounds checking
+                var SomeString = function.Function.GetParam(0);
+                var SomeStringInner = builder.BuildExtractValue(SomeString, 1);
+                var index = function.Function.GetParam(1);
+                var length = function.Function.GetParam(2);
+                var ResultString = function.Function.GetParam(3);
+
+                var newContent = builder.BuildCall2(
+                    context.CFuntions.malloc.TypeOf,
+                    context.CFuntions.malloc.Function,
+                    [length]
+                );
+                var subString = builder.BuildInBoundsGEP2(LLVMTypeRef.Int8, SomeStringInner, [index]);
+                builder.BuildCall2(
+                    context.CFuntions.memcpy.TypeOf,
+                    context.CFuntions.memcpy.Function,
+                    [newContent, subString, length]
+                );
+                var String = LLVMValueRef.CreateConstStruct(
+                    [
+                        LLVMValueRef.CreateConstNull(LLVMTypeRef.Int32),
+                        LLVMValueRef.CreateConstNull(LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0))
+                    ],
+                    false
+                );
+                String = builder.BuildInsertValue(String, builder.BuildIntCast(length, LLVMTypeRef.Int32), 0);
+                String = builder.BuildInsertValue(String, newContent, 1);
+                builder.BuildStore(String, ResultString);
+
+                builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
+                break;
+            default:
+                throw new CompilerException("Undefined builtin", 0);
         }
         // throw new NotImplementedException();
     }
