@@ -100,6 +100,7 @@ public class Parser
         var variable = ParseVariableDeclaration();
         if (variable != null || lastLineVariableDec)
         {
+            members.Add(variable);
             var property = ParseProperty(TokenType.ACCESSOR, members.Last().Name);
             if (property != null)
             {
@@ -844,7 +845,6 @@ public class Parser
             thisClass.Name,
             false
         );
-        members.Add(variableNode);
         lastLineVariableDec = true;
         return variableNode;
     }
