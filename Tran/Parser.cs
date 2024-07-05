@@ -14,7 +14,6 @@ public class Parser
     public List<VariableDeclarationNode> members;
     private int blockLevel;
     private FunctionNode currentFunction;
-    private bool lastLineVariableDec;
 
     public Parser(LinkedList<Token> tokens)
     {
@@ -25,7 +24,6 @@ public class Parser
         blockLevel = 0;
         currentFunction = new FunctionNode("default");
         thisClass = new ModuleNode("default");
-        lastLineVariableDec = false;
     }
 
     public bool AcceptSeparators()
@@ -90,6 +88,15 @@ public class Parser
                         false
                     )
                 );
+                ((FunctionNode)function.Value).VariablesInScope.Add(member.Name,
+                    new VariableDeclarationNode(
+                        false,
+                        member.Type,
+                        member.Name,
+                        thisClass.Name,
+                        false
+                    )
+                );
             }
         }
         return program;
@@ -98,22 +105,20 @@ public class Parser
     public bool ParseField()
     {
         var variable = ParseVariableDeclaration();
-        if (variable != null || lastLineVariableDec)
+        if (variable != null)
         {
             members.Add(variable);
-            var property = ParseProperty(TokenType.ACCESSOR, members.Last().Name);
+            var property = ParseProperty(TokenType.ACCESSOR, variable.Name);
             if (property != null)
             {
                 thisClass.addFunction(property);
             }
 
-            property = ParseProperty(TokenType.MUTATOR, members.Last().Name);
+            property = ParseProperty(TokenType.MUTATOR, variable.Name);
             if (property != null)
             {
                 thisClass.addFunction(property);
             }
-
-            lastLineVariableDec = false;
             return true;
         }
 
@@ -845,7 +850,6 @@ public class Parser
             thisClass.Name,
             false
         );
-        lastLineVariableDec = true;
         return variableNode;
     }
 
