@@ -215,12 +215,11 @@ public abstract class SAVisitor
     }
 }
 
-public class SemanticVisitor : SAVisitor
+public class AssignmentNodeTypeCheckerVisitor : SAVisitor
 {
-    public override ASTNode? Visit(ProgramNode node)
+    public override ASTNode? Visit(AssignmentNode node)
     {
-        node.Walk(new MathOpNodeOptimizer());
-        return node;
+        return null;
     }
 }
 
