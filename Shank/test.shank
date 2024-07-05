@@ -1,5 +1,5 @@
 define start()
-	tester 'c'
+	tester 4 + (0 + 0)
     
-define tester(a : character)
+define tester(a : integer)
     write a

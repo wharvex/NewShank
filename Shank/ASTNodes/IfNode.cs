@@ -34,9 +34,9 @@ public class IfNode : StatementNode
         NextIfNode = nextIfNode;
     }
 
-    public BooleanExpressionNode? Expression { get; init; }
+    public BooleanExpressionNode? Expression { get; set; }
     public List<StatementNode> Children { get; init; }
-    public IfNode? NextIfNode { get; init; }
+    public IfNode? NextIfNode { get; set; }
 
     public override string ToString()
     {
@@ -101,4 +101,24 @@ public class IfNode : StatementNode
     }
 
     public override void Accept(Visitor v) => v.Visit(this);
+
+    public override ASTNode? Walk(SAVisitor v)
+    {
+        var temp = v.Visit(this);
+        if (temp != null)
+            return temp;
+
+        if (Expression != null)
+            Expression = (BooleanExpressionNode)(Expression.Walk(v) ?? Expression);
+
+        for (var index = 0; index < Children.Count; index++)
+        {
+            Children[index] = (StatementNode)(Children[index].Walk(v) ?? Children[index]);
+        }
+
+        if (NextIfNode != null)
+            NextIfNode = (IfNode)(NextIfNode.Walk(v) ?? NextIfNode);
+
+        return v.PostWalk(this);
+    }
 }

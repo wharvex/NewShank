@@ -70,4 +70,9 @@ public class RecordNode(
     }
 
     public override void Accept(Visitor v) => v.Visit(this);
+
+    public override ASTNode? Walk(SAVisitor v)
+    {
+        throw new NotImplementedException();
+    }
 }

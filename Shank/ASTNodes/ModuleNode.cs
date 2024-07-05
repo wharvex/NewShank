@@ -480,30 +480,29 @@ public class ModuleNode : ASTNode
         }
 
         Enums = Enums.WalkDictionary(v);
+        GlobalVariables = GlobalVariables.WalkDictionary(v);
         Functions = Functions.WalkDictionary(v);
         Records = Records.WalkDictionary(v);
-        GlobalVariables = GlobalVariables.WalkDictionary(v);
         Exported = Exported.WalkDictionary(v);
         Imported = Imported.WalkDictionary(v);
         Tests = Tests.WalkDictionary(v);
 
         return v.Final(this);
+    }
 
-        //var ret = v.Visit(this);
-        //if (ret is not null)
-        //{
-        //    return ret;
-        //}
+    public override ASTNode? Walk(SAVisitor v)
+    {
+        var temp = v.Visit(this);
+        if (temp != null)
+            return temp;
 
-        //Enums = v.VisitDictionary(Enums);
-        //Functions = v.VisitDictionary(Functions);
-        //Records = v.VisitDictionary(Records);
-        //GlobalVariables = v.VisitDictionary(GlobalVariables);
-        //Exported = v.VisitDictionary(Exported);
-        //Imported = v.VisitDictionary(Imported);
-        //Tests = v.VisitDictionary(Tests);
+        foreach (var function in Functions)
+        {
+            Functions[function.Key] = (CallableNode)(
+                Functions[function.Key].Walk(v) ?? Functions[function.Key]
+            );
+        }
 
-        //ret = v.Final(this);
-        //return ret ?? this;
+        return v.PostWalk(this);
     }
 }

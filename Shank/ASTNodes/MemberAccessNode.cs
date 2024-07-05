@@ -15,4 +15,9 @@ public class MemberAccessNode(string name) : ASTNode
     {
         throw new NotImplementedException();
     }
+
+    public override ASTNode? Walk(SAVisitor v)
+    {
+        throw new NotImplementedException();
+    }
 }

@@ -33,6 +33,11 @@ public class EmptyNode(string comment) : ASTNode
         throw new NotImplementedException();
     }
 
+    public override ASTNode? Walk(SAVisitor v)
+    {
+        throw new NotImplementedException();
+    }
+
     public override string ToString()
     {
         return "Empty " + Comment;

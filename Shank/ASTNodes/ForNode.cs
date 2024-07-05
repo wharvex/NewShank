@@ -34,11 +34,11 @@ public class ForNode : StatementNode
         Line = copy.Line;
     }
 
-    public VariableUsagePlainNode Variable { get; init; }
-    public VariableUsageNodeTemp NewVariable { get; init; }
+    public VariableUsagePlainNode Variable { get; set; }
+    public VariableUsageNodeTemp NewVariable { get; set; }
     public ExpressionNode From { get; init; }
     public ExpressionNode To { get; init; }
-    public List<StatementNode> Children { get; init; }
+    public List<StatementNode> Children { get; set; }
 
     public override object[] returnStatementTokens()
     {
@@ -97,4 +97,22 @@ public class ForNode : StatementNode
     }
 
     public override void Accept(Visitor v) => v.Visit(this);
+
+    public override ASTNode? Walk(SAVisitor v)
+    {
+        var temp = v.Visit(this);
+        if (temp != null)
+            return temp;
+
+        Variable = (VariableUsagePlainNode)(Variable.Walk(v) ?? Variable);
+
+        NewVariable = (VariableUsageNodeTemp)(NewVariable.Walk(v) ?? NewVariable);
+
+        for (var index = 0; index < Children.Count; index++)
+        {
+            Children[index] = (StatementNode)(Children[index].Walk(v) ?? Children[index]);
+        }
+
+        return v.PostWalk(this);
+    }
 }

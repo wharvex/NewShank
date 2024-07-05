@@ -138,6 +138,12 @@ public class EnumDataType : InterpreterDataType
         Value = value;
     }
 
+    public EnumDataType(EnumType t)
+    {
+        Type = new EnumNode(t.Name, t.ModuleName, t.Variants);
+        Value = "";
+    }
+
     public string Value { set; get; }
     public EnumNode? Type { get; set; }
 

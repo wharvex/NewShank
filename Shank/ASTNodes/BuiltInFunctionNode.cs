@@ -39,6 +39,22 @@ public class BuiltInFunctionNode : CallableNode
     }
 
     public override void Accept(Visitor v) => v.Visit(this);
+
+    public override ASTNode? Walk(SAVisitor v)
+    {
+        var temp = v.Visit(this);
+        if (temp != null)
+            return temp;
+
+        for (var index = 0; index < ParameterVariables.Count; index++)
+        {
+            ParameterVariables[index] = (VariableDeclarationNode)(
+                ParameterVariables[index].Walk(v) ?? ParameterVariables[index]
+            );
+        }
+
+        return v.PostWalk(this);
+    }
 }
 
 public class BuiltInVariadicFunctionNode(

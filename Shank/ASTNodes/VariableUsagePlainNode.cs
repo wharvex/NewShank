@@ -37,7 +37,7 @@ public class VariableUsagePlainNode : VariableUsageNodeTemp
     /// <summary>
     /// Represents an extension of the base variable reference (e.g. an array subscript or a record member).
     /// </summary>
-    public ExpressionNode? Extension { get; init; }
+    public ExpressionNode? Extension { get; set; }
 
     public VrnExtType ExtensionType { get; set; }
 
@@ -141,4 +141,16 @@ public class VariableUsagePlainNode : VariableUsageNodeTemp
     public override T Accept<T>(ExpressionVisitor<T> visit) => visit.Visit(this);
 
     public override void Accept(Visitor v) => v.Visit(this);
+
+    public override ASTNode? Walk(SAVisitor v)
+    {
+        var temp = v.Visit(this);
+        if (temp != null)
+            return temp;
+
+        if (Extension != null)
+            Extension = (ExpressionNode)(Extension.Walk(v) ?? Extension);
+
+        return v.PostWalk(this);
+    }
 }

@@ -36,4 +36,12 @@ public class IntNode : ExpressionNode
     //     throw new NotImplementedException();
     // }
     public override void Accept(Visitor v) => v.Visit(this);
+
+    public override ASTNode? Walk(SAVisitor v)
+    {
+        var temp = v.Visit(this);
+        if (temp != null)
+            return temp;
+        return v.PostWalk(this);
+    }
 }

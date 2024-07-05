@@ -695,6 +695,34 @@ public class FunctionNode : CallableNode
 
     public override void Accept(Visitor v) => v.Visit(this);
 
+    public override ASTNode? Walk(SAVisitor v)
+    {
+        var temp = v.Visit(this);
+        if (temp != null)
+            return temp;
+
+        for (var index = 0; index < ParameterVariables.Count; index++)
+        {
+            ParameterVariables[index] = (VariableDeclarationNode)(
+                ParameterVariables[index].Walk(v) ?? ParameterVariables[index]
+            );
+        }
+
+        for (var index = 0; index < LocalVariables.Count; index++)
+        {
+            LocalVariables[index] = (VariableDeclarationNode)(
+                LocalVariables[index].Walk(v) ?? LocalVariables[index]
+            );
+        }
+
+        for (var index = 0; index < Statements.Count; index++)
+        {
+            Statements[index] = (StatementNode)(Statements[index].Walk(v) ?? Statements[index]);
+        }
+
+        return v.PostWalk(this);
+    }
+
     public override ASTNode Walk(WalkCompliantVisitor v)
     {
         var ret = v.Visit(this, out var shortCircuit);
@@ -709,19 +737,5 @@ public class FunctionNode : CallableNode
         Tests = Tests.WalkDictionary(v);
 
         return v.Final(this);
-
-        //var ret = v.Visit(this);
-        //if (ret is not null)
-        //{
-        //    return ret;
-        //}
-
-        //ParameterVariables = v.VisitList(ParameterVariables);
-        //LocalVariables = v.VisitList(LocalVariables);
-        //Statements = v.VisitList(Statements);
-        //Tests = v.VisitDictionary(Tests);
-
-        //ret = v.Final(this);
-        //return ret ?? this;
     }
 }

@@ -1,3 +1,4 @@
+using System.Net.Sockets;
 using LLVMSharp.Interop;
 using Shank.ExprVisitors;
 using Shank.IRGenerator;
@@ -8,8 +9,8 @@ public class MathOpNode(ExpressionNode left, MathOpNode.MathOpType op, Expressio
     : ExpressionNode
 {
     public MathOpType Op { get; init; } = op;
-    public ExpressionNode Left { get; init; } = left;
-    public ExpressionNode Right { get; init; } = right;
+    public ExpressionNode Left { get; set; } = left;
+    public ExpressionNode Right { get; set; } = right;
 
     public override string ToString()
     {
@@ -38,4 +39,17 @@ public class MathOpNode(ExpressionNode left, MathOpNode.MathOpType op, Expressio
     }
 
     public override void Accept(Visitor v) => v.Visit(this);
+
+    public override ASTNode? Walk(SAVisitor v)
+    {
+        var temp = v.Visit(this);
+        if (temp != null)
+            return temp;
+
+        Left = (ExpressionNode)(Left.Walk(v) ?? Left);
+
+        Right = (ExpressionNode)(Right.Walk(v) ?? Right);
+
+        return v.PostWalk(this);
+    }
 }

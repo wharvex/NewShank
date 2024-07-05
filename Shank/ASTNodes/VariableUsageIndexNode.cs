@@ -45,5 +45,10 @@ public class VariableUsageIndexNode(VariableUsageNodeTemp left, ExpressionNode r
         throw new NotImplementedException();
     }
 
+    public override ASTNode? Walk(SAVisitor v)
+    {
+        throw new NotImplementedException();
+    }
+
     public void Accept(IVariableUsageIndexVisitor visitor) => visitor.Visit(this);
 }

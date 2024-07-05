@@ -17,12 +17,6 @@ public class VariablesGettingVisitor : WalkCompliantVisitor
         List<VariableDeclarationNode>
     > VariableDeclarations { get; set; } = [];
 
-    public override ASTNode? Visit(ModuleNode n)
-    {
-        CurrentModuleName = n.Name;
-        return null;
-    }
-
     public override ASTNode Visit(ProgramNode n, out bool shortCircuit)
     {
         shortCircuit = false;
@@ -36,10 +30,10 @@ public class VariablesGettingVisitor : WalkCompliantVisitor
         return n;
     }
 
-    public override ASTNode? Visit(FunctionNode n)
+    public override ASTNode Visit(EnumNode n, out bool shortCircuit)
     {
-        CurrentFunctionName = n.Name;
-        return null;
+        shortCircuit = false;
+        return n;
     }
 
     public override ASTNode Visit(FunctionNode n, out bool shortCircuit)

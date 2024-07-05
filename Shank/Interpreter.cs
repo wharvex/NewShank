@@ -13,11 +13,11 @@ public class Interpreter
 
     public static ModuleNode? StartModule { get; set; }
     public static StringBuilder testOutput = new StringBuilder();
-    public static InterpretOptions? InterpreterOptions { get; set; }
+    public static InterpretOptions? ActiveInterpretOptions { get; set; }
 
     public static bool GetVuopTestFlag()
     {
-        return InterpreterOptions?.VuOpTest ?? false;
+        return ActiveInterpretOptions?.VuOpTest ?? false;
     }
 
     public static Dictionary<string, ModuleNode> GetModulesSafe() =>
@@ -108,6 +108,29 @@ public class Interpreter
             )
             .ToDictionary();
 
+    private static Dictionary<string, InterpreterDataType> NewNewGetVariablesDictionary(
+        FunctionNode fn,
+        List<InterpreterDataType> args
+    )
+    {
+        return fn.VariablesInScope.Select(kvp =>
+        {
+            var paramIdx = Enumerable
+                .Range(0, fn.ParameterVariables.Count)
+                .FirstOrDefault(i => kvp.Key.Equals(fn.ParameterVariables[i].GetNameSafe()), -1);
+            if (paramIdx >= 0)
+            {
+                return new KeyValuePair<string, InterpreterDataType>(kvp.Key, args[paramIdx]);
+            }
+
+            return new KeyValuePair<string, InterpreterDataType>(
+                kvp.Key,
+                kvp.Value.Type.ToIdt(kvp.Value.InitialValue)
+            );
+        })
+            .ToDictionary();
+    }
+
     private static ModuleNode GetStartModuleSafe() =>
         StartModule
         ?? throw new InvalidOperationException("Expected Interpreter._startModule to not be Null.");
@@ -127,7 +150,7 @@ public class Interpreter
     {
         var variables = GetVuopTestFlag()
             ? NewGetVariablesDictionary(fn, parametersIDTs, maybeModule)
-            : GetVariablesDictionary(fn, parametersIDTs, maybeModule);
+            : NewNewGetVariablesDictionary(fn, parametersIDTs);
 
         if (fn is TestNode)
         {
@@ -1121,7 +1144,7 @@ public class Interpreter
 
     private static bool EnumLessThan(EnumDataType left, EnumDataType right)
     {
-        var enumElements = left.Type.Type.Variants.ToArray();
+        var enumElements = left.Type.EType.Variants.ToArray();
         int leftIndex = 0,
             rightIndex = 0;
         for (int i = 0; i < enumElements.Length; i++)
@@ -1136,7 +1159,7 @@ public class Interpreter
 
     private static bool EnumLessThan(EnumDataType left, string right)
     {
-        var enumElements = left.Type.Type.Variants.ToArray();
+        var enumElements = left.Type.EType.Variants.ToArray();
         int leftIndex = 0,
             rightIndex = 0;
         for (int i = 0; i < enumElements.Length; i++)

@@ -1,3 +1,14 @@
+define globalPrinter()
+    k := 55
+    write "global variable: " k
+
+variables k : integer
+
+define greeter(newGreeting : string; newTimes : integer)
+variables j : integer
+    for j from 1 to newTimes
+        write newGreeting
+
 define start()
 variables greeting : string
 variables times, i : integer
@@ -5,3 +16,5 @@ variables times, i : integer
     times := 5
     for i from 1 to 10
         write greeting
+    greeter "hey" 5
+    globalPrinter
