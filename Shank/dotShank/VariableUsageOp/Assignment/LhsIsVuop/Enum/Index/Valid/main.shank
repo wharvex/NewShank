@@ -1,4 +1,4 @@
 define start()
 variables a : array from 0 to 9 of integer
     a[0] := 33
-    write "hello from Vuop Assignment LhsIsVuop Integer Index Valid"
+    write "hello from Vuop Assignment LhsIsVuop Integer NonMathOp Index Valid"

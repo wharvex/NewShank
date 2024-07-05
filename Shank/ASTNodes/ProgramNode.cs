@@ -117,17 +117,6 @@ public class ProgramNode : ASTNode
         Modules = Modules.WalkDictionary(v);
 
         return v.Final(this);
-
-        //var ret = v.Visit(this);
-        //if (ret is not null)
-        //{
-        //    return ret;
-        //}
-
-        //Modules = v.VisitDictionary(Modules);
-
-        //ret = v.Final(this);
-        //return ret ?? this;
     }
 
     public override ASTNode? Walk(SAVisitor v)

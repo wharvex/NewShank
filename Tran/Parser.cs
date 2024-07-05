@@ -14,7 +14,6 @@ public class Parser
     public List<VariableDeclarationNode> members;
     private int blockLevel;
     private FunctionNode currentFunction;
-    private bool lastLineVariableDec;
 
     public Parser(LinkedList<Token> tokens)
     {
@@ -25,7 +24,6 @@ public class Parser
         blockLevel = 0;
         currentFunction = new FunctionNode("default");
         thisClass = new ModuleNode("default");
-        lastLineVariableDec = false;
     }
 
     public bool AcceptSeparators()
@@ -98,7 +96,7 @@ public class Parser
     public bool ParseField()
     {
         var variable = ParseVariableDeclaration();
-        if (variable != null || lastLineVariableDec)
+        if (variable != null || members.Count > 0)
         {
             var property = ParseProperty(TokenType.ACCESSOR, members.Last().Name);
             if (property != null)
@@ -112,7 +110,6 @@ public class Parser
                 thisClass.addFunction(property);
             }
 
-            lastLineVariableDec = false;
             return true;
         }
 
@@ -845,7 +842,6 @@ public class Parser
             false
         );
         members.Add(variableNode);
-        lastLineVariableDec = true;
         return variableNode;
     }
 
