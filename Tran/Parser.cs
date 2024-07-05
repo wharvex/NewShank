@@ -88,7 +88,8 @@ public class Parser
                         false
                     )
                 );
-                ((FunctionNode)function.Value).VariablesInScope.Add(member.Name,
+                ((FunctionNode)function.Value).VariablesInScope.Add(
+                    member.Name,
                     new VariableDeclarationNode(
                         false,
                         member.Type,
