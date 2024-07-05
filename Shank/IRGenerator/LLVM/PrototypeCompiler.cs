@@ -2,7 +2,7 @@ using LLVMSharp.Interop;
 using Shank.ASTNodes;
 using Shank.IRGenerator;
 
-namespace Shank.ExprVisitors;
+namespace Shank.IRGenerator;
 
 public class PrototypeCompiler(Context context, LLVMBuilderRef builder, LLVMModuleRef module)
 {

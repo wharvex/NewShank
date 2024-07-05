@@ -1,8 +1,7 @@
 using LLVMSharp.Interop;
 using Shank.ASTNodes;
-using Shank.IRGenerator;
 
-namespace Shank.ExprVisitors;
+namespace Shank.IRGenerator;
 
 public enum Types
 {

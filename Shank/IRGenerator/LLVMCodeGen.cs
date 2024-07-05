@@ -1,10 +1,6 @@
-using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.IO;
 using System.Text;
 using LLVMSharp.Interop;
-using Shank.ASTNodes;
-using Shank.ExprVisitors;
 using Shank.IRGenerator;
 
 namespace Shank;
