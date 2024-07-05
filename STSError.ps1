@@ -51,8 +51,10 @@ function st2 {
 
         $shank_files = Get-ChildItem $args_list[1] -r -filter *.shank
 
-        Write-Host $shank_files
-
+        foreach ( $sf in $shank_files )
+        {
+            Write-Host $sf.FullName
+        }
     }
 
     # invoke a script block based on param
