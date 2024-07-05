@@ -267,8 +267,6 @@ public class CommandLineArgsParser
 
     public void RunInterpreter(InterpretOptions options, ProgramNode program)
     {
-        var vgVis = new VariablesGettingVisitor();
-
         options
             .InputFiles.ToList()
             .ForEach(
@@ -283,9 +281,19 @@ public class CommandLineArgsParser
         SemanticVisitor sv = new SemanticVisitor();
         sv.Visit(program);
         SemanticAnalysis.CheckModules(program);
+
+        // Some visiting.
+        var vgVis = new VariablesGettingVisitor();
+        var etVis = new ExpressionTypingVisitor(SemanticAnalysis.GetTypeOfExpression)
+        {
+            ActiveInterpretOptions = options
+        };
         program.Walk(vgVis);
-        OutputHelper.DebugPrintAst(program, "post-SA");
-        Interpreter.InterpreterOptions = options;
+        OutputHelper.DebugPrintAst(program, "post-vgVis");
+        program.Walk(etVis);
+
+        OutputHelper.DebugPrintAst(program, "post-etVis");
+        Interpreter.ActiveInterpretOptions = options;
         Interpreter.Modules = program.Modules;
         Interpreter.StartModule = program.GetStartModuleSafe();
         if (!options.unitTest)

@@ -18,4 +18,15 @@ public abstract class ExpressionNode : ASTNode
     }
 
     public override void Accept(Visitor v) => throw new NotImplementedException();
+
+    public override ASTNode Walk(WalkCompliantVisitor v)
+    {
+        var ret = v.Visit(this, out var shortCircuit);
+        if (shortCircuit)
+        {
+            return ret;
+        }
+
+        return v.Final(this);
+    }
 }

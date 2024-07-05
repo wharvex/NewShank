@@ -851,7 +851,7 @@ public class SemanticAnalysisVisitor : Visitor
         var resolveType =
             // TODO: should this be the other way I.E. generics shadow other types
             module.Records.GetValueOrDefault(member.TypeName)?.Type
-            ?? (Type?)module.Enums.GetValueOrDefault(member.TypeName)?.Type
+            ?? (Type?)module.Enums.GetValueOrDefault(member.TypeName)?.EType
             ?? (
                 generics.Contains(member.TypeName)
                     ? member.TypeParameters.Count != 0
@@ -983,9 +983,9 @@ public class SemanticAnalysisVisitor : Visitor
                     {
                         if (enumDefinition is EnumNode e)
                         {
-                            if (e.Type.Variants.Contains(n.Value))
+                            if (e.EType.Variants.Contains(n.Value))
                             {
-                                variable.Type = e.Type;
+                                variable.Type = e.EType;
                                 break;
                             }
                         }

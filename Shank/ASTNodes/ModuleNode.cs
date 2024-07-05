@@ -488,23 +488,6 @@ public class ModuleNode : ASTNode
         Tests = Tests.WalkDictionary(v);
 
         return v.Final(this);
-
-        //var ret = v.Visit(this);
-        //if (ret is not null)
-        //{
-        //    return ret;
-        //}
-
-        //Enums = v.VisitDictionary(Enums);
-        //Functions = v.VisitDictionary(Functions);
-        //Records = v.VisitDictionary(Records);
-        //GlobalVariables = v.VisitDictionary(GlobalVariables);
-        //Exported = v.VisitDictionary(Exported);
-        //Imported = v.VisitDictionary(Imported);
-        //Tests = v.VisitDictionary(Tests);
-
-        //ret = v.Final(this);
-        //return ret ?? this;
     }
 
     public override ASTNode? Walk(SAVisitor v)

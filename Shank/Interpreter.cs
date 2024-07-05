@@ -13,11 +13,11 @@ public class Interpreter
 
     public static ModuleNode? StartModule { get; set; }
     public static StringBuilder testOutput = new StringBuilder();
-    public static InterpretOptions? InterpreterOptions { get; set; }
+    public static InterpretOptions? ActiveInterpretOptions { get; set; }
 
     public static bool GetVuopTestFlag()
     {
-        return InterpreterOptions?.VuOpTest ?? false;
+        return ActiveInterpretOptions?.VuOpTest ?? false;
     }
 
     public static Dictionary<string, ModuleNode> GetModulesSafe() =>
@@ -1144,7 +1144,7 @@ public class Interpreter
 
     private static bool EnumLessThan(EnumDataType left, EnumDataType right)
     {
-        var enumElements = left.Type.Type.Variants.ToArray();
+        var enumElements = left.Type.EType.Variants.ToArray();
         int leftIndex = 0,
             rightIndex = 0;
         for (int i = 0; i < enumElements.Length; i++)
@@ -1159,7 +1159,7 @@ public class Interpreter
 
     private static bool EnumLessThan(EnumDataType left, string right)
     {
-        var enumElements = left.Type.Type.Variants.ToArray();
+        var enumElements = left.Type.EType.Variants.ToArray();
         int leftIndex = 0,
             rightIndex = 0;
         for (int i = 0; i < enumElements.Length; i++)

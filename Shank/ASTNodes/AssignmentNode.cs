@@ -72,17 +72,24 @@ public class AssignmentNode : StatementNode
 
     public override ASTNode Walk(WalkCompliantVisitor v)
     {
-        var ret = v.Visit(this);
-        if (ret is not null)
+        var ret = v.Visit(this, out var shortCircuit);
+        if (shortCircuit)
         {
             return ret;
         }
 
-        NewTarget = (VariableUsageNodeTemp)NewTarget.Walk(v);
+        if (v is ExpressionTypingVisitor etv && etv.GetVuopTestFlag())
+        {
+            NewTarget = (VariableUsageNodeTemp)NewTarget.Walk(v);
+        }
+        else
+        {
+            Target = (VariableUsagePlainNode)Target.Walk(v);
+        }
+
         Expression = (ExpressionNode)Expression.Walk(v);
 
-        ret = v.Final(this);
-        return ret ?? this;
+        return v.Final(this);
     }
 
     public override ASTNode? Walk(SAVisitor v)

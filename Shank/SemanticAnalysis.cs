@@ -721,7 +721,7 @@ public class SemanticAnalysis
         throw new Exception("Unrecognized node type in math expression while checking range");
     }
 
-    private static Type GetTypeOfExpression(
+    public static Type GetTypeOfExpression(
         ExpressionNode expression,
         Dictionary<string, VariableDeclarationNode> variables
     )
@@ -1353,9 +1353,9 @@ public class SemanticAnalysis
                     {
                         if (enumDefinition is EnumNode e)
                         {
-                            if (e.Type.Variants.Contains(n.Value))
+                            if (e.EType.Variants.Contains(n.Value))
                             {
-                                variable.Type = e.Type;
+                                variable.Type = e.EType;
                                 break;
                             }
                         }
@@ -1468,7 +1468,7 @@ public class SemanticAnalysis
         var resolveType =
             // TODO: should this be the other way I.E. generics shadow other types
             module.Records.GetValueOrDefault(member.TypeName)?.Type
-            ?? (Type?)module.Enums.GetValueOrDefault(member.TypeName)?.Type
+            ?? (Type?)module.Enums.GetValueOrDefault(member.TypeName)?.EType
             ?? (
                 generics.Contains(member.TypeName)
                     ? member.TypeParameters.Count != 0

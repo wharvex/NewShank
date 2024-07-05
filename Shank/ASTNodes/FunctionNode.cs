@@ -737,19 +737,5 @@ public class FunctionNode : CallableNode
         Tests = Tests.WalkDictionary(v);
 
         return v.Final(this);
-
-        //var ret = v.Visit(this);
-        //if (ret is not null)
-        //{
-        //    return ret;
-        //}
-
-        //ParameterVariables = v.VisitList(ParameterVariables);
-        //LocalVariables = v.VisitList(LocalVariables);
-        //Statements = v.VisitList(Statements);
-        //Tests = v.VisitDictionary(Tests);
-
-        //ret = v.Final(this);
-        //return ret ?? this;
     }
 }
