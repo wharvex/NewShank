@@ -175,15 +175,15 @@ class test
             files.AddLast(
                 @"
 interface someName
-    number x
-    string y".Replace("    ", "\t")
+    square() : number s".Replace("    ", "\t")
             );
             files.AddLast(
                 @"
 class test implements someName
     number x
-        x = 9000 * 1000
-        y = ""agc""".Replace("    ", "\t")
+    x = 5
+    square() : number s
+        s = x*x".Replace("    ", "\t")
             );
             InitializeInterpreter(files);
             RunInterpreter();
