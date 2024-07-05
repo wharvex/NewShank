@@ -49,4 +49,9 @@ public class EnumNode(string type, string parentModuleName, List<string> enumEle
         ret = v.Final(this);
         return ret ?? this;
     }
+
+    public override ASTNode? Walk(SAVisitor v)
+    {
+        throw new NotImplementedException();
+    }
 }

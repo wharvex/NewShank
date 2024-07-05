@@ -32,5 +32,10 @@ public class StatementNode : ASTNode
 
     public override void Accept(Visitor v) => throw new NotImplementedException();
 
+    public override ASTNode? Walk(SAVisitor v)
+    {
+        throw new NotImplementedException();
+    }
+
     public virtual void Visit(StatementVisitor visit) { }
 }

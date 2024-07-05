@@ -506,4 +506,20 @@ public class ModuleNode : ASTNode
         //ret = v.Final(this);
         //return ret ?? this;
     }
+
+    public override ASTNode? Walk(SAVisitor v)
+    {
+        var temp = v.Visit(this);
+        if (temp != null)
+            return temp;
+
+        foreach (var function in Functions)
+        {
+            Functions[function.Key] = (CallableNode)(
+                Functions[function.Key].Walk(v) ?? Functions[function.Key]
+            );
+        }
+
+        return v.PostWalk(this);
+    }
 }

@@ -129,4 +129,18 @@ public class ProgramNode : ASTNode
         //ret = v.Final(this);
         //return ret ?? this;
     }
+
+    public override ASTNode? Walk(SAVisitor v)
+    {
+        var temp = v.Visit(this);
+        if (temp != null)
+            return temp;
+
+        foreach (var modules in Modules.Values)
+        {
+            Modules[modules.Name] = (ModuleNode)(modules.Walk(v) ?? modules);
+        }
+
+        return v.PostWalk(this);
+    }
 }

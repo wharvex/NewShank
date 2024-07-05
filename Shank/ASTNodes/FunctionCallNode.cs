@@ -189,4 +189,18 @@ public class FunctionCallNode : StatementNode
     }
 
     public override void Accept(Visitor v) => v.Visit(this);
+
+    public override ASTNode? Walk(SAVisitor v)
+    {
+        var temp = v.Visit(this);
+        if (temp != null)
+            return temp;
+
+        for (var index = 0; index < Arguments.Count; index++)
+        {
+            Arguments[index] = (ExpressionNode)(Arguments[index].Walk(v) ?? Arguments[index]);
+        }
+
+        return v.PostWalk(this);
+    }
 }

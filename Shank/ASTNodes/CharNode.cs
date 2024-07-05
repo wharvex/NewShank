@@ -34,4 +34,13 @@ public class CharNode : ExpressionNode
     public override T Accept<T>(ExpressionVisitor<T> visit) => visit.Visit(this);
 
     public override void Accept(Visitor v) => v.Visit(this);
+
+    public override ASTNode? Walk(SAVisitor v)
+    {
+        var temp = v.Visit(this);
+        if (temp != null)
+            return temp;
+
+        return v.PostWalk(this);
+    }
 }

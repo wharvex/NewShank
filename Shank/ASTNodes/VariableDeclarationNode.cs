@@ -193,4 +193,16 @@ public class VariableDeclarationNode : ASTNode
         //ret = v.Final(this);
         //return ret ?? this;
     }
+
+    public override ASTNode? Walk(SAVisitor v)
+    {
+        var temp = v.Visit(this);
+        if (temp != null)
+            return temp;
+
+        if (InitialValue != null)
+            InitialValue = (ExpressionNode)(InitialValue.Walk(v) ?? InitialValue);
+
+        return v.PostWalk(this);
+    }
 }

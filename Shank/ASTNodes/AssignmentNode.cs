@@ -84,4 +84,17 @@ public class AssignmentNode : StatementNode
         ret = v.Final(this);
         return ret ?? this;
     }
+
+    public override ASTNode? Walk(SAVisitor v)
+    {
+        var temp = v.Visit(this);
+        if (temp != null)
+            return temp;
+
+        Target = (VariableUsagePlainNode)(Target.Walk(v) ?? Target);
+
+        Expression = (ExpressionNode)(Expression.Walk(v) ?? Expression);
+
+        return v.PostWalk(this);
+    }
 }
