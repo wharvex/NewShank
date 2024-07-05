@@ -167,7 +167,7 @@ class test
             InitializeInterpreter(files);
             RunInterpreter();
         }
-        
+
         [TestMethod]
         public void InterpreterTest5()
         {
@@ -188,7 +188,7 @@ class test implements someName
             InitializeInterpreter(files);
             RunInterpreter();
         }
-        
+
         [TestMethod]
         public void InterpreterTestIfsAndLoops()
         {
