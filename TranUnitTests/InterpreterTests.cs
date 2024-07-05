@@ -94,7 +94,7 @@ namespace TranUnitTests
         }
 
         [TestMethod]
-        public void InterpreterTest1()
+        public void InterpreterTestBasic()
         {
             InitializeInterpreter(
                 @"
@@ -107,7 +107,7 @@ class start
         }
 
         [TestMethod]
-        public void InterpreterTest2()
+        public void InterpreterTestFunctionCall()
         {
             InitializeInterpreter(
                 @"
@@ -128,7 +128,7 @@ class start
         }
 
         [TestMethod]
-        public void InterpreterTest3()
+        public void InterpreterTestFields()
         {
             InitializeInterpreter(
                 @"
@@ -144,7 +144,7 @@ class start
         }
 
         [TestMethod]
-        public void InterpreterTest4()
+        public void InterpreterTestMultiClass()
         {
             LinkedList<string> files = new LinkedList<string>();
             files.AddLast(
