@@ -112,11 +112,9 @@ public class Parser
             {
                 thisClass.addFunction(property);
             }
-
             lastLineVariableDec = false;
             return true;
         }
-
         return false;
     }
 

@@ -167,7 +167,28 @@ class test
             InitializeInterpreter(files);
             RunInterpreter();
         }
-
+        
+        [TestMethod]
+        public void InterpreterTest5()
+        {
+            LinkedList<string> files = new LinkedList<string>();
+            files.AddLast(
+                @"
+interface someName
+    number x
+    string y".Replace("    ", "\t")
+            );
+            files.AddLast(
+                @"
+class test implements someName
+    number x
+        x = 9000 * 1000
+        y = ""agc""".Replace("    ", "\t")
+            );
+            InitializeInterpreter(files);
+            RunInterpreter();
+        }
+        
         [TestMethod]
         public void InterpreterTestIfsAndLoops()
         {
