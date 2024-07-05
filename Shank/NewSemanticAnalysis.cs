@@ -1,3 +1,5 @@
+using Shank.ASTNodes;
+
 namespace Shank;
 
 public class NewSemanticAnalysis
