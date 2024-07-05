@@ -278,7 +278,8 @@ public class CommandLineArgsParser
         OutputHelper.DebugPrintAst(program, "pre-SA");
         BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
         SemanticAnalysis.ActiveInterpretOptions = options;
-        NewSemanticAnalysis.Run(program);
+        SemanticVisitor sv = new SemanticVisitor();
+        sv.Visit(program);
         SemanticAnalysis.CheckModules(program);
 
         // Some visiting.
