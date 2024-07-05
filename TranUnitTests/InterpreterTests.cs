@@ -47,7 +47,7 @@ namespace TranUnitTests
         private Dictionary<string, ModuleNode> GetModules(LinkedList<string> programs)
         {
             Dictionary<string, ModuleNode> modules = new Dictionary<string, ModuleNode>();
-            foreach(var program in programs)
+            foreach (var program in programs)
             {
                 CreateParser(program);
                 var module = parser.Parse().Modules.First();
@@ -147,19 +147,23 @@ class start
         public void InterpreterTest4()
         {
             LinkedList<string> files = new LinkedList<string>();
-            files.AddLast(@"
+            files.AddLast(
+                @"
 class start
     number x
     string y
 
     start()
         x = 100
-        y = ""helloworld""".Replace("    ", "\t"));
-            files.AddLast(@"
+        y = ""helloworld""".Replace("    ", "\t")
+            );
+            files.AddLast(
+                @"
 class test
     doStuff()
         number a
-        a = 9000 * 1000".Replace("    ", "\t"));
+        a = 9000 * 1000".Replace("    ", "\t")
+            );
             InitializeInterpreter(files);
             RunInterpreter();
         }
