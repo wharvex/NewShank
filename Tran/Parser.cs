@@ -493,7 +493,7 @@ public class Parser
         }
         return null;
     }
-
+    
     public List<StatementNode> ParseBlock()
     {
         blockLevel++;
