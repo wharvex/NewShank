@@ -1,5 +1,6 @@
-﻿using Shank.ASTNodes;
-using System;
+﻿using System;
+using Shank.ASTNodes;
+
 namespace Shank;
 
 public class BuiltInFunctions
@@ -281,14 +282,15 @@ public class BuiltInFunctions
         int count = intParam.Value;
         for (int i = 1; i <= count; i++)
         {
-            //fix this 
-           Console.WriteLine(i);
+            //fix this
+            Console.WriteLine(i);
         }
     }
+
     public static void Clone(List<InterpreterDataType> parameters)
     {
         List<string> stringRepresentation = new List<string>();
-        
+
         foreach (var param in parameters)
         {
             stringRepresentation.Add(param.ToString());
@@ -296,10 +298,9 @@ public class BuiltInFunctions
 
         if (parameters[0] is StringDataType dest)
         {
-           //fix this 
+            //fix this
         }
     }
-    
 
     public static void Left(List<InterpreterDataType> parameters)
     {
