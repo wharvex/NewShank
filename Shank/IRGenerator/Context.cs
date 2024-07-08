@@ -137,6 +137,13 @@ public class LLVMStruct(LLVMValueRef valueRef, bool isMutable, LLVMStructType ty
     }
 }
 
+public class LLVMReference(LLVMValueRef valueRef, bool isMutable, LLVMReferenceType typeRef)
+    : LLVMValue(valueRef, isMutable, typeRef.LlvmTypeRef)
+{
+    public static LLVMValue New(LLVMValueRef valueRef, bool isMutable, LLVMReferenceType type) =>
+        new LLVMReference(valueRef, isMutable, type);
+}
+
 public abstract class LLVMType(Type type, LLVMTypeRef llvmtype)
 {
     public Type Type { get; set; } = type;
@@ -149,6 +156,10 @@ public class LLVMStructType(RecordType type, LLVMTypeRef llvmtype, List<string> 
     public int GetMemberIndex(string member) => members.IndexOf(member);
 }
 
+public class LLVMReferenceType(LLVMStructType inner, LLVMTypeRef typeRef) : LLVMType(inner.Type, typeRef)
+{
+    
+}
 public class LLVMArrayType(ArrayType type, LLVMTypeRef llvmtype) : LLVMType(type, llvmtype)
 {
     public Type Inner() => type.Inner;
@@ -167,7 +178,7 @@ public struct CFuntions
             "printf",
             LLVMTypeRef.CreateFunction(
                 sizeT,
-                new LLVMTypeRef[] { LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0) },
+                [ LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0) ],
                 true
             )
         );
@@ -192,15 +203,6 @@ public struct CFuntions
 
     // void *malloc(size_t n);
     public LLVMFunction malloc { get; }
-}
-
-public class Module
-{
-    public Dictionary<string, LLVMShankFunction> Functions { get; } = new();
-    public Dictionary<string, LLVMType> CustomTypes { get; } = new();
-
-    // global variables, constants or variables defined at the top level
-    public Dictionary<string, LLVMValue> GloabalVariables { get; } = new();
 }
 
 public class Context
@@ -256,7 +258,7 @@ public class Context
             EnumType e => LLVMTypeRef.Int32,
             // if it's a custom type we look it up in the context
             ReferenceType r
-                => LLVMTypeRef.CreatePointer((LLVMTypeRef)GetLLVMTypeFromShankType(r.Inner), 0),
+                =>  LLVMTypeRef.CreateStruct([ LLVMTypeRef.CreatePointer((LLVMTypeRef)GetLLVMTypeFromShankType(r.Inner), 0), LLVMTypeRef.Int32, LLVMTypeRef.Int1 ],false),
             ArrayType a
                 => LLVMTypeRef.CreateStruct(
                     [
@@ -287,7 +289,7 @@ public class Context
                 CharacterType => (LLVMCharacter.New, LLVMTypeRef.Int8),
                 EnumType enumType => (LLVMInteger.New, LLVMTypeRef.Int64),
                 // if it's a custom type we look it up in the context
-                ReferenceType => null,
+                ReferenceType r => ((value, mutable, type )=>LLVMReference.New(value, mutable, new LLVMReferenceType( Records[((RecordType)r.Inner).MonomorphizedIndex], type)), (LLVMTypeRef) GetLLVMTypeFromShankType(type)) ,
                 ArrayType arrayType
                     => (
                         (value, mutable, type) =>
