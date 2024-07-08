@@ -91,7 +91,7 @@ public class MemberValidatingVisitor(MemberExpectingVisitor mev, Type exprType)
         else
         {
             throw new SemanticErrorException(
-                "Member `" + Mev.Contents.Name + "' not found on record `" + it.NewToString() + "'",
+                "Member `" + Mev.Contents.Name + "' not found on record `" + it + "'",
                 Mev.Contents
             );
         }
@@ -202,7 +202,7 @@ public class VunVsTypeCheckingVisitor(Type t, Dictionary<string, VariableDeclara
                         "Member `"
                             + m.Right.Name
                             + "' not found on record `"
-                            + it.NewToString()
+                            + it
                             + "'"
                     );
                 }
