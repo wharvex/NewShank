@@ -255,6 +255,7 @@ public class MonomorphizationVisitor(
         );
         if (ProgramNode.Functions.TryGetValue(typedModuleIndex, out _))
         {
+            Push(typedModuleIndex);
             return;
         }
 
@@ -407,7 +408,13 @@ public class MonomorphizationTypeVisitor(
             return recordNode.Type;
         }
 
-        var record = new RecordNode(type.Name, type.ModuleName, [], []);
+        var record = new RecordNode(type.Name, type.ModuleName, [], [])
+        {
+            Type =
+            {
+                MonomorphizedIndex = typedModuleIndex
+            }
+        };
         programNode.Records[typedModuleIndex] = record;
         var recordType = new RecordType(
             type.Name,
