@@ -3,7 +3,5 @@ define start()
     
 define tester(a : integer)
 variables i : integer = 1
-    repeat
+    for i from 1 to 10
         write i
-        i := i + 1
-    until i > 10

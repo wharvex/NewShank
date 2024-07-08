@@ -278,7 +278,7 @@ public class Interpreter
                     );
                 var start = ResolveInt(fn.From, variables);
                 var end = ResolveInt(fn.To, variables);
-                for (var i = start; i < end; i++)
+                for (var i = start; i <= end; i++)
                 {
                     index.Value = i;
                     InterpretBlock(fn.Children, variables, callingFunction);
