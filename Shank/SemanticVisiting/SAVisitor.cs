@@ -290,6 +290,13 @@ public class FunctionCallVisitor : SAVisitor
     public override ASTNode? Visit(ModuleNode node)
     {
         Functions = node.Functions;
+        foreach (var import in node.Imported)
+        {
+            if (!Functions.ContainsKey(import.Key))
+            {
+                Functions.Add(import.Key, (CallableNode)import.Value);
+            }
+        }
         return null;
     }
 
