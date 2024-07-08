@@ -1,3 +1,4 @@
+using CommandLine.Text;
 using LLVMSharp.Interop;
 using Shank.ExprVisitors;
 using Shank.IRGenerator;
@@ -9,6 +10,7 @@ public class BuiltInFunctionNode : CallableNode
     public BuiltInFunctionNode(string name, BuiltInCall execute)
         : base(name, execute) { }
 
+    public List<string> GenericTypeParameterNames { get; set; } = [];
     // public override LLVMValueRef Visit(
     //     LLVMVisitor visitor,
     //     Context context,
@@ -33,6 +35,7 @@ public class BuiltInFunctionNode : CallableNode
         Line = function.Line;
         Execute = function.Execute;
         ParameterVariables.AddRange(parameters);
+        GenericTypeParameterNames = function.GenericTypeParameterNames;
     }
 
     public override void Accept(Visitor v) => v.Visit(this);

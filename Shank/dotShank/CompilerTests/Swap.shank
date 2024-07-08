@@ -1,0 +1,14 @@
+define start()
+variables a: integer
+variables b: integer
+    a := 5
+    b := 10
+    swap var a, var b
+    write a, b
+
+define swap(var a:T; var b:T) generic T
+variables temp: T
+    temp := a
+    a := b
+    b := temp
+    

@@ -446,13 +446,13 @@ public class ModuleNode : ASTNode
     //     GetFunctionsAsList().ForEach(f => f.Visit(visitor, context, builder, module));
     // }
 
-    public void VisitPrototype(Context context, LLVMModuleRef module)
-    {
-        // TODO: compile types
-        // generate function prototypes
-        context.SetCurrentModule(Name);
-        GetFunctionsAsList().ForEach(f => f.VisitPrototype(context, module));
-    }
+    // public void VisitPrototype(Context context, LLVMModuleRef module)
+    // {
+    //     // TODO: compile types
+    //     // generate function prototypes
+    //     context.SetCurrentModule(Name);
+    //     GetFunctionsAsList().ForEach(f => f.VisitPrototype(context, module));
+    // }
 
     public void VisitProto(VisitPrototype visitPrototype)
     {

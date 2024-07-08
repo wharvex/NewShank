@@ -132,7 +132,10 @@ public class MonomorphizationVisitor(
                         }
                 )
                 .ToList();
-            var function = new BuiltInFunctionNode(variadicFunctionNode, parameters);
+            var function = new BuiltInFunctionNode(variadicFunctionNode, parameters)
+            {
+                MonomorphizedName = typedBuiltinIndex
+            };
             // TODO: maybe specialize this further by turning it into multiple individual function calls for each arguement (might be annoying for write, because "write "Foo"" would probably become "writeString "Foo"; writeString "\n"", we would also probalb have a lot of "writeString " "" when we have mutliple arguements)
             programNode.BuiltinFunctions[typedBuiltinIndex] = function;
         }
@@ -162,21 +165,25 @@ public class MonomorphizationVisitor(
                         .ToList()
                 )
             );
-            Push(typedBuiltinIndex);
             if (programNode.BuiltinFunctions.ContainsKey(typedBuiltinIndex))
             {
                 return;
             }
             var parameters = node.ParameterVariables.Select(declarationNode =>
             {
-                declarationNode.Accept(this);
+                declarationNode.Accept(new MonomorphizationVisitor(instantiatedGenerics, nonMonomorphizedProgramNode, start, programNode) {expr =  expr});
                 return (VariableDeclarationNode)Pop();
             })
                 .ToList();
-            programNode.BuiltinFunctions[typedBuiltinIndex] = new BuiltInFunctionNode(
+            var function = new BuiltInFunctionNode(
                 node,
                 parameters
-            );
+            )
+            {
+                MonomorphizedName = typedBuiltinIndex
+            };
+            programNode.BuiltinFunctions[typedBuiltinIndex] = function;
+            Push(typedBuiltinIndex);
         }
     }
 
@@ -213,13 +220,19 @@ public class MonomorphizationVisitor(
                     new MonomorphizationVisitor(
                         instantiatedGenerics,
                         nonMonomorphizedProgramNode,
-                        start,
+                        module,
                         ProgramNode
                     )
                     {
                         expr = expr
                     }
                 );
+        // TODO: less hacky solution to demodulize global variables, maybe only add them when they are used
+            foreach (var (key, value) in module.GlobalVariables)
+            {
+                value.Accept(this);
+                programNode.GlobalVariables[(ModuleIndex)value.MonomorphizedName()] = (VariableDeclarationNode)Pop();
+            }
             Push(new FunctionCallNode(node, (TypedModuleIndex)Pop()));
         }
     }
@@ -232,7 +245,6 @@ public class MonomorphizationVisitor(
                 instantiatedTypes.OrderBy(pair => pair.Key).Select(pair => pair.Value).ToList()
             )
         );
-        Push(typedModuleIndex);
         if (ProgramNode.Functions.TryGetValue(typedModuleIndex, out _))
         {
             return;
@@ -257,8 +269,12 @@ public class MonomorphizationVisitor(
         })
             .ToList();
 
-        var function = new FunctionNode(node, parameters, variables, statements);
+        var function = new FunctionNode(node, parameters, variables, statements)
+        {
+            MonomorphizedName = typedModuleIndex
+        };
         ProgramNode.Functions[typedModuleIndex] = function;
+        Push(typedModuleIndex);
     }
 
     public override void Visit(WhileNode node)
@@ -282,6 +298,12 @@ public class MonomorphizationVisitor(
     public override void Visit(ModuleNode node)
     {
         start = node;
+        // TODO: less hacky solution to demodulize global variables, maybe only add them when they are used
+            foreach (var (key, value) in node.GlobalVariables)
+            {
+                value.Accept(this);
+                programNode.GlobalVariables[(ModuleIndex)value.MonomorphizedName()] = (VariableDeclarationNode)Pop();
+            }
         node.GetStartFunctionSafe().Accept(this);
     }
 

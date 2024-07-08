@@ -262,7 +262,7 @@ public class CommandLineArgsParser
         program.Accept(monomorphization);
         var monomorphizedProgram = monomorphization.ProgramNode;
 
-        a.CodeGen(options, program);
+        a.CodeGen(options, monomorphizedProgram);
     }
 
     public void RunInterpreter(InterpretOptions options, ProgramNode program)

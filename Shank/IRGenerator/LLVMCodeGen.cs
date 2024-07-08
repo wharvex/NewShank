@@ -1,10 +1,6 @@
-using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.IO;
 using System.Text;
 using LLVMSharp.Interop;
-using Shank.ASTNodes;
-using Shank.ExprVisitors;
 using Shank.IRGenerator;
 
 namespace Shank;
@@ -13,7 +9,7 @@ public class LLVMCodeGen
 {
     public LLVMModuleRef ModuleRef;
 
-    public void CodeGen(CompileOptions compileOptions, ProgramNode programNode)
+    public void CodeGen(CompileOptions compileOptions, MonomorphizedProgramNode programNode)
     {
         LLVM.InitializeAllTargetInfos();
         LLVM.InitializeAllTargets();
@@ -28,7 +24,8 @@ public class LLVMCodeGen
         // string? directory = Path.GetDirectoryName(compileOptions.OutFile);
 
         var context = new Context(null, new CFuntions(module));
-        programNode.Accept(new LLVMVisitor(context, builder, module));
+        var compiler = new Compiler(context, builder, module);
+        compiler.Compile(programNode);
 
         //outputting directly to an object file
         //https://llvm.org/docs/tutorial/MyFirstLanguageFrontend/LangImpl08.html
