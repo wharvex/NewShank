@@ -44,6 +44,30 @@ namespace TranUnitTests
                 BuiltInFunctions.Register(startModule.getFunctions());
         }
 
+        private Dictionary<string, ModuleNode> GetModules(LinkedList<string> programs)
+        {
+            Dictionary<string, ModuleNode> modules = new Dictionary<string, ModuleNode>();
+            foreach (var program in programs)
+            {
+                CreateParser(program);
+                var module = parser.Parse().Modules.First();
+                modules.Add(module.Key, module.Value);
+            }
+            return modules;
+        }
+
+        public void InitializeInterpreter(LinkedList<string> files)
+        {
+            Interpreter.Reset();
+            SemanticAnalysis.reset();
+            Dictionary<string, ModuleNode> modules = GetModules(files);
+            Interpreter.setModules(modules);
+            var startModule = Interpreter.setStartModule();
+            SemanticAnalysis.setStartModule();
+            if (startModule != null)
+                BuiltInFunctions.Register(startModule.getFunctions());
+        }
+
         public void RunInterpreter()
         {
             foreach (KeyValuePair<string, ModuleNode> currentModulePair in Interpreter.Modules)
@@ -70,7 +94,7 @@ namespace TranUnitTests
         }
 
         [TestMethod]
-        public void InterpreterTest1()
+        public void InterpreterTestBasic()
         {
             InitializeInterpreter(
                 @"
@@ -83,7 +107,7 @@ class start
         }
 
         [TestMethod]
-        public void InterpreterTest2()
+        public void InterpreterTestFunctionCall()
         {
             InitializeInterpreter(
                 @"
@@ -104,7 +128,7 @@ class start
         }
 
         [TestMethod]
-        public void InterpreterTest3()
+        public void InterpreterTestFields()
         {
             InitializeInterpreter(
                 @"
@@ -116,6 +140,52 @@ class start
         x = 100
         y = ""helloworld""".Replace("    ", "\t")
             );
+            RunInterpreter();
+        }
+
+        [TestMethod]
+        public void InterpreterTestMultiClass()
+        {
+            LinkedList<string> files = new LinkedList<string>();
+            files.AddLast(
+                @"
+class start
+    number x
+    string y
+
+    start()
+        x = 100
+        y = ""helloworld""".Replace("    ", "\t")
+            );
+            files.AddLast(
+                @"
+class test
+    doStuff()
+        number a
+        a = 9000 * 1000".Replace("    ", "\t")
+            );
+            InitializeInterpreter(files);
+            RunInterpreter();
+        }
+
+        [TestMethod]
+        public void InterpreterTest5()
+        {
+            LinkedList<string> files = new LinkedList<string>();
+            files.AddLast(
+                @"
+interface someName
+    square() : number s".Replace("    ", "\t")
+            );
+            files.AddLast(
+                @"
+class test implements someName
+    number x
+    x = 5
+    square() : number s
+        s = x*x".Replace("    ", "\t")
+            );
+            InitializeInterpreter(files);
             RunInterpreter();
         }
 

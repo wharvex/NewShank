@@ -1,4 +1,5 @@
-﻿using Shank.ASTNodes;
+﻿using System;
+using Shank.ASTNodes;
 
 namespace Shank;
 
@@ -275,6 +276,36 @@ public class BuiltInFunctions
     }
 
     private static readonly Random R = new();
+
+    public static void Times(List<InterpreterDataType> parameters)
+    {
+        if (parameters.Count == 0 || !(parameters[0] is IntDataType intParam))
+        {
+            throw new ArgumentException("First parameter must be an IntDataType.");
+        }
+
+        int count = intParam.Value;
+        for (int i = 1; i <= count; i++)
+        {
+            //fix this
+            Console.WriteLine(i);
+        }
+    }
+
+    public static void Clone(List<InterpreterDataType> parameters)
+    {
+        List<string> stringRepresentation = new List<string>();
+
+        foreach (var param in parameters)
+        {
+            stringRepresentation.Add(param.ToString());
+        }
+
+        if (parameters[0] is StringDataType dest)
+        {
+            //fix this
+        }
+    }
 
     public static void Left(List<InterpreterDataType> parameters)
     {
