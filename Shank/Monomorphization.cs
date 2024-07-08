@@ -167,6 +167,7 @@ public class MonomorphizationVisitor(
             );
             if (programNode.BuiltinFunctions.ContainsKey(typedBuiltinIndex))
             {
+                Push(typedBuiltinIndex);
                 return;
             }
             var parameters = node.ParameterVariables.Select(declarationNode =>
