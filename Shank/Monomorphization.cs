@@ -410,10 +410,7 @@ public class MonomorphizationTypeVisitor(
 
         var record = new RecordNode(type.Name, type.ModuleName, [], [])
         {
-            Type =
-            {
-                MonomorphizedIndex = typedModuleIndex
-            }
+            Type = { MonomorphizedIndex = typedModuleIndex }
         };
         programNode.Records[typedModuleIndex] = record;
         var recordType = new RecordType(
