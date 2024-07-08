@@ -669,8 +669,8 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
     {
         var memory = function.Function.FirstParam;
         var isSet = function.Function.GetParam(1);
-        
-            var set =  builder.BuildExtractValue(memory, 2);
+
+        var set = builder.BuildExtractValue(memory, 2);
         builder.BuildStore(set, isSet);
         builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
     }
@@ -685,27 +685,43 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         var size = llvmTypeFromShankType.SizeOf;
         size = builder.BuildIntCast(size, LLVMTypeRef.Int32);
         var memory = builder.BuildMalloc(llvmTypeFromShankType);
-        var newReference = LLVMValueRef.CreateConstStruct([LLVMValueRef.CreateConstNull(LLVMTypeRef.CreatePointer(llvmTypeFromShankType, 0)), size, LLVMValueRef.CreateConstInt(LLVMTypeRef.Int1, 1)],
-            false);
+        var newReference = LLVMValueRef.CreateConstStruct(
+            [
+                LLVMValueRef.CreateConstNull(LLVMTypeRef.CreatePointer(llvmTypeFromShankType, 0)),
+                size,
+                LLVMValueRef.CreateConstInt(LLVMTypeRef.Int1, 1)
+            ],
+            false
+        );
         newReference = builder.BuildInsertValue(newReference, memory, 0);
         builder.BuildStore(newReference, param);
         builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
     }
+
     private void CompileBuiltinFreeMemory(BuiltInFunctionNode node, LLVMShankFunction function)
-        {
-            var param = function.Function.FirstParam;
-            ReferenceType type = (ReferenceType)node.ParameterVariables.First().Type;
-            var innerType = type.Inner;
-            var typeFromShankType = (LLVMTypeRef)context.GetLLVMTypeFromShankType(type);
-            var memory = builder.BuildLoad2(LLVMTypeRef.CreatePointer( typeFromShankType, 0), builder.BuildStructGEP2(typeFromShankType, param, 0));
-            builder.BuildFree(memory);
-            
-            var llvmTypeFromShankType = (LLVMTypeRef)context.GetLLVMTypeFromShankType(innerType);
-            var newReference = LLVMValueRef.CreateConstStruct([LLVMValueRef.CreateConstNull(LLVMTypeRef.CreatePointer(llvmTypeFromShankType, 0)),LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0) , LLVMValueRef.CreateConstInt(LLVMTypeRef.Int1, 0)],
-                false);
-            builder.BuildStore(newReference, param);
-            builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
-        }
+    {
+        var param = function.Function.FirstParam;
+        ReferenceType type = (ReferenceType)node.ParameterVariables.First().Type;
+        var innerType = type.Inner;
+        var typeFromShankType = (LLVMTypeRef)context.GetLLVMTypeFromShankType(type);
+        var memory = builder.BuildLoad2(
+            LLVMTypeRef.CreatePointer(typeFromShankType, 0),
+            builder.BuildStructGEP2(typeFromShankType, param, 0)
+        );
+        builder.BuildFree(memory);
+
+        var llvmTypeFromShankType = (LLVMTypeRef)context.GetLLVMTypeFromShankType(innerType);
+        var newReference = LLVMValueRef.CreateConstStruct(
+            [
+                LLVMValueRef.CreateConstNull(LLVMTypeRef.CreatePointer(llvmTypeFromShankType, 0)),
+                LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0),
+                LLVMValueRef.CreateConstInt(LLVMTypeRef.Int1, 0)
+            ],
+            false
+        );
+        builder.BuildStore(newReference, param);
+        builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
+    }
 
     private void CompileBuiltinWrite(BuiltInFunctionNode node, LLVMShankFunction function)
     {
