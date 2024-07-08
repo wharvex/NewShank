@@ -45,7 +45,6 @@ public class PrototypeCompiler(Context context, LLVMBuilderRef builder, LLVMModu
         context.AddFunction((TypedModuleIndex)node.MonomorphizedName, function);
     }
 
-
     public void CompileRecordPrototype(RecordNode node)
     {
         var llvmRecord = module.Context.CreateNamedStruct(node.Name);

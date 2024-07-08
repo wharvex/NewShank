@@ -72,10 +72,9 @@ public class VariableDeclarationNode : ASTNode
     public bool IsConstant { get; set; }
     public ExpressionNode? InitialValue { get; set; }
     public bool IsGlobal { get; set; } = false;
+
     public Index MonomorphizedName() =>
-        IsGlobal
-            ? new ModuleIndex(new NamedIndex(Name), ModuleName)
-            : new NamedIndex(Name);
+        IsGlobal ? new ModuleIndex(new NamedIndex(Name), ModuleName) : new NamedIndex(Name);
 
     public string GetNameSafe() =>
         Name ?? throw new InvalidOperationException("Expected Name to not be null");

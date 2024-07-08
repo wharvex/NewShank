@@ -10,7 +10,7 @@ public abstract class CallableNode : ASTNode
     public string Name { get; set; }
 
     public string? parentModuleName { get; set; }
-    public  Index MonomorphizedName { get; set; }
+    public Index MonomorphizedName { get; set; }
 
     public bool IsPublic { get; set; }
 

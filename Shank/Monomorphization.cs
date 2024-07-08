@@ -171,14 +171,21 @@ public class MonomorphizationVisitor(
             }
             var parameters = node.ParameterVariables.Select(declarationNode =>
             {
-                declarationNode.Accept(new MonomorphizationVisitor(instantiatedGenerics, nonMonomorphizedProgramNode, start, programNode) {expr =  expr});
+                declarationNode.Accept(
+                    new MonomorphizationVisitor(
+                        instantiatedGenerics,
+                        nonMonomorphizedProgramNode,
+                        start,
+                        programNode
+                    )
+                    {
+                        expr = expr
+                    }
+                );
                 return (VariableDeclarationNode)Pop();
             })
                 .ToList();
-            var function = new BuiltInFunctionNode(
-                node,
-                parameters
-            )
+            var function = new BuiltInFunctionNode(node, parameters)
             {
                 MonomorphizedName = typedBuiltinIndex
             };
@@ -227,11 +234,12 @@ public class MonomorphizationVisitor(
                         expr = expr
                     }
                 );
-        // TODO: less hacky solution to demodulize global variables, maybe only add them when they are used
+            // TODO: less hacky solution to demodulize global variables, maybe only add them when they are used
             foreach (var (key, value) in module.GlobalVariables)
             {
                 value.Accept(this);
-                programNode.GlobalVariables[(ModuleIndex)value.MonomorphizedName()] = (VariableDeclarationNode)Pop();
+                programNode.GlobalVariables[(ModuleIndex)value.MonomorphizedName()] =
+                    (VariableDeclarationNode)Pop();
             }
             Push(new FunctionCallNode(node, (TypedModuleIndex)Pop()));
         }
@@ -299,11 +307,12 @@ public class MonomorphizationVisitor(
     {
         start = node;
         // TODO: less hacky solution to demodulize global variables, maybe only add them when they are used
-            foreach (var (key, value) in node.GlobalVariables)
-            {
-                value.Accept(this);
-                programNode.GlobalVariables[(ModuleIndex)value.MonomorphizedName()] = (VariableDeclarationNode)Pop();
-            }
+        foreach (var (key, value) in node.GlobalVariables)
+        {
+            value.Accept(this);
+            programNode.GlobalVariables[(ModuleIndex)value.MonomorphizedName()] =
+                (VariableDeclarationNode)Pop();
+        }
         node.GetStartFunctionSafe().Accept(this);
     }
 

@@ -190,35 +190,38 @@ public class BuiltInFunctions
             new("allocateMemory", call)
             {
                 Line = 0,
-                ParameterVariables = [
+                ParameterVariables =
+                [
                     new VariableDeclarationNode()
                     {
                         Name = "refersTo",
                         Type = new ReferenceType(new GenericType("R")),
                         IsConstant = false
                     }
-                ], 
+                ],
                 GenericTypeParameterNames = ["R"],
                 Execute = AllocateMemory
             },
             new("freeMemory", call)
             {
                 Line = 0,
-                ParameterVariables = [
+                ParameterVariables =
+                [
                     new VariableDeclarationNode()
                     {
                         Name = "refersTo",
                         Type = new ReferenceType(new GenericType("R")),
                         IsConstant = false
                     }
-                ], 
+                ],
                 GenericTypeParameterNames = ["R"],
                 Execute = FreeMemory
             },
             new("isSet", call)
             {
                 Line = 0,
-                ParameterVariables = [
+                ParameterVariables =
+                [
                     new VariableDeclarationNode()
                     {
                         Name = "refersTo",
@@ -231,14 +234,15 @@ public class BuiltInFunctions
                         Type = new BooleanType(),
                         IsConstant = false
                     }
-                ], 
+                ],
                 GenericTypeParameterNames = ["R"],
                 Execute = IsSet
             },
             new("size", call)
             {
                 Line = 0,
-                ParameterVariables = [
+                ParameterVariables =
+                [
                     new VariableDeclarationNode()
                     {
                         Name = "refersTo",
@@ -251,7 +255,7 @@ public class BuiltInFunctions
                         Type = new IntegerType(),
                         IsConstant = false
                     }
-                ], 
+                ],
                 GenericTypeParameterNames = ["R"],
                 Execute = Size
             },

@@ -11,6 +11,7 @@ public class BuiltInFunctionNode : CallableNode
         : base(name, execute) { }
 
     public List<string> GenericTypeParameterNames { get; set; } = [];
+
     // public override LLVMValueRef Visit(
     //     LLVMVisitor visitor,
     //     Context context,

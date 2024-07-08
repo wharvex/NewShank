@@ -199,11 +199,7 @@ public class VunVsTypeCheckingVisitor(Type t, Dictionary<string, VariableDeclara
                 if (it.GetMember(m.Right.Name) is null)
                 {
                     throw new SemanticErrorException(
-                        "Member `"
-                            + m.Right.Name
-                            + "' not found on record `"
-                            + it
-                            + "'"
+                        "Member `" + m.Right.Name + "' not found on record `" + it + "'"
                     );
                 }
 
