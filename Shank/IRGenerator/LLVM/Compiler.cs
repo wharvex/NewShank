@@ -673,8 +673,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
             );
         var format = $"{string.Join(" ", formatList)}\n";
         var parameters = function
-            .Function.Params
-            .SelectMany<LLVMValueRef, LLVMValueRef>(
+            .Function.Params.SelectMany<LLVMValueRef, LLVMValueRef>(
                 p =>
                     _types(p.TypeOf) switch
                     {
