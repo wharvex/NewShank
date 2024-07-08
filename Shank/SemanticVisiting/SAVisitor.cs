@@ -215,12 +215,160 @@ public abstract class SAVisitor
     }
 }
 
-public class SemanticVisitor : SAVisitor
+public class ForNodeVisitor : SAVisitor
 {
-    public override ASTNode? Visit(ProgramNode node)
+    private Dictionary<string, VariableDeclarationNode> Variables;
+
+    public override ASTNode? Visit(FunctionNode node)
     {
-        node.Walk(new MathOpNodeOptimizer());
-        return node;
+        Variables = node.VariablesInScope;
+        return null;
+    }
+
+    public override ASTNode? Visit(ForNode node)
+    {
+        if (SemanticAnalysis.GetTypeOfExpression(node.Variable, Variables) is not IntegerType)
+        {
+            throw new SemanticErrorException(
+                $"For loop has a non-integer index called {node.Variable.Name}. This is not allowed.",
+                node.Variable
+            );
+        }
+
+        if (SemanticAnalysis.GetTypeOfExpression(node.From, Variables) is not IntegerType)
+        {
+            throw new SemanticErrorException(
+                $"For loop must have its ranges be integers!",
+                node.From
+            );
+        }
+
+        if (SemanticAnalysis.GetTypeOfExpression(node.To, Variables) is not IntegerType)
+        {
+            throw new SemanticErrorException(
+                $"For loop must have its ranges be integers!",
+                node.To
+            );
+        }
+
+        return null;
+    }
+}
+
+public class BooleanExpressionNodeVisitor : SAVisitor
+{
+    protected Dictionary<string, VariableDeclarationNode> Variables;
+
+    public override ASTNode? Visit(FunctionNode node)
+    {
+        Variables = node.VariablesInScope;
+        return null;
+    }
+
+    public override ASTNode? Visit(BooleanExpressionNode node)
+    {
+        if (
+            SemanticAnalysis.GetTypeOfExpression(node.Left, Variables).GetType()
+            != SemanticAnalysis.GetTypeOfExpression(node.Right, Variables).GetType()
+        )
+        {
+            throw new SemanticErrorException(
+                "Cannot compare expressions of different types.",
+                node
+            );
+        }
+        return null;
+    }
+}
+
+public class FunctionCallVisitor : SAVisitor
+{
+    protected Dictionary<string, CallableNode> Functions;
+
+    protected Dictionary<string, VariableDeclarationNode> Variables;
+
+    public override ASTNode? Visit(ModuleNode node)
+    {
+        Functions = node.Functions;
+        return null;
+    }
+
+    public override ASTNode? Visit(FunctionNode node)
+    {
+        Variables = node.VariablesInScope;
+        return null;
+    }
+}
+
+public class FunctionCallTypeVisitor : FunctionCallVisitor
+{
+    public override ASTNode? Visit(FunctionCallNode node)
+    {
+        var function = Functions[node.Name];
+        if (function is not BuiltInVariadicFunctionNode)
+        {
+            for (var index = 0; index < node.Arguments.Count; index++)
+            {
+                if (
+                    SemanticAnalysis.GetTypeOfExpression(node.Arguments[index], Variables).GetType()
+                    != function.ParameterVariables[index].Type.GetType()
+                )
+                {
+                    throw new SemanticErrorException(
+                        "Type of argument does not match what is required for the function",
+                        node
+                    );
+                }
+            }
+        }
+
+        return null;
+    }
+}
+
+public class FunctionCallCountVisitor : FunctionCallVisitor
+{
+    public override ASTNode? Visit(FunctionCallNode node)
+    {
+        var function = Functions[node.Name];
+
+        int defaultParameterCount = 0;
+        foreach (var variableDeclarationNode in Variables.Values)
+        {
+            if (variableDeclarationNode.IsDefaultValue)
+                defaultParameterCount++;
+        }
+
+        if (function is not BuiltInVariadicFunctionNode)
+        {
+            if (
+                node.Arguments.Count < function.ParameterVariables.Count - defaultParameterCount
+                || node.Arguments.Count > function.ParameterVariables.Count
+            )
+                throw new SemanticErrorException(
+                    "Function call does not have a valid amount of arguments for the function",
+                    node
+                );
+        }
+
+        return null;
+    }
+}
+
+public class FunctionCallDefaultVisitor : FunctionCallVisitor
+{
+    public override ASTNode? Visit(FunctionCallNode node)
+    {
+        // Adds the default values to the funciton call to help with the compiler
+        var function = Functions[node.Name];
+        if (function.ParameterVariables.Count - node.Arguments.Count > 0)
+        {
+            for (int i = node.Arguments.Count; i < function.ParameterVariables.Count; i++)
+            {
+                node.Arguments.Add((ExpressionNode)function.ParameterVariables[i].InitialValue);
+            }
+        }
+        return null;
     }
 }
 

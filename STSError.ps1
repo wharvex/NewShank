@@ -49,7 +49,7 @@ function st2 {
         $args_list = -split $args_str
         $args_list[1] = "$($ds)$($args_list[1])"
 
-        $shank_files = Get-ChildItem $args_list[1] -r -filter *.shank
+        $shank_files = Get-ChildItem $args_list[1] -r
 
         foreach ( $sf in $shank_files )
         {

@@ -22,7 +22,7 @@ public class WhileNode : StatementNode
         Expression = copy.Expression;
     }
 
-    public BooleanExpressionNode Expression { get; init; }
+    public BooleanExpressionNode Expression { get; set; }
     public List<StatementNode> Children { get; set; }
 
     public override object[] returnStatementTokens()
@@ -68,4 +68,20 @@ public class WhileNode : StatementNode
     }
 
     public override void Accept(Visitor v) => v.Visit(this);
+
+    public override ASTNode? Walk(SAVisitor v)
+    {
+        var temp = v.Visit(this);
+        if (temp != null)
+            return temp;
+
+        Expression = (BooleanExpressionNode)(Expression.Walk(v) ?? Expression);
+
+        for (var index = 0; index < Children.Count; index++)
+        {
+            Children[index] = (StatementNode)(Children[index].Walk(v) ?? Children[index]);
+        }
+
+        return v.PostWalk(this);
+    }
 }

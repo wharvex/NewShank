@@ -38,7 +38,6 @@ public class SemanticAnalysisVisitor : Visitor
 
     public override void Visit(IntNode node)
     {
-        Console.WriteLine("IntNode visited");
         if (GetTypeOfExpression(node).GetType() != typeof(IntegerType))
         {
             throw new SemanticErrorException("Integer is not an integer", node);
@@ -47,7 +46,6 @@ public class SemanticAnalysisVisitor : Visitor
 
     public override void Visit(FloatNode node)
     {
-        Console.WriteLine("FloatNode visited");
         if (GetTypeOfExpression(node).GetType() != typeof(RealType))
         {
             throw new SemanticErrorException("Real is not an real", node);
@@ -56,8 +54,6 @@ public class SemanticAnalysisVisitor : Visitor
 
     public override void Visit(VariableUsagePlainNode node)
     {
-        Console.WriteLine("VariableUsagePlainNode visited");
-
         // Checks if the variable has been declared or not
         if (!variableStack.Peek().ContainsKey(node.Name))
         {
@@ -67,7 +63,6 @@ public class SemanticAnalysisVisitor : Visitor
 
     public override void Visit(CharNode node)
     {
-        Console.WriteLine("CharNode visited");
         if (GetTypeOfExpression(node).GetType() != typeof(CharacterType))
         {
             throw new SemanticErrorException("Character is not an character", node);
@@ -76,7 +71,6 @@ public class SemanticAnalysisVisitor : Visitor
 
     public override void Visit(BoolNode node)
     {
-        Console.WriteLine("BoolNode visited");
         if (GetTypeOfExpression(node).GetType() != typeof(BooleanType))
         {
             throw new SemanticErrorException("Boolean is not an boolean", node);
@@ -85,7 +79,6 @@ public class SemanticAnalysisVisitor : Visitor
 
     public override void Visit(StringNode node)
     {
-        Console.WriteLine("StringNode visited");
         if (GetTypeOfExpression(node).GetType() != typeof(StringType))
         {
             throw new SemanticErrorException("String is not an string", node);
@@ -94,8 +87,6 @@ public class SemanticAnalysisVisitor : Visitor
 
     public override void Visit(MathOpNode node)
     {
-        Console.WriteLine("MathOpNode visited");
-
         node.Left.Accept(this);
         node.Right.Accept(this);
 
@@ -105,22 +96,17 @@ public class SemanticAnalysisVisitor : Visitor
 
     public override void Visit(BooleanExpressionNode node)
     {
-        Console.WriteLine("BooleanExpressionNode visited");
-
         node.Left.Accept(this);
         node.Right.Accept(this);
     }
 
     public override void Visit(RecordNode node)
     {
-        Console.WriteLine("RecordNode visited");
         //throw new NotImplementedException();
     }
 
     public override void Visit(FunctionCallNode node)
     {
-        Console.WriteLine("FunctionCallNode visited");
-
         ASTNode calledFunction;
         //Checks if the function exists
         if (StartModule.getFunctions().ContainsKey(node.Name))
@@ -221,7 +207,6 @@ public class SemanticAnalysisVisitor : Visitor
 
     public override void Visit(FunctionNode node)
     {
-        Console.WriteLine("FunctionNode visited");
         Functions.Add(node.Name, node);
 
         // try
@@ -263,13 +248,11 @@ public class SemanticAnalysisVisitor : Visitor
 
     public override void Visit(WhileNode node)
     {
-        Console.WriteLine("WhileNode visited");
         //throw new NotImplementedException();
     }
 
     public override void Visit(AssignmentNode node)
     {
-        Console.WriteLine("AssignmentNode visited");
         node.Target.Accept(this);
         node.Expression.Accept(this);
         // if (
@@ -527,13 +510,11 @@ public class SemanticAnalysisVisitor : Visitor
 
     public override void Visit(EnumNode node)
     {
-        Console.WriteLine("EnumNode visited");
         //throw new NotImplementedException();
     }
 
     public override void Visit(ModuleNode node)
     {
-        Console.WriteLine("ModuleNode visited");
         //Modules.Add(node.Name, node);
 
         if (node.Enums.Count > 0)
@@ -569,20 +550,16 @@ public class SemanticAnalysisVisitor : Visitor
 
     public override void Visit(IfNode node)
     {
-        Console.WriteLine("IfNode visited");
         //throw new NotImplementedException();
     }
 
     public override void Visit(RepeatNode node)
     {
-        Console.WriteLine("RepeatNode visited");
         //throw new NotImplementedException();
     }
 
     public override void Visit(VariableDeclarationNode node)
     {
-        Console.WriteLine("VariableDeclarationNode visited");
-
         // Makes sure that the value being put into the variable matches the type of the variable
         if (node.InitialValue != null)
         {
@@ -602,7 +579,6 @@ public class SemanticAnalysisVisitor : Visitor
 
     public override void Visit(ProgramNode node)
     {
-        Console.WriteLine("ProgramNode visited");
         program = node;
         StartModule = node.GetStartModuleSafe();
 

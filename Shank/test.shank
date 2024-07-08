@@ -1,5 +1,9 @@
 define start()
-	tester 4 + (0 + 0)
+	tester 4
     
 define tester(a : integer)
-    write a
+variables i : integer = 1
+    repeat
+        write i
+        i := i + 1
+    until i > 10
