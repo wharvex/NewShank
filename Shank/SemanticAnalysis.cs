@@ -393,8 +393,6 @@ public class SemanticAnalysis
     )
     {
         functionCallNode.FunctionDefinitionModule = fn.parentModuleName!;
-        // TODO: overloads and default parameters might have different arrity
-        // TODO: works for Default.
 
         foreach (
             var (
@@ -407,6 +405,7 @@ public class SemanticAnalysis
             if (param.IsDefaultValue && index > args.Count - 1)
                 args.Add((ExpressionNode)param.InitialValue);
         }
+
         if (args.Count != fn.ParameterVariables.Count)
             throw new SemanticErrorException(
                 "For function "
@@ -417,6 +416,8 @@ public class SemanticAnalysis
                     + fn.ParameterVariables.Count
                     + " are required."
             );
+        // TODO: overloads and default parameters might have different arrity
+        // TODO: works for Default. overloads still a WIP
         var selectMany = fn.ParameterVariables.Zip(args)
             .SelectMany(paramAndArg =>
             {
