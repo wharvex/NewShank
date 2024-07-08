@@ -148,9 +148,7 @@ public class Interpreter
         ModuleNode? maybeModule = null
     )
     {
-        var variables = GetVuopTestFlag()
-            ? NewGetVariablesDictionary(fn, parametersIDTs, maybeModule)
-            : NewNewGetVariablesDictionary(fn, parametersIDTs);
+        var variables = NewNewGetVariablesDictionary(fn, parametersIDTs);
 
         if (fn is TestNode)
         {

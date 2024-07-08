@@ -12,6 +12,7 @@ public class VariableDeclarationNode : ASTNode
 {
     public string? Name { get; set; }
     public string? ModuleName { get; set; }
+    public string? EnumTypeName { private get; set; }
 
     public bool IsDefaultValue { get; set; }
 
@@ -118,6 +119,12 @@ public class VariableDeclarationNode : ASTNode
     // {
     //    return records[GetUnknownTypeSafe()].GetFromMembersByNameSafe(memberName).Type;
     // }
+
+    public bool TryGetEnumTypeName(out string? typeName)
+    {
+        typeName = EnumTypeName;
+        return EnumTypeName is not null;
+    }
 
     public bool EqualsForOverload(VariableDeclarationNode vn)
     {

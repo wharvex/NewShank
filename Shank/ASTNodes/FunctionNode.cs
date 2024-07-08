@@ -52,6 +52,7 @@ public class FunctionNode : CallableNode
     }
 
     //DEPRECATED
+    [Obsolete("Don't use this property. Overloads will be handled differently (WIP).")]
     public string OverloadNameExt { get; set; } = "";
 
     public List<VariableDeclarationNode> LocalVariables { get; set; } = [];
@@ -62,6 +63,7 @@ public class FunctionNode : CallableNode
     public List<string>? GenericTypeParameterNames { get; set; }
 
     public Dictionary<string, VariableDeclarationNode> VariablesInScope { get; set; } = [];
+    public Dictionary<string, List<VariableDeclarationNode>> EnumsInScope { get; set; } = [];
 
     public void ApplyActionToTests(
         Action<TestNode, List<InterpreterDataType>, ModuleNode?> action,

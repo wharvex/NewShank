@@ -57,10 +57,10 @@ function st {
 
         foreach ( $sf in $shank_files )
         {
-        Write-Host "`n**** File Path $progress ****`n" -ForegroundColor green
-        Write-Host $sf.FullName
-        Write-Host "`n**** File Contents $progress ****`n" -ForegroundColor cyan
-        Get-Content $sf.FullName
+            Write-Host "`n**** File Path $progress ****`n" -ForegroundColor green
+            Write-Host $sf.FullName
+            Write-Host "`n**** File Contents $progress ****`n" -ForegroundColor cyan
+            Get-Content $sf.FullName
         }
         Write-Host "`n**** Command $progress ****`n" -ForegroundColor magenta
         "dotnet run $($args_list -join ' ') --project $sp"

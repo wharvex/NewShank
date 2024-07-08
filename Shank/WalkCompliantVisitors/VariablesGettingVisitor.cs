@@ -11,11 +11,17 @@ public class VariablesGettingVisitor : WalkCompliantVisitor
         set => _currentModuleName = value;
     }
     private string? CurrentFunctionName { get; set; }
+    private string? CurrentEnumName { get; set; }
 
     public Dictionary<
         (string, string?),
         List<VariableDeclarationNode>
     > VariableDeclarations { get; set; } = [];
+
+    public Dictionary<
+        string,
+        List<VariableDeclarationNode>
+    > VariableDeclarationsFromEnums { get; set; } = [];
 
     public override ASTNode Visit(ProgramNode n, out bool shortCircuit)
     {
@@ -32,6 +38,7 @@ public class VariablesGettingVisitor : WalkCompliantVisitor
 
     public override ASTNode Visit(EnumNode n, out bool shortCircuit)
     {
+        CurrentEnumName = n.TypeName;
         shortCircuit = false;
         return n;
     }
