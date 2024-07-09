@@ -171,12 +171,8 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
             LLVMArray newValue = (LLVMArray)value;
             var elementType = (LLVMTypeRef)
                 context.GetLLVMTypeFromShankType(((LLVMArray)value).Inner());
-            var array = builder.BuildStructGEP2(
-                newValue.TypeRef, 
-                value.ValueRef,
-                0
-            );
-            var a = builder.BuildLoad2(LLVMTypeRef.CreatePointer( elementType,0), array);
+            var array = builder.BuildStructGEP2(newValue.TypeRef, value.ValueRef, 0);
+            var a = builder.BuildLoad2(LLVMTypeRef.CreatePointer(elementType, 0), array);
             a = builder.BuildInBoundsGEP2(elementType, a, [CompileExpression(node.Extension)]);
             return (load ? builder.BuildLoad2(elementType, a) : a);
         }
@@ -255,7 +251,8 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         // and the way we currently define string constants, they must not be mutated
         // one problem is that constant llvm strings are null terminated
         var stringPointer = builder.BuildArrayMalloc(
-            LLVMTypeRef.Int8, LLVMValueRef.CreateConstInt( LLVMTypeRef.Int32,  (ulong)node.Value.Length)
+            LLVMTypeRef.Int8,
+            LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, (ulong)node.Value.Length)
         );
         builder.BuildCall2(
             context.CFuntions.memcpy.TypeOf,
@@ -586,7 +583,8 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         var name = node.GetNameSafe();
         // TODO: only alloca when !isConstant
 
-        var llvmTypeFromShankType = context.GetLLVMTypeFromShankType(node.Type) ?? throw new Exception("null type");
+        var llvmTypeFromShankType =
+            context.GetLLVMTypeFromShankType(node.Type) ?? throw new Exception("null type");
         LLVMValueRef v = builder.BuildAlloca(
             // isVar is false, because we are already creating it using alloca which makes it var
             llvmTypeFromShankType,
@@ -595,14 +593,20 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         // TODO: preallocate records to (might need to be recursive)
         if (node.Type is ArrayType a)
         {
-            var arraySize = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32,  (ulong)a.Range.To);
-            var arrayAllocation =
-                builder.BuildArrayAlloca((LLVMTypeRef)context.GetLLVMTypeFromShankType(a.Inner),arraySize);
-            var array = builder.BuildInsertValue(LLVMValueRef.CreateConstStruct([
-                LLVMValueRef.CreateConstNull(arrayAllocation.TypeOf), arraySize
-            ], false),arrayAllocation, 0);
+            var arraySize = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, (ulong)a.Range.To);
+            var arrayAllocation = builder.BuildArrayAlloca(
+                (LLVMTypeRef)context.GetLLVMTypeFromShankType(a.Inner),
+                arraySize
+            );
+            var array = builder.BuildInsertValue(
+                LLVMValueRef.CreateConstStruct(
+                    [LLVMValueRef.CreateConstNull(arrayAllocation.TypeOf), arraySize],
+                    false
+                ),
+                arrayAllocation,
+                0
+            );
             builder.BuildStore(array, v);
-
         }
         var variable = context.NewVariable(node.Type);
         context.AddVariable(node.MonomorphizedName(), variable(v, !node.IsConstant));
