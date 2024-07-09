@@ -140,6 +140,8 @@ public class LLVMStruct(LLVMValueRef valueRef, bool isMutable, LLVMStructType ty
 public class LLVMReference(LLVMValueRef valueRef, bool isMutable, LLVMReferenceType typeRef)
     : LLVMValue(valueRef, isMutable, typeRef.LlvmTypeRef)
 {
+    public LLVMReferenceType TypeOf { get; } = typeRef;
+
     public static LLVMValue New(LLVMValueRef valueRef, bool isMutable, LLVMReferenceType type) =>
         new LLVMReference(valueRef, isMutable, type);
 }
@@ -157,7 +159,10 @@ public class LLVMStructType(RecordType type, LLVMTypeRef llvmtype, List<string> 
 }
 
 public class LLVMReferenceType(LLVMStructType inner, LLVMTypeRef typeRef)
-    : LLVMType(inner.Type, typeRef) { }
+    : LLVMType(inner.Type, typeRef)
+{
+    public LLVMStructType Inner { get; } = inner;
+}
 
 public class LLVMArrayType(ArrayType type, LLVMTypeRef llvmtype) : LLVMType(type, llvmtype)
 {

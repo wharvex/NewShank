@@ -181,6 +181,13 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
 
         if (node.ExtensionType == VariableUsagePlainNode.VrnExtType.RecordMember)
         {
+            if (value is LLVMReference r)
+            {
+                var inner = builder.BuildStructGEP2(r.TypeRef, r.ValueRef, 0);
+                inner = builder.BuildLoad2(LLVMTypeRef.CreatePointer(r.TypeOf.Inner.LlvmTypeRef, 0), inner);
+                value = new LLVMStruct(inner, r.IsMutable, r.TypeOf.Inner);
+            }
+
             LLVMStruct varType = (LLVMStruct)value;
             var varField = (VariableUsagePlainNode)node.GetExtensionSafe();
             var fieldType = (LLVMTypeRef)
@@ -190,7 +197,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
                 value.ValueRef,
                 (uint)varType.Access(varField.Name)
             );
-            return (load ? builder.BuildLoad2(fieldType, structField) : structField);
+            return load ? builder.BuildLoad2(fieldType, structField) : structField;
         }
         // else if (node.ExtensionType == VariableUsagePlainNode.VrnExtType.Enum)
         // {
@@ -201,7 +208,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
 
         if (node.ExtensionType == VariableUsagePlainNode.VrnExtType.None)
         {
-            return (load ? builder.BuildLoad2(value.TypeRef, value.ValueRef) : value.ValueRef);
+            return load ? builder.BuildLoad2(value.TypeRef, value.ValueRef) : value.ValueRef;
         }
 
         throw new NotImplementedException();
