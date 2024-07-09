@@ -40,12 +40,24 @@ public class OutputHelper
         outputFile.WriteLine(output);
     }
 
+    /// <summary>
+    ///     <para> 
+    ///         Method <c>DebugPrintTxt</c> creates a file to hold our debug text and writes the output provided to the file
+    ///     </para>
+    /// </summary>
+    /// <param name="output">The output to be put in the file destination</param>
+    /// <param name="suffix">A suffix added to the file name</param>
+    /// <param name="append">Whether or not to append the doc path to the name of the file</param>
+
     public static void DebugPrintTxt(string output, string suffix, bool append = false)
     {
+        //we are naming and creating the output file
         using var outputFile = new StreamWriter(
             Path.Combine(DocPath, "ShankDebugOutput_" + suffix + ".txt"),
             append
         );
+
+        //output text is written to the file
         outputFile.WriteLine(output);
     }
 }

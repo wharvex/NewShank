@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.ComponentModel;
+using System.Diagnostics;
 using Shank.ASTNodes;
 
 namespace Shank;
@@ -590,6 +591,14 @@ public class Parser
         return ret;
     }
 
+    /// <summary>
+    ///     <para>
+    ///         Method <c>BodyFunction</c> 
+    ///     </para>
+    /// </summary>
+    /// <param name="function"></param>
+    /// <param name="moduleName"></param>
+
     private void BodyFunction(FunctionNode function, string moduleName)
     {
         StatementsBody(function.Statements, moduleName);
@@ -610,6 +619,12 @@ public class Parser
         Body(bodyContents, parentModule, GetVariablesRecord);
         return bodyContents.Cast<VariableDeclarationNode>().ToList();
     }
+
+    /// <summary>
+    ///     Method <c>StatementsBody</c> parses and returns a statement body
+    /// </summary>
+    /// <param name="statements">The template for the list of statements contained within the StatementBody</param>
+    /// <param name="moduleName">The name of the parent module to which the statement body belongs</param>
 
     private void StatementsBody(List<StatementNode> statements, string moduleName)
     {
@@ -642,8 +657,17 @@ public class Parser
         RequiresToken(Token.TokenType.Dedent);
     }
 
+    /// <summary>
+    ///     <para> 
+    ///         Method <c>Statements</c> parses and returns a list of statements
+    ///     </para>
+    /// </summary>
+    /// <param name="statements">Our template provided to build our list of statements on</param>
+    /// <param name="moduleName">The name of the parent module to which the list of statements belongs</param>
     private void Statements(List<StatementNode> statements, string moduleName)
     {
+
+        //parse while we have more statements
         do
         {
             var s = Statement(moduleName);
@@ -657,6 +681,14 @@ public class Parser
         } while (true);
     }
 
+
+    /// <summary>
+    ///     <para> 
+    ///         Method <c>Statement</c> parses and returns a statement based on the type
+    ///     </para>
+    /// </summary>
+    /// <param name="moduleName">The name of the parent module to which the statement belongs</param>
+    /// <returns>Assignment or While or Repeat or For or If or FunctionCall</returns>
     private StatementNode? Statement(string moduleName)
     {
         return (
@@ -957,18 +989,34 @@ public class Parser
         return new Range(fromValue, toValue);
     }
 
+    /// <summary>
+    ///     <para> 
+    ///         Method <c>FunctionCall</c> parses and returns a function call statement
+    ///     </para>
+    /// </summary>
+    /// <param name="moduleName">The name of the parent module to which the function call belongs</param>
+    /// <returns>FunctionCallNode containing the contents of the function call statement</returns>
+    /// <exception cref="SyntaxErrorException">If an invalid constant or expression was found for a non-variable argument</exception>
     private FunctionCallNode? FunctionCall(string moduleName)
     {
+        //parse the identifier
         var name = MatchAndRemove(Token.TokenType.Identifier);
         if (name == null)
             return null;
+
+        //parse the arguments
         var arguments = new List<ExpressionNode>();
+
         int lineNum = name.LineNumber;
+
         while (ExpectsEndOfLine() == false)
         {
+            //check to see if it is a variable
             var isVariable = MatchAndRemove(Token.TokenType.Var) != null;
+
             if (!isVariable)
             {
+                //add the constant or expression to the list if not a variable
                 var e = Expression(moduleName);
                 if (e == null)
                     throw new SyntaxErrorException(
@@ -981,6 +1029,7 @@ public class Parser
             }
             else
             {
+                //add the variable to list if is a variable
                 var variable = GetVariableUsagePlainNode(moduleName);
                 variable.IsVariableFunctionCall = true;
                 arguments.Add(variable);
@@ -989,25 +1038,54 @@ public class Parser
             MatchAndRemove(Token.TokenType.Comma);
         }
 
+        //construct the function call
         var retVal = new FunctionCallNode(name.Value != null ? name.Value : string.Empty);
         retVal.Arguments.AddRange(arguments);
         retVal.LineNum = lineNum;
+
         return retVal;
     }
 
+    /// <summary>
+    ///     <para> 
+    ///         Method <c>If</c> parses and returns an if statement
+    ///     </para>
+    /// </summary>
+    /// <param name="moduleName">The name of the parent module to which the if statement belongs</param>
+    /// <returns>IfNode containing the contenets of the if statement</returns>
+    /// <exception cref="SyntaxErrorException">
+    ///     <list type="bullet"> 
+    ///         <item> 
+    ///             <description>A boolean expression was not found within the if conditional</description>
+    ///         </item>
+    ///         <item> 
+    ///             <description>A "then" keyword does not follow the if conditional</description>
+    ///         </item>
+    ///     </list>
+    /// </exception>
     private StatementNode? If(string moduleName)
     {
+        //parse the keyword
         if (MatchAndRemove(Token.TokenType.If) == null)
             return null;
+
+        //parse the conditional
         var boolExp = BooleanExpression(moduleName);
+
         if (boolExp == null)
             throw new SyntaxErrorException("Expected a boolean expression in the if.", Peek(0));
+
+        //parse "then" keyword
         if (MatchAndRemove(Token.TokenType.Then) == null)
             throw new SyntaxErrorException("Expected a then in the if.", Peek(0));
 
+        //body statements are on the next line
         RequiresEndOfLine();
 
+        //template for our body of statements
         var body = new List<StatementNode>();
+
+        //parse our body of statements
         StatementsBody(body, moduleName);
         return new IfNode(boolExp, body, ElseAndElseIf(moduleName));
     }
@@ -1041,51 +1119,130 @@ public class Parser
         return null;
     }
 
+    /// <summary>
+    ///     <para> 
+    ///         Method <c>While</c> parses and returns a while statement
+    ///     </para>
+    /// </summary>
+    /// <param name="moduleName">The name of the parent module to which the while statement belongs</param>
+    /// <returns>A WhileNode containing the contents of the while statement</returns>
+
     private StatementNode? While(string moduleName)
     {
+        //parse the keyword
         if (MatchAndRemove(Token.TokenType.While) == null)
             return null;
+
+        //parse the boolean expression
         var boolExp = BooleanExpression(moduleName);
 
+        //make sure we put the body content on a new line
         RequiresEndOfLine();
 
+        //template for our parsed statements
         var statements = new List<StatementNode>();
+
+        //parse the statments using the template
         StatementsBody(statements, moduleName);
+
         return new WhileNode(boolExp, statements);
     }
 
+    /// <summary>
+    ///     <para> 
+    ///         Method <c>Repeat</c> parses and returns a repeat statement
+    ///     </para>
+    /// </summary>
+    /// <param name="moduleName">The name of hte parent module to which the repeat statement belongs</param>
+    /// <returns>A RepeatNode containing the contents of the repeat statement</returns>
+    /// <exception cref="SyntaxErrorException">
+    ///     <list type="bullet"> 
+    ///         <item> 
+    ///             <description>An until statement does not exist at the end of the repeat</description>
+    ///         </item>
+    ///         <item> 
+    ///             <description>A boolean expression does not follow an "until" keyword</description>
+    ///         </item>
+    ///     </list>
+    /// </exception>
+
     private StatementNode? Repeat(string moduleName)
     {
+        //parse the keyword
         if (MatchAndRemove(Token.TokenType.Repeat) == null)
             return null;
 
+        //make sure our statements are on the next line
         RequiresEndOfLine();
 
+        //template for our statements
         var statements = new List<StatementNode>();
+
+        //parse the body full of statements
         StatementsBody(statements, moduleName);
+
+        //find the UNTIL keyword
         if (MatchAndRemove(Token.TokenType.Until) == null)
             throw new SyntaxErrorException("Expected an until to end the repeat.", Peek(0));
+
+        //parse a boolean expression
         var boolExp = BooleanExpression(moduleName);
+
         if (boolExp == null)
             throw new SyntaxErrorException(
                 "Expected a boolean expression at the end of the repeat.",
                 Peek(0)
             );
 
+        //make sure other statements are on lines following 
         RequiresEndOfLine();
 
         return new RepeatNode(boolExp, statements);
     }
 
+    /// <summary>
+    ///     <para> 
+    ///         Method <c>For</c> parses and returns a for statement
+    ///     </para>
+    /// </summary>
+    /// <param name="moduleName">The name of the parent module to which the for statement belongs</param>
+    /// <returns>ForNode containing the contents of the for statement</returns>
+    /// <exception cref="SyntaxErrorException">
+    ///     <list type="bullet"> 
+    ///         <item> 
+    ///             <description>A variable is not used in the for statement's conditional</description>
+    ///         </item>
+    ///         <item> 
+    ///             <description>A "from" keyword is not present in the for statement's conditional</description>
+    ///         </item>
+    ///         <item> 
+    ///             <description>A lower bound expression is not present in the for statement's conditional </description>
+    ///         </item>
+    ///         <item> 
+    ///             <description>A "to" keyword is not present in the for statement's conditional</description>
+    ///         </item>
+    ///         <item> 
+    ///             <description>An upper bound expression is not present in the for statement's conditional</description>
+    ///         </item>
+    ///     </list>
+    /// </exception>
+
     private StatementNode? For(string moduleName)
     {
+        //parse the keyword
         if (MatchAndRemove(Token.TokenType.For) == null)
             return null;
+
+        //get the variable to be used for the for conditionals
         var indexVariable = GetVariableUsagePlainNode(moduleName);
         if (indexVariable == null)
             throw new SyntaxErrorException("Expected a variable in the for statement.", Peek(0));
+
+       
         if (MatchAndRemove(Token.TokenType.From) == null)
             throw new SyntaxErrorException("Expected a from in the for statement.", Peek(0));
+
+        //parse the lower bound's expression
         var fromExp = Expression(moduleName);
         if (fromExp == null)
             throw new SyntaxErrorException(
@@ -1094,6 +1251,8 @@ public class Parser
             );
         if (MatchAndRemove(Token.TokenType.To) == null)
             throw new SyntaxErrorException("Expected a to in the for statement.", Peek(0));
+
+        //parse the upper bound's expression
         var toExp = Expression(moduleName);
         if (toExp == null)
             throw new SyntaxErrorException(
@@ -1101,21 +1260,53 @@ public class Parser
                 Peek(0)
             );
 
+        //require the body statements to be on the next line 
         RequiresEndOfLine();
 
+        //template for our body statements
         var statements = new List<StatementNode>();
+
+        //parse the statements using our template
         StatementsBody(statements, moduleName);
         return new ForNode(indexVariable, fromExp, toExp, statements);
     }
 
+    /// <summary>
+    ///     <para> 
+    ///         Method <c>BooleanExpression</c> parses an returns an expression but only if it is a boolean expression
+    ///     </para>
+    /// </summary>
+    /// <param name="moduleName">The parent module's name to whcih the boolean expression belongs to</param>
+    /// <returns>A BooleanExpressionNode containing the boolean expression's contents</returns>
+    /// <exception cref="SyntaxErrorException">If the expression parsed does not match the format of a boolean expression</exception>
     private BooleanExpressionNode BooleanExpression(string moduleName)
     {
+        //expression is parsed
         var expression = Expression(moduleName);
+        
+        //check to see if the expression matches a boolean expression format
         if (expression is not BooleanExpressionNode ben)
             throw new SyntaxErrorException("Expected a boolean expression", Peek(0));
         return ben;
     }
 
+    /// <summary>
+    ///     <para> 
+    ///         Method <c>Assignment</c> parses an assignment if it is present
+    ///     </para>
+    /// </summary>
+    /// <param name="moduleName">The name of the parent module containing the assignment</param>
+    /// <returns>a new AssignmentNode else null</returns>
+    /// <exception cref="SyntaxErrorException">
+    ///     <list type="bullet"> 
+    ///         <item> 
+    ///             <description>A valid identifier is not found</description>
+    ///         </item>
+    ///         <item> 
+    ///             <description>A valid expression is not found</description>
+    ///         </item>
+    ///     </list>
+    /// </exception>
     private StatementNode? Assignment(string moduleName)
     {
         if (
@@ -1125,13 +1316,18 @@ public class Parser
                 or Token.TokenType.Dot
         )
         {
+            //get the variable side
             var target = GetVariableUsagePlainNode(moduleName);
             if (target == null)
                 throw new SyntaxErrorException(
                     "Found an assignment without a valid identifier.",
                     Peek(0)
                 );
+
+            //parse the assignment operator
             MatchAndRemove(Token.TokenType.Assignment);
+
+            //parse the expression side
             var expression = ParseExpressionLine(moduleName);
             if (expression == null)
                 throw new SyntaxErrorException(
@@ -1146,8 +1342,26 @@ public class Parser
         }
     }
 
+    /// <summary>
+    ///     <para> 
+    ///         Method <c>NewAssignment</c> parses an assignment if it is present
+    ///     </para>
+    /// </summary>
+    /// <param name="moduleName">The name of the parent module to which the assigment belongs</param>
+    /// <returns>the new AssignmentNode containing its contents else null</returns>
+    /// <exception cref="SyntaxErrorException">
+    ///     <list type="bullet"> 
+    ///         <item> 
+    ///             <description>If a variable usage was expected but not found</description>
+    ///         </item>
+    ///         <item> 
+    ///             <description>If an expression was expected but not found</description>
+    ///         </item>
+    ///     </list>
+    /// </exception>
     private StatementNode? NewAssignment(string moduleName)
     {
+        //output for the new assignment 
         OutputHelper.DebugPrintTxt("hello from new assignment", "vuop", true);
         OutputHelper.DebugPrintTxt(
             "Assignment token found on line "
@@ -1157,28 +1371,41 @@ public class Parser
             "vuop",
             true
         );
+       
+        //makes sure our assignment is on the current line being parsed 
         if (!FindBeforeEol(Token.TokenType.Assignment))
         {
             return null;
         }
 
+        //the variable is parsed
         var target =
             GetVariableUsageNode(moduleName)
             ?? throw new SyntaxErrorException("Expected variable usage", Peek(0));
 
+        //the assignment (:=) is parsed
         RequiresToken(Token.TokenType.Assignment);
 
+        //the expression is parsed
         var expression =
             ParseExpressionLine(moduleName)
             ?? throw new SyntaxErrorException("Expected expression", Peek(0));
 
+        //new assignment node containing the contents
         return new AssignmentNode(target, expression, true);
     }
 
+    /// <summary>
+    ///     Method <c>FindBeforeEol</c> checks to see if the token matching the type passed in is before the next EndOfLine token 
+    /// </summary>
+    /// <param name="tokenType">The desired token's type</param>
+    /// <returns>true if found or else false</returns>
     private bool FindBeforeEol(Token.TokenType tokenType)
     {
         var i = 0;
         var next = Peek(i);
+
+        //looks to see if the required token is before an the end of the line 
         while (next is not null && next.Type != Token.TokenType.EndOfLine)
         {
             if (next.Type == tokenType)
@@ -1750,8 +1977,16 @@ public class Parser
         return retVal;
     }
 
+    /// <summary>
+    ///     <para> 
+    ///         Method <c>Expression</c> parses and returns an expression
+    ///     </para>
+    /// </summary>
+    /// <param name="moduleName">The name of the parent module to which the expression belongs</param>
+    /// <returns>An ExpressionRHS object containing the expression contents</returns>
     public ExpressionNode? Expression(string moduleName)
     {
+        //get the term in the expression 
         var lt = Term(moduleName);
         if (lt == null)
             return null;
@@ -1848,8 +2083,16 @@ public class Parser
         }
     }
 
+    /// <summary>
+    ///     <para> 
+    ///         Method <c>Term</c> parses and returns a term 
+    ///     </para>
+    /// </summary>
+    /// <param name="moduleName">The name of the parent module to which the term belongs</param>
+    /// <returns>A TermRHS object containing the terms contents</returns>
     private ExpressionNode? Term(string moduleName)
     {
+        //get the factor in the term
         var lt = Factor(moduleName);
         if (lt == null)
             return null;
@@ -1888,8 +2131,26 @@ public class Parser
         }
     }
 
+    /// <summary>
+    ///     <para>
+    ///         Method <c>Factor</c> parses a factor and returns it 
+    ///     </para>
+    /// </summary>
+    /// <param name="moduleName">The name of the parent module to which the factor belongs</param>
+    /// <returns>ExpressionRHS or VariableUsageNode or StringNode or CharNode or BoolNode or FloatNode or IntNode</returns>
+    /// <exception cref="SyntaxErrorException">
+    ///     <list type="bullet"> 
+    ///         <item>
+    ///             <description>If a left parenthesis is not followed by a right parenthesis in a parenthesis enclosed expression</description>
+    ///         </item>
+    ///         <item> 
+    ///             <description>If a character constant is invalid</description>
+    ///         </item>
+    ///     </list>
+    /// </exception>
     private ExpressionNode? Factor(string moduleName)
     {
+        //parse an expression inside of parenthesis
         if (MatchAndRemove(Token.TokenType.LeftParen) != null)
         {
             var exp = Expression(moduleName);
@@ -1898,16 +2159,19 @@ public class Parser
             return exp;
         }
 
+        //if it is just a variable return that variable
         if (GetVariableUsagePlainNode(moduleName) is { } variable)
         {
             return variable;
         }
 
+        //if it is a string literal
         if (MatchAndRemove(Token.TokenType.StringContents) is { } sc)
         {
             return new StringNode(sc.Value ?? string.Empty);
         }
-
+        
+        //if it is character contents
         if (MatchAndRemove(Token.TokenType.CharContents) is { } cc)
         {
             if (cc.Value is null || cc.Value.Length != 1)
@@ -1915,16 +2179,24 @@ public class Parser
             return new CharNode(cc.Value[0]);
         }
 
+        //if it is a boolean true
         if (MatchAndRemove(Token.TokenType.True) is { })
             return new BoolNode(true);
+
+        //if it is a boolean false
         if (MatchAndRemove(Token.TokenType.False) is { })
             return new BoolNode(false);
 
+        //parse the number before the type is checked
         var token = MatchAndRemove(Token.TokenType.Number);
         if (token == null || token.Value == null)
             return null;
+
+        //if it is a float
         if (token.Value.Contains("."))
             return new FloatNode(float.Parse(token.Value));
+
+        //else return an integer
         return new IntNode(int.Parse(token.Value));
     }
 
