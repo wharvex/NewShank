@@ -40,7 +40,7 @@ public class LLVMCodeGen
             features,
             opt,
             LLVMRelocMode.LLVMRelocPIC,
-            LLVMCodeModel.LLVMCodeModelMedium
+            LLVMCodeModel.LLVMCodeModelLarge
         );
         var out_string = "";
         if (!compileOptions.CompileOff)

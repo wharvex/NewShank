@@ -120,6 +120,7 @@ public class MonomorphizationVisitor(
             {
                 return;
             }
+
             var parameters = instantiatedVariadics
                 .Select(
                     (parameterType, index) =>
@@ -170,6 +171,7 @@ public class MonomorphizationVisitor(
                 Push(typedBuiltinIndex);
                 return;
             }
+
             var parameters = node.ParameterVariables.Select(declarationNode =>
             {
                 declarationNode.Accept(
@@ -200,6 +202,7 @@ public class MonomorphizationVisitor(
         // no module means it is a builtin see FunctionCallNode.FunctionDefinitionModule
         if (node.FunctionDefinitionModule is null)
         {
+            Console.WriteLine("1st time with add");
             BuiltInFunctionNode builtInFunctionNode = (
                 nonMonomorphizedProgramNode.GetStartModuleSafe().getFunction(node.Name)
                 as BuiltInFunctionNode
@@ -209,6 +212,8 @@ public class MonomorphizationVisitor(
         }
         else
         {
+            Console.WriteLine("2nd time with add");
+
             var module = nonMonomorphizedProgramNode.GetFromModulesSafe(
                 node.FunctionDefinitionModule
             );
@@ -242,12 +247,14 @@ public class MonomorphizationVisitor(
                 programNode.GlobalVariables[(ModuleIndex)value.MonomorphizedName()] =
                     (VariableDeclarationNode)Pop();
             }
+
             Push(new FunctionCallNode(node, (TypedModuleIndex)Pop()));
         }
     }
 
     public override void Visit(FunctionNode node)
     {
+        Console.WriteLine("func node: " + node.ToString());
         var typedModuleIndex = new TypedModuleIndex(
             new ModuleIndex(new NamedIndex(node.Name), node.parentModuleName!),
             new TypeIndex(
@@ -315,6 +322,7 @@ public class MonomorphizationVisitor(
             programNode.GlobalVariables[(ModuleIndex)value.MonomorphizedName()] =
                 (VariableDeclarationNode)Pop();
         }
+
         node.GetStartFunctionSafe().Accept(this);
     }
 

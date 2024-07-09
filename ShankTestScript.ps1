@@ -1,4 +1,22 @@
-function st {
+# TODO: Please use ShankTestCompiler.ps1
+# it provides a more modern powershelll testing, 
+# providing both Compiler testing and interpret testing as well
+# as documentation
+
+
+
+
+
+
+
+
+
+
+
+
+
+function st
+{
     param([int]$x, [string]$pls, [switch]$y)
 
     # path for Shank Project file
@@ -7,10 +25,12 @@ function st {
     # path for Dot Shank folder
     $ds = './Shank/dotShank/'
 
-    if ($y) {
-        $path_list = $(Get-Content "./ShankTestPaths_$($pls).txt")
+    if ($y)
+    {
+        $path_list = $( Get-Content "./ShankTestPaths_$( $pls ).txt" )
     }
-    else {
+    else
+    {
         $path_list = "NotAPath", # 0
         "Interpret ModuleTest2", # 1
         "Interpret Records/simple", # 2
@@ -37,8 +57,9 @@ function st {
     }
 
     $all_runner = {
-        $new_path_list = $path_list[1..$($path_list.Length - 1)]
-        foreach ($p in $new_path_list) {
+        $new_path_list = $path_list[1..$( $path_list.Length - 1 )]
+        foreach ($p in $new_path_list)
+        {
             & $generic_runner -args_str $p -i ($new_path_list.IndexOf($p) + 1)
         }
     }
@@ -47,15 +68,34 @@ function st {
         param($args_str, $i)
 
         $args_list = -split $args_str
-        $args_list[1] = "$($ds)$($args_list[1])"
+        $args_list[1] = "$( $ds )$( $args_list[1] )"
 
         $progress = if ($null -ne $i) `
-        { "( Program $i of $($path_list.Length - 1) )" } `
-            else { '( Program 1 of 1 )' }
+        
+        
+        
+        
+        
+        
+        
+        {
+            "( Program $i of $( $path_list.Length - 1 ) )"
+        } `
+            
+        
+        
+        
+        
+        
+        
+        else
+        {
+            '( Program 1 of 1 )'
+        }
 
         $shank_files = Get-ChildItem $args_list[1] -r -filter *.shank
 
-        foreach ( $sf in $shank_files )
+        foreach ($sf in $shank_files)
         {
             Write-Host "`n**** File Path $progress ****`n" -ForegroundColor green
             Write-Host $sf.FullName
@@ -63,15 +103,20 @@ function st {
             Get-Content $sf.FullName
         }
         Write-Host "`n**** Command $progress ****`n" -ForegroundColor magenta
-        "dotnet run $($args_list -join ' ') --project $sp"
+        "dotnet run $( $args_list -join ' ' ) --project $sp"
         Write-Host "`n**** Output $progress ****`n" -ForegroundColor blue
         dotnet run @args_list --project $sp
     }
 
     # invoke a script block based on param
-    switch ($x) {
-        { $_ -eq 0 } { & $all_runner }
-        { $_ -lt -1 -or $_ -ge $path_list.Length } { "Bad Argument" }
+    switch ($x)
+    {
+        { $_ -eq 0 } {
+            & $all_runner
+        }
+        { $_ -lt -1 -or $_ -ge $path_list.Length } {
+            "Bad Argument"
+        }
         default {
             & $generic_runner $path_list[$_]
         }
