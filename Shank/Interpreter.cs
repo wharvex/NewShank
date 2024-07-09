@@ -26,17 +26,8 @@ public class Interpreter
     public static List<ModuleNode> GetModulesAsList() =>
         GetModulesSafe().Select(kvp => kvp.Value).ToList();
 
-    /// <summary>
-    /// Get an IDT-by-name dictionary of all the variables which a function can access.
-    /// </summary>
-    /// <param name="fn">The function</param>
-    /// <param name="parameters">A list of IDTs of the arguments that were passed in when calling
-    /// the function</param>
-    /// <param name="maybeModule">The module to which the function belongs (optional)</param>
-    /// <returns>A dictionary for getting IDTs by name of all the variables which a function can
-    /// access</returns>
-    /// <exception cref="InvalidOperationException"></exception>
-    private static Dictionary<string, InterpreterDataType> GetVariablesDictionary(
+    [Obsolete("Please use GetVariablesDictionary")]
+    private static Dictionary<string, InterpreterDataType> OldOldGetVariablesDictionary(
         FunctionNode fn,
         List<InterpreterDataType> parameters,
         ModuleNode? maybeModule = null
@@ -71,7 +62,8 @@ public class Interpreter
             )
             .ToDictionary();
 
-    private static Dictionary<string, InterpreterDataType> NewGetVariablesDictionary(
+    [Obsolete("Please use GetVariablesDictionary")]
+    private static Dictionary<string, InterpreterDataType> OldGetVariablesDictionary(
         FunctionNode fn,
         List<InterpreterDataType> parameters,
         ModuleNode? maybeModule = null
@@ -108,20 +100,23 @@ public class Interpreter
             )
             .ToDictionary();
 
-    private static Dictionary<string, InterpreterDataType> NewNewGetVariablesDictionary(
+    private static Dictionary<string, InterpreterDataType> GetVariablesDictionary(
         FunctionNode fn,
         List<InterpreterDataType> args
     )
     {
         return fn.VariablesInScope.Select(kvp =>
         {
+            // If the current VariablesInScope element is in ParameterVariables, paramIdx stores its
+            // index in ParameterVariables, or else it stores -1.
             var paramIdx = Enumerable
                 .Range(0, fn.ParameterVariables.Count)
                 .FirstOrDefault(i => kvp.Key.Equals(fn.ParameterVariables[i].GetNameSafe()), -1);
+
+            // We assume there is an IDT in args at the same index position as its corresponding VDN
+            // in ParameterVariables.
             if (paramIdx >= 0)
-            {
                 return new KeyValuePair<string, InterpreterDataType>(kvp.Key, args[paramIdx]);
-            }
 
             return new KeyValuePair<string, InterpreterDataType>(
                 kvp.Key,
@@ -148,7 +143,7 @@ public class Interpreter
         ModuleNode? maybeModule = null
     )
     {
-        var variables = NewNewGetVariablesDictionary(fn, parametersIDTs);
+        var variables = GetVariablesDictionary(fn, parametersIDTs);
 
         if (fn is TestNode)
         {
@@ -295,7 +290,7 @@ public class Interpreter
         {
             if (stmt is AssignmentNode an)
             {
-                var target = variables[an.NewTarget.GetPlain().Name];
+                var target = GetIdtFromVun(variables, an.NewTarget);
                 OutputHelper.DebugPrintJson(target, "nestedIdtTarget");
                 OutputHelper.DebugPrintJson(an.NewTarget, "nestedAnTarget");
                 switch (target)
@@ -1490,5 +1485,26 @@ public class Interpreter
     public static Dictionary<string, ModuleNode> getModules()
     {
         return Modules;
+    }
+
+    public static InterpreterDataType GetIdtFromVun(
+        Dictionary<string, InterpreterDataType> idts,
+        VariableUsageNodeTemp v
+    )
+    {
+        (VariableUsageNodeTemp vc, var d) = v.GetPlainAndDepth();
+        var ic = idts[((VariableUsagePlainNode)vc).Name];
+        while (true)
+        {
+            d--;
+            if (d < 0)
+                break;
+            vc = v.GetVunAtDepth(d);
+            ic = ic.GetInnerIdt(vc, NewResolveInt, idts);
+            if (ic is null)
+                break;
+        }
+
+        return ic ?? throw new InvalidOperationException();
     }
 }

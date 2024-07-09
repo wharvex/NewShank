@@ -63,5 +63,27 @@ public abstract class VariableUsageNodeTemp : ExpressionNode
         return ((VariableUsagePlainNode)plainRet, intRet);
     }
 
+    public VariableUsageNodeTemp GetVunAtDepth(int depth)
+    {
+        var d = 0;
+        var vc = this;
+        while (d < depth)
+        {
+            vc = vc switch
+            {
+                VariableUsageIndexNode i => i.Left,
+                VariableUsageMemberNode m => m.Left,
+                VariableUsagePlainNode p => p,
+                _
+                    => throw new UnreachableException(
+                        "VUN class hierarchy was altered; please update this switch accordingly."
+                    )
+            };
+            d++;
+        }
+
+        return vc;
+    }
+
     public void Accept(IVariableUsageVisitor visitor) => visitor.Visit(this);
 }
