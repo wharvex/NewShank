@@ -593,7 +593,7 @@ public class Parser
 
     /// <summary>
     ///     <para>
-    ///         Method <c>BodyFunction</c> 
+    ///         Method <c>BodyFunction</c>
     ///     </para>
     /// </summary>
     /// <param name="function"></param>
@@ -658,7 +658,7 @@ public class Parser
     }
 
     /// <summary>
-    ///     <para> 
+    ///     <para>
     ///         Method <c>Statements</c> parses and returns a list of statements
     ///     </para>
     /// </summary>
@@ -666,7 +666,6 @@ public class Parser
     /// <param name="moduleName">The name of the parent module to which the list of statements belongs</param>
     private void Statements(List<StatementNode> statements, string moduleName)
     {
-
         //parse while we have more statements
         do
         {
@@ -681,9 +680,8 @@ public class Parser
         } while (true);
     }
 
-
     /// <summary>
-    ///     <para> 
+    ///     <para>
     ///         Method <c>Statement</c> parses and returns a statement based on the type
     ///     </para>
     /// </summary>
@@ -990,7 +988,7 @@ public class Parser
     }
 
     /// <summary>
-    ///     <para> 
+    ///     <para>
     ///         Method <c>FunctionCall</c> parses and returns a function call statement
     ///     </para>
     /// </summary>
@@ -1047,18 +1045,18 @@ public class Parser
     }
 
     /// <summary>
-    ///     <para> 
+    ///     <para>
     ///         Method <c>If</c> parses and returns an if statement
     ///     </para>
     /// </summary>
     /// <param name="moduleName">The name of the parent module to which the if statement belongs</param>
     /// <returns>IfNode containing the contenets of the if statement</returns>
     /// <exception cref="SyntaxErrorException">
-    ///     <list type="bullet"> 
-    ///         <item> 
+    ///     <list type="bullet">
+    ///         <item>
     ///             <description>A boolean expression was not found within the if conditional</description>
     ///         </item>
-    ///         <item> 
+    ///         <item>
     ///             <description>A "then" keyword does not follow the if conditional</description>
     ///         </item>
     ///     </list>
@@ -1120,7 +1118,7 @@ public class Parser
     }
 
     /// <summary>
-    ///     <para> 
+    ///     <para>
     ///         Method <c>While</c> parses and returns a while statement
     ///     </para>
     /// </summary>
@@ -1149,18 +1147,18 @@ public class Parser
     }
 
     /// <summary>
-    ///     <para> 
+    ///     <para>
     ///         Method <c>Repeat</c> parses and returns a repeat statement
     ///     </para>
     /// </summary>
     /// <param name="moduleName">The name of hte parent module to which the repeat statement belongs</param>
     /// <returns>A RepeatNode containing the contents of the repeat statement</returns>
     /// <exception cref="SyntaxErrorException">
-    ///     <list type="bullet"> 
-    ///         <item> 
+    ///     <list type="bullet">
+    ///         <item>
     ///             <description>An until statement does not exist at the end of the repeat</description>
     ///         </item>
-    ///         <item> 
+    ///         <item>
     ///             <description>A boolean expression does not follow an "until" keyword</description>
     ///         </item>
     ///     </list>
@@ -1194,34 +1192,34 @@ public class Parser
                 Peek(0)
             );
 
-        //make sure other statements are on lines following 
+        //make sure other statements are on lines following
         RequiresEndOfLine();
 
         return new RepeatNode(boolExp, statements);
     }
 
     /// <summary>
-    ///     <para> 
+    ///     <para>
     ///         Method <c>For</c> parses and returns a for statement
     ///     </para>
     /// </summary>
     /// <param name="moduleName">The name of the parent module to which the for statement belongs</param>
     /// <returns>ForNode containing the contents of the for statement</returns>
     /// <exception cref="SyntaxErrorException">
-    ///     <list type="bullet"> 
-    ///         <item> 
+    ///     <list type="bullet">
+    ///         <item>
     ///             <description>A variable is not used in the for statement's conditional</description>
     ///         </item>
-    ///         <item> 
+    ///         <item>
     ///             <description>A "from" keyword is not present in the for statement's conditional</description>
     ///         </item>
-    ///         <item> 
+    ///         <item>
     ///             <description>A lower bound expression is not present in the for statement's conditional </description>
     ///         </item>
-    ///         <item> 
+    ///         <item>
     ///             <description>A "to" keyword is not present in the for statement's conditional</description>
     ///         </item>
-    ///         <item> 
+    ///         <item>
     ///             <description>An upper bound expression is not present in the for statement's conditional</description>
     ///         </item>
     ///     </list>
@@ -1238,7 +1236,6 @@ public class Parser
         if (indexVariable == null)
             throw new SyntaxErrorException("Expected a variable in the for statement.", Peek(0));
 
-       
         if (MatchAndRemove(Token.TokenType.From) == null)
             throw new SyntaxErrorException("Expected a from in the for statement.", Peek(0));
 
@@ -1260,7 +1257,7 @@ public class Parser
                 Peek(0)
             );
 
-        //require the body statements to be on the next line 
+        //require the body statements to be on the next line
         RequiresEndOfLine();
 
         //template for our body statements
@@ -1272,7 +1269,7 @@ public class Parser
     }
 
     /// <summary>
-    ///     <para> 
+    ///     <para>
     ///         Method <c>BooleanExpression</c> parses an returns an expression but only if it is a boolean expression
     ///     </para>
     /// </summary>
@@ -1283,7 +1280,7 @@ public class Parser
     {
         //expression is parsed
         var expression = Expression(moduleName);
-        
+
         //check to see if the expression matches a boolean expression format
         if (expression is not BooleanExpressionNode ben)
             throw new SyntaxErrorException("Expected a boolean expression", Peek(0));
@@ -1291,18 +1288,18 @@ public class Parser
     }
 
     /// <summary>
-    ///     <para> 
+    ///     <para>
     ///         Method <c>Assignment</c> parses an assignment if it is present
     ///     </para>
     /// </summary>
     /// <param name="moduleName">The name of the parent module containing the assignment</param>
     /// <returns>a new AssignmentNode else null</returns>
     /// <exception cref="SyntaxErrorException">
-    ///     <list type="bullet"> 
-    ///         <item> 
+    ///     <list type="bullet">
+    ///         <item>
     ///             <description>A valid identifier is not found</description>
     ///         </item>
-    ///         <item> 
+    ///         <item>
     ///             <description>A valid expression is not found</description>
     ///         </item>
     ///     </list>
@@ -1343,25 +1340,25 @@ public class Parser
     }
 
     /// <summary>
-    ///     <para> 
+    ///     <para>
     ///         Method <c>NewAssignment</c> parses an assignment if it is present
     ///     </para>
     /// </summary>
     /// <param name="moduleName">The name of the parent module to which the assigment belongs</param>
     /// <returns>the new AssignmentNode containing its contents else null</returns>
     /// <exception cref="SyntaxErrorException">
-    ///     <list type="bullet"> 
-    ///         <item> 
+    ///     <list type="bullet">
+    ///         <item>
     ///             <description>If a variable usage was expected but not found</description>
     ///         </item>
-    ///         <item> 
+    ///         <item>
     ///             <description>If an expression was expected but not found</description>
     ///         </item>
     ///     </list>
     /// </exception>
     private StatementNode? NewAssignment(string moduleName)
     {
-        //output for the new assignment 
+        //output for the new assignment
         OutputHelper.DebugPrintTxt("hello from new assignment", "vuop", true);
         OutputHelper.DebugPrintTxt(
             "Assignment token found on line "
@@ -1371,8 +1368,8 @@ public class Parser
             "vuop",
             true
         );
-       
-        //makes sure our assignment is on the current line being parsed 
+
+        //makes sure our assignment is on the current line being parsed
         if (!FindBeforeEol(Token.TokenType.Assignment))
         {
             return null;
@@ -1396,7 +1393,7 @@ public class Parser
     }
 
     /// <summary>
-    ///     Method <c>FindBeforeEol</c> checks to see if the token matching the type passed in is before the next EndOfLine token 
+    ///     Method <c>FindBeforeEol</c> checks to see if the token matching the type passed in is before the next EndOfLine token
     /// </summary>
     /// <param name="tokenType">The desired token's type</param>
     /// <returns>true if found or else false</returns>
@@ -1405,7 +1402,7 @@ public class Parser
         var i = 0;
         var next = Peek(i);
 
-        //looks to see if the required token is before an the end of the line 
+        //looks to see if the required token is before an the end of the line
         while (next is not null && next.Type != Token.TokenType.EndOfLine)
         {
             if (next.Type == tokenType)
@@ -1978,7 +1975,7 @@ public class Parser
     }
 
     /// <summary>
-    ///     <para> 
+    ///     <para>
     ///         Method <c>Expression</c> parses and returns an expression
     ///     </para>
     /// </summary>
@@ -1986,7 +1983,7 @@ public class Parser
     /// <returns>An ExpressionRHS object containing the expression contents</returns>
     public ExpressionNode? Expression(string moduleName)
     {
-        //get the term in the expression 
+        //get the term in the expression
         var lt = Term(moduleName);
         if (lt == null)
             return null;
@@ -2084,8 +2081,8 @@ public class Parser
     }
 
     /// <summary>
-    ///     <para> 
-    ///         Method <c>Term</c> parses and returns a term 
+    ///     <para>
+    ///         Method <c>Term</c> parses and returns a term
     ///     </para>
     /// </summary>
     /// <param name="moduleName">The name of the parent module to which the term belongs</param>
@@ -2133,17 +2130,17 @@ public class Parser
 
     /// <summary>
     ///     <para>
-    ///         Method <c>Factor</c> parses a factor and returns it 
+    ///         Method <c>Factor</c> parses a factor and returns it
     ///     </para>
     /// </summary>
     /// <param name="moduleName">The name of the parent module to which the factor belongs</param>
     /// <returns>ExpressionRHS or VariableUsageNode or StringNode or CharNode or BoolNode or FloatNode or IntNode</returns>
     /// <exception cref="SyntaxErrorException">
-    ///     <list type="bullet"> 
+    ///     <list type="bullet">
     ///         <item>
     ///             <description>If a left parenthesis is not followed by a right parenthesis in a parenthesis enclosed expression</description>
     ///         </item>
-    ///         <item> 
+    ///         <item>
     ///             <description>If a character constant is invalid</description>
     ///         </item>
     ///     </list>
@@ -2170,7 +2167,7 @@ public class Parser
         {
             return new StringNode(sc.Value ?? string.Empty);
         }
-        
+
         //if it is character contents
         if (MatchAndRemove(Token.TokenType.CharContents) is { } cc)
         {

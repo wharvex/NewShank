@@ -41,7 +41,7 @@ public class OutputHelper
     }
 
     /// <summary>
-    ///     <para> 
+    ///     <para>
     ///         Method <c>DebugPrintTxt</c> creates a file to hold our debug text and writes the output provided to the file
     ///     </para>
     /// </summary>
