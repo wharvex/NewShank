@@ -146,13 +146,23 @@ public class Parser
             property.Statements = ParseBlock();
             blockLevel--;
 
-            if(propertyType == TokenType.ACCESSOR)
+            if (propertyType == TokenType.ACCESSOR)
             {
-                property.ParameterVariables.Add(new VariableDeclarationNode(false, variable.Type, "value", thisClass.Name, false));
+                property.ParameterVariables.Add(
+                    new VariableDeclarationNode(
+                        false,
+                        variable.Type,
+                        "value",
+                        thisClass.Name,
+                        false
+                    )
+                );
             }
             else
             {
-                property.ParameterVariables.Add(new VariableDeclarationNode(true, variable.Type, "value", thisClass.Name, false));
+                property.ParameterVariables.Add(
+                    new VariableDeclarationNode(true, variable.Type, "value", thisClass.Name, false)
+                );
             }
             return property;
         }
@@ -260,7 +270,7 @@ public class Parser
                 parameters.AddRange(ParseParameters(false));
             }
             functionNode.ParameterVariables = parameters;
-            foreach ( var parameter in functionNode.ParameterVariables)
+            foreach (var parameter in functionNode.ParameterVariables)
             {
                 functionNode.VariablesInScope.Add(parameter.Name, parameter);
             }
@@ -523,7 +533,7 @@ public class Parser
             {
                 currentLevel++;
             }
-            
+
             if (currentLevel != blockLevel)
             {
                 //if (statement != null)

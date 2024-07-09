@@ -8,11 +8,6 @@ namespace Tran
 {
     public class TranAnalysis
     {
-
-        public void Walk()
-        {
-            
-        }
-
+        public void Walk() { }
     }
 }
