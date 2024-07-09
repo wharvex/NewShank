@@ -588,7 +588,7 @@ public class SemanticAnalysis
 
                     if (lower < from || upper > to)
                         throw new Exception(
-                            $"The variable {variable!} can only be assigned expressions that wont overstep its range."
+                            $"The variable {variable!} can only be assigned expressions that wont overstep its range ({from}..{to}), but attempted to assign to expression {expression} with range ({lower}..{upper}."
                         );
                 }
             }
