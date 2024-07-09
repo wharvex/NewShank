@@ -930,10 +930,12 @@ public class Parser
     /// </exception>
     private Range? CheckRangeInner(bool isFloat, Range defaultRange)
     {
-        //remove a from token if present, else return the default range passed in
+        // remove the `from  token which signifies the start of a range
+        // - if it is not there return null
+        // - it is up to the caller to determine what they want to do if there is no range
         if (MatchAndRemove(Token.TokenType.From) is null)
         {
-            return defaultRange;
+            return null;
         }
 
         //lower bound of range
