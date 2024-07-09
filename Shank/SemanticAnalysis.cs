@@ -326,6 +326,7 @@ public class SemanticAnalysis
     )
     {
         CheckRange(targetName, targetType, expression, variables);
+        // if(targetType )
 
         if (
             targetType is EnumType e
@@ -337,6 +338,8 @@ public class SemanticAnalysis
             {
                 throw new SemanticErrorException($"ambiguous variable name {v.Name}", expression);
             }
+
+            v.ReferencesGlobalVariable = true;
         }
         else
         {

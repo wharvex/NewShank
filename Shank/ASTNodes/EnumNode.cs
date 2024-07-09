@@ -7,6 +7,7 @@ public class EnumNode : ExpressionNode
 {
     public string TypeName => EType.Name;
     public EnumType EType { get; set; }
+
     public List<string> EnumElements => EType.Variants;
     public string ParentModuleName { get; set; }
     public bool IsPublic { get; set; } = false;

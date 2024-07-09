@@ -17,7 +17,6 @@ namespace Shank;
 //
 //     public void CheckType() { }
 // }
-
 public class SemanticAnalysisVisitor : Visitor
 {
     private static ProgramNode program;
@@ -297,6 +296,8 @@ public class SemanticAnalysisVisitor : Visitor
                         node
                     );
                 }
+
+                // Console.WriteLine(targetDeclaration.IsGlobal);
 
                 node.Target.ReferencesGlobalVariable = targetDeclaration.IsGlobal;
             }
@@ -1139,6 +1140,7 @@ public class SemanticAnalysisVisitor : Visitor
                     variableReferenceNode
                 );
             variableReferenceNode.ReferencesGlobalVariable = variable.IsGlobal;
+
             return (variableReferenceNode.ExtensionType, NewType: variable.Type) switch
             {
                 (ExtensionType: VariableUsagePlainNode.VrnExtType.None, _) => variable.Type,

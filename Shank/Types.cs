@@ -23,7 +23,6 @@ public interface Type // our marker interface anything that implements is known 
 /// </summary>
 /// <param name="From">Lower bound of the range</param>
 /// <param name="To">Upper bound of the range</param>
-
 public readonly record struct Range // the type that represents a type range in shank (from … to …), as ranges on types are part of the types
 (float From, float To)
 {
@@ -159,6 +158,17 @@ public class EnumType(string name, string moduleName, List<string> variants) : T
 
     public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;
 
+    public int GetElementNum(string name)
+    {
+        foreach (var (param, index) in variants.Select((param, index) => (param, index)))
+        {
+            if (param == name)
+                return index;
+        }
+
+        return -1;
+    }
+
     public override string ToString() => $"{Name} [{string.Join(", ", Variants)}]";
 } // enums are just a list of variants
 
@@ -228,7 +238,6 @@ public readonly record struct ArrayType(Type Inner, Range Range) : RangeType // 
 /// </summary>
 /// <param name="TypeName"></param>
 /// <param name="TypeParameters"></param>
-
 public readonly record struct UnknownType(string TypeName, List<Type> TypeParameters) : Type // unknown types are those types that we have not found their proper definition during semantic analysis, yet
 // they also need to keep and generics they instantiate like Int, String in HashMap Int, String
 {

@@ -165,7 +165,9 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
 
     public LLVMValueRef CompileVariableUsage(VariableUsagePlainNode node, bool load = true)
     {
+        Console.WriteLine(node.MonomorphizedName());
         LLVMValue value = context.GetVariable(node.MonomorphizedName());
+
         if (node.ExtensionType == VariableUsagePlainNode.VrnExtType.ArrayIndex)
         {
             LLVMArray newValue = (LLVMArray)value;
@@ -209,6 +211,16 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
 
         if (node.ExtensionType == VariableUsagePlainNode.VrnExtType.None)
         {
+            if (value is LLVMEnum p)
+            {
+                return LLVMValueRef.CreateConstInt(
+                    LLVMTypeRef.Int64,
+                    (ulong)p.EnumType.GetElementNum(node.Name)
+                );
+            }
+
+            // if(value.TypeRef == )
+            // builder.BuildLoad2(value.TypeRef, )
             return load ? builder.BuildLoad2(value.TypeRef, value.ValueRef) : value.ValueRef;
         }
 
@@ -478,9 +490,8 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
 
     public void CompileAssignment(AssignmentNode node)
     {
+        // Console.WriteLine("assignment nsmaE: " + node.Target.MonomorphizedName());
         var llvmValue = context.GetVariable(node.Target.MonomorphizedName());
-        // context.GetCustomType(node.)
-        Console.WriteLine(node.ToString());
         var expression = CompileExpression(node.Expression);
         var target = CompileExpression(node.Target, false);
         if (!llvmValue.IsMutable)
