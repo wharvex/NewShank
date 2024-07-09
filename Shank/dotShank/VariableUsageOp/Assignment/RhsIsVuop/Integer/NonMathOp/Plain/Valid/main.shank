@@ -1,4 +1,5 @@
 define start()
-variables a : integer
+variables a, b : integer
     a := 33
-    write "hello from Vuop Assignment LhsIsVuop Integer NonMathOp Plain Valid"
+    b := a
+    write "hello from Vuop Assignment RhsIsVuop Integer NonMathOp Plain Valid"
