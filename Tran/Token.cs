@@ -12,7 +12,6 @@ public enum TokenType
     STRING,
     IMPLEMENTS,
     ACCESSOR,
-    VALUE,
     LOOP,
     WORD,
     MUTATOR,

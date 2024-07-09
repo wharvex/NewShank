@@ -8,7 +8,7 @@ namespace Shank.Tran;
 public class Parser
 {
     private TokenHandler handler;
-    private ProgramNode program;
+    private static ProgramNode program;
     public ModuleNode thisClass;
     private LinkedList<string> sharedNames;
     public List<VariableDeclarationNode> members;
@@ -45,7 +45,7 @@ public class Parser
     public ProgramNode Parse()
     {
         AcceptSeparators();
-        if (!ParseClass() && !ParseInterface())
+        if (!ParseInterface() && !ParseClass())
         {
             throw new Exception("No class declaration found in file");
         }
@@ -109,13 +109,14 @@ public class Parser
         if (variable != null)
         {
             members.Add(variable);
-            var property = ParseProperty(TokenType.ACCESSOR, variable.Name);
+            AcceptSeparators();
+            var property = ParseProperty(TokenType.ACCESSOR, variable);
             if (property != null)
             {
                 thisClass.addFunction(property);
             }
-
-            property = ParseProperty(TokenType.MUTATOR, variable.Name);
+            AcceptSeparators();
+            property = ParseProperty(TokenType.MUTATOR, variable);
             if (property != null)
             {
                 thisClass.addFunction(property);
@@ -126,7 +127,7 @@ public class Parser
         return false;
     }
 
-    public FunctionNode? ParseProperty(TokenType propertyType, String? variableName)
+    public FunctionNode? ParseProperty(TokenType propertyType, VariableDeclarationNode variable)
     {
         if (
             handler.MatchAndRemove(propertyType) != null
@@ -134,14 +135,25 @@ public class Parser
         )
         {
             var property = new FunctionNode(
-                variableName + propertyType.ToString().ToLower(),
+                "__" + variable + propertyType.ToString().ToLower(),
                 thisClass.Name,
                 true
             );
+
             currentFunction = property;
+
+            blockLevel++;
             property.Statements = ParseBlock();
-            var retVal = new VariableDeclarationNode { IsConstant = true, Name = "value" };
-            property.ParameterVariables.Add(retVal);
+            blockLevel--;
+
+            if(propertyType == TokenType.ACCESSOR)
+            {
+                property.ParameterVariables.Add(new VariableDeclarationNode(false, variable.Type, "value", thisClass.Name, false));
+            }
+            else
+            {
+                property.ParameterVariables.Add(new VariableDeclarationNode(true, variable.Type, "value", thisClass.Name, false));
+            }
             return property;
         }
 
@@ -218,6 +230,7 @@ public class Parser
     {
         FunctionNode functionNode;
         Token? function;
+        List<VariableDeclarationNode> parameters;
         var isPublic = handler.MatchAndRemove(TokenType.PRIVATE) == null;
         var isShared = (isPublic && handler.MatchAndRemove(TokenType.SHARED) != null);
 
@@ -233,8 +246,7 @@ public class Parser
 
             if (handler.MatchAndRemove(TokenType.OPENPARENTHESIS) != null)
             {
-                var parameters = ParseParameters(true);
-                functionNode.ParameterVariables.AddRange(parameters);
+                parameters = ParseParameters(true);
                 if (handler.MatchAndRemove(TokenType.CLOSEDPARENTHESIS) == null)
                     throw new Exception("Function declaration missing end parenthesis");
             }
@@ -245,9 +257,13 @@ public class Parser
 
             if (handler.MatchAndRemove(TokenType.COLON) != null)
             {
-                functionNode.ParameterVariables.AddRange(ParseParameters(false));
+                parameters.AddRange(ParseParameters(false));
             }
-
+            functionNode.ParameterVariables = parameters;
+            foreach ( var parameter in functionNode.ParameterVariables)
+            {
+                functionNode.VariablesInScope.Add(parameter.Name, parameter);
+            }
             currentFunction = functionNode;
             functionNode.Statements = ParseBlock();
             return true;
@@ -507,15 +523,16 @@ public class Parser
             {
                 currentLevel++;
             }
-            var statement = ParseStatement();
+            
             if (currentLevel != blockLevel)
             {
-                if (statement != null)
-                {
-                    throw new Exception("Invalid indentation in block");
-                }
+                //if (statement != null)
+                //{
+                //    throw new Exception("Invalid indentation in block");
+                //}
                 break;
             }
+            var statement = ParseStatement();
 
             if (statement != null)
             {
@@ -527,6 +544,7 @@ public class Parser
                 if (variableDec != null)
                 {
                     currentFunction.LocalVariables.Add(variableDec);
+                    currentFunction.VariablesInScope.Add(variableDec.Name, variableDec);
                 }
             }
         }

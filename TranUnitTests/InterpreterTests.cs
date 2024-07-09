@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Logging;
 using Shank;
 using Shank.ASTNodes;
 using Shank.Tran;
@@ -121,8 +122,8 @@ class start
         temp = 0
         addStuff(x, y, temp)
     
-    addStuff(number a, number b) : number ret
-        ret = a+b".Replace("    ", "\t")
+    addStuff(number a, number b) : number retVal
+        retVal = a+b".Replace("    ", "\t")
             );
             RunInterpreter();
         }
@@ -139,6 +140,23 @@ class start
     start()
         x = 100
         y = ""helloworld""".Replace("    ", "\t")
+            );
+            RunInterpreter();
+        }
+
+        [TestMethod]
+        public void InterpreterTestAccessors()
+        {
+            InitializeInterpreter(
+                @"
+class start
+    number x
+        accessor:
+            value = 100
+
+    start()
+        number a
+        a = x + 10".Replace("    ", "\t")
             );
             RunInterpreter();
         }
@@ -168,6 +186,7 @@ class test
             RunInterpreter();
         }
 
+        //TODO: we can worry about this at a later date
         [TestMethod]
         public void InterpreterTest5()
         {
