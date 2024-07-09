@@ -120,6 +120,14 @@ public class LLVMCharacter(LLVMValueRef valueRef, bool isMutable, LLVMTypeRef ty
         new LLVMCharacter(valueRef, isMutable, type);
 }
 
+public class LLVMEnum(EnumType enumType)
+    : LLVMValue(LLVMValueRef.CreateConstNull(LLVMTypeRef.Int64), true, LLVMTypeRef.Int64)
+{
+    public EnumType EnumType { get; set; } = enumType;
+
+    public static LLVMValue New(EnumType enumType) => new LLVMEnum(enumType);
+}
+
 public class LLVMStruct(LLVMValueRef valueRef, bool isMutable, LLVMStructType typeRef)
     : LLVMValue(valueRef, isMutable, typeRef.LlvmTypeRef)
 {
@@ -301,7 +309,7 @@ public class Context
                 UnknownType unknownType => throw new TypeAccessException($"{type} doesnt exist"),
                 BooleanType => (LLVMBoolean.New, LLVMTypeRef.Int1),
                 CharacterType => (LLVMCharacter.New, LLVMTypeRef.Int8),
-                EnumType enumType => (LLVMInteger.New, LLVMTypeRef.Int64),
+                EnumType => (LLVMInteger.New, LLVMTypeRef.Int64),
                 // if it's a custom type we look it up in the context
                 ReferenceType r
                     => (

@@ -326,6 +326,7 @@ public class SemanticAnalysis
     )
     {
         CheckRange(targetName, targetType, expression, variables);
+        // if(targetType )
 
         if (
             targetType is EnumType e
@@ -337,6 +338,8 @@ public class SemanticAnalysis
             {
                 throw new SemanticErrorException($"ambiguous variable name {v.Name}", expression);
             }
+
+            v.ReferencesGlobalVariable = true;
         }
         else
         {
@@ -588,7 +591,7 @@ public class SemanticAnalysis
 
                     if (lower < from || upper > to)
                         throw new Exception(
-                            $"The variable {variable!} can only be assigned expressions that wont overstep its range."
+                            $"The variable {variable!} can only be assigned expressions that wont overstep its range ({from}..{to}), but attempted to assign to expression {expression} with range ({lower}..{upper}."
                         );
                 }
             }

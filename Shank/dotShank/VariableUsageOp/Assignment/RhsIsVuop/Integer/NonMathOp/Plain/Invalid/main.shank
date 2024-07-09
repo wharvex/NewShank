@@ -1,4 +1,6 @@
 define start()
 variables a : integer
-    a := "three"
-    write "hello from Vuop Assignment LhsIsVuop Integer NonMathOp Plain Invalid"
+variables b : string
+    a := 33
+    b := a
+    write "hello from Vuop Assignment RhsIsVuop Integer NonMathOp Plain Invalid"
