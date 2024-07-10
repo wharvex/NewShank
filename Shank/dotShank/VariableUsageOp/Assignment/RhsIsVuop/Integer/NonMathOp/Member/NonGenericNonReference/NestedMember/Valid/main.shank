@@ -7,5 +7,7 @@ record Course
 
 define start()
 variables student : Student
+variables numberTemp : integer
     student.course.number := 101
-    write "hello from Vuop Assignment LhsIsVuop Integer NonMathOp NestedMember Valid"
+    numberTemp := student.course.number
+    write "hello from Vuop Assignment RhsIsVuop Integer NonMathOp Member NonGenericNonReference NestedMember Valid"

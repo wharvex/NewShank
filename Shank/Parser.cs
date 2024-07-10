@@ -30,16 +30,19 @@ public class Parser
         Token.TokenType.Test
     ];
 
-    public InterpretOptions? InterpreterOptions { get; set; }
+    public InterpretOptions? ActiveInterpretOptions { get; set; }
+
+    public bool GetVuopTestFlag()
+    {
+        return ActiveInterpretOptions?.VuOpTest ?? false;
+    }
 
     public Parser(List<Token> tokens, InterpretOptions? options = null)
     {
         _tokens = tokens;
-        InterpreterOptions = options;
-        if (InterpreterOptions is not null && InterpreterOptions.VuOpTest)
-        {
+        ActiveInterpretOptions = options;
+        if (GetVuopTestFlag())
             OutputHelper.DebugPrintTxt("starting vuop test debug output", "vuop");
-        }
     }
 
     private readonly List<Token> _tokens;
@@ -690,7 +693,7 @@ public class Parser
     private StatementNode? Statement(string moduleName)
     {
         return (
-                InterpreterOptions is not null && InterpreterOptions.VuOpTest
+                ActiveInterpretOptions is not null && ActiveInterpretOptions.VuOpTest
                     ? NewAssignment(moduleName)
                     : Assignment(moduleName)
             )
@@ -1360,17 +1363,6 @@ public class Parser
     /// </exception>
     private StatementNode? NewAssignment(string moduleName)
     {
-        //output for the new assignment
-        OutputHelper.DebugPrintTxt("hello from new assignment", "vuop", true);
-        OutputHelper.DebugPrintTxt(
-            "Assignment token found on line "
-                + Line
-                + ": "
-                + FindBeforeEol(Token.TokenType.Assignment),
-            "vuop",
-            true
-        );
-
         //makes sure our assignment is on the current line being parsed
         if (!FindBeforeEol(Token.TokenType.Assignment))
         {

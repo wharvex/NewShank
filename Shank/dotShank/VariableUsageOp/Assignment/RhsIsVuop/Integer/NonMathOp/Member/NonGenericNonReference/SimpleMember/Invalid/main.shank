@@ -3,5 +3,7 @@ record Student
 
 define start()
 variables student : Student
-    student.courseLoad := "five"
-    write "hello from Vuop Assignment LhsIsVuop Integer NonMathOp Member Invalid"
+variables courseLoadTemp : string
+    student.courseLoad := 5
+    courseLoadTemp := student.courseLoad
+    write "hello from Vuop Assignment RhsIsVuop Integer NonMathOp Member NonGenericNonReference SimpleMember Invalid"

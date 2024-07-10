@@ -96,9 +96,9 @@ function st {
     # invoke a script block based on choice
     switch ($choice) {
         { $_ -eq -1 } { & $run_all }
-        { $_ -lt -1 -or $_ -ge $args_lines.Length } { "Bad Argument" }
+        { $_ -lt -1 -or $_ -gt $args_lines.Length } { "Bad Argument" }
         default {
-            & $run_one $args_lines[$_]
+            & $run_one $args_lines[$_ - 1]
         }
     }
 }
