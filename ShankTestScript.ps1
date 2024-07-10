@@ -1,124 +1,104 @@
-# TODO: Please use ShankTestCompiler.ps1
-# it provides a more modern powershelll testing, 
-# providing both Compiler testing and interpret testing as well
-# as documentation
+
+<#PSScriptInfo
+
+.VERSION 0.1
+
+.GUID 74dda12f-98a2-4210-9ede-50195f3ba3b6
+
+.AUTHOR Tim Gudlewski
+
+.COMPANYNAME
+
+.COPYRIGHT (c) 2024 Tim Gudlewski
+
+.TAGS Dotnet Testing Input Files
+
+.LICENSEURI
+
+.PROJECTURI
+
+.ICONURI
+
+.EXTERNALMODULEDEPENDENCIES
+
+.REQUIREDSCRIPTS
+
+.EXTERNALSCRIPTDEPENDENCIES dotnet run
+
+.RELEASENOTES
+First version
+
+#>
 
 
 
 
 
+<#
+
+.DESCRIPTION
+You can run multiple dotnet run commands with your choice of input files and config options.
+
+#>
 
 
+$config_values = $(Get-Content "./TestScriptConfigValues.txt")
 
+function st {
+    [CmdletBinding()]
+    param(
+      [PSDefaultValue(Help='File containing lines of arguments to pass to `dotnet run`')]
+      [string] $args_lines_source = $config_values[0],
 
+      [PSDefaultValue(Help='Line number in args lines file to run (default: all lines)')]
+      [int] $choice = -1
+    )
 
+    $project_file_path = $config_values[1]
 
+    $input_exts = -split $config_values[2]
 
+    $args_lines = $(Get-Content $args_lines_source)
 
-function st
-{
-    param([int]$x, [string]$pls, [switch]$y)
+    $input_file_path_arg_position = $config_values[3]
 
-    # path for Shank Project file
-    $sp = './Shank/Shank.csproj'
-
-    # path for Dot Shank folder
-    $ds = './Shank/dotShank/'
-
-    if ($y)
-    {
-        $path_list = $( Get-Content "./ShankTestPaths_$( $pls ).txt" )
-    }
-    else
-    {
-        $path_list = "NotAPath", # 0
-        "Interpret ModuleTest2", # 1
-        "Interpret Records/simple", # 2
-        "Interpret RealRange", # 3
-        "Interpret Arrays/sum", # 4
-        "Interpret Records/nested", # 5
-        "Interpret Globals", # 6
-        "Interpret UnitTestTests1 -u", # 7
-        "Interpret Builtins/Write", # 8
-        "Interpret Enums", # 9
-        "Compile TestLlvmTheoAndMendel -S --print-ir" # 10
-        #"CompilePractice Minimal/PrintInt/Shank --flat PrintInt"
-        #"Interpret Generics/simple/functions2" ** revisit this to debug **
-        #"Interpret OldShankFiles/Pascals.shank"
-        #"Interpret OldShankFiles/GCD.shank"
-        #"Interpret Negative"
-        #"Interpret String"
-        #"CompilePractice Minimal/Old"
-        #"CompilePractice Minimal/PrintStr/Shank --flat PrintStr"
-        #"Expressions"
-        #"Overloads/overloadsTest.shank"
-        #"Generics/complex"
-        #"Generics/simple/records"
-    }
-
-    $all_runner = {
-        $new_path_list = $path_list[1..$( $path_list.Length - 1 )]
-        foreach ($p in $new_path_list)
-        {
-            & $generic_runner -args_str $p -i ($new_path_list.IndexOf($p) + 1)
+    # script block to run all input files
+    $run_all = {
+        foreach ($line in $args_lines) {
+            & $run_one -args_line $line -i $args_lines.IndexOf($line)
         }
     }
 
-    $generic_runner = {
-        param($args_str, $i)
+    # script block to run one input file
+    $run_one = {
+        param($args_line, $i)
 
-        $args_list = -split $args_str
-        $args_list[1] = "$( $ds )$( $args_list[1] )"
+        $args_list = -split $args_line
 
         $progress = if ($null -ne $i) `
-        
-        
-        
-        
-        
-        
-        
-        {
-            "( Program $i of $( $path_list.Length - 1 ) )"
-        } `
-            
-        
-        
-        
-        
-        
-        
-        else
-        {
-            '( Program 1 of 1 )'
-        }
+            { "( Program $($i + 1) of $($args_lines.Length) )" } `
+            else { '( Program 1 of 1 )' }
 
-        $shank_files = Get-ChildItem $args_list[1] -r -filter *.shank
+        $input_files = Get-ChildItem $args_list[$input_file_path_arg_position] -r | where { $_.Extension -in $input_exts }
 
-        foreach ($sf in $shank_files)
-        {
-            Write-Host "`n**** File Path $progress ****`n" -ForegroundColor green
-            Write-Host $sf.FullName
-            Write-Host "`n**** File Contents $progress ****`n" -ForegroundColor cyan
-            Get-Content $sf.FullName
+        foreach ($file in $input_files ) {
+            Write-Host "`n**** Input File Path $progress ****`n" -ForegroundColor green
+            Write-Host $file.FullName
+            Write-Host "`n**** Input File Contents $progress ****`n" -ForegroundColor cyan
+            Get-Content $file.FullName
         }
         Write-Host "`n**** Command $progress ****`n" -ForegroundColor magenta
-        "dotnet run $( $args_list -join ' ' ) --project $sp"
+        "dotnet run $($args_list -join ' ') --project $project_file_path"
         Write-Host "`n**** Output $progress ****`n" -ForegroundColor blue
-        dotnet run @args_list --project $sp
+        dotnet run @args_list --project $project_file_path
     }
 
-    # invoke a script block based on param
-    switch ($x)
-    {
-        { $_ -eq 0 } {
-            & $all_runner
-        }
-        { $_ -lt -1 -or $_ -ge $path_list.Length } {
-            "Bad Argument"
-        }
+    # invoke a script block based on choice
+    switch ($choice) {
+        { $_ -eq -1 } { & $run_all }
+        { $_ -lt -1 -or $_ -ge $args_lines.Length } { "Bad Argument" }
         default {
-            & $generic_runner $path_list[$_]
+            & $run_one $args_lines[$_]
         }
     }
 }

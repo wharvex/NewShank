@@ -1,0 +1,4 @@
+ShankTestPaths_main.txt
+Shank/Shank.csproj
+.shank
+1

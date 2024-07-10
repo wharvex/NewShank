@@ -1,5 +1,4 @@
-
-Interpret OldShankFiles/Pascals.shank
-Interpret OldShankFiles/GCD.shank
-Interpret Negative
-Interpret String
+Interpret Shank/dotShank/OldShankFiles/Pascals.shank
+Interpret Shank/dotShank/OldShankFiles/GCD.shank
+Interpret Shank/dotShank/Negative
+Interpret Shank/dotShank/String
