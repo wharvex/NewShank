@@ -180,8 +180,6 @@ public class BuiltInFunctions
                 ],
                 AssertIsEqual
             ),
-
-
             new("start", call)
             {
                 Line = 0,
@@ -224,7 +222,6 @@ public class BuiltInFunctions
                 GenericTypeParameterNames = ["T"],
                 Execute = End
             },
-
             new("allocateMemory", call)
             {
                 Line = 0,
@@ -520,7 +517,6 @@ public class BuiltInFunctions
             $"Expected<{i}>, Actual<{j}>";
     }
 
-    
     private static void Start(List<InterpreterDataType> parameters)
     {
         if (parameters is [ArrayDataType adt, IntDataType idt])
@@ -529,12 +525,10 @@ public class BuiltInFunctions
         }
         else
         {
-            
-            throw new Exception(
-                "Start requires the following parameters: array, var integer"
-            );
+            throw new Exception("Start requires the following parameters: array, var integer");
         }
     }
+
     private static void End(List<InterpreterDataType> parameters)
     {
         if (parameters is [ArrayDataType adt, IntDataType idt])
@@ -543,12 +537,10 @@ public class BuiltInFunctions
         }
         else
         {
-            
-            throw new Exception(
-                "End requires the following parameters: array, var integer"
-            );
+            throw new Exception("End requires the following parameters: array, var integer");
         }
     }
+
     public static void AllocateMemory(List<InterpreterDataType> parameters)
     {
         if (parameters[0] is ReferenceDataType rdt)

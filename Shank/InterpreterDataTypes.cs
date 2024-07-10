@@ -187,8 +187,8 @@ public class ArrayDataType : InterpreterDataType
 {
     public List<object> Value { get; }
     private Range range { get; }
-public ArrayType Type => new(ArrayContentsType, range);
-public Type ArrayContentsType { get; init; }
+    public ArrayType Type => new(ArrayContentsType, range);
+    public Type ArrayContentsType { get; init; }
 
     public ArrayDataType(ArrayType arrayType)
     {
@@ -197,10 +197,8 @@ public Type ArrayContentsType { get; init; }
         ArrayContentsType = arrayType.Inner;
     }
 
-    public ArrayDataType(List<object> val, ArrayType arrayType) : this(arrayType)
-    {
-        
-    }
+    public ArrayDataType(List<object> val, ArrayType arrayType)
+        : this(arrayType) { }
 
     public void AddElement(object element, int idx)
     {
