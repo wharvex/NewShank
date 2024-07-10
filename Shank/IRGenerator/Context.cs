@@ -197,7 +197,7 @@ public struct CFuntions
         printf.Linkage = LLVMLinkage.LLVMExternalLinkage;
         // llvm does not like void pointers, so we most places I've seen use i8* instead
         var voidStar = LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0);
-        
+
         memcpy = llvmModule.addFunction(
             "memcpy",
             LLVMTypeRef.CreateFunction(voidStar, [voidStar, voidStar, sizeT])
@@ -205,7 +205,10 @@ public struct CFuntions
         memcpy.Linkage = LLVMLinkage.LLVMExternalLinkage;
         malloc = llvmModule.addFunction("malloc", LLVMTypeRef.CreateFunction(voidStar, [sizeT]));
         memcpy.Linkage = LLVMLinkage.LLVMExternalLinkage;
-        exit = llvmModule.addFunction("exit", LLVMTypeRef.CreateFunction(LLVMTypeRef.Void, [LLVMTypeRef.Int32, ]));
+        exit = llvmModule.addFunction(
+            "exit",
+            LLVMTypeRef.CreateFunction(LLVMTypeRef.Void, [LLVMTypeRef.Int32,])
+        );
         exit.Linkage = LLVMLinkage.LLVMExternalLinkage;
     }
 
@@ -218,6 +221,7 @@ public struct CFuntions
 
     // void *malloc(size_t n);
     public LLVMFunction malloc { get; }
+
     // void exit(int exit_code);
     public LLVMFunction exit { get; }
 }

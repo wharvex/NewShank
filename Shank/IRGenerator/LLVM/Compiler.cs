@@ -165,16 +165,17 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
 
     private void Error(string message, LLVMValueRef[] values, ASTNode node)
     {
-        
         builder.BuildCall2(
             context.CFuntions.printf.TypeOf,
             context.CFuntions.printf.Function,
-            values.Prepend( builder.BuildGlobalStringPtr($"Error: { message}, on line {node.Line}\n")).ToArray()
+            values
+                .Prepend(builder.BuildGlobalStringPtr($"Error: {message}, on line {node.Line}\n"))
+                .ToArray()
         );
         builder.BuildCall2(
             context.CFuntions.exit.TypeOf,
             context.CFuntions.exit.Function,
-            [LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32,  1)]
+            [LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 1)]
         );
         builder.BuildUnreachable();
     }
@@ -190,22 +191,35 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
             var elementType = (LLVMTypeRef)
                 context.GetLLVMTypeFromShankType(((LLVMArray)value).Inner());
             var start = builder.BuildStructGEP2(newValue.TypeRef, value.ValueRef, 1);
-                start= builder.BuildLoad2(LLVMTypeRef.Int32, start);
-            
+            start = builder.BuildLoad2(LLVMTypeRef.Int32, start);
+
             var index = builder.BuildIntCast(CompileExpression(node.Extension), LLVMTypeRef.Int32);
             var size = builder.BuildStructGEP2(newValue.TypeRef, value.ValueRef, 2);
-                size= builder.BuildLoad2(LLVMTypeRef.Int32, size);
-                var indexOutOfBoundsBlock = module.Context.AppendBasicBlock(context.CurrentFunction.Function, "index out of bounnds");
-                var okIndexBlock = module.Context.AppendBasicBlock(context.CurrentFunction.Function, "ok");
-                var smaller = builder.BuildICmp(LLVMIntPredicate.LLVMIntSLT, index, start);
-                var bigger = builder.BuildICmp(LLVMIntPredicate.LLVMIntSGT, index, builder.BuildAdd(start, size));
-                var goodIndex = builder.BuildOr(smaller,
-                    bigger);
-                builder.BuildCondBr(goodIndex, indexOutOfBoundsBlock, okIndexBlock);
-                builder.PositionAtEnd(indexOutOfBoundsBlock);
-                // TODO: in the error say which side the index is out of bounds for
-                Error($"Index %d is out of bounds, for array {node.Name} of type {newValue.Inner()}", [index], node);
-                builder.PositionAtEnd(okIndexBlock);
+            size = builder.BuildLoad2(LLVMTypeRef.Int32, size);
+            var indexOutOfBoundsBlock = module.Context.AppendBasicBlock(
+                context.CurrentFunction.Function,
+                "index out of bounnds"
+            );
+            var okIndexBlock = module.Context.AppendBasicBlock(
+                context.CurrentFunction.Function,
+                "ok"
+            );
+            var smaller = builder.BuildICmp(LLVMIntPredicate.LLVMIntSLT, index, start);
+            var bigger = builder.BuildICmp(
+                LLVMIntPredicate.LLVMIntSGT,
+                index,
+                builder.BuildAdd(start, size)
+            );
+            var goodIndex = builder.BuildOr(smaller, bigger);
+            builder.BuildCondBr(goodIndex, indexOutOfBoundsBlock, okIndexBlock);
+            builder.PositionAtEnd(indexOutOfBoundsBlock);
+            // TODO: in the error say which side the index is out of bounds for
+            Error(
+                $"Index %d is out of bounds, for array {node.Name} of type {newValue.Inner()}",
+                [index],
+                node
+            );
+            builder.PositionAtEnd(okIndexBlock);
             var array = builder.BuildStructGEP2(newValue.TypeRef, value.ValueRef, 0);
             var a = builder.BuildLoad2(LLVMTypeRef.CreatePointer(elementType, 0), array);
             index = builder.BuildSub(index, start);
@@ -639,8 +653,11 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         // TODO: preallocate records to (might need to be recursive)
         if (node.Type is ArrayType a)
         {
-            var arraySize = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32,  (ulong)(a.Range.To -a.Range.From)) ;
-            var arrayStart = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32,  (ulong)a.Range.From) ;
+            var arraySize = LLVMValueRef.CreateConstInt(
+                LLVMTypeRef.Int32,
+                (ulong)(a.Range.To - a.Range.From)
+            );
+            var arrayStart = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, (ulong)a.Range.From);
             var arrayAllocation = builder.BuildArrayAlloca(
                 (LLVMTypeRef)context.GetLLVMTypeFromShankType(a.Inner),
                 arraySize
