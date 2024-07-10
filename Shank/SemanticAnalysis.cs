@@ -495,17 +495,16 @@ public class SemanticAnalysis
                 (GenericType g, _) => MatchTypesGeneric(g, type),
                 // you cannot pass as a parameter a more general type that corresponds to an argument with a more specific type
                 // we know this is a more general argument because the case above catches all generic parameters (even ones with a generic argument)
-                (_ , GenericType) => Option.None<IEnumerable<(string, Type)>>(),
+                (_, GenericType) => Option.None<IEnumerable<(string, Type)>>(),
                 // if we have a reference type and a another reference type we just unify their inner types
-                (ReferenceType param, ReferenceType arg)
-                    => MatchTypes(param.Inner, arg.Inner),
+                (ReferenceType param, ReferenceType arg) => MatchTypes(param.Inner, arg.Inner),
                 // // an instantiated type holds two things the actual types and the actual types for any generics in the actual type
                 // to find the substitution for tow instantiated types we first verify that they are the same underlying type the `where ... Equals ...`
                 (InstantiatedType param, InstantiatedType arg) when arg.Inner.Equals(param.Inner)
                     => MatchTypesInstantiated(param, arg),
                 // TODO: validate ranges
                 // same as ReferenceType but for arrays
-                (ArrayType  param,  ArrayType arg )=> MatchTypes(param.Inner, arg.Inner),
+                (ArrayType param, ArrayType arg) => MatchTypes(param.Inner, arg.Inner),
                 ({ } a, { } b)
                     => Option.Some(Enumerable.Empty<(string, Type)>()).Where(_ => !a.Equals(b))
             };
