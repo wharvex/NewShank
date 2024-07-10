@@ -29,6 +29,6 @@ public class VariableUsageMemberNode(VariableUsageNodeTemp left, MemberAccessNod
 
     public override ASTNode? Walk(SAVisitor v)
     {
-        throw new NotImplementedException();
+        return this;
     }
 }

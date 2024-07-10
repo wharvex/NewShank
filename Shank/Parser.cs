@@ -2150,10 +2150,19 @@ public class Parser
             return exp;
         }
 
-        //if it is just a variable return that variable
-        if (GetVariableUsagePlainNode(moduleName) is { } variable)
+        if (GetVuopTestFlag())
         {
-            return variable;
+            if (GetVariableUsageNode(moduleName) is { } v)
+            {
+                return v;
+            }
+        }
+        else
+        {
+            if (GetVariableUsagePlainNode(moduleName) is { } variable)
+            {
+                return variable;
+            }
         }
 
         //if it is a string literal

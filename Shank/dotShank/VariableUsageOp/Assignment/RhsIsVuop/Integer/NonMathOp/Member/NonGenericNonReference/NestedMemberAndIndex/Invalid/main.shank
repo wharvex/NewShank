@@ -10,5 +10,5 @@ define start()
 variables students : array from 0 to 99 of Student
 variables numberTemp : string
     students[4].courses[3].number := 101
-    numberTempt := students[4].courses[3].number
+    numberTemp := students[4].courses[3].number
     write "hello from Vuop Assignment LhsIsVuop Integer NonMathOp Member NonGenericNonReference NestedMemberAndIndex Valid"

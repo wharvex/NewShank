@@ -45,6 +45,7 @@ You can run multiple dotnet run commands with your choice of input files and con
 $config_values = $(Get-Content "./TestScriptConfigValues.txt")
 
 function st {
+    [OutputType([String])]
     [CmdletBinding()]
     param(
       [PSDefaultValue(Help='File containing lines of arguments to pass to `dotnet run`')]
@@ -55,12 +56,10 @@ function st {
     )
 
     $project_file_path = $config_values[1]
-
     $input_exts = -split $config_values[2]
+    $input_file_path_arg_position = $config_values[3]
 
     $args_lines = $(Get-Content $args_lines_source)
-
-    $input_file_path_arg_position = $config_values[3]
 
     # script block to run all input files
     $run_all = {
@@ -79,7 +78,8 @@ function st {
             { "( Program $($i + 1) of $($args_lines.Length) )" } `
             else { '( Program 1 of 1 )' }
 
-        $input_files = Get-ChildItem $args_list[$input_file_path_arg_position] -r | where { $_.Extension -in $input_exts }
+        $input_files = Get-ChildItem $args_list[$input_file_path_arg_position] `
+            -r | Where-Object { $_.Extension -in $input_exts }
 
         foreach ($file in $input_files ) {
             Write-Host "`n**** Input File Path $progress ****`n" -ForegroundColor green
