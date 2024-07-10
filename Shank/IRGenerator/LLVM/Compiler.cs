@@ -754,10 +754,10 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
                 CompileBuiltinIsSet(node, function);
                 break;
             case "high":
-                CompileBuiltinHigh( function);
+                CompileBuiltinHigh(function);
                 break;
             case "low":
-                CompileBuiltinLow( function);
+                CompileBuiltinLow(function);
                 break;
             case "size":
                 CompileBuiltinSize(node, function);
@@ -787,26 +787,27 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
     {
         // we don't need the actual reference as llvm type of the reference can be determined based on the signature of the function (effectively this is computed at compile time)
         // var memory = function.Function.FirstParam;
-        
+
         var size = function.Function.GetParam(1);
-        
+
         var type = (ReferenceType)node.ParameterVariables.First().Type;
         var innerTypeOfReference = type.Inner;
-        var llvmTypeOfReference = (LLVMTypeRef)context.GetLLVMTypeFromShankType(innerTypeOfReference);
+        var llvmTypeOfReference = (LLVMTypeRef)
+            context.GetLLVMTypeFromShankType(innerTypeOfReference);
         var referenceSize = llvmTypeOfReference.SizeOf;
         builder.BuildStore(referenceSize, size);
         builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
     }
 
-    private void CompileBuiltinHigh( LLVMShankFunction function)
+    private void CompileBuiltinHigh(LLVMShankFunction function)
     {
         // we have to get the runtime array start and size as opposed to just looking at the signature of the function because we do not monomorphize over the type limits
         var array = function.Function.FirstParam;
         var end = function.Function.GetParam(1);
         var arrayStart = builder.BuildExtractValue(array, 1);
-        var arraySize =  builder.BuildExtractValue(array, 2);
+        var arraySize = builder.BuildExtractValue(array, 2);
         var arrayEnd = builder.BuildAdd(arrayStart, arraySize);
-        builder.BuildStore( arrayEnd, end);
+        builder.BuildStore(arrayEnd, end);
         builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
     }
 
