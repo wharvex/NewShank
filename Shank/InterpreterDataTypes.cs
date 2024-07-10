@@ -186,19 +186,20 @@ public class ReferenceDataType : InterpreterDataType
 public class ArrayDataType : InterpreterDataType
 {
     public List<object> Value { get; }
-
-    public Type ArrayContentsType { get; init; }
+    private Range range { get; }
+public ArrayType Type => new(ArrayContentsType, range);
+public Type ArrayContentsType { get; init; }
 
     public ArrayDataType(ArrayType arrayType)
     {
         Value = [];
+        range = arrayType.Range;
         ArrayContentsType = arrayType.Inner;
     }
 
-    public ArrayDataType(List<object> val, Type arrayContentsType)
+    public ArrayDataType(List<object> val, ArrayType arrayType) : this(arrayType)
     {
-        Value = val;
-        ArrayContentsType = arrayContentsType;
+        
     }
 
     public void AddElement(object element, int idx)

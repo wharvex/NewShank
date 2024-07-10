@@ -516,7 +516,7 @@ public class ArrayTypeToArrayDataTypeConvertingVisitor : IArrayTypeVisitor
                 at.Inner.Accept(ttiVis);
                 adtList.Insert(i, ttiVis.Idt);
             });
-        Adt = new ArrayDataType(adtList, at.Inner);
+        Adt = new ArrayDataType(adtList, at);
     }
 }
 

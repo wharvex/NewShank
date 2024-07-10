@@ -71,6 +71,6 @@ public static class TypesHelper
             {
                 adtList.Insert(i, t.Inner.ToIdt(null));
             });
-        return new ArrayDataType(adtList, t.Inner);
+        return new ArrayDataType(adtList, t);
     }
 }

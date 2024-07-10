@@ -860,7 +860,7 @@ public class Interpreter
         else
         {
             // Passing in the whole array as a new ADT.
-            paramsList.Add(new ArrayDataType(adt.Value, adt.ArrayContentsType));
+            paramsList.Add(new ArrayDataType(adt.Value, adt.Type));
         }
     }
 

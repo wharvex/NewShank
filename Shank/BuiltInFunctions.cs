@@ -8,7 +8,8 @@ public class BuiltInFunctions
     public static int numberOfBuiltInFunctions = 0;
 
     public static void Register(Dictionary<string, CallableNode> functionList)
-    { // Note to the reader - this implementation is different than what I have the students writing in Java.
+    {
+        // Note to the reader - this implementation is different than what I have the students writing in Java.
         // The concepts are the same, but this is more language appropriate. This would be too hard for
         // the students to do in Java.
         CallableNode.BuiltInCall call = FreeMemory;
@@ -19,8 +20,7 @@ public class BuiltInFunctions
             new BuiltInVariadicFunctionNode("writeToTest", WriteToTest),
             MakeNode(
                 "squareRoot",
-                new VariableDeclarationNode[]
-                {
+                [
                     new VariableDeclarationNode()
                     {
                         Name = "value",
@@ -32,27 +32,25 @@ public class BuiltInFunctions
                         Name = "result",
                         Type = new RealType(),
                         IsConstant = false
-                    },
-                },
+                    }
+                ],
                 SquareRoot
             ),
             MakeNode(
                 "getRandom",
-                new VariableDeclarationNode[]
-                {
+                [
                     new VariableDeclarationNode()
                     {
                         Name = "result",
                         Type = new IntegerType(),
                         IsConstant = false
-                    },
-                },
+                    }
+                ],
                 Random
             ),
             MakeNode(
                 "integerToReal",
-                new VariableDeclarationNode[]
-                {
+                [
                     new VariableDeclarationNode()
                     {
                         Name = "value",
@@ -64,14 +62,13 @@ public class BuiltInFunctions
                         Name = "result",
                         Type = new RealType(),
                         IsConstant = false
-                    },
-                },
+                    }
+                ],
                 IntegerToReal
             ),
             MakeNode(
                 "realToInteger",
-                new VariableDeclarationNode[]
-                {
+                [
                     new VariableDeclarationNode()
                     {
                         Name = "value",
@@ -83,14 +80,13 @@ public class BuiltInFunctions
                         Name = "result",
                         Type = new IntegerType(),
                         IsConstant = false
-                    },
-                },
+                    }
+                ],
                 RealToInteger
             ),
             MakeNode(
                 "left",
-                new VariableDeclarationNode[]
-                {
+                [
                     new VariableDeclarationNode()
                     {
                         Name = "value",
@@ -108,14 +104,13 @@ public class BuiltInFunctions
                         Name = "result",
                         Type = new StringType(),
                         IsConstant = false
-                    },
-                },
+                    }
+                ],
                 Left
             ),
             MakeNode(
                 "right",
-                new VariableDeclarationNode[]
-                {
+                [
                     new VariableDeclarationNode()
                     {
                         Name = "value",
@@ -133,14 +128,13 @@ public class BuiltInFunctions
                         Name = "result",
                         Type = new StringType(),
                         IsConstant = false
-                    },
-                },
+                    }
+                ],
                 Right
             ),
             MakeNode(
                 "substring",
-                new VariableDeclarationNode[]
-                {
+                [
                     new VariableDeclarationNode()
                     {
                         Name = "value",
@@ -164,14 +158,13 @@ public class BuiltInFunctions
                         Name = "result",
                         Type = new StringType(),
                         IsConstant = false
-                    },
-                },
+                    }
+                ],
                 Substring
             ),
             MakeNode(
                 "assertIsEqual",
-                new VariableDeclarationNode[]
-                {
+                [
                     new VariableDeclarationNode()
                     {
                         Name = "actualValue",
@@ -184,9 +177,54 @@ public class BuiltInFunctions
                         Type = new IntegerType(),
                         IsConstant = true
                     }
-                },
+                ],
                 AssertIsEqual
             ),
+
+
+            new("start", call)
+            {
+                Line = 0,
+                ParameterVariables =
+                [
+                    new VariableDeclarationNode()
+                    {
+                        Name = "someArray",
+                        Type = new ArrayType(new GenericType("T"), ArrayType.DefaultRange),
+                        IsConstant = true
+                    },
+                    new VariableDeclarationNode()
+                    {
+                        Name = "start",
+                        Type = new IntegerType(),
+                        IsConstant = false
+                    }
+                ],
+                GenericTypeParameterNames = ["T"],
+                Execute = Start
+            },
+            new("end", call)
+            {
+                Line = 0,
+                ParameterVariables =
+                [
+                    new VariableDeclarationNode()
+                    {
+                        Name = "someArray",
+                        Type = new ArrayType(new GenericType("T"), ArrayType.DefaultRange),
+                        IsConstant = true
+                    },
+                    new VariableDeclarationNode()
+                    {
+                        Name = "end",
+                        Type = new IntegerType(),
+                        IsConstant = false
+                    }
+                ],
+                GenericTypeParameterNames = ["T"],
+                Execute = End
+            },
+
             new("allocateMemory", call)
             {
                 Line = 0,
@@ -264,6 +302,7 @@ public class BuiltInFunctions
         {
             functionList[f.Name] = f;
         }
+
         numberOfBuiltInFunctions = retVal.Count;
     }
 
@@ -481,6 +520,35 @@ public class BuiltInFunctions
             $"Expected<{i}>, Actual<{j}>";
     }
 
+    
+    private static void Start(List<InterpreterDataType> parameters)
+    {
+        if (parameters is [ArrayDataType adt, IntDataType idt])
+        {
+            idt.Value = (int)adt.Type.Range.From;
+        }
+        else
+        {
+            
+            throw new Exception(
+                "Start requires the following parameters: array, var integer"
+            );
+        }
+    }
+    private static void End(List<InterpreterDataType> parameters)
+    {
+        if (parameters is [ArrayDataType adt, IntDataType idt])
+        {
+            idt.Value = (int)adt.Type.Range.To;
+        }
+        else
+        {
+            
+            throw new Exception(
+                "End requires the following parameters: array, var integer"
+            );
+        }
+    }
     public static void AllocateMemory(List<InterpreterDataType> parameters)
     {
         if (parameters[0] is ReferenceDataType rdt)
@@ -557,6 +625,7 @@ public class BuiltInFunctions
                     break;
             }
         }
+
         return size;
     }
 }
