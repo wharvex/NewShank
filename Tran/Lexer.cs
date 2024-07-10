@@ -34,7 +34,6 @@ public class Lexer
         keywordHash["string"] = TokenType.STRING;
         keywordHash["implements"] = TokenType.IMPLEMENTS;
         keywordHash["accessor"] = TokenType.ACCESSOR;
-        keywordHash["value"] = TokenType.VALUE;
         keywordHash["loop"] = TokenType.LOOP;
         keywordHash["mutator"] = TokenType.MUTATOR;
         keywordHash["console"] = TokenType.CONSOLE;

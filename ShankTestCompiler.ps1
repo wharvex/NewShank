@@ -121,6 +121,7 @@ function cst
         {
             if ( $compile.Equals("h"))
             {
+                echo "cst(1) --- MANUAL PAGE"
                 echo ""
                 echo "NAME"
                 echo ""
@@ -129,6 +130,7 @@ function cst
                 echo "SYNOPSIS"
                 echo ""
                 echo " cst [c|i|h] [0-10]"
+                echo "run in order"
                 echo ""
                 echo "DESCRIPTION"
                 echo ""
@@ -140,6 +142,37 @@ function cst
                 echo ""
                 echo "0-10 - index, specfies a specific script you want to run. they are 8 compiler scripts, 10 Interpret scripts
                         leave blank if you want to run all"
+                echo "DESCRIPTION OF TEST SCRIPTS"
+                echo ""
+                echo "i - can run in interpter"
+                echo "c - can run in compiler, if there is a (no) or (iffy) next to it it means this is not ready yet"
+                echo "index - shows what index you need"
+                echo ""
+                echo "ModuleTest1 i,c, index 1 - Tests modules. or a way to import multiple files without polluting the name space or semantic anaylsis failing, index 1"
+                echo "                  can run in both interpter and compiler"
+                echo "Records/simple i,c, index 2 - Test Records. which are structs in shank"
+                echo ""
+
+                echo "Array/sum i,c(iffy), index 3  - Test Arrays by calculating the sum of an array"
+                echo ""
+
+                echo "Records/Nested i,c(no), index 4  - Test if you can have a recored in a record"
+                echo ""
+
+                echo "Globals i,c, index 5  - Global Varaibles"
+                echo ""
+
+                echo "UnitTests i,c(no), index 6  - tests unit tests"
+                echo ""
+
+                echo "Builtins/Write i,c, index 7  - tests if built in functions work"
+                echo ""
+
+                echo "Enums i,c (maybe), index 8  - this tests enums"
+                echo ""
+                echo "the compiler test scripts may squash things together will fix eventually"
+
+
             }
             else
             {

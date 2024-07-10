@@ -84,7 +84,26 @@ public class PrototypeCompiler(Context context, LLVMBuilderRef builder, LLVMModu
 
     private void CompileEnumPrototype(EnumNode obj)
     {
-        throw new NotImplementedException();
+        // var llvmRecord = module.Context.CreateNamedStruct(node.Name);
+        var enumType = new LLVMEnumType(obj.EType, LLVMTypeRef.Int64);
+        context.Enums.Add(obj.EType.MonomorphizedIndex(), enumType);
+        var variable = context.NewVariable(obj.EType);
+        foreach (
+            var (param, index) in obj.EnumElementsVariables.Select((param, index) => (param, index))
+        )
+        {
+            context.AddVariable(
+                param.MonomorphizedName(),
+                variable(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, (ulong)index), false)
+            );
+        }
+
+        // context.AddVariable(
+        //     obj.EType.MonomorphizedIndex(),
+        //     variable(LLVMValueRef.CreateConstNull(LLVMTypeRef.Int64), false)
+        // );
+
+        // context.Records.Add(node.Type.MonomorphizedIndex, record);
     }
 
     private void CompileBuiltinFunctionPrototype(BuiltInFunctionNode node)

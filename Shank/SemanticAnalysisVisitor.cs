@@ -17,7 +17,6 @@ namespace Shank;
 //
 //     public void CheckType() { }
 // }
-
 public class SemanticAnalysisVisitor : Visitor
 {
     private static ProgramNode program;
@@ -298,6 +297,8 @@ public class SemanticAnalysisVisitor : Visitor
                     );
                 }
 
+                // Console.WriteLine(targetDeclaration.IsGlobal);
+
                 node.Target.ReferencesGlobalVariable = targetDeclaration.IsGlobal;
             }
 
@@ -409,7 +410,7 @@ public class SemanticAnalysisVisitor : Visitor
 
                     if (lower < from || upper > to)
                         throw new Exception(
-                            $"The variable {variable!} can only be assigned expressions that wont overstep its range."
+                            $"The variable {variable!} can only be assigned expressions that wont overstep its range ({from}..{to}), but attempted to assign to expression {expression} with range ({lower}..{upper}."
                         );
                 }
             }
@@ -1139,6 +1140,7 @@ public class SemanticAnalysisVisitor : Visitor
                     variableReferenceNode
                 );
             variableReferenceNode.ReferencesGlobalVariable = variable.IsGlobal;
+
             return (variableReferenceNode.ExtensionType, NewType: variable.Type) switch
             {
                 (ExtensionType: VariableUsagePlainNode.VrnExtType.None, _) => variable.Type,
