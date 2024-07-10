@@ -30,6 +30,10 @@ public class ModuleNode : ASTNode
 
     public Dictionary<string, TestNode> Tests { get; set; }
 
+    public Dictionary<string, CallableNode> OriginalFunctions { get; set; }
+
+    public Dictionary<string, CallableNode> BuiltIns { get; set; }
+
     public ModuleNode(string name)
     {
         this.Name = name;
@@ -42,6 +46,7 @@ public class ModuleNode : ASTNode
         ExportTargetNames = new LinkedList<string>();
         Tests = new Dictionary<string, TestNode>();
         Enums = new Dictionary<string, EnumNode>();
+        OriginalFunctions = Functions;
     }
 
     public void AddToFunctions(CallableNode fn)
@@ -496,10 +501,22 @@ public class ModuleNode : ASTNode
         if (temp != null)
             return temp;
 
-        foreach (var function in Functions)
+        // foreach (var function in Functions)
+        // {
+        //     Functions[function.Key] = (CallableNode)(
+        //         Functions[function.Key].Walk(v) ?? Functions[function.Key]
+        //     );
+        // }
+
+        foreach (var record in Records.Keys)
         {
-            Functions[function.Key] = (CallableNode)(
-                Functions[function.Key].Walk(v) ?? Functions[function.Key]
+            Records[record] = (RecordNode)(Records[record].Walk(v) ?? Records[record]);
+        }
+
+        foreach (var function in OriginalFunctions)
+        {
+            OriginalFunctions[function.Key] = (CallableNode)(
+                OriginalFunctions[function.Key].Walk(v) ?? OriginalFunctions[function.Key]
             );
         }
 

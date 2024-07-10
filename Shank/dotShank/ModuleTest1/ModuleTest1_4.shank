@@ -1,3 +1,5 @@
+module test4
+
 define min(a, b : integer; var c : integer)
 	if a < b then
 		c := a

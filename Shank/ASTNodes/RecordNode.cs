@@ -73,6 +73,15 @@ public class RecordNode(
 
     public override ASTNode? Walk(SAVisitor v)
     {
-        throw new NotImplementedException();
+        var temp = v.Visit(this);
+        if (temp != null)
+            return temp;
+
+        for (var index = 0; index < members.Count; index++)
+        {
+            members[index] = (VariableDeclarationNode)(members[index].Walk(v) ?? members[index]);
+        }
+
+        return v.PostWalk(this);
     }
 }
