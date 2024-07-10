@@ -180,7 +180,7 @@ public class BuiltInFunctions
                 ],
                 AssertIsEqual
             ),
-            new("start", call)
+            new("low", call)
             {
                 Line = 0,
                 ParameterVariables =
@@ -193,15 +193,15 @@ public class BuiltInFunctions
                     },
                     new VariableDeclarationNode()
                     {
-                        Name = "start",
+                        Name = "low",
                         Type = new IntegerType(),
                         IsConstant = false
                     }
                 ],
                 GenericTypeParameterNames = ["T"],
-                Execute = Start
+                Execute = Low
             },
-            new("end", call)
+            new("high", call)
             {
                 Line = 0,
                 ParameterVariables =
@@ -214,13 +214,13 @@ public class BuiltInFunctions
                     },
                     new VariableDeclarationNode()
                     {
-                        Name = "end",
+                        Name = "high",
                         Type = new IntegerType(),
                         IsConstant = false
                     }
                 ],
                 GenericTypeParameterNames = ["T"],
-                Execute = End
+                Execute = High
             },
             new("allocateMemory", call)
             {
@@ -517,7 +517,7 @@ public class BuiltInFunctions
             $"Expected<{i}>, Actual<{j}>";
     }
 
-    private static void Start(List<InterpreterDataType> parameters)
+    private static void Low(List<InterpreterDataType> parameters)
     {
         if (parameters is [ArrayDataType adt, IntDataType idt])
         {
@@ -525,11 +525,11 @@ public class BuiltInFunctions
         }
         else
         {
-            throw new Exception("Start requires the following parameters: array, var integer");
+            throw new Exception("Low requires the following parameters: array, var integer");
         }
     }
 
-    private static void End(List<InterpreterDataType> parameters)
+    private static void High(List<InterpreterDataType> parameters)
     {
         if (parameters is [ArrayDataType adt, IntDataType idt])
         {
@@ -537,7 +537,7 @@ public class BuiltInFunctions
         }
         else
         {
-            throw new Exception("End requires the following parameters: array, var integer");
+            throw new Exception("High requires the following parameters: array, var integer");
         }
     }
 

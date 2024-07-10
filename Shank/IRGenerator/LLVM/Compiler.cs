@@ -753,9 +753,71 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
             case "isSet":
                 CompileBuiltinIsSet(node, function);
                 break;
+            case "high":
+                CompileBuiltinHigh( function);
+                break;
+            case "low":
+                CompileBuiltinLow( function);
+                break;
+            case "size":
+                CompileBuiltinSize(node, function);
+                break;
+            case "left":
+                CompileBuiltinLeft(node, function);
+                break;
+            case "right":
+                CompileBuiltinRight(node, function);
+                break;
             default:
                 throw new CompilerException("Undefined builtin", 0);
         }
+    }
+
+    private void CompileBuiltinRight(BuiltInFunctionNode node, LLVMShankFunction function)
+    {
+        throw new NotImplementedException();
+    }
+
+    private void CompileBuiltinLeft(BuiltInFunctionNode node, LLVMShankFunction function)
+    {
+        throw new NotImplementedException();
+    }
+
+    private void CompileBuiltinSize(BuiltInFunctionNode node, LLVMShankFunction function)
+    {
+        // we don't need the actual reference as llvm type of the reference can be determined based on the signature of the function (effectively this is computed at compile time)
+        // var memory = function.Function.FirstParam;
+        
+        var size = function.Function.GetParam(1);
+        
+        var type = (ReferenceType)node.ParameterVariables.First().Type;
+        var innerTypeOfReference = type.Inner;
+        var llvmTypeOfReference = (LLVMTypeRef)context.GetLLVMTypeFromShankType(innerTypeOfReference);
+        var referenceSize = llvmTypeOfReference.SizeOf;
+        builder.BuildStore(referenceSize, size);
+        builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
+    }
+
+    private void CompileBuiltinHigh( LLVMShankFunction function)
+    {
+        // we have to get the runtime array start and size as opposed to just looking at the signature of the function because we do not monomorphize over the type limits
+        var array = function.Function.FirstParam;
+        var end = function.Function.GetParam(1);
+        var arrayStart = builder.BuildExtractValue(array, 1);
+        var arraySize =  builder.BuildExtractValue(array, 2);
+        var arrayEnd = builder.BuildAdd(arrayStart, arraySize);
+        builder.BuildStore( arrayEnd, end);
+        builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
+    }
+
+    private void CompileBuiltinLow(LLVMShankFunction function)
+    {
+        // we have to get the runtime array start as opposed to just looking at the signature of the function because we do not monomorphize over the type limits
+        var array = function.Function.FirstParam;
+        var start = function.Function.GetParam(1);
+        var arrayStart = builder.BuildExtractValue(array, 1);
+        builder.BuildStore(arrayStart, start);
+        builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
     }
 
     private void CompileBuiltinIsSet(BuiltInFunctionNode node, LLVMShankFunction function)
