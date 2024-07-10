@@ -197,13 +197,16 @@ public struct CFuntions
         printf.Linkage = LLVMLinkage.LLVMExternalLinkage;
         // llvm does not like void pointers, so we most places I've seen use i8* instead
         var voidStar = LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0);
+        
         memcpy = llvmModule.addFunction(
             "memcpy",
             LLVMTypeRef.CreateFunction(voidStar, [voidStar, voidStar, sizeT])
         );
         memcpy.Linkage = LLVMLinkage.LLVMExternalLinkage;
         malloc = llvmModule.addFunction("malloc", LLVMTypeRef.CreateFunction(voidStar, [sizeT]));
-        malloc.Linkage = LLVMLinkage.LLVMExternalLinkage;
+        memcpy.Linkage = LLVMLinkage.LLVMExternalLinkage;
+        exit = llvmModule.addFunction("exit", LLVMTypeRef.CreateFunction(LLVMTypeRef.Void, [LLVMTypeRef.Int32, ]));
+        exit.Linkage = LLVMLinkage.LLVMExternalLinkage;
     }
 
     //  int printf(const char *restrict format, ...);
@@ -215,25 +218,21 @@ public struct CFuntions
 
     // void *malloc(size_t n);
     public LLVMFunction malloc { get; }
+    // void exit(int exit_code);
+    public LLVMFunction exit { get; }
 }
 
-public class Context
+public class Context(MonomorphizedProgramNode moduleNode, CFuntions cFuntions)
 {
-    private readonly MonomorphizedProgramNode moduleNode;
+    private readonly MonomorphizedProgramNode moduleNode = moduleNode;
 
     public LLVMTypeRef StringType = LLVMTypeRef.CreateStruct(
         [LLVMTypeRef.Int32, LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0)],
         false
     );
 
-    public Context(MonomorphizedProgramNode moduleNode, CFuntions cFuntions)
-    {
-        this.moduleNode = moduleNode;
-        CFuntions = cFuntions;
-    }
-
     // public ModuleNode moduleNode { get; set; }
-    public CFuntions CFuntions { get; }
+    public CFuntions CFuntions { get; } = cFuntions;
     public LLVMFunction CurrentFunction { get; set; }
 
     // public Dictionary<string, LLVMShankFunction> BuiltinFunctions { get; } = new();
@@ -288,7 +287,8 @@ public class Context
                             (LLVMTypeRef)GetLLVMTypeFromShankType(a.Inner),
                             0
                         ),
-                        LLVMTypeRef.Int32
+                        LLVMTypeRef.Int32, // start
+                        LLVMTypeRef.Int32 // size
                     ],
                     false
                 ),
@@ -334,6 +334,7 @@ public class Context
                                     GetLLVMTypeFromShankType(arrayType.Inner).Value,
                                     0
                                 ),
+                                LLVMTypeRef.Int32,
                                 LLVMTypeRef.Int32
                             ],
                             false
