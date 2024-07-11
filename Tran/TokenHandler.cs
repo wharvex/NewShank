@@ -33,8 +33,15 @@ public class TokenHandler
         {
             var matchedToken = tokens.First.Value;
             tokens.RemoveFirst();
+          //  PrintToken(matchedToken);
             return matchedToken;
         }
         return null;
+    }
+    
+    //to debug
+    public void PrintToken(Token token)
+    {
+        Console.WriteLine($"Token: {token.GetType()}, Value={token.GetValue()}");
     }
 }

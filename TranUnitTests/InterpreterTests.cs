@@ -74,7 +74,7 @@ namespace TranUnitTests
             foreach (KeyValuePair<string, ModuleNode> currentModulePair in Interpreter.Modules)
             {
                 var currentModule = currentModulePair.Value;
-                //Console.WriteLine($"\nOutput of {currentModule.getName()}:\n");
+               // Console.WriteLine($"\nOutput of {currentModule.getName()}:\n");
 
                 if (
                     currentModule.getFunctions().ContainsKey("start")
@@ -128,6 +128,18 @@ class start
             RunInterpreter();
         }
 
+        [TestMethod]
+        public void InterpreterTestPrint()
+        {
+            InitializeInterpreter(
+                @"
+class start
+    start()
+        console.print (tran)".Replace("    ", "\t")
+            );
+            RunInterpreter();
+        }
+        
         [TestMethod]
         public void InterpreterTestFields()
         {

@@ -267,7 +267,7 @@ class Tran
             // Console.Write(expression);
             Assert.AreEqual(expected, expression!.ToString());
         }
-
+       
         [TestMethod]
         public void ParseBuiltInFunctionNodeTestTimes()
         {
@@ -279,16 +279,7 @@ class Tran
             // Console.Write(expression);
         }
 
-        [TestMethod]
-        public void ParseBuiltInFunctionNodeTestPrint()
-        {
-            var testString = "console.print (temp)";
-            Lexer newLexer = new Lexer(testString);
-            LinkedList<Token> tokens = newLexer.Lex();
-            Parser newParser = new Parser(tokens);
-            // var expression = newParser.ParseBuiltInFunctionNode();
-            // Console.Write(expression);
-        }
+       
 
         [TestMethod]
         public void ParseBuiltInFunctionNodeTestGetDate()

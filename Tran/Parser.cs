@@ -123,7 +123,6 @@ public class Parser
             }
             return true;
         }
-
         return false;
     }
 
@@ -240,6 +239,8 @@ public class Parser
     {
         FunctionNode functionNode;
         Token? function;
+        //debug
+        //Console.WriteLine("here");
         List<VariableDeclarationNode> parameters;
         var isPublic = handler.MatchAndRemove(TokenType.PRIVATE) == null;
         var isShared = (isPublic && handler.MatchAndRemove(TokenType.SHARED) != null);
@@ -278,7 +279,6 @@ public class Parser
             functionNode.Statements = ParseBlock();
             return true;
         }
-
         return false;
     }
 
@@ -441,7 +441,7 @@ public class Parser
         return null;
     }
 
-    public string ParseBuiltInFunctionNode()
+    public string? ParseBuiltInFunctionNode()
     {
         if (handler.MatchAndRemove(TokenType.PERIOD) != null)
         {
@@ -489,25 +489,13 @@ public class Parser
             {
                 if (handler.MatchAndRemove(TokenType.PRINT) != null)
                 {
-                    if (handler.MatchAndRemove(TokenType.OPENPARENTHESIS) != null)
-                    {
-                        if (handler.MatchAndRemove(TokenType.CLOSEDPARENTHESIS) != null)
-                        {
-                            return "String";
-                        }
-                    }
-                    else
-                    {
-                        throw new Exception(
-                            "In ParseBuiltInFunctionNode method, Expected an opening parenthesis"
-                        );
-                    }
+                            return "write";
                 }
                 else
                 {
                     throw new Exception(
-                        "In ParseBuiltInFunctionNode method, Expected 'print' after 'console.'"
-                    );
+                        "In ParseBuiltInFunctionNode method, Expected a print after period"
+                    ); 
                 }
             }
             else
