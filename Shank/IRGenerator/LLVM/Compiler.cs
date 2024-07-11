@@ -306,7 +306,6 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
             (ulong)node.Value.Length
         );
 
-
         var stringContent = builder.BuildGlobalStringPtr(node.Value);
 
         // if we never mutate the string part directly, meaning when we do assignment we assign it a new string struct, then we do not need to do this malloc,
@@ -775,7 +774,6 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         }
     }
 
-
     private void CompileBuiltinSize(BuiltInFunctionNode node, LLVMShankFunction function)
     {
         // we don't need the actual reference as llvm type of the reference can be determined based on the signature of the function (effectively this is computed at compile time)
@@ -951,11 +949,22 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         var someString = function.Function.GetParam(0);
         var length = function.Function.GetParam(1);
         var resultString = function.Function.GetParam(2);
-        SubString(someString, LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0), length, resultString);
+        SubString(
+            someString,
+            LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0),
+            length,
+            resultString
+        );
         builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
     }
+
     // index passed in are zero based
-    private void SubString(LLVMValueRef someString, LLVMValueRef index, LLVMValueRef length, LLVMValueRef resultString)
+    private void SubString(
+        LLVMValueRef someString,
+        LLVMValueRef index,
+        LLVMValueRef length,
+        LLVMValueRef resultString
+    )
     {
         // TODO: bounds checking
         var someStringContents = builder.BuildExtractValue(someString, 0);
