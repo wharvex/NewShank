@@ -1,4 +1,6 @@
 define start()
-variables a : array from 0 to 9 of integer
-    a[0] := "three"
-    write "hello from Vuop Assignment LhsIsVuop Integer NonMathOp Index Invalid"
+variables a : string
+variables b : array from 1 to 10 of real
+    b[1] := 33.3
+    a := b[1]
+    write "hello from Vuop Assignment RhsIsVuop float NonMathOp Index Invalid"

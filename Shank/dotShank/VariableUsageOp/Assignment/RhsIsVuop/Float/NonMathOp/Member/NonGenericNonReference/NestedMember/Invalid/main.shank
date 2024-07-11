@@ -1,13 +1,13 @@
 record Student
     name : string
-    course : Course
+    gpa : real
 
-record Course
-    number : integer
+record Advisor
+    advisee : Student
 
 define start()
-variables student : Student
-variables math : Course
-    student.course := math
-    student.course.number := "hello"
-    write "hello from Vuop Assignment LhsIsVuop Integer NonMathOp NestedMember Invalid"
+variables advisor : Advisor
+variables gpaTemp : string
+    advisor.advisee.gpa := 3.87
+    gpaTemp := advisor.advisee.gpa
+    write "hello from Vuop Assignment RhsIsVuop Float NonMathOp Member NonGenericNonReference NestedMember Invalid"

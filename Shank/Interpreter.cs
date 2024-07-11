@@ -291,8 +291,6 @@ public class Interpreter
             if (stmt is AssignmentNode an)
             {
                 var target = GetIdtFromVun(variables, an.NewTarget);
-                OutputHelper.DebugPrintJson(target, "nestedIdtTarget");
-                OutputHelper.DebugPrintJson(an.NewTarget, "nestedAnTarget");
                 switch (target)
                 {
                     case IntDataType it:
@@ -302,7 +300,7 @@ public class Interpreter
                         NewAssignToArray(at, an, variables);
                         break;
                     case FloatDataType ft:
-                        ft.Value = ResolveFloat(an.Expression, variables);
+                        ft.Value = NewResolveFloat(an.Expression, variables);
                         break;
                     case StringDataType st:
                         st.Value = ResolveString(an.Expression, variables);
@@ -439,8 +437,8 @@ public class Interpreter
         {
             BooleanType => ResolveBool(an.Expression, variables),
             StringType => ResolveString(an.Expression, variables),
-            RealType => ResolveFloat(an.Expression, variables),
-            IntegerType => ResolveInt(an.Expression, variables),
+            RealType => NewResolveFloat(an.Expression, variables),
+            IntegerType => NewResolveInt(an.Expression, variables),
             CharacterType => ResolveChar(an.Expression, variables),
             InstantiatedType => ResolveRecord(an.Expression, variables),
             ReferenceType => ResolveReference(an.Expression, variables),
@@ -500,7 +498,7 @@ public class Interpreter
             adt.ArrayContentsType switch
             {
                 IntegerType => NewResolveInt(an.Expression, variables),
-                RealType => ResolveFloat(an.Expression, variables),
+                RealType => NewResolveFloat(an.Expression, variables),
                 StringType => ResolveString(an.Expression, variables),
                 CharacterType => ResolveChar(an.Expression, variables),
                 BooleanType => ResolveBool(an.Expression, variables),
@@ -1322,11 +1320,11 @@ public class Interpreter
     {
         switch (node)
         {
-            case MathOpNode mon:
+            case MathOpNode m:
             {
-                var left = NewResolveInt(mon.Left, variables);
-                var right = NewResolveInt(mon.Right, variables);
-                return mon.Op switch
+                var left = NewResolveInt(m.Left, variables);
+                var right = NewResolveInt(m.Right, variables);
+                return m.Op switch
                 {
                     MathOpNode.MathOpType.Plus => left + right,
                     MathOpNode.MathOpType.Minus => left - right,
@@ -1336,13 +1334,46 @@ public class Interpreter
                     _ => throw new ArgumentOutOfRangeException()
                 };
             }
-            case IntNode fn:
-                return fn.Value;
-            case VariableUsageNodeTemp vun:
-                return ((IntDataType)GetIdtFromVun(variables, vun)).Value;
+            case IntNode i:
+                return i.Value;
+            case VariableUsageNodeTemp v:
+                return ((IntDataType)GetIdtFromVun(variables, v)).Value;
             default:
                 throw new ArgumentException(
                     "Unsupported node type for resolving to int: " + node.GetType(),
+                    nameof(node)
+                );
+        }
+    }
+
+    public static float NewResolveFloat(
+        ASTNode node,
+        Dictionary<string, InterpreterDataType> variables
+    )
+    {
+        switch (node)
+        {
+            case MathOpNode m:
+            {
+                var left = NewResolveFloat(m.Left, variables);
+                var right = NewResolveFloat(m.Right, variables);
+                return m.Op switch
+                {
+                    MathOpNode.MathOpType.Plus => left + right,
+                    MathOpNode.MathOpType.Minus => left - right,
+                    MathOpNode.MathOpType.Times => left * right,
+                    MathOpNode.MathOpType.Divide => left / right,
+                    MathOpNode.MathOpType.Modulo => left % right,
+                    _ => throw new ArgumentOutOfRangeException()
+                };
+            }
+            case FloatNode f:
+                return f.Value;
+            case VariableUsageNodeTemp v:
+                return ((FloatDataType)GetIdtFromVun(variables, v)).Value;
+            default:
+                throw new ArgumentException(
+                    "Unsupported node type for resolving to float: " + node.GetType(),
                     nameof(node)
                 );
         }

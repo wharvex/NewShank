@@ -1,0 +1,10 @@
+Interpret Shank/dotShank/VariableUsageOp/Assignment/RhsIsVuop/Float/NonMathOp/Plain/Valid --vuop-test
+Interpret Shank/dotShank/VariableUsageOp/Assignment/RhsIsVuop/Float/NonMathOp/Plain/Invalid --vuop-test
+Interpret Shank/dotShank/VariableUsageOp/Assignment/RhsIsVuop/Float/NonMathOp/Index/Valid --vuop-test
+Interpret Shank/dotShank/VariableUsageOp/Assignment/RhsIsVuop/Float/NonMathOp/Index/Invalid --vuop-test
+Interpret Shank/dotShank/VariableUsageOp/Assignment/RhsIsVuop/Float/NonMathOp/Member/NonGenericNonReference/SimpleMember/Valid --vuop-test
+Interpret Shank/dotShank/VariableUsageOp/Assignment/RhsIsVuop/Float/NonMathOp/Member/NonGenericNonReference/SimpleMember/Invalid --vuop-test
+Interpret Shank/dotShank/VariableUsageOp/Assignment/RhsIsVuop/Float/NonMathOp/Member/NonGenericNonReference/NestedMember/Valid --vuop-test
+Interpret Shank/dotShank/VariableUsageOp/Assignment/RhsIsVuop/Float/NonMathOp/Member/NonGenericNonReference/NestedMember/Invalid --vuop-test
+Interpret Shank/dotShank/VariableUsageOp/Assignment/RhsIsVuop/Float/NonMathOp/Member/NonGenericNonReference/NestedMemberAndIndex/Valid --vuop-test
+Interpret Shank/dotShank/VariableUsageOp/Assignment/RhsIsVuop/Float/NonMathOp/Member/NonGenericNonReference/NestedMemberAndIndex/Invalid --vuop-test

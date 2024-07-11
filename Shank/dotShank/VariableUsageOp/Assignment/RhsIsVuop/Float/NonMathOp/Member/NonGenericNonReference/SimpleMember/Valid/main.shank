@@ -1,7 +1,9 @@
 record Student
-    courseLoad : integer
+    gpa : real
 
 define start()
 variables student : Student
-    student.courseLoad := 5
-    write "hello from Vuop Assignment LhsIsVuop Integer NonMathOp Member Valid"
+variables gpaTemp : real
+    student.gpa := 3.87
+    gpaTemp := student.gpa
+    write "hello from Vuop Assignment RhsIsVuop Float NonMathOp Member NonGenericNonReference SimpleMember Valid"
