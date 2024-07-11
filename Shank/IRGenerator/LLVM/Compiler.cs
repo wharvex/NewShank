@@ -164,6 +164,23 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         );
     }
 
+    private void Error(string message, LLVMValueRef[] values)
+    {
+        
+        builder.BuildCall2(
+            context.CFuntions.printf.TypeOf,
+            context.CFuntions.printf.Function,
+            values
+                .Prepend(builder.BuildGlobalStringPtr($"Error: {message}\n"))
+                .ToArray()
+        );
+        builder.BuildCall2(
+            context.CFuntions.exit.TypeOf,
+            context.CFuntions.exit.Function,
+            [LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 1)]
+        );
+        builder.BuildUnreachable();
+    }
     private void Error(string message, LLVMValueRef[] values, ASTNode node)
     {
         builder.BuildCall2(
@@ -777,6 +794,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
     public void CompileBuiltinFunction(BuiltInFunctionNode node)
     {
         var function = context.BuiltinFunctions[(TypedBuiltinIndex)node.MonomorphizedName];
+        context.CurrentFunction = function;
         var block = function.AppendBasicBlock("entry");
         builder.PositionAtEnd(block);
         switch (node.Name)
@@ -974,11 +992,36 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         var index = function.Function.GetParam(1);
         var length = function.Function.GetParam(2);
         var resultString = function.Function.GetParam(3);
+        index = builder.BuildIntCast(index, LLVMTypeRef.Int32);
+       var indexZero = builder.BuildSub(index, LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 1));
+        var indexOutOfBoundsBlock = module.Context.AppendBasicBlock(context.CurrentFunction.Function, "out of bounds"); 
+        var indexInBoundsBlock = module.Context.AppendBasicBlock(context.CurrentFunction.Function, "in bounds");
+        var stringLength = builder.BuildExtractValue(someString, 1);
+        var outOfBounds = builder.BuildOr(builder.BuildICmp(LLVMIntPredicate.LLVMIntSLT, index,
+            LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 1)),
+            builder.BuildICmp(LLVMIntPredicate.LLVMIntSGT, index, stringLength));
 
-        index = builder.BuildIntCast(length, LLVMTypeRef.Int32);
+        builder.BuildCondBr(outOfBounds, indexOutOfBoundsBlock, indexInBoundsBlock);
+        builder.PositionAtEnd(indexOutOfBoundsBlock);
+            Error(
+                $"Index %d is out of bounds, for string with length %d in call to substring",
+                [index, stringLength]
+            );
+            builder.PositionAtEnd(indexInBoundsBlock);
+        var indexAndLengthOutOfBoundsBlock = module.Context.AppendBasicBlock(context.CurrentFunction.Function, "out of bounds"); 
+        var indexAndLengthInBoundsBlock = module.Context.AppendBasicBlock(context.CurrentFunction.Function, "in bounds");
+        // we use index zero because when we substring we start at index and go for length characters (start..=start+length) so the first character we take is the start and we will have length - 1 characters left
+        var outOfBoundsWithLength = builder.BuildICmp(LLVMIntPredicate.LLVMIntSGT, builder.BuildAdd( indexZero, builder.BuildIntCast( length, LLVMTypeRef.Int32)), stringLength);
+        builder.BuildCondBr(outOfBoundsWithLength, indexAndLengthOutOfBoundsBlock, indexAndLengthInBoundsBlock);
+        builder.PositionAtEnd(indexAndLengthOutOfBoundsBlock);
+            Error(
+                $"Index %d with length %d is out of bounds, for string with length %d in call to substring",
+                [index, length, stringLength]
+            );
+            builder.PositionAtEnd(indexAndLengthInBoundsBlock);
+
         // make index zero based
-        index = builder.BuildSub(index, LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 1));
-        SubString(someString, index, length, resultString);
+        SubString(someString, indexZero, length, resultString);
 
         builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
     }
@@ -987,8 +1030,22 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
     {
         var someString = function.Function.GetParam(0);
         var length = function.Function.GetParam(1);
+        var length32 = builder.BuildIntCast(length, LLVMTypeRef.Int32);
         var resultString = function.Function.GetParam(2);
         var stringLength = builder.BuildExtractValue(someString, 1);
+             var toBigLength = builder.BuildOr(builder.BuildICmp(LLVMIntPredicate.LLVMIntSLT, length32,
+                    LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0)),
+                    builder.BuildICmp(LLVMIntPredicate.LLVMIntSGT, length32, stringLength)
+                );
+                var toBigLengthBlock = module.Context.AppendBasicBlock(context.CurrentFunction.Function ,"bad length");
+                var goodLengthBlock = module.Context.AppendBasicBlock(context.CurrentFunction.Function ,"good length");
+                builder.BuildCondBr(toBigLength, toBigLengthBlock, goodLengthBlock);
+                builder.PositionAtEnd(toBigLengthBlock);
+                    Error(
+                        $"Length %d is to big for string with length %d in call to right",
+                        [length, stringLength]
+                    );
+                    builder.PositionAtEnd(goodLengthBlock);
         // substring starting string.lenth - length
         var index = builder.BuildIntCast(length, LLVMTypeRef.Int32);
         index = builder.BuildSub(stringLength, index);
@@ -1000,7 +1057,25 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
     {
         var someString = function.Function.GetParam(0);
         var length = function.Function.GetParam(1);
+        var length32 = builder.BuildIntCast(length, LLVMTypeRef.Int32);
         var resultString = function.Function.GetParam(2);
+        var stringLength = builder.BuildExtractValue(someString, 1);
+        var toBigLength = builder.BuildOr(builder.BuildICmp(LLVMIntPredicate.LLVMIntSLT, length32,
+            LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0)),
+            builder.BuildICmp(LLVMIntPredicate.LLVMIntSGT, length32, stringLength)
+        );
+        var toBigLengthBlock = module.Context.AppendBasicBlock(context.CurrentFunction.Function ,"bad length");
+        var goodLengthBlock = module.Context.AppendBasicBlock(context.CurrentFunction.Function ,"good length");
+        builder.BuildCondBr(toBigLength, toBigLengthBlock, goodLengthBlock);
+        builder.PositionAtEnd(toBigLengthBlock);
+            Error(
+                $"Length %d is to big for string with length %d in call to left",
+                [length, stringLength]
+            );
+            builder.PositionAtEnd(goodLengthBlock);
+        
+            
+        
         SubString(
             someString,
             LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0),
@@ -1011,6 +1086,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
     }
 
     // index passed in are zero based (must be 32 bit integers)
+    // bounds must be checked beforehand (so each string manipulation method can give its own specific errors)
     private void SubString(
         LLVMValueRef someString,
         LLVMValueRef index,
