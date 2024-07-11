@@ -33,12 +33,12 @@ public class TokenHandler
         {
             var matchedToken = tokens.First.Value;
             tokens.RemoveFirst();
-          //  PrintToken(matchedToken);
+            //  PrintToken(matchedToken);
             return matchedToken;
         }
         return null;
     }
-    
+
     //to debug
     public void PrintToken(Token token)
     {

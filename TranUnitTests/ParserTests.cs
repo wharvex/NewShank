@@ -267,7 +267,7 @@ class Tran
             // Console.Write(expression);
             Assert.AreEqual(expected, expression!.ToString());
         }
-       
+
         [TestMethod]
         public void ParseBuiltInFunctionNodeTestTimes()
         {
@@ -278,8 +278,6 @@ class Tran
             // var expression = newParser.ParseBuiltInFunctionNode();
             // Console.Write(expression);
         }
-
-       
 
         [TestMethod]
         public void ParseBuiltInFunctionNodeTestGetDate()

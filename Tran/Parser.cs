@@ -489,13 +489,13 @@ public class Parser
             {
                 if (handler.MatchAndRemove(TokenType.PRINT) != null)
                 {
-                            return "write";
+                    return "write";
                 }
                 else
                 {
                     throw new Exception(
                         "In ParseBuiltInFunctionNode method, Expected a print after period"
-                    ); 
+                    );
                 }
             }
             else
