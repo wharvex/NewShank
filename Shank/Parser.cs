@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Diagnostics;
+using Optional;
 using Shank.ASTNodes;
 
 namespace Shank;
@@ -743,7 +744,7 @@ public class Parser
             //if the type is a real number create a new RealType object
             //Range is checked against float values
             Token.TokenType.Real
-                => new RealType(CheckRange(true, RealType.DefaultRange)),
+                => new RealType(CheckRange((_,_) => Option.None<string>(), RealType.DefaultRange)),
 
             //custom type is returned if an identifier is found
             Token.TokenType.Identifier
@@ -751,14 +752,14 @@ public class Parser
 
             //IntegerType is returned if integer type is found
             Token.TokenType.Integer
-                => new IntegerType(CheckRange(false, IntegerType.DefaultRange)),
+                => new IntegerType(CheckRange(NormalRangeVerifier, IntegerType.DefaultRange)),
 
             //BooleanType is returned if boolean type is found
             Token.TokenType.Boolean
                 => new BooleanType(),
             Token.TokenType.Character
-                => new CharacterType(CheckRange(false, CharacterType.DefaultRange)),
-            Token.TokenType.String => new StringType(CheckRange(false, StringType.DefaultRange)),
+                => new CharacterType(CheckRange(NormalRangeVerifier, CharacterType.DefaultRange)),
+            Token.TokenType.String => new StringType(CheckRange((from, to ) => NormalRangeVerifier(from, to).FlatMap(_ => Option.Some($"a string type's range `from` must be 1, but was {from}").Filter(from is IntNode { Value: not  1} )), StringType.DefaultRange)),
             Token.TokenType.Array => ArrayTypeParser(declarationContext, typeToken),
             // we cannot check unknown type for refersTo being on enum, but if we have refersTo integer we can check that at parse time
             Token.TokenType.RefersTo
@@ -872,7 +873,7 @@ public class Parser
         Token? arrayToken
     )
     {
-        var range = CheckRangeInner(false, ArrayType.DefaultRange);
+        var range = CheckRangeInner(NormalRangeVerifier, ArrayType.DefaultRange);
         if (
             range is null
             && declarationContext == VariableDeclarationNode.DeclarationContext.VariablesLine
@@ -900,11 +901,15 @@ public class Parser
     /// <param name="isFloat">Whether or not the range provided is measured using float values</param>
     /// <param name="defaultRange">The expected default range</param>
     /// <returns>Range object returned from <c>CheckRangeInner</c></returns>
-    private Range CheckRange(bool isFloat, Range defaultRange)
+    private Range CheckRange(Func<ExpressionNode,ExpressionNode,Option<string>> rangeVerifier, Range defaultRange)
     {
-        return CheckRangeInner(isFloat, defaultRange) ?? defaultRange;
+        return CheckRangeInner(rangeVerifier, defaultRange) ?? defaultRange;
     }
 
+    private Option<string> NormalRangeVerifier(ExpressionNode to, ExpressionNode from)
+    {
+       return Option.Some("Expected integer type limits found float ones").Filter(to is FloatNode || from is FloatNode);
+    }
     /// <summary>
     ///     <para>
     ///         Method <c>CheckRangeInner</c> parses a range expression (see Shank documentation) and determines whether or not it is valid. If so the range is returned.
@@ -931,7 +936,7 @@ public class Parser
     ///         </item>
     ///     </list>
     /// </exception>
-    private Range? CheckRangeInner(bool isFloat, Range defaultRange)
+    private Range? CheckRangeInner(Func<ExpressionNode, ExpressionNode, Option<string>> rangeVerifier, Range defaultRange)
     {
         // remove the `from  token which signifies the start of a range
         // - if it is not there return null
@@ -961,10 +966,13 @@ public class Parser
         );
 
         //checks semantically to make sure our range node types are what is expected
-        if (!isFloat && (fromNode is FloatNode || toNode is FloatNode))
-        {
-            throw new SyntaxErrorException("Expected integer type limits found float ones", null);
-        }
+
+
+        var verifier = rangeVerifier(fromNode, toNode);
+        verifier.MatchSome(s =>
+            
+            throw new SyntaxErrorException(s, null)
+        );
 
         //get the value of the float is a FloatNode type is found else get the value of the IntNode
         var fromValue = fromNode is FloatNode from ? from.Value : ((IntNode)fromNode).Value;

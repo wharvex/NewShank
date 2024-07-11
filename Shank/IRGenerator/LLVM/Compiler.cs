@@ -975,6 +975,9 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         var length = function.Function.GetParam(2);
         var resultString = function.Function.GetParam(3);
 
+        index = builder.BuildIntCast(length, LLVMTypeRef.Int32);
+        // make index zero based
+        index = builder.BuildSub(index, LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 1));
         SubString(someString, index, length, resultString);
 
         builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
@@ -987,7 +990,8 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         var resultString = function.Function.GetParam(2);
         var stringLength = builder.BuildExtractValue(someString, 1);
         // substring starting string.lenth - length
-        var index = builder.BuildSub(stringLength, builder.BuildIntCast(length, LLVMTypeRef.Int32));
+        var index = builder.BuildIntCast(length, LLVMTypeRef.Int32);
+         index = builder.BuildSub(stringLength, index);
         SubString(someString, index, length, resultString);
         builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
     }
@@ -1006,7 +1010,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
     }
 
-    // index passed in are zero based
+    // index passed in are zero based (must be 32 bit integers)
     private void SubString(
         LLVMValueRef someString,
         LLVMValueRef index,
