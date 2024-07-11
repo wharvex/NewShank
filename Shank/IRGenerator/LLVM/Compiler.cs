@@ -405,18 +405,18 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         // also we do not know the order by which types are added to the llvm module
         var record = context.GetCustomType(node.Type.MonomorphizedIndex);
         var args = node.Type.Fields.Select(
-            s =>
-                // for records (and eventually references) we do not hold the actual type of the record, but rather a pointer to it, because llvm does not like direct recursive types
-                (
-                    s.Key,
-                    s.Value is RecordType
-                        ? LLVMTypeRef.CreatePointer(
-                            (LLVMTypeRef)context.GetLLVMTypeFromShankType(s.Value)!,
-                            0
-                        )
-                        : (LLVMTypeRef)context.GetLLVMTypeFromShankType(s.Value)!
-                )
-        )
+                s =>
+                    // for records (and eventually references) we do not hold the actual type of the record, but rather a pointer to it, because llvm does not like direct recursive types
+                    (
+                        s.Key,
+                        s.Value is RecordType
+                            ? LLVMTypeRef.CreatePointer(
+                                (LLVMTypeRef)context.GetLLVMTypeFromShankType(s.Value)!,
+                                0
+                            )
+                            : (LLVMTypeRef)context.GetLLVMTypeFromShankType(s.Value)!
+                    )
+            )
             .ToArray();
         record.LlvmTypeRef.StructSetBody(args.Select(s => s.Item2).ToArray(), false);
     }
@@ -430,11 +430,11 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
             // if any arguement is not mutable, but is required to be mutable
             if (
                 function
-                    .ArguementMutability.Zip( //mutable
-                        node.Arguments //Parameters //multable
+                .ArguementMutability.Zip( //mutable
+                    node.Arguments //Parameters //multable
                         .Select(p => p is VariableUsagePlainNode { IsVariableFunctionCall: true }) //.IsVariable)
-                    )
-                    .Any(a => a is { First: true, Second: false })
+                )
+                .Any(a => a is { First: true, Second: false })
             )
             {
                 throw new Exception($"call to {node.Name} has a mismatch of mutability");
@@ -586,20 +586,20 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
     public void CompileIf(IfNode node)
     {
         if (node.Expression != null)
-        // if the condition is null then it's an else statement, which can
-        // only happen after an if statement
-        // so is it's an if statement, and since we compile
-        // if statements recursively, like how we parse them
-        // we know that we already created the block for the
-        // else statement, when compiling the if part
-        // so we just compile the statements in the else block
-        // if the condition is not null we compile the condition,
-        // create two blocks one for if it's true, and for when the condition is false
-        // we then just compile the statements for when the condition
-        // is true under the true block, followed by a goto to an after block
-        // and we visit(compile) the IfNode for when the condition is false
-        // if needed, followed by a goto to the after branch
-        // note we could make this a bit better by checking if next is null and then make the conditional branch to after block in the false cas
+            // if the condition is null then it's an else statement, which can
+            // only happen after an if statement
+            // so is it's an if statement, and since we compile
+            // if statements recursively, like how we parse them
+            // we know that we already created the block for the
+            // else statement, when compiling the if part
+            // so we just compile the statements in the else block
+            // if the condition is not null we compile the condition,
+            // create two blocks one for if it's true, and for when the condition is false
+            // we then just compile the statements for when the condition
+            // is true under the true block, followed by a goto to an after block
+            // and we visit(compile) the IfNode for when the condition is false
+            // if needed, followed by a goto to the after branch
+            // note we could make this a bit better by checking if next is null and then make the conditional branch to after block in the false cas
         {
             var condition = CompileExpression(node.Expression);
             var ifBlock = context.CurrentFunction.AppendBasicBlock("if block");
@@ -651,6 +651,12 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
             llvmTypeFromShankType,
             name
         );
+        if (node.IsDefaultValue)
+        {
+            var init = CompileExpression(node.InitialValue);
+            builder.BuildStore(init, v);
+        }
+
         // TODO: preallocate records to (might need to be recursive)
         if (node.Type is ArrayType a)
         {
@@ -673,6 +679,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
             );
             builder.BuildStore(array, v);
         }
+
         var variable = context.NewVariable(node.Type);
         context.AddVariable(node.MonomorphizedName(), variable(v, !node.IsConstant));
     }
@@ -683,8 +690,42 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         protoTypeCompiler.CompilePrototypes(node);
 
         node.Records.Values.ToList().ForEach(CompileRecord);
+        node.GlobalVariables.Values.ToList().ForEach(CompileGlobalVariables);
         node.Functions.Values.ToList().ForEach(CompileFunction);
         node.BuiltinFunctions.Values.ToList().ForEach(CompileBuiltinFunction);
+    }
+
+    private void CompileGlobalVariables(VariableDeclarationNode node)
+    {
+        var variable = context.GetVariable((ModuleIndex)node.MonomorphizedName());
+        var content = (ExpressionNode)node.InitialValue! switch
+        {
+            IntNode n => CompileInteger(n),
+            FloatNode f => CompileReal(f),
+            BoolNode b => CompileBoolean(b),
+            StringNode s => CompileConstantString(s),
+            CharNode c => CompileCharacter(c),
+        };
+        variable.ValueRef = variable.ValueRef with { Initializer = content };
+        module.Dump();
+    }
+
+    private LLVMValueRef CompileConstantString(StringNode s)
+    {
+        // this is basically what builder.BuildGlobalStringPtr does, just without the builder - as It's for constants
+        // and builders need a basic block which requires a function
+        // see https://llvm.org/doxygen/IRBuilder_8cpp_source.html line 44 and line 1997 (definition of BuildGlobalStringPtr)
+        
+        // create the actual constant array of bytes corresponding to the string
+        var stringContent = module.Context.GetConstString(s.Value, false);
+        // hold the array in seperate global, so that we can gep it as a pointer (you can't gep a raw array)
+        var stringVariable = module.AddGlobal(stringContent.TypeOf, s.Value  + "Content");
+        stringVariable.Initializer = stringContent;
+        // now gep the array which is the global variable, this is done to convert the array to an i8*
+        stringContent = LLVMValueRef.CreateConstInBoundsGEP2(stringContent.TypeOf, stringVariable, [  LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0), LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0)]);
+        
+        var size = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, (ulong)s.Value.Length);
+        return LLVMValueRef.CreateConstStruct([stringContent, size], false);
     }
 
     public void CompileFor(ForNode node)

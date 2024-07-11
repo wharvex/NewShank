@@ -68,7 +68,7 @@ public static class LLVMAddFunctionExtension
 public abstract class LLVMValue(LLVMValueRef valueRef, bool isMutable, LLVMTypeRef typeRef)
 {
     // public VariableDeclarationNode Node { get; set; } = node;
-    public LLVMValueRef ValueRef { get; } = valueRef;
+    public LLVMValueRef ValueRef { get;set; } = valueRef;
 
     // the type of the value, does not include any pointers, you can know if its needs a pointer by looking at the isMutable field
     public LLVMTypeRef TypeRef { get; } = typeRef;
