@@ -991,7 +991,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         var stringLength = builder.BuildExtractValue(someString, 1);
         // substring starting string.lenth - length
         var index = builder.BuildIntCast(length, LLVMTypeRef.Int32);
-         index = builder.BuildSub(stringLength, index);
+        index = builder.BuildSub(stringLength, index);
         SubString(someString, index, length, resultString);
         builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
     }
