@@ -296,7 +296,7 @@ public class Interpreter
                 switch (target)
                 {
                     case IntDataType it:
-                        it.Value = ResolveInt(an.Expression, variables);
+                        it.Value = NewResolveInt(an.Expression, variables);
                         break;
                     case ArrayDataType at:
                         NewAssignToArray(at, an, variables);
@@ -1344,7 +1344,7 @@ public class Interpreter
                     VariableUsagePlainNode p => ((IntDataType)variables[p.Name]).Value,
 
                     VariableUsageIndexNode i
-                        => ((ArrayDataType)variables[i.BaseName]).GetElementInteger(
+                        => ((ArrayDataType)variables[i.BaseName]).NewGetElementInteger(
                             NewResolveInt(i.Right, variables)
                         ),
                     VariableUsageMemberNode m
@@ -1356,7 +1356,7 @@ public class Interpreter
                 };
             default:
                 throw new ArgumentException(
-                    "Unsupported node type for resolving to int:",
+                    "Unsupported node type for resolving to int: " + node.GetType(),
                     nameof(node)
                 );
         }

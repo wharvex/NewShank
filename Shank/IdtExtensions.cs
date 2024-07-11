@@ -21,9 +21,7 @@ public static class IdtExtensions
         {
             case RecordDataType rdt:
                 if (vun is VariableUsageMemberNode m)
-                {
                     return (InterpreterDataType)rdt.Value[m.Right.Name];
-                }
 
                 throw new InvalidOperationException(
                     "Wrong lookup node provided for RecordDataType."

@@ -63,14 +63,14 @@ public static class TypesHelper
 
     public static ArrayDataType ToIdt(this ArrayType t)
     {
-        List<object> adtList = [];
+        var adtArr = new object[(int)t.Range.To + 1];
         Enumerable
             .Range((int)t.Range.From, (int)t.Range.To)
             .ToList()
             .ForEach(i =>
             {
-                adtList.Insert(i, t.Inner.ToIdt(null));
+                adtArr[i] = t.Inner.ToIdt(null);
             });
-        return new ArrayDataType(adtList, t);
+        return new ArrayDataType([..adtArr], t);
     }
 }

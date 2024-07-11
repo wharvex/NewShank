@@ -198,7 +198,11 @@ public class ArrayDataType : InterpreterDataType
     }
 
     public ArrayDataType(List<object> val, ArrayType arrayType)
-        : this(arrayType) { }
+    {
+        Value = val;
+        range = arrayType.Range;
+        ArrayContentsType = arrayType.Inner;
+    }
 
     public void AddElement(object element, int idx)
     {
@@ -225,6 +229,11 @@ public class ArrayDataType : InterpreterDataType
     public int GetElementInteger(int idx)
     {
         return (int)GetElement(idx);
+    }
+
+    public int NewGetElementInteger(int idx)
+    {
+        return ((IntDataType)GetElement(idx)).Value;
     }
 
     public string GetElementString(int idx)
