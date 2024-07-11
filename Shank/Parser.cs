@@ -447,7 +447,7 @@ public class Parser
                     ret.AddToGlobalVariables(ProcessVariablesDoWhile(moduleName, true));
                     break;
                 case Token.TokenType.Constants:
-                    ret.AddToGlobalVariables(ProcessConstantsDoWhile(moduleName));
+                    ret.AddToGlobalVariables(ProcessConstantsDoWhile(moduleName, true));
                     break;
                 default:
                     throw new NotImplementedException(

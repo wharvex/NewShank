@@ -93,8 +93,9 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
 
     private LLVMValueRef HandleString(LLVMValueRef L, LLVMValueRef R)
     {
-        var lSize = builder.BuildExtractValue(L, 0);
-        var rSize = builder.BuildExtractValue(R, 0);
+        // TODO: what does string concatination and ranges
+        var lSize = builder.BuildExtractValue(L, 1);
+        var rSize = builder.BuildExtractValue(R, 1);
         var newSize = builder.BuildAdd(lSize, rSize);
         // allocate enough (or perhaps in the future more than enough) space, for the concatenated string
         // I think this has to be heap allocated, because we can assign this to an out parameter of a function, and we would then lose it if it was stack allocated
@@ -107,7 +108,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         builder.BuildCall2(
             context.CFuntions.memcpy.TypeOf,
             context.CFuntions.memcpy.Function,
-            [newContent, builder.BuildExtractValue(L, 1), lSize]
+            [newContent, builder.BuildExtractValue(L, 0), lSize]
         );
         // fill the second part of the string
         // first "increment" the pointer of the string to be after the contents of the first part
@@ -115,17 +116,17 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         builder.BuildCall2(
             context.CFuntions.memcpy.TypeOf,
             context.CFuntions.memcpy.Function,
-            [secondPart, builder.BuildExtractValue(R, 1), rSize]
+            [secondPart, builder.BuildExtractValue(R, 0), rSize]
         );
         var String = LLVMValueRef.CreateConstStruct(
             [
+                LLVMValueRef.CreateConstNull(LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0)),
                 LLVMValueRef.CreateConstNull(LLVMTypeRef.Int32),
-                LLVMValueRef.CreateConstNull(LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0))
             ],
             false
         );
-        String = builder.BuildInsertValue(String, newSize, 0);
-        String = builder.BuildInsertValue(String, newContent, 1);
+        String = builder.BuildInsertValue(String, newContent, 0);
+        String = builder.BuildInsertValue(String, newSize, 1);
         return String;
     }
 
@@ -305,6 +306,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
             (ulong)node.Value.Length
         );
 
+
         var stringContent = builder.BuildGlobalStringPtr(node.Value);
 
         // if we never mutate the string part directly, meaning when we do assignment we assign it a new string struct, then we do not need to do this malloc,
@@ -322,13 +324,13 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         );
         var String = LLVMValueRef.CreateConstStruct(
             [
+                LLVMValueRef.CreateConstNull(LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0)),
                 LLVMValueRef.CreateConstNull(LLVMTypeRef.Int32),
-                LLVMValueRef.CreateConstNull(LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0))
             ],
             false
         );
-        String = builder.BuildInsertValue(String, stringLength, 0);
-        String = builder.BuildInsertValue(String, stringPointer, 1);
+        String = builder.BuildInsertValue(String, stringPointer, 0);
+        String = builder.BuildInsertValue(String, stringLength, 1);
         return String;
     }
 
@@ -763,25 +765,16 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
                 CompileBuiltinSize(node, function);
                 break;
             case "left":
-                CompileBuiltinLeft(node, function);
+                CompileBuiltinLeft(function);
                 break;
             case "right":
-                CompileBuiltinRight(node, function);
+                CompileBuiltinRight(function);
                 break;
             default:
                 throw new CompilerException("Undefined builtin", 0);
         }
     }
 
-    private void CompileBuiltinRight(BuiltInFunctionNode node, LLVMShankFunction function)
-    {
-        throw new NotImplementedException();
-    }
-
-    private void CompileBuiltinLeft(BuiltInFunctionNode node, LLVMShankFunction function)
-    {
-        throw new NotImplementedException();
-    }
 
     private void CompileBuiltinSize(BuiltInFunctionNode node, LLVMShankFunction function)
     {
@@ -914,7 +907,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
                                 )
                             ],
                         Types.STRING
-                            => [builder.BuildExtractValue(p, 0), builder.BuildExtractValue(p, 1)],
+                            => [builder.BuildExtractValue(p, 1), builder.BuildExtractValue(p, 0)],
                     }
             )
             .Prepend(builder.BuildGlobalStringPtr(format, "printf-format"));
@@ -931,19 +924,48 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         // SubString someString, index, length, var resultString
 
         // resultString = length characters from someString, starting at index
-        // TODO: bounds checking
-        var SomeString = function.Function.GetParam(0);
-        var SomeStringInner = builder.BuildExtractValue(SomeString, 1);
+        var someString = function.Function.GetParam(0);
         var index = function.Function.GetParam(1);
         var length = function.Function.GetParam(2);
-        var ResultString = function.Function.GetParam(3);
+        var resultString = function.Function.GetParam(3);
 
+        SubString(someString, index, length, resultString);
+
+        builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
+    }
+
+    private void CompileBuiltinRight(LLVMShankFunction function)
+    {
+        var someString = function.Function.GetParam(0);
+        var length = function.Function.GetParam(1);
+        var resultString = function.Function.GetParam(2);
+        var stringLength = builder.BuildExtractValue(someString, 1);
+        // substring starting string.lenth - length
+        var index = builder.BuildSub(stringLength, builder.BuildIntCast(length, LLVMTypeRef.Int32));
+        SubString(someString, index, length, resultString);
+        builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
+    }
+
+    private void CompileBuiltinLeft(LLVMShankFunction function)
+    {
+        var someString = function.Function.GetParam(0);
+        var length = function.Function.GetParam(1);
+        var resultString = function.Function.GetParam(2);
+        SubString(someString, LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0), length, resultString);
+        builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
+    }
+    // index passed in are zero based
+    private void SubString(LLVMValueRef someString, LLVMValueRef index, LLVMValueRef length, LLVMValueRef resultString)
+    {
+        // TODO: bounds checking
+        var someStringContents = builder.BuildExtractValue(someString, 0);
+        length = builder.BuildIntCast(length, LLVMTypeRef.Int32);
         var newContent = builder.BuildCall2(
             context.CFuntions.malloc.TypeOf,
             context.CFuntions.malloc.Function,
             [length]
         );
-        var subString = builder.BuildInBoundsGEP2(LLVMTypeRef.Int8, SomeStringInner, [index]);
+        var subString = builder.BuildInBoundsGEP2(LLVMTypeRef.Int8, someStringContents, [index]);
         builder.BuildCall2(
             context.CFuntions.memcpy.TypeOf,
             context.CFuntions.memcpy.Function,
@@ -951,20 +973,18 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         );
         var String = LLVMValueRef.CreateConstStruct(
             [
+                LLVMValueRef.CreateConstNull(LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0)),
                 LLVMValueRef.CreateConstNull(LLVMTypeRef.Int32),
-                LLVMValueRef.CreateConstNull(LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0))
             ],
             false
         );
+        String = builder.BuildInsertValue(String, newContent, 0);
         String = builder.BuildInsertValue(
             String,
             builder.BuildIntCast(length, LLVMTypeRef.Int32),
-            0
+            1
         );
-        String = builder.BuildInsertValue(String, newContent, 1);
-        builder.BuildStore(String, ResultString);
-
-        builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
+        builder.BuildStore(String, resultString);
     }
 
     private void CompileBuiltinRealToInteger(LLVMShankFunction function)
