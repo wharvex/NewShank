@@ -1,3 +1,4 @@
+# most of this is modified from times script
 function cst
 {
     param([string]$compile, [int]$x, [string]$pls, [switch]$y)

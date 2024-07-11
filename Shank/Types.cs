@@ -170,6 +170,13 @@ public class EnumType(string name, string moduleName, List<string> variants) : T
         return -1;
     }
 
+    public string GetElemenTvalue(int index)
+    {
+        if (index < Variants.Count)
+            return Variants[index];
+        return "error";
+    }
+
     public override string ToString() => $"{Name} [{string.Join(", ", Variants)}]";
 } // enums are just a list of variants
 

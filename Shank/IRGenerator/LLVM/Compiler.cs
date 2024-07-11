@@ -284,8 +284,6 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
                 );
             }
 
-            // if(value.TypeRef == )
-            // builder.BuildLoad2(value.TypeRef, )
             return load ? builder.BuildLoad2(value.TypeRef, value.ValueRef) : value.ValueRef;
         }
 
@@ -934,6 +932,32 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
     }
 
+    private LLVMValueRef HandleEnum(LLVMValueRef valueRef, List<string> list, int Index = 0)
+    {
+        if (Index >= list.Count)
+        {
+            return builder.BuildSelect(
+                builder.BuildICmp(
+                    LLVMIntPredicate.LLVMIntEQ,
+                    LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, (ulong)list.Count),
+                    valueRef
+                ),
+                builder.BuildGlobalStringPtr(list[0]),
+                builder.BuildGlobalStringPtr("error")
+            );
+        }
+
+        return builder.BuildSelect(
+            builder.BuildICmp(
+                LLVMIntPredicate.LLVMIntEQ,
+                LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, (ulong)Index),
+                valueRef
+            ),
+            builder.BuildGlobalStringPtr(list[Index]),
+            HandleEnum(valueRef, list, Index + 1)
+        );
+    }
+
     private void CompileBuiltinWrite(BuiltInFunctionNode node, LLVMShankFunction function)
     {
         var formatList = node.ParameterVariables.Select(param => param.Type)
@@ -944,39 +968,43 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
                         BooleanType booleanType => "%s",
                         CharacterType characterType => "%c",
                         IntegerType integerType => "%d",
+                        EnumType enumType => "%s",
                         RealType realType => "%.2f",
                         StringType stringType => "%.*s",
                         _ => throw new NotImplementedException(nameof(type))
                     }
             );
+
         var format = $"{string.Join(" ", formatList)}\n";
-        var parameters = function
-            .Function.Params.SelectMany<LLVMValueRef, LLVMValueRef>(
-                p =>
-                    _types(p.TypeOf) switch
-                    {
-                        // TODO: do not dispatch based (only) on llvm type b/c especially for records, it will be hard to obtain the record type via llvm rather use the parameter list of the function from the ast
-                        Types.FLOAT
-                            => [p],
-                        Types.INTEGER => [p],
-                        Types.BOOLEAN
-                            =>
-                            [
-                                builder.BuildSelect(
-                                    p,
-                                    builder.BuildGlobalStringPtr("true"),
-                                    builder.BuildGlobalStringPtr("false")
-                                )
-                            ],
-                        Types.STRING
-                            => [builder.BuildExtractValue(p, 1), builder.BuildExtractValue(p, 0)],
-                    }
-            )
+        var paramList = node.ParameterVariables.Zip(function.Function.Params)
+            .SelectMany<(VariableDeclarationNode First, LLVMValueRef Second), LLVMValueRef>(n =>
+            {
+                return n.First.Type switch
+                {
+                    EnumType e => [HandleEnum(n.Second, e.Variants)],
+                    IntegerType or RealType => [n.Second],
+                    BooleanType
+                        =>
+                        [
+                            builder.BuildSelect(
+                                n.Second,
+                                builder.BuildGlobalStringPtr("true"),
+                                builder.BuildGlobalStringPtr("false")
+                            )
+                        ],
+                    StringType
+                        =>
+                        [
+                            builder.BuildExtractValue(n.Second, 1),
+                            builder.BuildExtractValue(n.Second, 0)
+                        ]
+                };
+            })
             .Prepend(builder.BuildGlobalStringPtr(format, "printf-format"));
         builder.BuildCall2(
             context.CFuntions.printf.TypeOf,
             context.CFuntions.printf.Function,
-            parameters.ToArray()
+            paramList.ToArray()
         );
         builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
     }
