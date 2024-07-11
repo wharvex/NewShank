@@ -1339,21 +1339,7 @@ public class Interpreter
             case IntNode fn:
                 return fn.Value;
             case VariableUsageNodeTemp vun:
-                return vun switch
-                {
-                    VariableUsagePlainNode p => ((IntDataType)variables[p.Name]).Value,
-
-                    VariableUsageIndexNode i
-                        => ((ArrayDataType)variables[i.BaseName]).NewGetElementInteger(
-                            NewResolveInt(i.Right, variables)
-                        ),
-                    VariableUsageMemberNode m
-                        => ((RecordDataType)variables[m.GetBaseName()]).GetValueInteger(
-                            m.Right.Name
-                        ),
-
-                    _ => throw new NotImplementedException()
-                };
+                return ((IntDataType)GetIdtFromVun(variables, vun)).Value;
             default:
                 throw new ArgumentException(
                     "Unsupported node type for resolving to int: " + node.GetType(),
