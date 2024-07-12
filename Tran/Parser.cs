@@ -134,7 +134,7 @@ public class Parser
         )
         {
             var property = new FunctionNode(
-                "__" + variable + propertyType.ToString().ToLower(),
+                "_" + variable.Name + "_"+ propertyType.ToString().ToLower(),
                 thisClass.Name,
                 true
             );
@@ -145,23 +145,23 @@ public class Parser
             property.Statements = ParseBlock();
             blockLevel--;
 
-            if (propertyType == TokenType.ACCESSOR)
-            {
-                property.ParameterVariables.Add(
-                    new VariableDeclarationNode(
+            var value = new VariableDeclarationNode(
                         false,
                         variable.Type,
                         "value",
                         thisClass.Name,
                         false
-                    )
-                );
+                    );
+            if (propertyType == TokenType.ACCESSOR)
+            {
+                property.ParameterVariables.Add(value);
+                property.VariablesInScope.Add(value.Name!, value);
             }
             else
             {
-                property.ParameterVariables.Add(
-                    new VariableDeclarationNode(true, variable.Type, "value", thisClass.Name, false)
-                );
+                value.IsConstant = true;
+                property.ParameterVariables.Add(value);
+                property.VariablesInScope.Add(value.Name!, value);
             }
             return property;
         }

@@ -7,6 +7,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting.Logging;
 using Shank;
 using Shank.ASTNodes;
 using Shank.Tran;
+using Tran;
 
 namespace TranUnitTests
 {
@@ -38,6 +39,7 @@ namespace TranUnitTests
             SemanticAnalysis.reset();
             CreateParser(file);
             Dictionary<string, ModuleNode> modules = parser.Parse().Modules;
+            modules = TranAnalysis.Walk(modules);
             Interpreter.setModules(modules);
             var startModule = Interpreter.setStartModule();
             SemanticAnalysis.setStartModule();
@@ -62,6 +64,7 @@ namespace TranUnitTests
             Interpreter.Reset();
             SemanticAnalysis.reset();
             Dictionary<string, ModuleNode> modules = GetModules(files);
+            modules = TranAnalysis.Walk(modules);
             Interpreter.setModules(modules);
             var startModule = Interpreter.setStartModule();
             SemanticAnalysis.setStartModule();
@@ -147,6 +150,8 @@ class start
                 @"
 class start
     number x
+        mutator:
+            x = value
     string y
 
     start()
@@ -169,6 +174,22 @@ class start
     start()
         number a
         a = x + 10".Replace("    ", "\t")
+            );
+            RunInterpreter();
+        }
+
+        [TestMethod]
+        public void InterpreterTestMutators()
+        {
+            InitializeInterpreter(
+                @"
+class start
+    number x
+        mutator:
+            x = value
+
+    start()
+        x = 999".Replace("    ", "\t")
             );
             RunInterpreter();
         }
