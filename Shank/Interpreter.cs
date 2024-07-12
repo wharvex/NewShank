@@ -1524,4 +1524,40 @@ public class Interpreter
 
         return ic ?? throw new InvalidOperationException();
     }
+
+    public static InterpreterDataType GetIdtFromExpr(
+        ExpressionNode e,
+        Dictionary<string, InterpreterDataType> idts
+    )
+    {
+        switch (e)
+        {
+            case IntNode i:
+                return new IntDataType(i.Value);
+            case FloatNode f:
+                return new FloatDataType(f.Value);
+            case StringNode s:
+                return new StringDataType(s.Value);
+            case CharNode c:
+                return new CharDataType(c.Value);
+            case BoolNode b:
+                return new BooleanDataType(b.Value);
+            case VariableUsageNodeTemp v:
+                return GetIdtFromVun(idts, v);
+            case MathOpNode m:
+            {
+                var left = GetIdtFromExpr(m.Left, idts);
+                var right = GetIdtFromExpr(m.Right, idts);
+
+                return e.Type switch
+                {
+                    RealType => new FloatDataType(m.GetResultOfOp(left, right)),
+                    IntegerType => new IntDataType((int)m.GetResultOfOp(left, right)),
+                    _ => throw new InvalidOperationException()
+                };
+            }
+            default:
+                throw new ArgumentException("Unsupported expression type", nameof(e));
+        }
+    }
 }
