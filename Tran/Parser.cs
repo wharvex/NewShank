@@ -568,7 +568,7 @@ public class Parser
         {
             functionName = functionToken.GetValue();
         }
-        else if(functionName != null)
+        else if (functionName != null)
         {
             Console.WriteLine(functionName);
         }
