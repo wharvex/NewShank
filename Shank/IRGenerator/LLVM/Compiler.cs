@@ -201,21 +201,15 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         Console.WriteLine(node.MonomorphizedName());
         LLVMValue value = context.GetVariable(node.MonomorphizedName());
 
-        var (varaiable, llvmType, type) = (node.ExtensionType)switch
+        var (varaiable, llvmType, type) = (node.ExtensionType) switch
         {
-            VariableUsagePlainNode.VrnExtType.ArrayIndex =>
-         CompileArrayUsage(node, load, value),
+            VariableUsagePlainNode.VrnExtType.ArrayIndex => CompileArrayUsage(node, load, value),
 
-        VariableUsagePlainNode.VrnExtType.RecordMember=>
-         CompileRecordUsage(node, load, value),
+            VariableUsagePlainNode.VrnExtType.RecordMember => CompileRecordUsage(node, load, value),
 
-    VariableUsagePlainNode.VrnExtType.None=>
-         CompileVariableUsage(node, load, value),
-
-};
-        return load?
-        
-            varaiable = CopyVariable(varaiable, llvmType, type): varaiable;
+            VariableUsagePlainNode.VrnExtType.None => CompileVariableUsage(node, load, value),
+        };
+        return load ? varaiable = CopyVariable(varaiable, llvmType, type) : varaiable;
     }
 
     private LLVMValueRef CopyVariable(LLVMValueRef varaiable, LLVMTypeRef llvmType, Type type)
@@ -224,23 +218,34 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         return builder.BuildLoad2(llvmType, varaiable);
     }
 
-    private (LLVMValueRef, LLVMTypeRef, Type) CompileVariableUsage(VariableUsagePlainNode node, bool load, LLVMValue value)
+    private (LLVMValueRef, LLVMTypeRef, Type) CompileVariableUsage(
+        VariableUsagePlainNode node,
+        bool load,
+        LLVMValue value
+    )
     {
         // TODO: don't special case in the compiler (we should get an EnumUsageNode)
         if (value is LLVMEnum p)
         {
-            return (LLVMValueRef.CreateConstInt(
+            return (
+                LLVMValueRef.CreateConstInt(
+                    LLVMTypeRef.Int64,
+                    (ulong)p.EnumType.GetElementNum(node.Name)
+                ),
                 LLVMTypeRef.Int64,
-                (ulong)p.EnumType.GetElementNum(node.Name)
-            ), LLVMTypeRef.Int64,p.EnumType );
+                p.EnumType
+            );
         }
-        
 
         // TODO: LLVMValue should remember its original type
         return (value.ValueRef, value.TypeRef, new UnknownType());
     }
 
-    private (LLVMValueRef, LLVMTypeRef, Type) CompileRecordUsage(VariableUsagePlainNode node, bool load, LLVMValue value)
+    private (LLVMValueRef, LLVMTypeRef, Type) CompileRecordUsage(
+        VariableUsagePlainNode node,
+        bool load,
+        LLVMValue value
+    )
     {
         if (value is LLVMReference r)
         {
@@ -251,13 +256,12 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
             );
             value = new LLVMStruct(inner, r.IsMutable, r.TypeOf.Inner);
         }
-        // TODO: all recorrda behind double pointer (or else don't make records in records behind pointer 
-        // once you do that you have to load at least once (twice if not 
+        // TODO: all recorrda behind double pointer (or else don't make records in records behind pointer
+        // once you do that you have to load at least once (twice if not
         LLVMStruct varType = (LLVMStruct)value;
         var varField = (VariableUsagePlainNode)node.GetExtensionSafe();
         var dataType = varType.GetTypeOf(varField.Name);
-        var fieldType = (LLVMTypeRef)
-            context.GetLLVMTypeFromShankType(dataType);
+        var fieldType = (LLVMTypeRef)context.GetLLVMTypeFromShankType(dataType);
         var structField = builder.BuildStructGEP2(
             value.TypeRef,
             value.ValueRef,
@@ -267,12 +271,15 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         return (structField, fieldType, dataType);
     }
 
-    private (LLVMValueRef, LLVMTypeRef, Type) CompileArrayUsage(VariableUsagePlainNode node, bool load, LLVMValue value)
+    private (LLVMValueRef, LLVMTypeRef, Type) CompileArrayUsage(
+        VariableUsagePlainNode node,
+        bool load,
+        LLVMValue value
+    )
     {
         LLVMArray newValue = (LLVMArray)value;
         var dataType = ((LLVMArray)value).Inner();
-        var elementType = (LLVMTypeRef)
-            context.GetLLVMTypeFromShankType(dataType);
+        var elementType = (LLVMTypeRef)context.GetLLVMTypeFromShankType(dataType);
         var start = builder.BuildStructGEP2(newValue.TypeRef, value.ValueRef, 1);
         start = builder.BuildLoad2(LLVMTypeRef.Int32, start);
 
@@ -283,10 +290,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
             context.CurrentFunction.Function,
             "index out of bounnds"
         );
-        var okIndexBlock = module.Context.AppendBasicBlock(
-            context.CurrentFunction.Function,
-            "ok"
-        );
+        var okIndexBlock = module.Context.AppendBasicBlock(context.CurrentFunction.Function, "ok");
         var smaller = builder.BuildICmp(LLVMIntPredicate.LLVMIntSLT, index, start);
         var bigger = builder.BuildICmp(
             LLVMIntPredicate.LLVMIntSGT,
@@ -308,7 +312,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         index = builder.BuildSub(index, start);
         a = builder.BuildInBoundsGEP2(elementType, a, [index]);
         // TODO: check for unitizialized access when doing this load (this applies also for member access and simple varaiable lookup)
-        // 
+        //
         return (a, elementType, dataType);
     }
 
@@ -445,13 +449,13 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
                 // for records (and eventually references) we do not hold the actual type of the record, but rather a pointer to it, because llvm does not like direct recursive types
                 (
                     s.Key,
-                        // s.Value is RecordType
-                        //     ? LLVMTypeRef.CreatePointer(
-                        //         (LLVMTypeRef)context.GetLLVMTypeFromShankType(s.Value)!,
-                        //         0
-                        //     )
-                        //     :
-                        (LLVMTypeRef)context.GetLLVMTypeFromShankType(s.Value)!
+                    // s.Value is RecordType
+                    //     ? LLVMTypeRef.CreatePointer(
+                    //         (LLVMTypeRef)context.GetLLVMTypeFromShankType(s.Value)!,
+                    //         0
+                    //     )
+                    //     :
+                    (LLVMTypeRef)context.GetLLVMTypeFromShankType(s.Value)!
                 )
         )
             .ToArray();
