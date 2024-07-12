@@ -280,6 +280,11 @@ public class CommandLineArgsParser
         SemanticAnalysis.ActiveInterpretOptions = options;
         SemanticAnalysis.CheckModules(program);
 
+        // program.Walk(new ImportVisitor());
+        // program.Walk(new RecordVisitor());
+        // program.Walk(new UnknownTypesVisitor());
+        // program.Walk(new TestVisitor());
+
         // Some visiting.
         var vgVis = new VariablesGettingVisitor();
         var etVis = new ExpressionTypingVisitor(SemanticAnalysis.GetTypeOfExpression)

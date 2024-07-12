@@ -8,6 +8,8 @@ public class NewSemanticAnalysis
     {
         // program.Walk(new ImportVisitor());
         // program.Walk(new RecordVisitor());
+        // program.Walk(new UnknownTypesVisitor());
+        // program.Walk(new TestVisitor());
 
         program.Walk(new ForNodeVisitor());
         program.Walk(new BooleanExpressionNodeVisitor());
