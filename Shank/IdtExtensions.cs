@@ -39,4 +39,46 @@ public static class IdtExtensions
                 return null;
         }
     }
+
+    public static bool TryGetFloatValue(this InterpreterDataType idt, out float val)
+    {
+        switch (idt)
+        {
+            case IntDataType i:
+                val = i.Value;
+                break;
+            case FloatDataType f:
+                val = f.Value;
+                break;
+            default:
+                val = default;
+                return false;
+        }
+
+        return true;
+    }
+
+    public static bool TryGetFloatOrIntOrStringValue(
+        this InterpreterDataType idt,
+        out FloatOrIntOrString val
+    )
+    {
+        switch (idt)
+        {
+            case IntDataType i:
+                val = new FloatOrIntOrString(i.Value);
+                break;
+            case FloatDataType f:
+                val = new FloatOrIntOrString(f.Value);
+                break;
+            case StringDataType s:
+                val = new FloatOrIntOrString(s.Value);
+                break;
+            default:
+                val = FloatOrIntOrString.Default;
+                return false;
+        }
+
+        return true;
+    }
 }

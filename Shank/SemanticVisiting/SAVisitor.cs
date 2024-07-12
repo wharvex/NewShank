@@ -216,6 +216,16 @@ public abstract class SAVisitor
         return null;
     }
 
+    public virtual ASTNode? Visit(TestNode node)
+    {
+        return null;
+    }
+
+    public virtual ASTNode? PostWalk(TestNode node)
+    {
+        return null;
+    }
+
     protected Type GetTypeOfExpression(
         ExpressionNode node,
         Dictionary<string, VariableDeclarationNode> variables
@@ -324,6 +334,90 @@ public abstract class SAVisitor
         return innerVndt is { } v
             ? GetTypeRecursive(v, (VariableUsagePlainNode)targetUsage.GetExtensionSafe()) ?? vndt
             : vndt;
+    }
+
+    protected static Type ResolveType(
+        Type member,
+        ModuleNode module,
+        List<string> generics,
+        Func<GenericType, GenericType> genericCollector
+    )
+    {
+        return member switch
+        {
+            UnknownType u => ResolveType(u, module, generics, genericCollector),
+            ReferenceType(UnknownType u) => handleReferenceType(u),
+            ArrayType(UnknownType u, Range r) => HandleArrayType(u, r),
+            _ => member
+        };
+
+        Type handleReferenceType(UnknownType type)
+        {
+            var resolvedType = ResolveType(type, module, generics, genericCollector);
+            if (resolvedType is not (RecordType or InstantiatedType or GenericType))
+            {
+                throw new SemanticErrorException(
+                    $"tried to use refersTo (dynamic memory management) on a non record type {resolvedType}",
+                    module
+                );
+            }
+
+            return new ReferenceType(resolvedType);
+        }
+
+        Type HandleArrayType(UnknownType t, Range r)
+        {
+            var resolvedType = ResolveType(t, module, generics, genericCollector);
+            return new ArrayType(resolvedType, r);
+        }
+    }
+
+    protected static Type ResolveType(
+        UnknownType member,
+        ModuleNode module,
+        List<string> generics,
+        Func<GenericType, GenericType> genericCollector
+    )
+    {
+        var resolveType =
+            // TODO: should this be the other way I.E. generics shadow other types
+            module.Records.GetValueOrDefault(member.TypeName)?.Type
+            ?? (Type?)module.Enums.GetValueOrDefault(member.TypeName)?.EType
+            ?? (
+                generics.Contains(member.TypeName)
+                    ? member.TypeParameters.Count != 0
+                        ? throw new SemanticErrorException(
+                            $"generics type cannot have generics on it",
+                            module
+                        )
+                        : genericCollector(new GenericType(member.TypeName))
+                    : throw new SemanticErrorException($"Unbound type {member}", module)
+            );
+        if (resolveType is EnumType && member.TypeParameters.Count != 0)
+        {
+            throw new SemanticErrorException($"Enums do not have generic types", module);
+        }
+        else if (resolveType is RecordType record)
+        {
+            if (record.Generics.Count != member.TypeParameters.Count)
+            {
+                throw new SemanticErrorException(
+                    $"not proper amount of types for generics {record.Generics}",
+                    module
+                );
+            }
+
+            var instantiatedGenerics = record
+                .Generics.Zip(
+                    member.TypeParameters.Select(
+                        type => ResolveType(type, module, generics, genericCollector)
+                    )
+                )
+                .ToDictionary();
+            resolveType = new InstantiatedType(record, instantiatedGenerics);
+        }
+
+        return resolveType;
     }
 }
 
@@ -438,93 +532,129 @@ public class RecordVisitor : SAVisitor
         }
         return null;
     }
+}
 
-    private static Type ResolveType(
-        Type member,
-        ModuleNode module,
-        List<string> generics,
-        Func<GenericType, GenericType> genericCollector
-    )
+public class UnknownTypesVisitor : SAVisitor
+{
+    private ModuleNode currentModule;
+
+    public override ASTNode? Visit(ModuleNode node)
     {
-        return member switch
-        {
-            UnknownType u => ResolveType(u, module, generics, genericCollector),
-            ReferenceType(UnknownType u) => handleReferenceType(u),
-            ArrayType(UnknownType u, Range r) => HandleArrayType(u, r),
-            _ => member
-        };
-
-        Type handleReferenceType(UnknownType type)
-        {
-            var resolvedType = ResolveType(type, module, generics, genericCollector);
-            if (resolvedType is not (RecordType or InstantiatedType or GenericType))
-            {
-                throw new SemanticErrorException(
-                    $"tried to use refersTo (dynamic memory management) on a non record type {resolvedType}",
-                    module
-                );
-            }
-
-            return new ReferenceType(resolvedType);
-        }
-
-        Type HandleArrayType(UnknownType t, Range r)
-        {
-            var resolvedType = ResolveType(t, module, generics, genericCollector);
-            return new ArrayType(resolvedType, r);
-        }
+        currentModule = node;
+        return null;
     }
 
-    private static Type ResolveType(
-        UnknownType member,
-        ModuleNode module,
-        List<string> generics,
-        Func<GenericType, GenericType> genericCollector
+    public override ASTNode? Visit(FunctionNode node)
+    {
+        CheckVariables(currentModule.GlobalVariables.Values.ToList(), currentModule, []);
+
+        CheckVariables(node.LocalVariables, currentModule, node.GenericTypeParameterNames ?? []);
+        node.LocalVariables.ForEach(vdn => OutputHelper.DebugPrintJson(vdn, vdn.Name ?? "null"));
+        var generics = node.GenericTypeParameterNames ?? [];
+        List<string> usedGenerics = [];
+        foreach (var variable in node.ParameterVariables)
+        {
+            // find the type of each parameter, and also see what generics each parameter uses
+            variable.Type = ResolveType(
+                variable.Type,
+                currentModule,
+                generics,
+                (GenericType generic) =>
+                {
+                    usedGenerics.Add(generic.Name);
+                    return generic;
+                }
+            );
+        }
+
+        // if not all generics are used in the parameters that means those generics cannot be infered, but they could be used for variables which is bad
+        if (!usedGenerics.Distinct().SequenceEqual(generics))
+        {
+            throw new SemanticErrorException(
+                $"Generic Type parameter(s) {string.Join(", ", generics.Except(usedGenerics.Distinct()))}  cannot be infered for function {node.Name}",
+                node
+            );
+        }
+        return null;
+    }
+
+    private void CheckVariables(
+        List<VariableDeclarationNode> variables,
+        ModuleNode currentModule,
+        List<String> generics
     )
     {
-        var resolveType =
-            // TODO: should this be the other way I.E. generics shadow other types
-            module.Records.GetValueOrDefault(member.TypeName)?.Type
-            ?? (Type?)module.Enums.GetValueOrDefault(member.TypeName)?.EType
-            ?? (
-                generics.Contains(member.TypeName)
-                    ? member.TypeParameters.Count != 0
-                        ? throw new SemanticErrorException(
-                            $"generics type cannot have generics on it",
-                            module
-                        )
-                        : genericCollector(new GenericType(member.TypeName))
-                    : throw new SemanticErrorException($"Unbound type {member}", module)
-            );
-        if (resolveType is EnumType && member.TypeParameters.Count != 0)
+        foreach (var variable in variables)
         {
-            throw new SemanticErrorException($"Enums do not have generic types", module);
-        }
-        else if (resolveType is RecordType record)
-        {
-            if (record.Generics.Count != member.TypeParameters.Count)
+            // if its a constant then it cannot refer to another constant/variable so the only case for variable is its an emum cohnstant
+            // might need  similiar logic for defaulat values of functions, and weird enum comparissons i.e. red = bar, where red is an enum constant
+            // because currently we do assume lhs determine type
+            if (variable is { IsConstant: true, InitialValue: { } init })
             {
-                throw new SemanticErrorException(
-                    $"not proper amount of types for generics {record.Generics}",
-                    module
-                );
-            }
-
-            var instantiatedGenerics = record
-                .Generics.Zip(
-                    member.TypeParameters.Select(
-                        type => ResolveType(type, module, generics, genericCollector)
+                // from the parsers pov we should make an enum node, b/c this can't be any random varialbe
+                if (init is StringNode n)
+                {
+                    foreach (
+                        var enumDefinition in currentModule.Enums.Values.Concat(
+                            currentModule.Imported.Values
+                        )
                     )
-                )
-                .ToDictionary();
-            resolveType = new InstantiatedType(record, instantiatedGenerics);
-        }
+                    {
+                        if (enumDefinition is EnumNode e)
+                        {
+                            if (e.EType.Variants.Contains(n.Value))
+                            {
+                                variable.Type = e.EType;
+                                break;
+                            }
+                        }
+                    }
 
-        return resolveType;
+                    if (variable.Type is not EnumType)
+                    {
+                        variable.Type = new StringType();
+                    }
+                }
+                else
+                {
+                    variable.Type = GetTypeOfExpression(init, []);
+                }
+            }
+            else
+            {
+                variable.Type = ResolveType(variable.Type, currentModule, generics, x => x);
+            }
+        }
     }
 }
 
-public class UnknownTypesVisitor : SAVisitor { }
+public class TestVisitor : SAVisitor
+{
+    private String ModuleName;
+    private Dictionary<string, CallableNode> Functions;
+
+    public override ASTNode? Visit(ModuleNode node)
+    {
+        ModuleName = node.Name;
+        Functions = node.OriginalFunctions;
+        return null;
+    }
+
+    public override ASTNode? Visit(TestNode node)
+    {
+        if (Functions.ContainsKey(node.targetFunctionName))
+        {
+            ((FunctionNode)Functions[node.targetFunctionName]).Tests.Add(node.Name, node);
+        }
+        else
+        {
+            throw new SemanticErrorException(
+                $"Could not find the function {node.targetFunctionName} in the module {ModuleName} to be tested."
+            );
+        }
+        return null;
+    }
+}
 
 public class InfiniteLoopVisitor : SAVisitor
 {
@@ -747,7 +877,7 @@ public class FunctionCallVisitor : SAVisitor
 
     public override ASTNode? Visit(ModuleNode node)
     {
-        Functions = node.Functions;
+        Functions = node.OriginalFunctions;
         foreach (var import in node.Imported)
         {
             if (!Functions.ContainsKey(import.Key))

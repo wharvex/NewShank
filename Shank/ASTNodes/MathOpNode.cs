@@ -52,4 +52,27 @@ public class MathOpNode(ExpressionNode left, MathOpNode.MathOpType op, Expressio
 
         return v.PostWalk(this);
     }
+
+    public float GetResultOfOp(float l, float r)
+    {
+        return Op switch
+        {
+            MathOpType.Plus => l + r,
+            MathOpType.Minus => l - r,
+            MathOpType.Divide => l / r,
+            MathOpType.Times => l * r,
+            MathOpType.Modulo => l % r,
+            _ => throw new NotImplementedException()
+        };
+    }
+
+    public float GetResultOfOp(InterpreterDataType l, InterpreterDataType r)
+    {
+        if (!l.TryGetFloatValue(out var lVal) || !r.TryGetFloatValue(out var rVal))
+        {
+            throw new InterpreterErrorException("No math allowed on non-numeric types.");
+        }
+
+        return GetResultOfOp(lVal, rVal);
+    }
 }
