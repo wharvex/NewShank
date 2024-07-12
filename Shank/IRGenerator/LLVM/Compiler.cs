@@ -201,93 +201,115 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         Console.WriteLine(node.MonomorphizedName());
         LLVMValue value = context.GetVariable(node.MonomorphizedName());
 
-        if (node.ExtensionType == VariableUsagePlainNode.VrnExtType.ArrayIndex)
+        var (varaiable, llvmType, type) = (node.ExtensionType)switch
         {
-            LLVMArray newValue = (LLVMArray)value;
-            var elementType = (LLVMTypeRef)
-                context.GetLLVMTypeFromShankType(((LLVMArray)value).Inner());
-            var start = builder.BuildStructGEP2(newValue.TypeRef, value.ValueRef, 1);
-            start = builder.BuildLoad2(LLVMTypeRef.Int32, start);
+            VariableUsagePlainNode.VrnExtType.ArrayIndex =>
+         CompileArrayUsage(node, load, value),
 
-            var index = builder.BuildIntCast(CompileExpression(node.Extension), LLVMTypeRef.Int32);
-            var size = builder.BuildStructGEP2(newValue.TypeRef, value.ValueRef, 2);
-            size = builder.BuildLoad2(LLVMTypeRef.Int32, size);
-            var indexOutOfBoundsBlock = module.Context.AppendBasicBlock(
-                context.CurrentFunction.Function,
-                "index out of bounnds"
-            );
-            var okIndexBlock = module.Context.AppendBasicBlock(
-                context.CurrentFunction.Function,
-                "ok"
-            );
-            var smaller = builder.BuildICmp(LLVMIntPredicate.LLVMIntSLT, index, start);
-            var bigger = builder.BuildICmp(
-                LLVMIntPredicate.LLVMIntSGT,
-                index,
-                builder.BuildAdd(start, size)
-            );
-            var goodIndex = builder.BuildOr(smaller, bigger);
-            builder.BuildCondBr(goodIndex, indexOutOfBoundsBlock, okIndexBlock);
-            builder.PositionAtEnd(indexOutOfBoundsBlock);
-            // TODO: in the error say which side the index is out of bounds for
-            Error(
-                $"Index %d is out of bounds, for array {node.Name} of type {newValue.Inner()}",
-                [index],
-                node
-            );
-            builder.PositionAtEnd(okIndexBlock);
-            var array = builder.BuildStructGEP2(newValue.TypeRef, value.ValueRef, 0);
-            var a = builder.BuildLoad2(LLVMTypeRef.CreatePointer(elementType, 0), array);
-            index = builder.BuildSub(index, start);
-            a = builder.BuildInBoundsGEP2(elementType, a, [index]);
-            // TODO: check for unitizialized access when doing this load (this applies also for member access and simple varaiable lookup)
-            return (load ? builder.BuildLoad2(elementType, a) : a);
-        }
+        VariableUsagePlainNode.VrnExtType.RecordMember=>
+         CompileRecordUsage(node, load, value),
 
-        if (node.ExtensionType == VariableUsagePlainNode.VrnExtType.RecordMember)
+    VariableUsagePlainNode.VrnExtType.None=>
+         CompileVariableUsage(node, load, value),
+
+};
+        return load?
+        
+            varaiable = CopyVariable(varaiable, llvmType, type): varaiable;
+    }
+
+    private LLVMValueRef CopyVariable(LLVMValueRef varaiable, LLVMTypeRef llvmType, Type type)
+    {
+        // TODO: copy everything recursivly
+        return builder.BuildLoad2(llvmType, varaiable);
+    }
+
+    private (LLVMValueRef, LLVMTypeRef, Type) CompileVariableUsage(VariableUsagePlainNode node, bool load, LLVMValue value)
+    {
+        // TODO: don't special case in the compiler (we should get an EnumUsageNode)
+        if (value is LLVMEnum p)
         {
-            if (value is LLVMReference r)
-            {
-                var inner = builder.BuildStructGEP2(r.TypeRef, r.ValueRef, 0);
-                inner = builder.BuildLoad2(
-                    LLVMTypeRef.CreatePointer(r.TypeOf.Inner.LlvmTypeRef, 0),
-                    inner
-                );
-                value = new LLVMStruct(inner, r.IsMutable, r.TypeOf.Inner);
-            }
-
-            LLVMStruct varType = (LLVMStruct)value;
-            var varField = (VariableUsagePlainNode)node.GetExtensionSafe();
-            var fieldType = (LLVMTypeRef)
-                context.GetLLVMTypeFromShankType(varType.GetTypeOf(varField.Name));
-            var structField = builder.BuildStructGEP2(
-                value.TypeRef,
-                value.ValueRef,
-                (uint)varType.Access(varField.Name)
-            );
-            return load ? builder.BuildLoad2(fieldType, structField) : structField;
+            return (LLVMValueRef.CreateConstInt(
+                LLVMTypeRef.Int64,
+                (ulong)p.EnumType.GetElementNum(node.Name)
+            ), LLVMTypeRef.Int64,p.EnumType );
         }
-        // else if (node.ExtensionType == VariableUsagePlainNode.VrnExtType.Enum)
-        // {
-        //     var varType = (EnumType)context.GetCustomType(value.TypeRef.StructName).Type;
-        //     Console.WriteLine(varType.Variants);
-        //     Console.WriteLine(node.Extension);
-        // }
+        
 
-        if (node.ExtensionType == VariableUsagePlainNode.VrnExtType.None)
+        // TODO: LLVMValue should remember its original type
+        return (value.ValueRef, value.TypeRef, new UnknownType());
+    }
+
+    private (LLVMValueRef, LLVMTypeRef, Type) CompileRecordUsage(VariableUsagePlainNode node, bool load, LLVMValue value)
+    {
+        if (value is LLVMReference r)
         {
-            if (value is LLVMEnum p)
-            {
-                return LLVMValueRef.CreateConstInt(
-                    LLVMTypeRef.Int64,
-                    (ulong)p.EnumType.GetElementNum(node.Name)
-                );
-            }
-
-            return load ? builder.BuildLoad2(value.TypeRef, value.ValueRef) : value.ValueRef;
+            var inner = builder.BuildStructGEP2(r.TypeRef, r.ValueRef, 0);
+            inner = builder.BuildLoad2(
+                LLVMTypeRef.CreatePointer(r.TypeOf.Inner.LlvmTypeRef, 0),
+                inner
+            );
+            value = new LLVMStruct(inner, r.IsMutable, r.TypeOf.Inner);
         }
+        // TODO: all recorrda behind double pointer (or else don't make records in records behind pointer 
+        // once you do that you have to load at least once (twice if not 
+        LLVMStruct varType = (LLVMStruct)value;
+        var varField = (VariableUsagePlainNode)node.GetExtensionSafe();
+        var dataType = varType.GetTypeOf(varField.Name);
+        var fieldType = (LLVMTypeRef)
+            context.GetLLVMTypeFromShankType(dataType);
+        var structField = builder.BuildStructGEP2(
+            value.TypeRef,
+            value.ValueRef,
+            (uint)varType.Access(varField.Name)
+        );
 
-        throw new NotImplementedException();
+        return (structField, fieldType, dataType);
+    }
+
+    private (LLVMValueRef, LLVMTypeRef, Type) CompileArrayUsage(VariableUsagePlainNode node, bool load, LLVMValue value)
+    {
+        LLVMArray newValue = (LLVMArray)value;
+        var dataType = ((LLVMArray)value).Inner();
+        var elementType = (LLVMTypeRef)
+            context.GetLLVMTypeFromShankType(dataType);
+        var start = builder.BuildStructGEP2(newValue.TypeRef, value.ValueRef, 1);
+        start = builder.BuildLoad2(LLVMTypeRef.Int32, start);
+
+        var index = builder.BuildIntCast(CompileExpression(node.Extension), LLVMTypeRef.Int32);
+        var size = builder.BuildStructGEP2(newValue.TypeRef, value.ValueRef, 2);
+        size = builder.BuildLoad2(LLVMTypeRef.Int32, size);
+        var indexOutOfBoundsBlock = module.Context.AppendBasicBlock(
+            context.CurrentFunction.Function,
+            "index out of bounnds"
+        );
+        var okIndexBlock = module.Context.AppendBasicBlock(
+            context.CurrentFunction.Function,
+            "ok"
+        );
+        var smaller = builder.BuildICmp(LLVMIntPredicate.LLVMIntSLT, index, start);
+        var bigger = builder.BuildICmp(
+            LLVMIntPredicate.LLVMIntSGT,
+            index,
+            builder.BuildAdd(start, size)
+        );
+        var goodIndex = builder.BuildOr(smaller, bigger);
+        builder.BuildCondBr(goodIndex, indexOutOfBoundsBlock, okIndexBlock);
+        builder.PositionAtEnd(indexOutOfBoundsBlock);
+        // TODO: in the error say which side the index is out of bounds for
+        Error(
+            $"Index %d is out of bounds, for array {node.Name} of type {newValue.Inner()}",
+            [index],
+            node
+        );
+        builder.PositionAtEnd(okIndexBlock);
+        var array = builder.BuildStructGEP2(newValue.TypeRef, value.ValueRef, 0);
+        var a = builder.BuildLoad2(LLVMTypeRef.CreatePointer(elementType, 0), array);
+        index = builder.BuildSub(index, start);
+        a = builder.BuildInBoundsGEP2(elementType, a, [index]);
+        // TODO: check for unitizialized access when doing this load (this applies also for member access and simple varaiable lookup)
+        // 
+        return (a, elementType, dataType);
     }
 
     public LLVMValueRef CompileCharacter(CharNode node)
@@ -419,15 +441,17 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         var record = context.GetCustomType(node.Type.MonomorphizedIndex);
         var args = node.Type.Fields.Select(
             s =>
+                // This is now longer case: we are assuming that (mutaully) recursive records are behind a refersTo
                 // for records (and eventually references) we do not hold the actual type of the record, but rather a pointer to it, because llvm does not like direct recursive types
                 (
                     s.Key,
-                    s.Value is RecordType
-                        ? LLVMTypeRef.CreatePointer(
-                            (LLVMTypeRef)context.GetLLVMTypeFromShankType(s.Value)!,
-                            0
-                        )
-                        : (LLVMTypeRef)context.GetLLVMTypeFromShankType(s.Value)!
+                        // s.Value is RecordType
+                        //     ? LLVMTypeRef.CreatePointer(
+                        //         (LLVMTypeRef)context.GetLLVMTypeFromShankType(s.Value)!,
+                        //         0
+                        //     )
+                        //     :
+                        (LLVMTypeRef)context.GetLLVMTypeFromShankType(s.Value)!
                 )
         )
             .ToArray();
