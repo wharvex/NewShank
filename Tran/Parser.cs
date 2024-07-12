@@ -562,15 +562,22 @@ public class Parser
     public StatementNode? ParseFunctionCall()
     {
         var functionToken = handler.MatchAndRemove(TokenType.FUNCTION);
+        var functionName = ParseBuiltInFunctionNode();
 
-        if (functionToken == null)
+        if (functionToken != null)
+        {
+            functionName = functionToken.GetValue();
+        }
+        else if(functionName != null)
+        {
+            Console.WriteLine(functionName);
+        }
+        else
         {
             return null;
         }
 
-        var functionName = ParseBuiltInFunctionNode() ?? functionToken.GetValue();
         FunctionCallNode functionCallNode = new FunctionCallNode(functionName);
-        var functionLineNumber = functionToken.GetTokenLineNumber();
 
         if (handler.MatchAndRemove(TokenType.OPENPARENTHESIS) == null)
         {
@@ -588,7 +595,6 @@ public class Parser
             );
         }
 
-        functionCallNode.LineNum = functionLineNumber;
         functionCallNode.Name = functionName;
         return functionCallNode;
     }

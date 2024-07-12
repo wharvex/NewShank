@@ -135,7 +135,7 @@ class start
                 @"
 class start
     start()
-        console.print (tran)".Replace("    ", "\t")
+        console.print(tran)".Replace("    ", "\t")
             );
             RunInterpreter();
         }
