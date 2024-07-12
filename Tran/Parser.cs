@@ -134,7 +134,7 @@ public class Parser
         )
         {
             var property = new FunctionNode(
-                "_" + variable.Name + "_"+ propertyType.ToString().ToLower(),
+                "_" + variable.Name + "_" + propertyType.ToString().ToLower(),
                 thisClass.Name,
                 true
             );
@@ -146,12 +146,12 @@ public class Parser
             blockLevel--;
 
             var value = new VariableDeclarationNode(
-                        false,
-                        variable.Type,
-                        "value",
-                        thisClass.Name,
-                        false
-                    );
+                false,
+                variable.Type,
+                "value",
+                thisClass.Name,
+                false
+            );
             if (propertyType == TokenType.ACCESSOR)
             {
                 property.ParameterVariables.Add(value);
