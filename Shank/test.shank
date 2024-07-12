@@ -2,6 +2,13 @@ define start()
 	tester 4
     
 define tester(a : integer)
-variables i : integer = 1
-    for i from 1 to 10
-        write i
+variables i,j,k : integer = 1
+    while i < 2
+        i := i + 1
+        while j < 2
+            j := j + 1
+            while k < 2
+                k := k + 1
+    write i
+    write j
+    write k

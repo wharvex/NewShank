@@ -17,5 +17,6 @@ public class NewSemanticAnalysis
         program.Walk(new FunctionCallDefaultVisitor());
 
         program.Walk(new MathOpNodeOptimizer());
+        program.Walk(new InfiniteLoopVisitor());
     }
 }

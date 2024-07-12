@@ -526,6 +526,151 @@ public class RecordVisitor : SAVisitor
 
 public class UnknownTypesVisitor : SAVisitor { }
 
+public class InfiniteLoopVisitor : SAVisitor
+{
+    private Stack<Dictionary<string, VariableUsagePlainNode>> LoopDeclarationStack =
+        new Stack<Dictionary<string, VariableUsagePlainNode>>();
+    private Stack<Dictionary<string, VariableUsagePlainNode>> LoopStatementStack =
+        new Stack<Dictionary<string, VariableUsagePlainNode>>();
+
+    private bool inLoopDeclaration;
+    private bool inLoopStatements;
+
+    public override ASTNode? Visit(VariableUsagePlainNode node)
+    {
+        if (inLoopDeclaration)
+        {
+            if (!LoopDeclarationStack.Peek().ContainsKey(node.Name))
+                LoopDeclarationStack.Peek().Add(node.Name, node);
+        }
+        else if (inLoopStatements)
+        {
+            if (!LoopStatementStack.Peek().ContainsKey(node.Name))
+                LoopStatementStack.Peek().Add(node.Name, node);
+        }
+
+        return null;
+    }
+
+    public override ASTNode? Visit(ForNode node)
+    {
+        if (inLoopDeclaration)
+        {
+            inLoopDeclaration = false;
+            inLoopStatements = true;
+        }
+        return null;
+    }
+
+    public override ASTNode? Visit(AssignmentNode node)
+    {
+        if (inLoopDeclaration)
+        {
+            inLoopDeclaration = false;
+            inLoopStatements = true;
+        }
+        return null;
+    }
+
+    public override ASTNode? Visit(FunctionCallNode node)
+    {
+        if (inLoopDeclaration)
+        {
+            inLoopDeclaration = false;
+            inLoopStatements = true;
+        }
+        return null;
+    }
+
+    public override ASTNode? Visit(IfNode node)
+    {
+        if (inLoopDeclaration)
+        {
+            inLoopDeclaration = false;
+            inLoopStatements = true;
+        }
+        return null;
+    }
+
+    public override ASTNode? Visit(WhileNode node)
+    {
+        LoopDeclarationStack.Push(new Dictionary<string, VariableUsagePlainNode>());
+        LoopStatementStack.Push(new Dictionary<string, VariableUsagePlainNode>());
+        inLoopDeclaration = true;
+        return null;
+    }
+
+    public override ASTNode? PostWalk(WhileNode node)
+    {
+        bool isInfinite = true;
+        foreach (var variable in LoopDeclarationStack.Peek().Keys)
+        {
+            if (LoopStatementStack.Peek().ContainsKey(variable))
+            {
+                isInfinite = false;
+                break;
+            }
+        }
+
+        if (LoopDeclarationStack.Peek().Count == 0)
+        {
+            throw new SemanticErrorException(
+                "This Loop is infinite because it does not use a variable in the loop declaration.",
+                node
+            );
+        }
+
+        if (isInfinite)
+        {
+            throw new SemanticErrorException(
+                "This Loop is infinite because it does not use the variable in the loop statements.",
+                node
+            );
+        }
+
+        LoopDeclarationStack.Pop();
+        LoopStatementStack.Pop();
+        if (LoopStatementStack.Count == 0)
+            inLoopStatements = false;
+        return null;
+    }
+
+    public override ASTNode? Visit(RepeatNode node)
+    {
+        LoopDeclarationStack.Push(new Dictionary<string, VariableUsagePlainNode>());
+        LoopStatementStack.Push(new Dictionary<string, VariableUsagePlainNode>());
+        inLoopDeclaration = true;
+        return null;
+    }
+
+    public override ASTNode? PostWalk(RepeatNode node)
+    {
+        bool isInfinite = true;
+        foreach (var variable in LoopDeclarationStack.Peek().Keys)
+        {
+            if (LoopStatementStack.Peek().ContainsKey(variable))
+            {
+                isInfinite = false;
+                break;
+            }
+        }
+
+        if (isInfinite)
+        {
+            throw new SemanticErrorException(
+                "This Loop is infinite because it does not use a variable in the loop.",
+                node
+            );
+        }
+
+        LoopDeclarationStack.Pop();
+        LoopStatementStack.Pop();
+        if (LoopStatementStack.Count == 0)
+            inLoopStatements = false;
+        return null;
+    }
+}
+
 public class ForNodeVisitor : SAVisitor
 {
     private Dictionary<string, VariableDeclarationNode> Variables;
