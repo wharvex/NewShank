@@ -1,4 +1,5 @@
 ﻿using Shank.ASTNodes;
+using Shank.MathOppable;
 using Shank.WalkCompliantVisitors;
 
 namespace Shank;
@@ -40,42 +41,18 @@ public static class IdtExtensions
         }
     }
 
-    public static bool TryGetFloatValue(this InterpreterDataType idt, out float val)
+    public static bool TryGetMathOppable(this InterpreterDataType idt, out IMathOppable val)
     {
         switch (idt)
         {
             case IntDataType i:
-                val = i.Value;
+                val = new MathOppableInt(i.Value);
                 break;
             case FloatDataType f:
-                val = f.Value;
+                val = new MathOppableFloat(f.Value);
                 break;
             default:
-                val = default;
-                return false;
-        }
-
-        return true;
-    }
-
-    public static bool TryGetFloatOrIntOrStringValue(
-        this InterpreterDataType idt,
-        out FloatOrIntOrString val
-    )
-    {
-        switch (idt)
-        {
-            case IntDataType i:
-                val = new FloatOrIntOrString(i.Value);
-                break;
-            case FloatDataType f:
-                val = new FloatOrIntOrString(f.Value);
-                break;
-            case StringDataType s:
-                val = new FloatOrIntOrString(s.Value);
-                break;
-            default:
-                val = FloatOrIntOrString.Default;
+                val = IMathOppable.Default;
                 return false;
         }
 

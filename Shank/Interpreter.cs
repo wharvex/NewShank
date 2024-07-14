@@ -4,6 +4,7 @@ using System.Text;
 using LLVMSharp;
 using Shank.ASTNodes;
 using Shank.AstVisitorsTim;
+using Shank.MathOppable;
 
 namespace Shank;
 
@@ -1548,13 +1549,18 @@ public class Interpreter
             {
                 var left = GetIdtFromExpr(m.Left, idts);
                 var right = GetIdtFromExpr(m.Right, idts);
-
-                return e.Type switch
+                var opResult = m.GetResultOfOp(left, right);
+                switch (opResult)
                 {
-                    RealType => new FloatDataType(m.GetResultOfOp(left, right)),
-                    IntegerType => new IntDataType((int)m.GetResultOfOp(left, right)),
-                    _ => throw new InvalidOperationException()
-                };
+                    case MathOppableInt mi:
+                        return new IntDataType(mi.Contents);
+                    case MathOppableFloat fi:
+                        return new FloatDataType(fi.Contents);
+                    case MathOppableString si:
+                        return new StringDataType(si.Contents);
+                    default:
+                        throw new UnreachableException();
+                }
             }
             default:
                 throw new ArgumentException("Unsupported expression type", nameof(e));
