@@ -12,6 +12,12 @@ public class Interpreter
 {
     public static Dictionary<string, ModuleNode>? Modules { get; set; }
 
+    public delegate bool AddVunToPassedTrier(
+        ExpressionNode e,
+        Dictionary<string, InterpreterDataType> variables,
+        List<InterpreterDataType> passed
+    );
+
     public static ModuleNode? StartModule { get; set; }
     public static StringBuilder testOutput = new StringBuilder();
     public static InterpretOptions? ActiveInterpretOptions { get; set; }
@@ -685,71 +691,74 @@ public class Interpreter
         var passed = new List<InterpreterDataType>();
         foreach (var fcp in fc.Arguments)
         {
-            if (fcp is VariableUsagePlainNode variableUsagePlainNode)
-            {
-                var name = variableUsagePlainNode.Name;
-                var value = variables[name];
-                switch (value)
-                {
-                    case IntDataType intVal:
-                        passed.Add(new IntDataType(intVal.Value));
-                        break;
-                    case FloatDataType floatVal:
-                        passed.Add(new FloatDataType(floatVal.Value));
-                        break;
-                    case StringDataType stringVal:
-                        passed.Add(new StringDataType(stringVal.Value));
-                        break;
-                    case CharDataType charVal:
-                        passed.Add(new CharDataType(charVal.Value));
-                        break;
-                    case BooleanDataType boolVal:
-                        passed.Add(new BooleanDataType(boolVal.Value));
-                        break;
-                    case ArrayDataType arrayVal:
-                        AddToParamsArray(arrayVal, variableUsagePlainNode, passed, variables);
-                        break;
-                    case RecordDataType recordVal:
-                        AddToParamsRecord(recordVal, variableUsagePlainNode, passed);
-                        break;
-                    case EnumDataType enumVal:
-                        passed.Add(new EnumDataType(enumVal.Type, enumVal.Value));
-                        break;
-                    case ReferenceDataType referenceVal:
-                        if (variableUsagePlainNode.Extension != null)
-                        {
-                            var vrn = ((VariableUsagePlainNode)variableUsagePlainNode.Extension);
-                            if (referenceVal.Record is null)
-                                throw new Exception(
-                                    $"{variableUsagePlainNode.Name} was never allocated."
-                                );
-                            if (referenceVal.Record.Value[vrn.Name] is int)
-                                passed.Add(
-                                    new IntDataType((int)referenceVal.Record.Value[vrn.Name])
-                                );
-                            else if (referenceVal.Record.Value[vrn.Name] is float)
-                                passed.Add(
-                                    new FloatDataType((float)referenceVal.Record.Value[vrn.Name])
-                                );
-                            else if (referenceVal.Record.Value[vrn.Name] is char)
-                                passed.Add(
-                                    new CharDataType((char)referenceVal.Record.Value[vrn.Name])
-                                );
-                            else if (referenceVal.Record.Value[vrn.Name] is string)
-                                passed.Add(
-                                    new StringDataType((string)referenceVal.Record.Value[vrn.Name])
-                                );
-                            else if (referenceVal.Record.Value[vrn.Name] is float)
-                                passed.Add(
-                                    new BooleanDataType((bool)referenceVal.Record.Value[vrn.Name])
-                                );
-                        }
-                        else
-                            passed.Add(new ReferenceDataType(referenceVal));
-                        break;
-                }
-            }
-            else
+            //if (fcp is VariableUsagePlainNode variableUsagePlainNode)
+            //{
+            //    var name = variableUsagePlainNode.Name;
+            //    var value = variables[name];
+            //    switch (value)
+            //    {
+            //        case IntDataType intVal:
+            //            passed.Add(new IntDataType(intVal.Value));
+            //            break;
+            //        case FloatDataType floatVal:
+            //            passed.Add(new FloatDataType(floatVal.Value));
+            //            break;
+            //        case StringDataType stringVal:
+            //            passed.Add(new StringDataType(stringVal.Value));
+            //            break;
+            //        case CharDataType charVal:
+            //            passed.Add(new CharDataType(charVal.Value));
+            //            break;
+            //        case BooleanDataType boolVal:
+            //            passed.Add(new BooleanDataType(boolVal.Value));
+            //            break;
+            //        case ArrayDataType arrayVal:
+            //            AddToParamsArray(arrayVal, variableUsagePlainNode, passed, variables);
+            //            break;
+            //        case RecordDataType recordVal:
+            //            AddToParamsRecord(recordVal, variableUsagePlainNode, passed);
+            //            break;
+            //        case EnumDataType enumVal:
+            //            passed.Add(new EnumDataType(enumVal.Type, enumVal.Value));
+            //            break;
+            //        case ReferenceDataType referenceVal:
+            //            if (variableUsagePlainNode.Extension != null)
+            //            {
+            //                var vrn = ((VariableUsagePlainNode)variableUsagePlainNode.Extension);
+            //                if (referenceVal.Record is null)
+            //                    throw new Exception(
+            //                        $"{variableUsagePlainNode.Name} was never allocated."
+            //                    );
+            //                if (referenceVal.Record.Value[vrn.Name] is int)
+            //                    passed.Add(
+            //                        new IntDataType((int)referenceVal.Record.Value[vrn.Name])
+            //                    );
+            //                else if (referenceVal.Record.Value[vrn.Name] is float)
+            //                    passed.Add(
+            //                        new FloatDataType((float)referenceVal.Record.Value[vrn.Name])
+            //                    );
+            //                else if (referenceVal.Record.Value[vrn.Name] is char)
+            //                    passed.Add(
+            //                        new CharDataType((char)referenceVal.Record.Value[vrn.Name])
+            //                    );
+            //                else if (referenceVal.Record.Value[vrn.Name] is string)
+            //                    passed.Add(
+            //                        new StringDataType((string)referenceVal.Record.Value[vrn.Name])
+            //                    );
+            //                else if (referenceVal.Record.Value[vrn.Name] is float)
+            //                    passed.Add(
+            //                        new BooleanDataType((bool)referenceVal.Record.Value[vrn.Name])
+            //                    );
+            //            }
+            //            else
+            //                passed.Add(new ReferenceDataType(referenceVal));
+            //            break;
+            //    }
+            //}
+            AddVunToPassedTrier addVunToPassedTrier = GetVuopTestFlag()
+                ? NewTryAddVunToPassed
+                : TryAddVunToPassed;
+            if (!addVunToPassedTrier(fcp, variables, passed))
             {
                 var value = fcp;
                 switch (value)
@@ -1594,5 +1603,133 @@ public class Interpreter
             default:
                 throw new ArgumentException("Unsupported expression type", nameof(e));
         }
+    }
+
+    public static bool TryAddVunToPassed(
+        ExpressionNode e,
+        Dictionary<string, InterpreterDataType> variables,
+        List<InterpreterDataType> passed
+    )
+    {
+        if (e is not VariableUsagePlainNode variableUsagePlainNode)
+        {
+            return false;
+        }
+
+        var name = variableUsagePlainNode.Name;
+        var value = variables[name];
+        switch (value)
+        {
+            case IntDataType intVal:
+                passed.Add(new IntDataType(intVal.Value));
+                break;
+            case FloatDataType floatVal:
+                passed.Add(new FloatDataType(floatVal.Value));
+                break;
+            case StringDataType stringVal:
+                passed.Add(new StringDataType(stringVal.Value));
+                break;
+            case CharDataType charVal:
+                passed.Add(new CharDataType(charVal.Value));
+                break;
+            case BooleanDataType boolVal:
+                passed.Add(new BooleanDataType(boolVal.Value));
+                break;
+            case ArrayDataType arrayVal:
+                AddToParamsArray(arrayVal, variableUsagePlainNode, passed, variables);
+                break;
+            case RecordDataType recordVal:
+                AddToParamsRecord(recordVal, variableUsagePlainNode, passed);
+                break;
+            case EnumDataType enumVal:
+                passed.Add(new EnumDataType(enumVal.Type, enumVal.Value));
+                break;
+            case ReferenceDataType referenceVal:
+                if (variableUsagePlainNode.Extension != null)
+                {
+                    var vrn = ((VariableUsagePlainNode)variableUsagePlainNode.Extension);
+                    if (referenceVal.Record is null)
+                        throw new Exception($"{variableUsagePlainNode.Name} was never allocated.");
+                    if (referenceVal.Record.Value[vrn.Name] is int)
+                        passed.Add(new IntDataType((int)referenceVal.Record.Value[vrn.Name]));
+                    else if (referenceVal.Record.Value[vrn.Name] is float)
+                        passed.Add(new FloatDataType((float)referenceVal.Record.Value[vrn.Name]));
+                    else if (referenceVal.Record.Value[vrn.Name] is char)
+                        passed.Add(new CharDataType((char)referenceVal.Record.Value[vrn.Name]));
+                    else if (referenceVal.Record.Value[vrn.Name] is string)
+                        passed.Add(new StringDataType((string)referenceVal.Record.Value[vrn.Name]));
+                    else if (referenceVal.Record.Value[vrn.Name] is float)
+                        passed.Add(new BooleanDataType((bool)referenceVal.Record.Value[vrn.Name]));
+                }
+                else
+                    passed.Add(new ReferenceDataType(referenceVal));
+                break;
+        }
+
+        return true;
+    }
+
+    public static bool NewTryAddVunToPassed(
+        ExpressionNode e,
+        Dictionary<string, InterpreterDataType> variables,
+        List<InterpreterDataType> passed
+    )
+    {
+        if (e is not VariableUsagePlainNode variableUsagePlainNode)
+        {
+            return false;
+        }
+
+        var name = variableUsagePlainNode.Name;
+        var value = variables[name];
+        switch (value)
+        {
+            case IntDataType intVal:
+                passed.Add(new IntDataType(intVal.Value));
+                break;
+            case FloatDataType floatVal:
+                passed.Add(new FloatDataType(floatVal.Value));
+                break;
+            case StringDataType stringVal:
+                passed.Add(new StringDataType(stringVal.Value));
+                break;
+            case CharDataType charVal:
+                passed.Add(new CharDataType(charVal.Value));
+                break;
+            case BooleanDataType boolVal:
+                passed.Add(new BooleanDataType(boolVal.Value));
+                break;
+            case ArrayDataType arrayVal:
+                AddToParamsArray(arrayVal, variableUsagePlainNode, passed, variables);
+                break;
+            case RecordDataType recordVal:
+                AddToParamsRecord(recordVal, variableUsagePlainNode, passed);
+                break;
+            case EnumDataType enumVal:
+                passed.Add(new EnumDataType(enumVal.Type, enumVal.Value));
+                break;
+            case ReferenceDataType referenceVal:
+                if (variableUsagePlainNode.Extension != null)
+                {
+                    var vrn = ((VariableUsagePlainNode)variableUsagePlainNode.Extension);
+                    if (referenceVal.Record is null)
+                        throw new Exception($"{variableUsagePlainNode.Name} was never allocated.");
+                    if (referenceVal.Record.Value[vrn.Name] is int)
+                        passed.Add(new IntDataType((int)referenceVal.Record.Value[vrn.Name]));
+                    else if (referenceVal.Record.Value[vrn.Name] is float)
+                        passed.Add(new FloatDataType((float)referenceVal.Record.Value[vrn.Name]));
+                    else if (referenceVal.Record.Value[vrn.Name] is char)
+                        passed.Add(new CharDataType((char)referenceVal.Record.Value[vrn.Name]));
+                    else if (referenceVal.Record.Value[vrn.Name] is string)
+                        passed.Add(new StringDataType((string)referenceVal.Record.Value[vrn.Name]));
+                    else if (referenceVal.Record.Value[vrn.Name] is float)
+                        passed.Add(new BooleanDataType((bool)referenceVal.Record.Value[vrn.Name]));
+                }
+                else
+                    passed.Add(new ReferenceDataType(referenceVal));
+                break;
+        }
+
+        return true;
     }
 }
