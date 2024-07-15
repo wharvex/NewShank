@@ -1,0 +1,10 @@
+Interpret Shank/dotShank/ModuleTest2 --vuop-test
+Interpret Shank/dotShank/Records/simple --vuop-test
+Interpret Shank/dotShank/RealRange --vuop-test
+Interpret Shank/dotShank/Arrays/sum --vuop-test
+Interpret Shank/dotShank/Records/nested --vuop-test
+Interpret Shank/dotShank/Globals --vuop-test
+Interpret Shank/dotShank/UnitTestTests1 -u --vuop-test
+Interpret Shank/dotShank/Builtins/Write --vuop-test
+Interpret Shank/dotShank/Enums --vuop-test
+Compile Shank/dotShank/TestLlvmTheoAndMendel -S --print-ir --vuop-test
