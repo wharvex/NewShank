@@ -2,6 +2,7 @@ using LLVMSharp.Interop;
 using Shank.ASTNodes;
 
 namespace Shank.IRGenerator;
+// TODO: check all mallocs (and any other thing returned from calling a c function)
 
 public enum Types
 {
@@ -209,7 +210,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
 
         LLVMValue value = context.GetVariable(node.MonomorphizedName());
 
-        var varaiable = (node.ExtensionType) switch
+        var varaiable = node.ExtensionType switch
         {
             VariableUsagePlainNode.VrnExtType.ArrayIndex => CompileArrayUsage(node, value),
 
@@ -296,24 +297,24 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
 
     private LLVMValueRef CompileCharacter(CharNode node)
     {
-        return (
+        return 
             LLVMValueRef.CreateConstInt(
                 module.Context.Int8Type, //a
                 node.Value
             )
-        );
+        ;
     }
 
     private LLVMValueRef CompileBoolean(BoolNode node)
     {
-        return (
+        return 
             LLVMValueRef.CreateConstInt(
                 module.Context.Int1Type, //a
-                (ulong)(
+                (ulong)
                     node.GetValueAsInt() //a
-                )
+                
             )
-        );
+        ;
     }
 
     public LLVMValueRef CompileString(StringNode node)
@@ -358,9 +359,9 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         var types = _types(L.TypeOf);
         return types switch
         {
-            Types.INTEGER => (HandleIntOp(L, node.Op, R)),
-            Types.FLOAT => (HandleFloatOp(L, node.Op, R)),
-            Types.STRING => (HandleString(L, R)),
+            Types.INTEGER => HandleIntOp(L, node.Op, R),
+            Types.FLOAT => HandleFloatOp(L, node.Op, R),
+            Types.STRING => HandleString(L, R),
             _ => throw new NotImplementedException()
         };
     }
@@ -792,6 +793,9 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
             case "write":
                 CompileBuiltinWrite(function);
                 break;
+            case "read":
+                CompileBuiltinRead(function);
+                break;
             case "substring":
                 CompileBuiltinSubString(function);
                 break;
@@ -828,6 +832,92 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
             default:
                 throw new CompilerException("Undefined builtin", 0);
         }
+    }
+
+    private void CompileBuiltinRead(LLVMShankFunction function)
+    {
+        // TODO: should read keep the \n
+        var output = function.Function.FirstParam;
+        var read_bb = module.Context.AppendBasicBlock(function.Function, "read char");
+        var reallocate_bb = module.Context.AppendBasicBlock(function.Function, "reallocate");
+        var check_done_bb = module.Context.AppendBasicBlock(function.Function, "check done");
+        var done_bb = module.Context.AppendBasicBlock(function.Function, "done");
+        // init part
+        var size = builder.BuildAlloca(LLVMTypeRef.Int32);
+        builder.BuildStore(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 128), size);
+        var content = builder.BuildAlloca(LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0));
+        builder.BuildStore(
+            builder.BuildCall2(
+                context.CFuntions.malloc.TypeOf,
+                context.CFuntions.malloc.Function,
+                [builder.BuildLoad2(LLVMTypeRef.Int32, size)]
+            ),
+            content
+        );
+        var index = builder.BuildAlloca(LLVMTypeRef.Int32);
+        builder.BuildStore(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0), index);
+        // read part
+        builder.BuildBr(read_bb);
+        builder.PositionAtEnd(read_bb);
+        var read = builder.BuildCall2(
+            context.CFuntions.getchar.TypeOf,
+            context.CFuntions.getchar.Function,
+            []
+        );
+        var loadedIndex = builder.BuildLoad2(LLVMTypeRef.Int32, index);
+        var reallocate = builder.BuildICmp(
+            LLVMIntPredicate.LLVMIntSGT,
+            loadedIndex,
+            builder.BuildLoad2(LLVMTypeRef.Int32, size)
+        );
+        builder.BuildCondBr(reallocate, reallocate_bb, check_done_bb);
+        // reallocation
+        builder.PositionAtEnd(reallocate_bb);
+        var newSize = builder.BuildLShr(
+            builder.BuildLoad2(LLVMTypeRef.Int32, size),
+            LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 1)
+        );
+        var newContent = builder.BuildCall2(
+            context.CFuntions.realloc.TypeOf,
+            context.CFuntions.realloc.Function,
+            [builder.BuildLoad2(LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0), content), newSize]
+        );
+        builder.BuildStore(newContent, content);
+        builder.BuildStore(newSize, size);
+        builder.BuildBr(check_done_bb);
+        // updating strin and checking if we are done
+        builder.PositionAtEnd(check_done_bb);
+        // TODO: just load content instead of double gep
+        var current = builder.BuildInBoundsGEP2(
+            LLVMTypeRef.Int8,
+            builder.BuildLoad2(LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0), content),
+            [loadedIndex]
+        );
+        builder.BuildStore(read, current);
+        builder.BuildStore(
+            builder.BuildAdd(loadedIndex, LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 1)),
+            index
+        );
+        var isNewline = builder.BuildICmp(
+            LLVMIntPredicate.LLVMIntEQ,
+            read,
+            LLVMValueRef.CreateConstInt(LLVMTypeRef.Int8, '\n')
+        );
+        builder.BuildCondBr(isNewline, done_bb, read_bb);
+        builder.PositionAtEnd(done_bb);
+        var newString = LLVMType.StringType.Undef;
+        newString = builder.BuildInsertValue(
+            newString,
+            builder.BuildLoad2(LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0), content),
+            0
+        );
+        newString = builder.BuildInsertValue(
+            newString,
+            builder.BuildLoad2(LLVMTypeRef.Int32, size),
+            1
+        );
+        builder.BuildStore(newString, output);
+        builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
     }
 
     private void CompileBuiltinHigh(LLVMShankFunction function)

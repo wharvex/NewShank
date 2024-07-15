@@ -27,12 +27,22 @@ public struct CFuntions
         );
         memcpy.Linkage = LLVMLinkage.LLVMExternalLinkage;
         malloc = llvmModule.addFunction("malloc", LLVMTypeRef.CreateFunction(voidStar, [sizeT]));
-        memcpy.Linkage = LLVMLinkage.LLVMExternalLinkage;
+        malloc.Linkage = LLVMLinkage.LLVMExternalLinkage;
         exit = llvmModule.addFunction(
             "exit",
             LLVMTypeRef.CreateFunction(LLVMTypeRef.Void, [LLVMTypeRef.Int32,])
         );
         exit.Linkage = LLVMLinkage.LLVMExternalLinkage;
+        getchar = llvmModule.addFunction(
+            "getchar",
+            LLVMTypeRef.CreateFunction(LLVMTypeRef.Int8, [])
+        );
+        getchar.Linkage = LLVMLinkage.LLVMExternalLinkage;
+        realloc = llvmModule.addFunction(
+            "realloc",
+            LLVMTypeRef.CreateFunction(voidStar, [voidStar, sizeT])
+        );
+        realloc.Linkage = LLVMLinkage.LLVMExternalLinkage;
     }
 
     //  int printf(const char *restrict format, ...);
@@ -47,6 +57,12 @@ public struct CFuntions
 
     // void exit(int exit_code);
     public LLVMFunction exit { get; }
+
+    // int getchar(void)
+    public LLVMFunction getchar { get; }
+
+    // void *realloc(void *ptr, size_t size);
+    public LLVMFunction realloc { get; }
 }
 
 public class Context(MonomorphizedProgramNode moduleNode, CFuntions cFuntions)
