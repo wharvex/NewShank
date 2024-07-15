@@ -84,21 +84,21 @@ public class PrototypeCompiler(Context context, LLVMBuilderRef builder, LLVMModu
         var enumType = new LLVMEnumType(obj.TypeName, obj.EType.Variants);
         context.Enums.Add(obj.EType.MonomorphizedIndex, enumType);
 
-        var variable = context.NewVariable(obj.EType);
+        // var variable = context.NewVariable(obj.EType);
 
-        foreach (
-            var (param, index) in obj.EnumElementsVariables.Select((param, index) => (param, index))
-        )
-        {
-            var a = module.AddGlobal(LLVMTypeRef.Int64, param.GetNameSafe());
-            // a.Linkage = LLVMLinkage.LLVMExternalLinkage;
-            // a.Linkage = LLVMLinkage.LLVMCommonLinkage;
-            // a.SetAlignment(4);
-            // a.Initializer = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, 0);
-            // var variable = context.NewVariable(node.Type);
-            a.Initializer = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, (ulong)index);
-            context.AddVariable(param.MonomorphizedName(), variable(a, false));
-        }
+        // foreach (
+        //     var (param, index) in obj.EnumElementsVariables.Select((param, index) => (param, index))
+        // )
+        // {
+        //     var a = module.AddGlobal(LLVMTypeRef.Int64, param.GetNameSafe());
+        //     // a.Linkage = LLVMLinkage.LLVMExternalLinkage;
+        //     // a.Linkage = LLVMLinkage.LLVMCommonLinkage;
+        //     // a.SetAlignment(4);
+        //     // a.Initializer = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, 0);
+        //     // var variable = context.NewVariable(node.Type);
+        //     a.Initializer = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, (ulong)index);
+        //     context.AddVariable(param.MonomorphizedName(), variable(a, false));
+        // }
 
         // context.AddVariable(
         //     obj.EType.MonomorphizedIndex(),
