@@ -1,11 +1,19 @@
 using System.Runtime.InteropServices;
 using LLVMSharp;
 using Shank.ASTNodes;
+using Shank.AstVisitorsTim;
 
 namespace Shank;
 
 public abstract class SAVisitor
 {
+    public static InterpretOptions? ActiveInterpretOptions { get; set; }
+
+    public static bool GetVuopTestFlag()
+    {
+        return ActiveInterpretOptions?.VuOpTest ?? false;
+    }
+
     public virtual ASTNode? Visit(ProgramNode node)
     {
         return null;
@@ -52,6 +60,16 @@ public abstract class SAVisitor
     }
 
     public virtual ASTNode? PostWalk(VariableDeclarationNode node)
+    {
+        return null;
+    }
+
+    public virtual ASTNode? Visit(VariableUsageNodeTemp node)
+    {
+        return null;
+    }
+
+    public virtual ASTNode? PostWalk(VariableUsageNodeTemp node)
     {
         return null;
     }
@@ -226,13 +244,18 @@ public abstract class SAVisitor
         return null;
     }
 
-    protected Type GetTypeOfExpression(
+    public static Type GetTypeOfExpression(
         ExpressionNode node,
         Dictionary<string, VariableDeclarationNode> variables
     )
     {
-        if (node is VariableUsagePlainNode variableUsagePlainNode)
+        if (node is VariableUsageNodeTemp variableUsageNodeTemp)
         {
+            if (GetVuopTestFlag())
+            {
+                return GetVariableType(variableUsageNodeTemp, variables);
+            }
+            var variableUsagePlainNode = (VariableUsagePlainNode)variableUsageNodeTemp;
             var name = variableUsagePlainNode.Name;
             var variableDeclarationNode = variables.GetValueOrDefault(variableUsagePlainNode.Name);
             switch (variableUsagePlainNode.ExtensionType)
@@ -311,6 +334,24 @@ public abstract class SAVisitor
             default:
                 throw new Exception();
         }
+    }
+
+    static Type GetVariableType(
+        VariableUsageNodeTemp vun,
+        Dictionary<string, VariableDeclarationNode> vdnByName
+    )
+    {
+        var vunPlainName = vun.GetPlain().Name;
+
+        if (!vdnByName.TryGetValue(vunPlainName, out var vdn))
+        {
+            throw new SemanticErrorException($"Variable {vunPlainName} not found", vun);
+        }
+
+        vun.GetPlain().ReferencesGlobalVariable = vdn.IsGlobal;
+        var vtVis = new VunTypeGettingVisitor(vdn.Type, vdnByName);
+        vun.Accept(vtVis);
+        return vtVis.VunType;
     }
 
     private static Type? GetTypeRecursive(
@@ -656,6 +697,270 @@ public class TestVisitor : SAVisitor
     }
 }
 
+public class AssignmentVisitor : SAVisitor
+{
+    private Dictionary<string, VariableDeclarationNode> Variables;
+
+    public override ASTNode? Visit(FunctionNode node)
+    {
+        Variables = node.VariablesInScope;
+        return null;
+    }
+
+    public override ASTNode? Visit(AssignmentNode node)
+    {
+        // Control flow reroute for vuop testing.
+        if (GetVuopTestFlag())
+        {
+            if (Variables.TryGetValue(node.NewTarget.GetPlain().Name, out var targetDeclaration))
+            {
+                if (targetDeclaration.IsConstant)
+                {
+                    throw new SemanticErrorException(
+                        $"Variable {node.Target.Name} is not mutable, you cannot assign to it.",
+                        node
+                    );
+                }
+
+                node.NewTarget.GetPlain().ReferencesGlobalVariable = targetDeclaration.IsGlobal;
+            }
+
+            var targetType = Variables[node.NewTarget.GetPlain().Name].Type;
+            NewCheckAssignment(
+                node.NewTarget.GetPlain().Name,
+                targetType,
+                node.Expression,
+                Variables,
+                node.NewTarget
+            );
+        }
+        else
+        {
+            if (Variables.TryGetValue(node.Target.Name, out var targetDeclaration))
+            {
+                if (targetDeclaration.IsConstant)
+                {
+                    throw new SemanticErrorException(
+                        $"Variable {node.Target.Name} is not mutable, you cannot assign to it.",
+                        node
+                    );
+                }
+
+                node.Target.ReferencesGlobalVariable = targetDeclaration.IsGlobal;
+            }
+
+            var targetType = GetTypeOfExpression(node.Target, Variables);
+            CheckAssignment(node.Target.Name, targetType, node.Expression, Variables);
+        }
+        return null;
+    }
+
+    private static Dictionary<string, Type> CheckAssignment(
+        string targetName,
+        Type targetType,
+        ExpressionNode expression,
+        Dictionary<string, VariableDeclarationNode> variables
+    )
+    {
+        CheckRange(targetName, targetType, expression, variables);
+        // if(targetType )
+
+        if (
+            targetType is EnumType e
+            && expression is VariableUsagePlainNode v
+            && e.Variants.Contains(v.Name)
+        )
+        {
+            if (v.ExtensionType != VariableUsagePlainNode.VrnExtType.None)
+            {
+                throw new SemanticErrorException($"ambiguous variable name {v.Name}", expression);
+            }
+
+            v.ReferencesGlobalVariable = true;
+        }
+        else
+        {
+            var expressionType = GetTypeOfExpression(expression, variables);
+            if (!targetType.Equals(expressionType))
+            {
+                throw new SemanticErrorException(
+                    $"Type mismatch cannot assign to {targetName}: {targetType} {expression}: {expressionType}",
+                    expression
+                );
+            }
+        }
+
+        return [];
+    }
+
+    private static void NewCheckAssignment(
+        string targetName,
+        Type targetType,
+        ExpressionNode expression,
+        Dictionary<string, VariableDeclarationNode> vDecs,
+        VariableUsageNodeTemp target
+    )
+    {
+        var vtVis = new VunTypeGettingVisitor(targetType, vDecs);
+        target.Accept(vtVis);
+
+        var expressionType = GetTypeOfExpression(expression, vDecs);
+        if (!vtVis.VunType.Equals(expressionType))
+        {
+            throw new SemanticErrorException(
+                "Type mismatch; cannot assign `"
+                    + expression
+                    + " : "
+                    + expressionType
+                    + "' to `"
+                    + targetName
+                    + " : "
+                    + targetType
+                    + "'.",
+                expression
+            );
+        }
+    }
+
+    private static void CheckRange(
+        String? variable,
+        Type targetType,
+        ASTNode expression,
+        Dictionary<string, VariableDeclarationNode> variablesLookup
+    )
+    {
+        // TODO: traverse record type if necesary
+        // if (an.Expression is StringNode s)
+        /*{
+            try
+            {
+                var type = (StringType)variablesLookup[an.Target.Name].NewType;
+                var from = type.Range.From;
+                var to = type.Range.To;
+                if (s.Value.Length < from || s.Value.Length > to)
+                    throw new Exception(
+                        $"The variable {an.Target.Name} can only be a length from {from.ToString()} to {to.ToString()}."
+                    );
+            }
+            catch (InvalidCastException e)
+            {
+
+                throw new Exception("String types can only be assigned a range of two integers.", e);
+            }
+        }*/
+        // else
+        {
+            // try
+            {
+                if (targetType is RangeType i) // all other i range type are bounded by integers
+                {
+                    var from = i.Range.From;
+                    var to = i.Range.To;
+                    int upper = (int)GetMaxRange(expression, variablesLookup);
+                    int lower = (int)GetMinRange(expression, variablesLookup);
+
+                    if (lower < from || upper > to)
+                        throw new Exception(
+                            $"The variable {variable!} can only be assigned expressions that wont overstep its range ({from}..{to}), but attempted to assign to expression {expression} with range ({lower}..{upper}."
+                        );
+                }
+            }
+            /*catch (InvalidCastException e)
+            {
+                throw new Exception("Incorrect type of range.");
+            }*/
+        }
+    }
+
+    private static float GetMaxRange(
+        ASTNode node,
+        Dictionary<string, VariableDeclarationNode> variables
+    )
+    {
+        if (node is MathOpNode mon)
+        {
+            switch (mon.Op)
+            {
+                case MathOpNode.MathOpType.Plus:
+                    return GetMaxRange(mon.Left, variables) + GetMaxRange(mon.Right, variables);
+                case MathOpNode.MathOpType.Minus:
+                    return GetMaxRange(mon.Left, variables) - GetMinRange(mon.Right, variables);
+                case MathOpNode.MathOpType.Times:
+                    return GetMaxRange(mon.Left, variables) * GetMaxRange(mon.Right, variables);
+                case MathOpNode.MathOpType.Divide:
+                    return GetMinRange(mon.Left, variables) / GetMaxRange(mon.Right, variables);
+                case MathOpNode.MathOpType.Modulo:
+                    return GetMaxRange(mon.Right, variables) - 1;
+            }
+        }
+
+        if (node is IntNode i)
+            return i.Value;
+        if (node is FloatNode f)
+            return f.Value;
+        if (node is StringNode s)
+            return s.Value.Length;
+        if (node is VariableUsagePlainNode vrn)
+        {
+            var dataType = GetTypeOfExpression(vrn, variables);
+            if (dataType is RangeType t)
+            {
+                return t.Range.To;
+            }
+
+            throw new Exception("Ranged variables can only be assigned variables with a range.");
+        }
+
+        throw new Exception(
+            "Unrecognized node type on line "
+                + node.Line
+                + " in math expression while checking range"
+        );
+    }
+
+    private static float GetMinRange(
+        ASTNode node,
+        Dictionary<string, VariableDeclarationNode> variables
+    )
+    {
+        if (node is MathOpNode mon)
+        {
+            switch (mon.Op)
+            {
+                case MathOpNode.MathOpType.Plus:
+                    return GetMinRange(mon.Left, variables) + GetMinRange(mon.Right, variables);
+                case MathOpNode.MathOpType.Minus:
+                    return GetMinRange(mon.Left, variables) - GetMaxRange(mon.Right, variables);
+                case MathOpNode.MathOpType.Times:
+                    return GetMinRange(mon.Left, variables) * GetMinRange(mon.Right, variables);
+                case MathOpNode.MathOpType.Divide:
+                    return GetMaxRange(mon.Left, variables) / GetMinRange(mon.Right, variables);
+                case MathOpNode.MathOpType.Modulo:
+                    return 0;
+            }
+        }
+
+        if (node is IntNode i)
+            return i.Value;
+        if (node is FloatNode f)
+            return f.Value;
+        if (node is StringNode s)
+            return s.Value.Length;
+        if (node is VariableUsagePlainNode vrn)
+        {
+            var dataType = GetTypeOfExpression(vrn, variables);
+            if (dataType is RangeType t)
+            {
+                return t.Range.From;
+            }
+
+            throw new Exception("Ranged variables can only be assigned variables with a range.");
+        }
+
+        throw new Exception("Unrecognized node type in math expression while checking range");
+    }
+}
+
 public class InfiniteLoopVisitor : SAVisitor
 {
     private Stack<Dictionary<string, VariableUsagePlainNode>> LoopDeclarationStack =
@@ -759,7 +1064,17 @@ public class InfiniteLoopVisitor : SAVisitor
         }
 
         LoopDeclarationStack.Pop();
-        LoopStatementStack.Pop();
+        var loopStatements = LoopStatementStack.Pop();
+        if (LoopStatementStack.Count != 0)
+        {
+            foreach (var loop in loopStatements)
+            {
+                if (!LoopStatementStack.Peek().ContainsKey(loop.Key))
+                {
+                    LoopStatementStack.Peek().Add(loop.Key, loop.Value);
+                }
+            }
+        }
         if (LoopStatementStack.Count == 0)
             inLoopStatements = false;
         return null;
@@ -813,7 +1128,19 @@ public class ForNodeVisitor : SAVisitor
 
     public override ASTNode? Visit(ForNode node)
     {
-        if (GetTypeOfExpression(node.Variable, Variables) is not IntegerType)
+        var iterationVariable = GetVuopTestFlag() ? node.NewVariable : node.Variable;
+        var typeOfIterationVariable = GetVuopTestFlag()
+            ? GetTypeOfExpression(node.NewVariable, Variables)
+            : GetTypeOfExpression(node.Variable, Variables);
+        if (Variables[iterationVariable.GetPlain().Name].IsConstant)
+        {
+            throw new SemanticErrorException(
+                $"cannot iterate in a for loop with variable {iterationVariable} as it is not declared mutable",
+                iterationVariable
+            );
+        }
+
+        if (typeOfIterationVariable is not IntegerType)
         {
             throw new SemanticErrorException(
                 $"For loop has a non-integer index called {node.Variable.Name}. This is not allowed.",

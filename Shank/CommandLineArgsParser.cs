@@ -276,10 +276,11 @@ public class CommandLineArgsParser
             );
         program.SetStartModule();
         OutputHelper.DebugPrintAst(program, "pre-SA");
-        BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
         SemanticAnalysis.ActiveInterpretOptions = options;
+        BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
         SemanticAnalysis.CheckModules(program);
 
+        SAVisitor.ActiveInterpretOptions = options;
         // program.Walk(new ImportVisitor());
         // program.Walk(new RecordVisitor());
         // program.Walk(new UnknownTypesVisitor());

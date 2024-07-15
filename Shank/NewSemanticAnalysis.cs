@@ -11,14 +11,15 @@ public class NewSemanticAnalysis
         // program.Walk(new UnknownTypesVisitor());
         // program.Walk(new TestVisitor());
 
-        program.Walk(new ForNodeVisitor());
+        program.Walk(new AssignmentVisitor());
         program.Walk(new BooleanExpressionNodeVisitor());
         program.Walk(new FunctionCallExistsVisitor());
         program.Walk(new FunctionCallCountVisitor());
         program.Walk(new FunctionCallTypeVisitor());
         program.Walk(new FunctionCallDefaultVisitor());
+        program.Walk(new ForNodeVisitor());
+        program.Walk(new InfiniteLoopVisitor());
 
         program.Walk(new MathOpNodeOptimizer());
-        program.Walk(new InfiniteLoopVisitor());
     }
 }
