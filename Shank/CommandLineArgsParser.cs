@@ -95,7 +95,7 @@ public class CompileOptions
     [Option(
         "linker",
         HelpText = "add whatever linker you feel if non specified it defaults to the GNU linker (ld)",
-        Default = "ld"
+        Default = "clang"
     )]
     public string LinkerOption { get; set; }
 
