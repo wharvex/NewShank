@@ -42,7 +42,7 @@ namespace TranUnitTests
             LinkedList<Token> tokens = lexer.Lex();
 
             string expectedTokensString =
-                "NUMBER(2.22)\n" + " NUMBER(444)\n" + " NUMBER(888)\n" + " SEPARATOR\n";
+                "NUMERAL(2.22)\n" + " NUMERAL(444)\n" + " NUMERAL(888)\n" + " SEPARATOR\n";
             string actualTokensString = string.Join("\n", tokens) + "\n";
 
             Assert.AreEqual(expectedTokensString, actualTokensString);
@@ -81,7 +81,7 @@ namespace TranUnitTests
                 " CLOSEDANGLEBRACKET\n"
                 + " OPENPARENTHESIS\n"
                 + " CLOSEDPARENTHESIS\n"
-                + " EQUALS\n"
+                + " EQUAL\n"
                 + " GREATERTHAN\n"
                 + " LESSTHAN\n"
                 + " PLUS\n"
@@ -133,7 +133,7 @@ namespace TranUnitTests
         public void KeyWord()
         {
             string file =
-                "if print getline nextfile function interface class string implements accessor value "
+                "if print getline nextfile function interface class string implements accessor "
                 + "loop mutator console datetime construct boolean true false shared \t \n return";
             Lexer lexer = new Lexer(file);
             LinkedList<Token> tokens = lexer.Lex();
@@ -150,7 +150,6 @@ namespace TranUnitTests
                 + " STRING\n"
                 + " IMPLEMENTS\n"
                 + " ACCESSOR\n"
-                + " VALUE\n"
                 + " LOOP\n"
                 + " MUTATOR\n"
                 + " CONSOLE\n"

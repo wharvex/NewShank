@@ -291,14 +291,23 @@ public class Interpreter
         {
             if (stmt is AssignmentNode an)
             {
-                var target = GetIdtFromVun(variables, an.NewTarget);
-                switch (target)
+                var idtTarget = GetIdtFromVun(variables, an.NewTarget);
+                switch (idtTarget)
                 {
                     case IntDataType it:
                         it.Value = NewResolveInt(an.Expression, variables);
                         break;
                     case ArrayDataType at:
-                        NewAssignToArray(at, an, variables);
+                        NewAssignToArray(
+                            at,
+                            an.Expression,
+                            an.NewTarget as VariableUsageIndexNode
+                                ?? throw new InterpreterErrorException(
+                                    "Somehow we have an ArrayDataType idtTarget but a non-VariableUsageIndexNode ASTNode target.",
+                                    an.NewTarget
+                                ),
+                            variables
+                        );
                         break;
                     case FloatDataType ft:
                         ft.Value = NewResolveFloat(an.Expression, variables);
@@ -313,7 +322,16 @@ public class Interpreter
                         bt.Value = ResolveBool(an.Expression, variables);
                         break;
                     case RecordDataType rt:
-                        NewAssignToRecord(rt, an, variables);
+                        NewAssignToRecord(
+                            rt,
+                            an.Expression,
+                            an.NewTarget as VariableUsageMemberNode
+                                ?? throw new InterpreterErrorException(
+                                    "Somehow we have a RecordDataType idtTarget but a non-VariableUsageMemberNode ASTNode target.",
+                                    an.NewTarget
+                                ),
+                            variables
+                        );
                         break;
                     case EnumDataType et:
                         et.Value = ResolveEnum(et, an.Expression, variables);
@@ -321,9 +339,18 @@ public class Interpreter
                     case ReferenceDataType rt:
                         if (rt.Record == null)
                             throw new Exception(
-                                $"{an.Target.Name} must be allocated before it can be addressed."
+                                $"{an.NewTarget} must be allocated before it can be addressed."
                             );
-                        NewAssignToRecord(rt.Record, an, variables);
+                        NewAssignToRecord(
+                            rt.Record,
+                            an.Expression,
+                            an.NewTarget as VariableUsageMemberNode
+                                ?? throw new InterpreterErrorException(
+                                    "Somehow we have a ReferenceDataType idtTarget but a non-VariableUsageMemberNode ASTNode target.",
+                                    an.NewTarget
+                                ),
+                            variables
+                        );
                         break;
                     default:
                         throw new Exception("Unknown type in assignment");
@@ -424,35 +451,34 @@ public class Interpreter
 
     private static void NewAssignToRecord(
         RecordDataType rdt,
-        AssignmentNode an,
+        ExpressionNode e,
+        VariableUsageMemberNode target,
         Dictionary<string, InterpreterDataType> variables
     )
     {
-        // Create/dispatch a visitor that expects/collects a member on an's NewTarget.
-        var mev = new MemberExpectingVisitor();
-        an.NewTarget.Accept(mev);
+        if (!rdt.Value.TryAdd(target.Right.Name, GetIdtFromExpr(e, variables)))
+            throw new InterpreterErrorException("Could not add the value to the record.", target);
 
-        var t = rdt.GetMemberType(mev.Contents.Name);
+        //var t = rdt.GetMemberType(mev.Contents.Name);
 
-        rdt.Value[mev.Contents.Name] = t switch
-        {
-            BooleanType => ResolveBool(an.Expression, variables),
-            StringType => ResolveString(an.Expression, variables),
-            RealType => NewResolveFloat(an.Expression, variables),
-            IntegerType => NewResolveInt(an.Expression, variables),
-            CharacterType => ResolveChar(an.Expression, variables),
-            InstantiatedType => ResolveRecord(an.Expression, variables),
-            ReferenceType => ResolveReference(an.Expression, variables),
-            EnumType => ResolveEnum(an.Expression, variables),
+        //rdt.Value[mev.Contents.Name] = t switch
+        //{
+        //    BooleanType => ResolveBool(an.Expression, variables),
+        //    StringType => ResolveString(an.Expression, variables),
+        //    RealType => NewResolveFloat(an.Expression, variables),
+        //    IntegerType => NewResolveInt(an.Expression, variables),
+        //    CharacterType => ResolveChar(an.Expression, variables),
+        //    InstantiatedType => ResolveRecord(an.Expression, variables),
+        //    ReferenceType => ResolveReference(an.Expression, variables),
+        //    EnumType => ResolveEnum(an.Expression, variables),
 
-            _
-                => throw new NotImplementedException(
-                    "Assigning a value of type "
-                        + t
-                        + " to a record variable member is not implemented yet."
-                )
-        };
-        OutputHelper.DebugPrintJson(rdt, "rdt");
+        //    _
+        //        => throw new NotImplementedException(
+        //            "Assigning a value of type "
+        //                + t
+        //                + " to a record variable member is not implemented yet."
+        //        )
+        //};
     }
 
     private static void AssignToArray(
@@ -491,27 +517,30 @@ public class Interpreter
 
     private static void NewAssignToArray(
         ArrayDataType adt,
-        AssignmentNode an,
+        ExpressionNode e,
+        VariableUsageIndexNode target,
         Dictionary<string, InterpreterDataType> variables
     )
     {
-        adt.AddElement(
-            adt.ArrayContentsType switch
-            {
-                IntegerType => NewResolveInt(an.Expression, variables),
-                RealType => NewResolveFloat(an.Expression, variables),
-                StringType => ResolveString(an.Expression, variables),
-                CharacterType => ResolveChar(an.Expression, variables),
-                BooleanType => ResolveBool(an.Expression, variables),
-                _
-                    => throw new NotImplementedException(
-                        "Assigning a value of type "
-                            + adt.ArrayContentsType
-                            + " to an array index is not implemented yet."
-                    )
-            },
-            NewResolveInt(((VariableUsageIndexNode)an.NewTarget).Right, variables)
-        );
+        adt.AddElement(GetIdtFromExpr(e, variables), NewResolveInt(target.Right, variables));
+
+        //adt.AddElement(
+        //    adt.ArrayContentsType switch
+        //    {
+        //        IntegerType => NewResolveInt(e, variables),
+        //        RealType => NewResolveFloat(e, variables),
+        //        StringType => ResolveString(e, variables),
+        //        CharacterType => ResolveChar(e, variables),
+        //        BooleanType => ResolveBool(e, variables),
+        //        _
+        //            => throw new NotImplementedException(
+        //                "Assigning a value of type "
+        //                    + adt.ArrayContentsType
+        //                    + " to an array index is not implemented yet."
+        //            )
+        //    },
+        //    NewResolveInt(target.Right, variables)
+        //);
     }
 
     private static bool ResolveBool(ASTNode node, Dictionary<string, InterpreterDataType> variables)
