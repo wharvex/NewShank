@@ -209,7 +209,7 @@ public class SemanticAnalysis
                         )
                             .ToList();
                         fn.FunctionDefinitionModule = builtInVariadicFunctionNode.parentModuleName!;
-                        Console.WriteLine(builtInFunctionNode.parentModuleName);
+                        // Console.WriteLine(builtInFunctionNode.parentModuleName);
                     }
                     else
                     {
@@ -339,6 +339,8 @@ public class SemanticAnalysis
                 throw new SemanticErrorException($"ambiguous variable name {v.Name}", expression);
             }
 
+            v.ExtensionType = VariableUsagePlainNode.VrnExtType.Enum;
+            v.Extension = new IntNode(e.Variants.IndexOf(v.Name));
             v.ReferencesGlobalVariable = true;
         }
         else

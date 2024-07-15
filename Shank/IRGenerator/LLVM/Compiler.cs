@@ -195,9 +195,18 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         builder.BuildUnreachable();
     }
 
+    public LLVMValueRef CompileEnum(VariableUsagePlainNode node)
+    {
+        return CompileExpression(node.Extension);
+    }
+
     private LLVMValueRef CompileVariableUsage(VariableUsagePlainNode node, bool load = true)
     {
-        Console.WriteLine(node.MonomorphizedName());
+        if (node.ExtensionType == VariableUsagePlainNode.VrnExtType.Enum)
+        {
+            return CompileEnum(node);
+        }
+
         LLVMValue value = context.GetVariable(node.MonomorphizedName());
 
         var varaiable = (node.ExtensionType) switch
@@ -205,8 +214,10 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
             VariableUsagePlainNode.VrnExtType.ArrayIndex => CompileArrayUsage(node, value),
 
             VariableUsagePlainNode.VrnExtType.RecordMember => CompileRecordUsage(node, value),
+            // VariableUsagePlainNode.VrnExtType.Enum => CompileEnum(node, value),
 
-            VariableUsagePlainNode.VrnExtType.None => value,
+            VariableUsagePlainNode.VrnExtType.None
+                => value,
         };
         return load ? CopyVariable(varaiable) : varaiable.ValueRef;
     }
