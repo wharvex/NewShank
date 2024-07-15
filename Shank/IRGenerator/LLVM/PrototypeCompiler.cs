@@ -18,15 +18,23 @@ public class PrototypeCompiler(Context context, LLVMBuilderRef builder, LLVMModu
     {
         var fnRetTy = module.Context.Int32Type;
         var parameters = node.ParameterVariables.Select(
-            s => new LLVMParameter(
-                context.GetLLVMTypeFromShankType(s.Type), !s.IsConstant)
-        ).ToList();
+            s => new LLVMParameter(context.GetLLVMTypeFromShankType(s.Type), !s.IsConstant)
+        )
+            .ToList();
         node.Name = (node.Name.Equals("start") ? "main" : node.Name);
         var function = module.addFunction(
             node.Name,
-            LLVMTypeRef.CreateFunction(fnRetTy,
-                parameters.Select(p => p.Mutable ? LLVMTypeRef.CreatePointer(p.Type.TypeRef, 0) : p.Type.TypeRef)
-                    .ToArray()),
+            LLVMTypeRef.CreateFunction(
+                fnRetTy,
+                parameters
+                    .Select(
+                        p =>
+                            p.Mutable
+                                ? LLVMTypeRef.CreatePointer(p.Type.TypeRef, 0)
+                                : p.Type.TypeRef
+                    )
+                    .ToArray()
+            ),
             parameters
         );
         foreach (
@@ -44,28 +52,20 @@ public class PrototypeCompiler(Context context, LLVMBuilderRef builder, LLVMModu
     public void CompileRecordPrototype(RecordNode node)
     {
         var llvmRecord = module.Context.CreateNamedStruct(node.Name);
-        var record = new LLVMStructType(
-            node.Name,
-            llvmRecord
-        );
+        var record = new LLVMStructType(node.Name, llvmRecord);
         context.Records.Add(node.Type.MonomorphizedIndex, record);
     }
 
     public void CompilePrototypeGlobalVariable(VariableDeclarationNode node)
     {
         var type = context.GetLLVMTypeFromShankType(node.Type);
-        var a = module.AddGlobal(
-            type.TypeRef,
-            node.GetNameSafe()
-        );
+        var a = module.AddGlobal(type.TypeRef, node.GetNameSafe());
         // a.Linkage = LLVMLinkage.LLVMExternalLinkage;
         // a.Linkage = LLVMLinkage.LLVMCommonLinkage;
         // a.SetAlignment(4);
         // a.Initializer = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, 0);
         var variable = context.NewVariable(node.Type);
-        a.Initializer = LLVMValueRef.CreateConstNull(
-            type.TypeRef
-        );
+        a.Initializer = LLVMValueRef.CreateConstNull(type.TypeRef);
         context.AddVariable(node.MonomorphizedName(), variable(a, !node.IsConstant));
     }
 
@@ -113,17 +113,25 @@ public class PrototypeCompiler(Context context, LLVMBuilderRef builder, LLVMModu
         var fnRetTy = module.Context.Int32Type;
 
         var parameters = node.ParameterVariables.Select(
-            s => new LLVMParameter(
-                context.GetLLVMTypeFromShankType(s.Type), !s.IsConstant)
-        ).ToList();
+            s => new LLVMParameter(context.GetLLVMTypeFromShankType(s.Type), !s.IsConstant)
+        )
+            .ToList();
 
         node.Name = (node.Name.Equals("start") ? "main" : node.Name);
 
         var function = module.addFunction(
             node.Name,
-            LLVMTypeRef.CreateFunction(fnRetTy,
-                parameters.Select(p => p.Mutable ? LLVMTypeRef.CreatePointer(p.Type.TypeRef, 0) : p.Type.TypeRef)
-                    .ToArray()),
+            LLVMTypeRef.CreateFunction(
+                fnRetTy,
+                parameters
+                    .Select(
+                        p =>
+                            p.Mutable
+                                ? LLVMTypeRef.CreatePointer(p.Type.TypeRef, 0)
+                                : p.Type.TypeRef
+                    )
+                    .ToArray()
+            ),
             parameters
         );
         foreach (

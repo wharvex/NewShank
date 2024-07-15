@@ -99,7 +99,8 @@ public class Context(MonomorphizedProgramNode moduleNode, CFuntions cFuntions)
             CharacterType => new LLVMCharacterType(),
             EnumType e => Enums[e.MonomorphizedIndex],
             // if it's a custom type we look it up in the context
-            ReferenceType r => new LLVMReferenceType((LLVMStructType)GetLLVMTypeFromShankType(r.Inner)),
+            ReferenceType r
+                => new LLVMReferenceType((LLVMStructType)GetLLVMTypeFromShankType(r.Inner)),
             ArrayType a => new LLVMArrayType(GetLLVMTypeFromShankType(a.Inner))
         };
     }
@@ -107,26 +108,33 @@ public class Context(MonomorphizedProgramNode moduleNode, CFuntions cFuntions)
     // given a shank type this gives back the correct constructor for the CDT (compiler date type)
     public Func<LLVMValueRef, bool, LLVMValue> NewVariable(Type type)
     {
-        Func<LLVMValueRef, bool, LLVMValue> typeConstructor =
-            type switch
-            {
-                IntegerType => LLVMInteger.New,
-                RealType => LLVMReal.New,
-                RecordType recordType =>
-                    (value, mutable) => LLVMStruct.New(value, mutable, Records[recordType.MonomorphizedIndex]),
+        Func<LLVMValueRef, bool, LLVMValue> typeConstructor = type switch
+        {
+            IntegerType => LLVMInteger.New,
+            RealType => LLVMReal.New,
+            RecordType recordType
+                => (value, mutable) =>
+                    LLVMStruct.New(value, mutable, Records[recordType.MonomorphizedIndex]),
 
-                StringType => LLVMString.New,
-                BooleanType => LLVMBoolean.New,
-                CharacterType => LLVMCharacter.New,
-                EnumType => LLVMInteger.New,
-                ReferenceType r
-                    =>
-                    (value, mutable) => new LLVMReference(value, mutable,
-                        new LLVMReferenceType((LLVMStructType)GetLLVMTypeFromShankType(r.Inner))),
-                ArrayType arrayType =>
-                    (value, mutable) => new LLVMArray(value, mutable,
-                        new LLVMArrayType(GetLLVMTypeFromShankType(arrayType.Inner))),
-            };
+            StringType => LLVMString.New,
+            BooleanType => LLVMBoolean.New,
+            CharacterType => LLVMCharacter.New,
+            EnumType => LLVMInteger.New,
+            ReferenceType r
+                => (value, mutable) =>
+                    new LLVMReference(
+                        value,
+                        mutable,
+                        new LLVMReferenceType((LLVMStructType)GetLLVMTypeFromShankType(r.Inner))
+                    ),
+            ArrayType arrayType
+                => (value, mutable) =>
+                    new LLVMArray(
+                        value,
+                        mutable,
+                        new LLVMArrayType(GetLLVMTypeFromShankType(arrayType.Inner))
+                    ),
+        };
 
         return (value, mutable) => typeConstructor(value, mutable);
     }

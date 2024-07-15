@@ -217,19 +217,12 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         return builder.BuildLoad2(varaiable.TypeRef.TypeRef, varaiable.ValueRef);
     }
 
-
-    private LLVMValue CompileRecordUsage(
-        VariableUsagePlainNode node,
-        LLVMValue value
-    )
+    private LLVMValue CompileRecordUsage(VariableUsagePlainNode node, LLVMValue value)
     {
         if (value is LLVMReference r)
         {
             var inner = builder.BuildStructGEP2(r.TypeRef.TypeRef, r.ValueRef, 0);
-            inner = builder.BuildLoad2(
-                LLVMTypeRef.CreatePointer(r.TypeOf.Inner.TypeRef, 0),
-                inner
-            );
+            inner = builder.BuildLoad2(LLVMTypeRef.CreatePointer(r.TypeOf.Inner.TypeRef, 0), inner);
             value = new LLVMStruct(inner, r.IsMutable, r.TypeOf.Inner);
         }
 
@@ -250,10 +243,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         return dataType.IntoValue(structField, value.IsMutable);
     }
 
-    private LLVMValue CompileArrayUsage(
-        VariableUsagePlainNode node,
-        LLVMValue value
-    )
+    private LLVMValue CompileArrayUsage(VariableUsagePlainNode node, LLVMValue value)
     {
         var newValue = (LLVMArray)value;
         var arrayInnerType = ((LLVMArray)value).Inner();
@@ -372,24 +362,46 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         var types = _types(L.TypeOf);
         return types switch
         {
-            Types.INTEGER => HandleIntBoolOp(L, node.Op switch
-            {
-                BooleanExpressionNode.BooleanExpressionOpType.eq => LLVMIntPredicate.LLVMIntEQ,
-                BooleanExpressionNode.BooleanExpressionOpType.ne => LLVMIntPredicate.LLVMIntNE,
-                BooleanExpressionNode.BooleanExpressionOpType.gt => LLVMIntPredicate.LLVMIntSGT,
-                BooleanExpressionNode.BooleanExpressionOpType.lt => LLVMIntPredicate.LLVMIntSLT,
-                BooleanExpressionNode.BooleanExpressionOpType.le => LLVMIntPredicate.LLVMIntSLE,
-                BooleanExpressionNode.BooleanExpressionOpType.ge => LLVMIntPredicate.LLVMIntSGE,
-            }, R),
-            Types.FLOAT => HandleFloatBoolOp(L, node.Op switch
-            {
-                BooleanExpressionNode.BooleanExpressionOpType.eq => LLVMRealPredicate.LLVMRealOEQ,
-                BooleanExpressionNode.BooleanExpressionOpType.ne => LLVMRealPredicate.LLVMRealONE,
-                BooleanExpressionNode.BooleanExpressionOpType.gt => LLVMRealPredicate.LLVMRealOLT,
-                BooleanExpressionNode.BooleanExpressionOpType.lt => LLVMRealPredicate.LLVMRealOLT,
-                BooleanExpressionNode.BooleanExpressionOpType.le => LLVMRealPredicate.LLVMRealOLE,
-                BooleanExpressionNode.BooleanExpressionOpType.ge => LLVMRealPredicate.LLVMRealOGE,
-            }, R),
+            Types.INTEGER
+                => HandleIntBoolOp(
+                    L,
+                    node.Op switch
+                    {
+                        BooleanExpressionNode.BooleanExpressionOpType.eq
+                            => LLVMIntPredicate.LLVMIntEQ,
+                        BooleanExpressionNode.BooleanExpressionOpType.ne
+                            => LLVMIntPredicate.LLVMIntNE,
+                        BooleanExpressionNode.BooleanExpressionOpType.gt
+                            => LLVMIntPredicate.LLVMIntSGT,
+                        BooleanExpressionNode.BooleanExpressionOpType.lt
+                            => LLVMIntPredicate.LLVMIntSLT,
+                        BooleanExpressionNode.BooleanExpressionOpType.le
+                            => LLVMIntPredicate.LLVMIntSLE,
+                        BooleanExpressionNode.BooleanExpressionOpType.ge
+                            => LLVMIntPredicate.LLVMIntSGE,
+                    },
+                    R
+                ),
+            Types.FLOAT
+                => HandleFloatBoolOp(
+                    L,
+                    node.Op switch
+                    {
+                        BooleanExpressionNode.BooleanExpressionOpType.eq
+                            => LLVMRealPredicate.LLVMRealOEQ,
+                        BooleanExpressionNode.BooleanExpressionOpType.ne
+                            => LLVMRealPredicate.LLVMRealONE,
+                        BooleanExpressionNode.BooleanExpressionOpType.gt
+                            => LLVMRealPredicate.LLVMRealOLT,
+                        BooleanExpressionNode.BooleanExpressionOpType.lt
+                            => LLVMRealPredicate.LLVMRealOLT,
+                        BooleanExpressionNode.BooleanExpressionOpType.le
+                            => LLVMRealPredicate.LLVMRealOLE,
+                        BooleanExpressionNode.BooleanExpressionOpType.ge
+                            => LLVMRealPredicate.LLVMRealOGE,
+                    },
+                    R
+                ),
             _ => throw new NotImplementedException()
         };
     }
@@ -400,7 +412,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         // also we do not know the order by which types are added to the llvm module
         var record = context.Records[node.Type.MonomorphizedIndex];
         var members = node.Type.Fields.Select(
-                s =>
+            s =>
                 (
                     s.Key,
                     // This is now longer case: we are assuming that (mutaully) recursive records are behind a refersTo
@@ -413,7 +425,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
                     //     :
                     context.GetLLVMTypeFromShankType(s.Value)
                 )
-            )
+        )
             .ToDictionary();
         record.Members = members;
         record.TypeRef.StructSetBody(members.Select(s => s.Value.TypeRef).ToArray(), false);
@@ -422,8 +434,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
     public void CompileFunctionCall(FunctionCallNode node)
     {
         {
-            var function =
-                context.GetFunction(node.MonomphorizedFunctionLocater);
+            var function = context.GetFunction(node.MonomphorizedFunctionLocater);
 
             var parameters = node.Arguments.Zip(function.Parameters.Select(p => p.Mutable))
                 .Select(
@@ -571,20 +582,20 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
     private void CompileIf(IfNode node)
     {
         if (node.Expression != null)
-            // if the condition is null then it's an else statement, which can
-            // only happen after an if statement
-            // so is it's an if statement, and since we compile
-            // if statements recursively, like how we parse them
-            // we know that we already created the block for the
-            // else statement, when compiling the if part
-            // so we just compile the statements in the else block
-            // if the condition is not null we compile the condition,
-            // create two blocks one for if it's true, and for when the condition is false
-            // we then just compile the statements for when the condition
-            // is true under the true block, followed by a goto to an after block
-            // and we visit(compile) the IfNode for when the condition is false
-            // if needed, followed by a goto to the after branch
-            // note we could make this a bit better by checking if next is null and then make the conditional branch to after block in the false cas
+        // if the condition is null then it's an else statement, which can
+        // only happen after an if statement
+        // so is it's an if statement, and since we compile
+        // if statements recursively, like how we parse them
+        // we know that we already created the block for the
+        // else statement, when compiling the if part
+        // so we just compile the statements in the else block
+        // if the condition is not null we compile the condition,
+        // create two blocks one for if it's true, and for when the condition is false
+        // we then just compile the statements for when the condition
+        // is true under the true block, followed by a goto to an after block
+        // and we visit(compile) the IfNode for when the condition is false
+        // if needed, followed by a goto to the after branch
+        // note we could make this a bit better by checking if next is null and then make the conditional branch to after block in the false cas
         {
             var condition = CompileExpression(node.Expression);
             var ifBlock = context.CurrentFunction.AppendBasicBlock("if block");
@@ -629,8 +640,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         var name = node.GetNameSafe();
         // TODO: only alloca when !isConstant
 
-        var llvmTypeFromShankType =
-            context.GetLLVMTypeFromShankType(node.Type);
+        var llvmTypeFromShankType = context.GetLLVMTypeFromShankType(node.Type);
         LLVMValueRef v = builder.BuildAlloca(
             // isVar is false, because we are already creating it using alloca which makes it var
             llvmTypeFromShankType.TypeRef,
@@ -650,10 +660,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
                 (ulong)(a.Range.To - a.Range.From)
             );
             var arrayStart = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, (ulong)a.Range.From);
-            var arrayAllocation = builder.BuildArrayAlloca(
-                shankType.Inner.TypeRef,
-                arraySize
-            );
+            var arrayAllocation = builder.BuildArrayAlloca(shankType.Inner.TypeRef, arraySize);
             var array = builder.BuildInsertValue(
                 LLVMValueRef.CreateConstStruct(
                     [LLVMValueRef.CreateConstNull(arrayAllocation.TypeOf), arrayStart, arraySize],
@@ -812,7 +819,6 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         }
     }
 
-
     private void CompileBuiltinHigh(LLVMShankFunction function)
     {
         // we have to get the runtime array start and size as opposed to just looking at the signature of the function because we do not monomorphize over the type limits
@@ -864,7 +870,6 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         // TODO: do refernces need to keep their size for `size` builtin?
         var param = function.Function.FirstParam;
 
-
         var type = (LLVMReferenceType)function.Parameters.First().Type;
         var llvmTypeOfReference = type.Inner.TypeRef;
 
@@ -888,11 +893,9 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
     {
         var param = function.Function.FirstParam;
 
-
         var type = (LLVMReferenceType)function.Parameters.First().Type;
         var llvmTypeOfReference = type.TypeRef;
         var llvmTypeOfReferenceInner = type.Inner.TypeRef;
-
 
         var memory = builder.BuildLoad2(
             LLVMTypeRef.CreatePointer(llvmTypeOfReference, 0),
@@ -902,7 +905,9 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
 
         var newReference = LLVMValueRef.CreateConstStruct(
             [
-                LLVMValueRef.CreateConstNull(LLVMTypeRef.CreatePointer(llvmTypeOfReferenceInner, 0)),
+                LLVMValueRef.CreateConstNull(
+                    LLVMTypeRef.CreatePointer(llvmTypeOfReferenceInner, 0)
+                ),
                 LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0),
                 LLVMValueRef.CreateConstInt(LLVMTypeRef.Int1, 0)
             ],
@@ -940,7 +945,8 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
 
     private void CompileBuiltinWrite(LLVMShankFunction function)
     {
-        var formatList = function.Parameters.Select(param => param.Type)
+        var formatList = function
+            .Parameters.Select(param => param.Type)
             .Select(
                 type =>
                     type switch
@@ -956,7 +962,8 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
             );
 
         var format = $"{string.Join(" ", formatList)}\n";
-        var paramList = function.Parameters.Zip(function.Function.Params)
+        var paramList = function
+            .Parameters.Zip(function.Function.Params)
             .SelectMany<(LLVMParameter First, LLVMValueRef Second), LLVMValueRef>(n =>
             {
                 return n.First.Type switch

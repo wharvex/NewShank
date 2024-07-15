@@ -1,6 +1,7 @@
 using LLVMSharp.Interop;
 
 namespace Shank.IRGenerator;
+
 /// <summary>
 /// container for Varaibles (we need a type and refrence)
 /// </summary>
@@ -83,13 +84,22 @@ public class LLVMReference(LLVMValueRef valueRef, bool isMutable, LLVMReferenceT
     public static LLVMValue New(LLVMValueRef valueRef, bool isMutable, LLVMReferenceType type) =>
         new LLVMReference(valueRef, isMutable, type);
 }
-public class LLVMEnum(LLVMValueRef variant,bool isMutable, LLVMEnumType llvmType): LLVMValue(variant, isMutable, llvmType)
+
+public class LLVMEnum(LLVMValueRef variant, bool isMutable, LLVMEnumType llvmType)
+    : LLVMValue(variant, isMutable, llvmType)
 {
-    public LLVMEnum(string variant, bool isMutable, LLVMEnumType llvmType) : this(
-        LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, (ulong)llvmType.GetVariantIndex(variant)), isMutable, llvmType) { }
+    public LLVMEnum(string variant, bool isMutable, LLVMEnumType llvmType)
+        : this(
+            LLVMValueRef.CreateConstInt(
+                LLVMTypeRef.Int32,
+                (ulong)llvmType.GetVariantIndex(variant)
+            ),
+            isMutable,
+            llvmType
+        ) { }
 
+    public List<string> Variants => llvmType.Variants;
 
-    public List<string> Variants  => llvmType.Variants;
-
-    public static LLVMValue New(string variant,bool isMutable,  LLVMEnumType llvmType) => new LLVMEnum(variant,isMutable, llvmType);
+    public static LLVMValue New(string variant, bool isMutable, LLVMEnumType llvmType) =>
+        new LLVMEnum(variant, isMutable, llvmType);
 }
