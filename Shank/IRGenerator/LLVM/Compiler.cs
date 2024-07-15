@@ -2,6 +2,7 @@ using LLVMSharp.Interop;
 using Shank.ASTNodes;
 
 namespace Shank.IRGenerator;
+
 // TODO: check all mallocs (and any other thing returned from calling a c function)
 
 public enum Types
@@ -297,24 +298,18 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
 
     private LLVMValueRef CompileCharacter(CharNode node)
     {
-        return 
-            LLVMValueRef.CreateConstInt(
-                module.Context.Int8Type, //a
-                node.Value
-            )
-        ;
+        return LLVMValueRef.CreateConstInt(
+            module.Context.Int8Type, //a
+            node.Value
+        );
     }
 
     private LLVMValueRef CompileBoolean(BoolNode node)
     {
-        return 
-            LLVMValueRef.CreateConstInt(
-                module.Context.Int1Type, //a
-                (ulong)
-                    node.GetValueAsInt() //a
-                
-            )
-        ;
+        return LLVMValueRef.CreateConstInt(
+            module.Context.Int1Type, //a
+            (ulong)node.GetValueAsInt() //a
+        );
     }
 
     public LLVMValueRef CompileString(StringNode node)
