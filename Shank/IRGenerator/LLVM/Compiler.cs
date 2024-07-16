@@ -299,8 +299,6 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
             (uint)varType.Access(varField.Name)
         );
 
-        Console.WriteLine($"----{value.TypeRef}");
-        Console.WriteLine($"----{dataType}");
         return dataType.IntoValue(structField, value.IsMutable);
     }
 
@@ -590,7 +588,6 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
 
     private void CompileAssignment(AssignmentNode node)
     {
-        // Console.WriteLine("assignment nsmaE: " + node.Target.MonomorphizedName());
         var llvmValue = context.GetVariable(node.Target.MonomorphizedName());
         var expression = CompileExpression(node.Expression);
         var target = CompileExpression(node.Target, false);
@@ -1055,28 +1052,40 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
 
     private void CompileBuiltinWrite(LLVMShankFunction function)
     {
-        var formatList = function
-            .Parameters.Select(param => param.Type)
-            .Select(
-                type =>
-                    type switch
-                    {
-                        LLVMBooleanType => "%s",
-                        LLVMCharacterType => "%c",
-                        LLVMIntegerType => "%d",
-                        LLVMEnumType => "%s",
-                        LLVMRealType => "%.2f",
-                        LLVMStringType => "%.*s",
-                        _ => throw new NotImplementedException(nameof(type))
-                    }
-            );
+        var formatList = function.Parameters.Select(param => param.Type).Select(GetFormatCode);
 
         var format = $"{string.Join(" ", formatList)}\n";
         var paramList = function
-            .Parameters.Zip(function.Function.Params)
-            .SelectMany<(LLVMParameter First, LLVMValueRef Second), LLVMValueRef>(n =>
+            .Parameters.Select(param => param.Type).Zip(function.Function.Params)
+            .SelectMany(GetValues)
+            .Prepend(builder.BuildGlobalStringPtr(format, "printf-format"));
+        builder.BuildCall2(
+            context.CFuntions.printf.TypeOf,
+            context.CFuntions.printf.Function,
+            paramList.ToArray()
+        );
+        builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
+
+        static string GetFormatCode(LLVMType type) =>
+            type switch
             {
-                return n.First.Type switch
+                LLVMBooleanType => "%s",
+                LLVMCharacterType => "%c",
+                LLVMIntegerType => "%d",
+                LLVMEnumType => "%s",
+                LLVMRealType => "%.2f",
+                LLVMStringType => "%.*s",
+                LLVMStructType record => $"record {record.Name}: [ {string.Join(", ", record.Members.Select(member => $"{member.Key}: {GetFormatCode(member.Value)}"))} ]",
+                // TODO: print only one level
+                LLVMReferenceType reference => $"refersTo {reference.Inner.Name}",
+
+                _ => throw new NotImplementedException(type.ToString())
+            };
+
+        IEnumerable<LLVMValueRef> GetValues((LLVMType First, LLVMValueRef Second) n)
+        {
+            {
+                return n.First switch
                 {
                     LLVMEnumType e => [HandleEnum(n.Second, e.Variants)],
                     LLVMIntegerType or LLVMRealType or LLVMCharacterType => [n.Second],
@@ -1095,16 +1104,12 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
                             builder.BuildExtractValue(n.Second, 1),
                             builder.BuildExtractValue(n.Second, 0)
                         ],
-                    _ => throw new NotImplementedException(nameof(n.First.Type))
+                    LLVMStructType record => record.Members.Values.SelectMany((member, index) => GetValues((member, builder.BuildExtractValue(n.Second, (uint)index)))),
+                    LLVMReferenceType => [],
+                    _ => throw new NotImplementedException(n.First.ToString())
                 };
-            })
-            .Prepend(builder.BuildGlobalStringPtr(format, "printf-format"));
-        builder.BuildCall2(
-            context.CFuntions.printf.TypeOf,
-            context.CFuntions.printf.Function,
-            paramList.ToArray()
-        );
-        builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
+            };
+        }
     }
 
     private void CompileBuiltinSubString(LLVMShankFunction function)
