@@ -1088,9 +1088,13 @@ public class Parser
             return null;
 
         //parse the conditional
-        var boolExp = BooleanExpression(moduleName);
+        // var boolExp = BooleanExpression(moduleName);
+        //
+        // if (boolExp == null)
+        //     throw new SyntaxErrorException("Expected a boolean expression in the if.", Peek(0));
+        var expression = Expression(moduleName);
 
-        if (boolExp == null)
+        if (expression == null)
             throw new SyntaxErrorException("Expected a boolean expression in the if.", Peek(0));
 
         //parse "then" keyword
@@ -1105,7 +1109,8 @@ public class Parser
 
         //parse our body of statements
         StatementsBody(body, moduleName);
-        return new IfNode(boolExp, body, ElseAndElseIf(moduleName));
+        //return new IfNode(boolExp, body, ElseAndElseIf(moduleName));
+        return new IfNode(expression, body, ElseAndElseIf(moduleName));
     }
 
     private IfNode? ElseAndElseIf(string moduleName)
@@ -1152,7 +1157,14 @@ public class Parser
             return null;
 
         //parse the boolean expression
-        var boolExp = BooleanExpression(moduleName);
+        // var boolExp = BooleanExpression(moduleName);
+        var expression = Expression(moduleName);
+
+        if (expression == null)
+            throw new SyntaxErrorException(
+                "Expected a boolean expression at the end of the repeat.",
+                Peek(0)
+            );
 
         //make sure we put the body content on a new line
         RequiresEndOfLine();
@@ -1163,7 +1175,8 @@ public class Parser
         //parse the statments using the template
         StatementsBody(statements, moduleName);
 
-        return new WhileNode(boolExp, statements);
+        // return new WhileNode(boolExp, statements);
+        return new WhileNode(expression, statements);
     }
 
     /// <summary>
@@ -1204,9 +1217,11 @@ public class Parser
             throw new SyntaxErrorException("Expected an until to end the repeat.", Peek(0));
 
         //parse a boolean expression
-        var boolExp = BooleanExpression(moduleName);
+        // var boolExp = BooleanExpression(moduleName);
 
-        if (boolExp == null)
+        var expression = Expression(moduleName);
+
+        if (expression == null)
             throw new SyntaxErrorException(
                 "Expected a boolean expression at the end of the repeat.",
                 Peek(0)
@@ -1215,7 +1230,7 @@ public class Parser
         //make sure other statements are on lines following
         RequiresEndOfLine();
 
-        return new RepeatNode(boolExp, statements);
+        return new RepeatNode(expression, statements);
     }
 
     /// <summary>

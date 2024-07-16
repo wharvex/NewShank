@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using LLVMSharp;
+using Optional;
 using Shank.ASTNodes;
 using Shank.AstVisitorsTim;
 
@@ -693,6 +694,74 @@ public class TestVisitor : SAVisitor
                 $"Could not find the function {node.targetFunctionName} in the module {ModuleName} to be tested."
             );
         }
+        return null;
+    }
+}
+
+public class BooleanExpectedVisitor : SAVisitor
+{
+    private Dictionary<string, VariableDeclarationNode> Variables;
+
+    public override ASTNode? Visit(FunctionNode node)
+    {
+        Variables = node.VariablesInScope;
+        return null;
+    }
+
+    public override ASTNode? Visit(IfNode node)
+    {
+        switch (node.Expression)
+        {
+            case BooleanExpressionNode:
+                return null;
+            case BoolNode:
+                return null;
+            case VariableUsageNodeTemp variableUsageNodeTemp:
+                if (
+                    GetTypeOfExpression(variableUsageNodeTemp, Variables).GetType()
+                    != typeof(BooleanType)
+                )
+                    throw new SemanticErrorException(
+                        "Cannot use a non boolean variable in an if statement.",
+                        variableUsageNodeTemp
+                    );
+                return null;
+            default:
+                throw new SemanticErrorException("Boolean expression expected.", node);
+        }
+    }
+
+    public override ASTNode? Visit(WhileNode node)
+    {
+        return null;
+    }
+
+    public override ASTNode? Visit(RepeatNode node)
+    {
+        return null;
+    }
+}
+
+public class VariableDeclarationVisitor : SAVisitor
+{
+    private Dictionary<string, VariableDeclarationNode> Variables;
+
+    public override ASTNode? Visit(FunctionNode node)
+    {
+        foreach (var local in node.LocalVariables)
+        {
+            foreach (var parameter in node.ParameterVariables)
+            {
+                if (parameter.Name.Equals(local.Name))
+                {
+                    throw new SemanticErrorException(
+                        $"The variable, {local.Name} has already been created.",
+                        local
+                    );
+                }
+            }
+        }
+
         return null;
     }
 }

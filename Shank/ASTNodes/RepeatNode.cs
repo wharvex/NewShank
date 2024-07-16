@@ -7,7 +7,7 @@ namespace Shank.ASTNodes;
 
 public class RepeatNode : StatementNode
 {
-    public RepeatNode(BooleanExpressionNode exp, List<StatementNode> children)
+    public RepeatNode(ExpressionNode exp, List<StatementNode> children)
     {
         Expression = exp;
         Children = children;
@@ -22,7 +22,7 @@ public class RepeatNode : StatementNode
         Expression = copy.Expression;
     }
 
-    public BooleanExpressionNode Expression { get; set; }
+    public ExpressionNode Expression { get; set; }
     public List<StatementNode> Children { get; set; }
 
     public override string ToString()
@@ -62,7 +62,7 @@ public class RepeatNode : StatementNode
         if (temp != null)
             return temp;
 
-        Expression = (BooleanExpressionNode)(Expression.Walk(v) ?? Expression);
+        Expression = (ExpressionNode)(Expression.Walk(v) ?? Expression);
 
         for (var index = 0; index < Children.Count; index++)
         {

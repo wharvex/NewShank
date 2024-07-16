@@ -3,12 +3,18 @@ define start()
     
 define tester(a : integer)
 variables i,j,k : integer = 1
-    while i < 2
+variables b : boolean = false
+variables d : boolean = true    
+    repeat
         i := i + 1
-        while j < 2
+        repeat
             j := j + 1
-            while k < 2
+            repeat 
                 k := k + 1
+            until k > 2
+        until j > 2
+    until d
+    
     write i
     write j
     write k
