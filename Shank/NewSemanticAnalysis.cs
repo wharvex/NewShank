@@ -12,7 +12,7 @@ public class NewSemanticAnalysis
         // program.Walk(new TestVisitor());
 
         program.Walk(new VariableDeclarationVisitor());
-        program.Walk(new AssignmentVisitor());
+        // program.Walk(new AssignmentVisitor());
         program.Walk(new BooleanExpressionNodeVisitor());
         program.Walk(new BooleanExpectedVisitor());
         program.Walk(new FunctionCallExistsVisitor());

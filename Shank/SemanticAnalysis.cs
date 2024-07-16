@@ -895,6 +895,7 @@ public class SemanticAnalysis
                         $"Invalid member access, tried to access non record {t}",
                         variableReferenceNode
                     ),
+                (ExtensionType: VariableUsagePlainNode.VrnExtType.Enum, _) => variable.Type
             };
         }
 

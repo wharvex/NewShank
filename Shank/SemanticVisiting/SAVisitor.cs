@@ -296,6 +296,8 @@ public abstract class SAVisitor
                                 variableUsagePlainNode
                             );
                     }
+                case VariableUsagePlainNode.VrnExtType.Enum:
+                    return variableDeclarationNode.Type;
                 default:
                     throw new SemanticErrorException(
                         "Could not find type of variable",
@@ -824,7 +826,7 @@ public class AssignmentVisitor : SAVisitor
         return null;
     }
 
-    private static Dictionary<string, Type> CheckAssignment(
+    private static void CheckAssignment(
         string targetName,
         Type targetType,
         ExpressionNode expression,
@@ -845,6 +847,8 @@ public class AssignmentVisitor : SAVisitor
                 throw new SemanticErrorException($"ambiguous variable name {v.Name}", expression);
             }
 
+            v.ExtensionType = VariableUsagePlainNode.VrnExtType.Enum;
+            v.Extension = new IntNode(e.Variants.IndexOf(v.Name));
             v.ReferencesGlobalVariable = true;
         }
         else
@@ -858,8 +862,6 @@ public class AssignmentVisitor : SAVisitor
                 );
             }
         }
-
-        return [];
     }
 
     private static void NewCheckAssignment(
