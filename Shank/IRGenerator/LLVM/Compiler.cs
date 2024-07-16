@@ -1056,8 +1056,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
 
         var format = $"{string.Join(" ", formatList)}\n";
         var paramList = function
-            .Parameters.Select(param => param.Type)
-            .Zip(function.Function.Params)
+            .Parameters.Select(param => param.Type).Zip(function.Function.Params)
             .SelectMany(GetValues)
             .Prepend(builder.BuildGlobalStringPtr(format, "printf-format"));
         builder.BuildCall2(
@@ -1076,8 +1075,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
                 LLVMEnumType => "%s",
                 LLVMRealType => "%.2f",
                 LLVMStringType => "%.*s",
-                LLVMStructType record
-                    => $"record {record.Name}: [ {string.Join(", ", record.Members.Select(member => $"{member.Key}: {GetFormatCode(member.Value)}"))} ]",
+                LLVMStructType record => $"{record.Name}: [ {string.Join(", ", record.Members.Select(member => $"{member.Key}: {GetFormatCode(member.Value)}"))} ]",
                 // TODO: print only one level
                 LLVMReferenceType reference => $"refersTo {reference.Inner.Name}",
 
@@ -1106,18 +1104,11 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
                             builder.BuildExtractValue(n.Second, 1),
                             builder.BuildExtractValue(n.Second, 0)
                         ],
-                    LLVMStructType record
-                        => record.Members.Values.SelectMany(
-                            (member, index) =>
-                                GetValues(
-                                    (member, builder.BuildExtractValue(n.Second, (uint)index))
-                                )
-                        ),
+                    LLVMStructType record => record.Members.Values.SelectMany((member, index) => GetValues((member, builder.BuildExtractValue(n.Second, (uint)index)))),
                     LLVMReferenceType => [],
                     _ => throw new NotImplementedException(n.First.ToString())
                 };
-            }
-            ;
+            };
         }
     }
 
