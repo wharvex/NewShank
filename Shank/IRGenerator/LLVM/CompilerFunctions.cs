@@ -37,7 +37,7 @@ public class LLVMShankFunction(
     string name,
     LLVMTypeRef type,
     List<LLVMParameter> parameters
-    ) : LLVMFunction(function, name, type)
+) : LLVMFunction(function, name, type)
 {
     public List<LLVMParameter> Parameters { get; } = parameters;
 }
