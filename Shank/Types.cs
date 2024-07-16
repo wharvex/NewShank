@@ -32,6 +32,7 @@ public readonly record struct Range // the type that represents a type range in 
 
     // since this is just for arrays and strings should it be unsigned
     public static Range DefaultSmallInteger => new(uint.MinValue, uint.MaxValue);
+
     // public static Range DefaultStringRange => new(1, uint.MaxValue);
 
     // since this is just for characters should it be unsigned
