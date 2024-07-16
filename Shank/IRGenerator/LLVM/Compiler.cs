@@ -227,7 +227,40 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
     {
         // not happening (should happen during semantic analysis) check for unitizialized access when doing this load
         // TODO: copy everything recursivly
-        return builder.BuildLoad2(varaiable.TypeRef.TypeRef, varaiable.ValueRef);
+        var value = builder.BuildLoad2(varaiable.TypeRef.TypeRef, varaiable.ValueRef);
+        return CopyVariable(varaiable.TypeRef, value);
+    }
+    private LLVMValueRef CopyVariable(LLVMType type, LLVMValueRef value) => type switch
+    {
+        // TODO: arrays might need to be copied just need a better way to do it
+        LLVMArrayType => value,
+        LLVMEnumType or LLVMCharacterType or LLVMBooleanType or LLVMIntegerType or LLVMRealType or LLVMReferenceType => value,
+        LLVMStringType => CopyString(value),
+        LLVMStructType llvmStructType => CopyStruct(llvmStructType, value),
+    };
+
+    private LLVMValueRef CopyStruct(LLVMStructType llvmStructType, LLVMValueRef value)
+    {
+        return llvmStructType.Members.Values.Select((type, index) => (index, CopyVariable(type, builder.BuildExtractValue(value, (uint)index)))).Aggregate(llvmStructType.TypeRef.Undef, (record, current) => builder.BuildInsertValue(record, current.Item2, (uint)current.index));
+    }
+
+    private LLVMValueRef CopyString(LLVMValueRef value)
+    {
+        var stringContent = builder.BuildExtractValue(value, 0);
+        var stringLength = builder.BuildExtractValue(value, 1);
+        var newStringContent = builder.BuildCall2(
+            context.CFuntions.malloc.TypeOf,
+            context.CFuntions.malloc.Function,
+            [stringLength]
+        );
+
+        builder.BuildCall2(
+            context.CFuntions.memcpy.TypeOf,
+            context.CFuntions.memcpy.Function,
+            [newStringContent, stringContent, stringLength]
+        );
+        var newString = builder.BuildInsertValue(LLVMType.StringType.Undef, newStringContent, 0);
+        return builder.BuildInsertValue(newString, stringLength, 1);
     }
 
     private LLVMValue CompileRecordUsage(VariableUsagePlainNode node, LLVMValue value)

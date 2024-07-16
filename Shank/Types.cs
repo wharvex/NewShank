@@ -32,7 +32,7 @@ public readonly record struct Range // the type that represents a type range in 
 
     // since this is just for arrays and strings should it be unsigned
     public static Range DefaultSmallInteger => new(uint.MinValue, uint.MaxValue);
-    public static Range DefaultStringRange => new(1, uint.MaxValue);
+    // public static Range DefaultStringRange => new(1, uint.MaxValue);
 
     // since this is just for characters should it be unsigned
     public static Range DefaultCharacter => new(byte.MinValue, byte.MaxValue);
@@ -75,7 +75,7 @@ public readonly record struct StringType(Range Range) : RangeType
 {
     public T Accept<T>(ITypeVisitor<T> v) => v.Visit(this);
 
-    public static Range DefaultRange => Range.DefaultStringRange;
+    public static Range DefaultRange => Range.DefaultSmallInteger;
 
     public bool Equals(StringType other) => true; // we do range checking separately as we do not know which is the one with more important range
 
