@@ -762,16 +762,7 @@ public class Parser
             Token.TokenType.String
                 => new StringType(
                     CheckRange(
-                        (from, to) =>
-                            NormalRangeVerifier(from, to)
-                                .FlatMap(
-                                    _ =>
-                                        Option
-                                            .Some(
-                                                $"a string type's range `from` must be 1, but was {from}"
-                                            )
-                                            .Filter(from is IntNode { Value: not 1 })
-                                ),
+                        NormalRangeVerifier,
                         StringType.DefaultRange
                     )
                 ),
