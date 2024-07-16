@@ -94,7 +94,6 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
 
     private LLVMValueRef HandleString(LLVMValueRef L, LLVMValueRef R)
     {
-        // TODO: what does string concatination and ranges
         var lSize = builder.BuildExtractValue(L, 1);
         var rSize = builder.BuildExtractValue(R, 1);
         var newSize = builder.BuildAdd(lSize, rSize);
@@ -226,6 +225,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
 
     private LLVMValueRef CopyVariable(LLVMValue varaiable)
     {
+        // not happening (should happen during semantic analysis) check for unitizialized access when doing this load
         // TODO: copy everything recursivly
         return builder.BuildLoad2(varaiable.TypeRef.TypeRef, varaiable.ValueRef);
     }
@@ -239,8 +239,6 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
             value = new LLVMStruct(inner, r.IsMutable, r.TypeOf.Inner);
         }
 
-        // TODO: all recorrda behind double pointer (or else don't make records in records behind pointer
-        // once you do that you have to load at least once (twice if not
         LLVMStruct varType = (LLVMStruct)value;
         var varField = (VariableUsagePlainNode)node.GetExtensionSafe();
         var dataType = varType.GetTypeOf(varField.Name);
@@ -292,7 +290,6 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         var a = builder.BuildLoad2(LLVMTypeRef.CreatePointer(elementType, 0), array);
         index = builder.BuildSub(index, start);
         a = builder.BuildInBoundsGEP2(elementType, a, [index]);
-        // TODO: check for unitizialized access when doing this load (this applies also for member access and simple varaiable lookup)
         return arrayInnerType.IntoValue(a, value.IsMutable);
     }
 
@@ -555,37 +552,6 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         builder.BuildStore(expression, target);
     }
 
-    // public  void Visit(EnumNode node)
-    // {
-    //     throw new NotImplementedException();
-    // }
-
-    /*public  void Visit(ModuleNode node)
-    {
-        context.SetCurrentModule(node.Name);
-        // then we add to our scope all our imports
-        foreach (var (moduleName, imports) in node.ImportTargetNames)
-        {
-            var shankModule = context.Modules[moduleName];
-            foreach (var import in imports)
-            {
-                // TODO: type imports
-                if (shankModule.Functions.TryGetValue(import, out var function))
-                {
-                    context.AddFunction(import, function);
-                }
-                else if (shankModule.CustomTypes.TryGetValue(import, out var type))
-                {
-                    context.AddCustomType(import, type);
-                }
-            }
-        }
-
-        node //modnode
-        .GetFunctionsAsList() //list
-            .ForEach(f => f.Accept(this));
-    }*/
-
     private void CompileIf(IfNode node)
     {
         if (node.Expression != null)
@@ -645,7 +611,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
     private void CompileVariableDeclaration(VariableDeclarationNode node)
     {
         var name = node.GetNameSafe();
-        // TODO: only alloca when !isConstant
+        // only alloca when !isConstant (is somewhat problametic with structs)
 
         var llvmTypeFromShankType = context.GetLLVMTypeFromShankType(node.Type);
         LLVMValueRef v = builder.BuildAlloca(
@@ -760,7 +726,6 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         var currentIterable = CompileExpression(node.Variable);
         // right now we assume, from, to, and the variable are all integers
         // in the future we should check and give some error at runtime/compile time if not
-        // TODO: signed or unsigned comparison
         var condition = builder.BuildICmp(LLVMIntPredicate.LLVMIntSLE, currentIterable, toValue);
         builder.BuildCondBr(condition, forBody, afterFor);
         builder.PositionAtEnd(forBody);
@@ -880,9 +845,8 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         builder.BuildStore(newContent, content);
         builder.BuildStore(newSize, size);
         builder.BuildBr(check_done_bb);
-        // updating strin and checking if we are done
+        // updating string and checking if we are done
         builder.PositionAtEnd(check_done_bb);
-        // TODO: just load content instead of double gep
         var current = builder.BuildInBoundsGEP2(
             LLVMTypeRef.Int8,
             builder.BuildLoad2(LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0), content),
@@ -1247,7 +1211,6 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         LLVMValueRef resultString
     )
     {
-        // TODO: bounds checking
         var someStringContents = builder.BuildExtractValue(someString, 0);
         length = builder.BuildIntCast(length, LLVMTypeRef.Int32);
         var newContent = builder.BuildCall2(
