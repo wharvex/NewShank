@@ -65,7 +65,7 @@ public static class TypesHelper
     {
         var adtArr = new object[(int)t.Range.To + 1];
         Enumerable
-            .Range((int)t.Range.From, (int)t.Range.To)
+            .Range((int)t.Range.From, (int)t.Range.To + 1)
             .ToList()
             .ForEach(i =>
             {

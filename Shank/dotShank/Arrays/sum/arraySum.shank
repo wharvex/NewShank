@@ -38,7 +38,8 @@ variables arr3: array from 0 to 30 of integer
 	
 
 define arraySum(arr: array of integer; size : integer)
-variables total, num, i: integer
+variables total, num : integer
+variables i : integer from 0 to 99
 
 	total := 0
 	i := 0

@@ -901,7 +901,57 @@ public class Interpreter
         }
     }
 
+    private static void NewAddToParamsArray(
+        ArrayDataType adt,
+        VariableUsageIndexNode vi,
+        List<InterpreterDataType> paramsList,
+        Dictionary<string, InterpreterDataType> variables
+    )
+    {
+        paramsList.Add(GetIdtFromVun(variables, vi));
+    }
+
     private static void AddToParamsRecord(
+        RecordDataType rdt,
+        VariableUsagePlainNode args, //ParameterNode pn,
+        List<InterpreterDataType> paramsList
+    )
+    {
+        var pnVrn = args; //pn.GetVariableSafe();
+        if (pnVrn.ExtensionType == VariableUsagePlainNode.VrnExtType.RecordMember)
+        {
+            var rmVrn = pnVrn.GetRecordMemberReferenceSafe();
+            paramsList.Add(
+                rdt.GetMemberType(rmVrn.Name) switch
+                {
+                    CharacterType => new CharDataType(rdt.GetValueCharacter(rmVrn.Name)),
+                    BooleanType => new BooleanDataType(rdt.GetValueBoolean(rmVrn.Name)),
+                    StringType => new StringDataType(rdt.GetValueString(rmVrn.Name)),
+                    IntegerType => new IntDataType(rdt.GetValueInteger(rmVrn.Name)),
+                    RealType => new FloatDataType(rdt.GetValueReal(rmVrn.Name)),
+                    ReferenceType => new ReferenceDataType(rdt.GetValueReference(rmVrn.Name)),
+                    RecordType
+                        => GetNestedParam(
+                            rdt,
+                            args
+                                ?? throw new Exception("Could not find extension for nested record")
+                        ),
+                    EnumType => rdt.GetValueEnum(rmVrn.Name),
+                    _
+                        => throw new NotImplementedException(
+                            "It has not been implemented yet to pass a complex Record member"
+                                + " type into a function."
+                        )
+                }
+            );
+        }
+        else
+        {
+            paramsList.Add(new RecordDataType(rdt));
+        }
+    }
+
+    private static void NewAddToParamsRecord(
         RecordDataType rdt,
         VariableUsagePlainNode args, //ParameterNode pn,
         List<InterpreterDataType> paramsList
@@ -1005,7 +1055,7 @@ public class Interpreter
                 return new BooleanDataType(((vn.InitialValue as BoolNode)?.Value) ?? true);
             case ArrayType a:
             {
-                return new ArrayDataType(a);
+                return new ArrayDataType([], a);
             }
             // TODO: merge record type and record node into one
             case InstantiatedType r:
@@ -1670,65 +1720,33 @@ public class Interpreter
     }
 
     public static bool NewTryAddVunToPassed(
-        ExpressionNode e,
+        ExpressionNode ex,
         Dictionary<string, InterpreterDataType> variables,
         List<InterpreterDataType> passed
     )
     {
-        if (e is not VariableUsagePlainNode variableUsagePlainNode)
+        if (ex is not VariableUsageNodeTemp vun)
         {
             return false;
         }
 
-        var name = variableUsagePlainNode.Name;
-        var value = variables[name];
-        switch (value)
-        {
-            case IntDataType intVal:
-                passed.Add(new IntDataType(intVal.Value));
-                break;
-            case FloatDataType floatVal:
-                passed.Add(new FloatDataType(floatVal.Value));
-                break;
-            case StringDataType stringVal:
-                passed.Add(new StringDataType(stringVal.Value));
-                break;
-            case CharDataType charVal:
-                passed.Add(new CharDataType(charVal.Value));
-                break;
-            case BooleanDataType boolVal:
-                passed.Add(new BooleanDataType(boolVal.Value));
-                break;
-            case ArrayDataType arrayVal:
-                AddToParamsArray(arrayVal, variableUsagePlainNode, passed, variables);
-                break;
-            case RecordDataType recordVal:
-                AddToParamsRecord(recordVal, variableUsagePlainNode, passed);
-                break;
-            case EnumDataType enumVal:
-                passed.Add(new EnumDataType(enumVal.Type, enumVal.Value));
-                break;
-            case ReferenceDataType referenceVal:
-                if (variableUsagePlainNode.Extension != null)
-                {
-                    var vrn = ((VariableUsagePlainNode)variableUsagePlainNode.Extension);
-                    if (referenceVal.Record is null)
-                        throw new Exception($"{variableUsagePlainNode.Name} was never allocated.");
-                    if (referenceVal.Record.Value[vrn.Name] is int)
-                        passed.Add(new IntDataType((int)referenceVal.Record.Value[vrn.Name]));
-                    else if (referenceVal.Record.Value[vrn.Name] is float)
-                        passed.Add(new FloatDataType((float)referenceVal.Record.Value[vrn.Name]));
-                    else if (referenceVal.Record.Value[vrn.Name] is char)
-                        passed.Add(new CharDataType((char)referenceVal.Record.Value[vrn.Name]));
-                    else if (referenceVal.Record.Value[vrn.Name] is string)
-                        passed.Add(new StringDataType((string)referenceVal.Record.Value[vrn.Name]));
-                    else if (referenceVal.Record.Value[vrn.Name] is float)
-                        passed.Add(new BooleanDataType((bool)referenceVal.Record.Value[vrn.Name]));
-                }
-                else
-                    passed.Add(new ReferenceDataType(referenceVal));
-                break;
-        }
+        var val = GetIdtFromVun(variables, vun);
+
+        passed.Add(
+            val switch
+            {
+                IntDataType i => i.CopyAs<IntDataType>(),
+                FloatDataType f => f.CopyAs<FloatDataType>(),
+                StringDataType s => s.CopyAs<StringDataType>(),
+                CharDataType c => c.CopyAs<CharDataType>(),
+                BooleanDataType b => b.CopyAs<BooleanDataType>(),
+                ArrayDataType a => a.CopyAs<ArrayDataType>(),
+                RecordDataType r => r.CopyAs<RecordDataType>(),
+                EnumDataType e => e.CopyAs<EnumDataType>(),
+                ReferenceDataType r => r.CopyAs<ReferenceDataType>(),
+                _ => throw new Exception("Unknown data type")
+            }
+        );
 
         return true;
     }

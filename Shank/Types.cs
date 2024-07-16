@@ -235,7 +235,9 @@ public readonly record struct ArrayType(Type Inner, Range Range) : RangeType // 
     public ArrayType(Type inner, Range? range)
         : this(inner, range ?? DefaultRange) { }
 
-    public static Range DefaultRange => Range.DefaultSmallInteger;
+    // We want to change this back to DefaultSmallInteger once we have better infrastructure in
+    // place for verifying ranges with if-statements.
+    public static Range DefaultRange => Range.DefaultInteger;
 
     public override string ToString() => $"array {this.RangeString()} of {Inner}";
 }

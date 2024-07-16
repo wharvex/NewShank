@@ -1267,7 +1267,9 @@ public class Parser
             return null;
 
         //get the variable to be used for the for conditionals
-        var indexVariable = GetVariableUsagePlainNode(moduleName);
+        var indexVariable = GetVuopTestFlag()
+            ? GetVariableUsageNode(moduleName)
+            : GetVariableUsagePlainNode(moduleName);
         if (indexVariable == null)
             throw new SyntaxErrorException("Expected a variable in the for statement.", Peek(0));
 
@@ -1300,7 +1302,9 @@ public class Parser
 
         //parse the statements using our template
         StatementsBody(statements, moduleName);
-        return new ForNode(indexVariable, fromExp, toExp, statements);
+        return GetVuopTestFlag()
+            ? new ForNode(fromExp, toExp, statements, indexVariable)
+            : new ForNode((VariableUsagePlainNode)indexVariable, fromExp, toExp, statements);
     }
 
     /// <summary>
