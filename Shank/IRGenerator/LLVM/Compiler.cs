@@ -1077,7 +1077,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
                 LLVMRealType => "%.2f",
                 LLVMStringType => "%.*s",
                 LLVMStructType record
-                    => $"record {record.Name}: [ {string.Join(", ", record.Members.Select(member => $"{member.Key}: {GetFormatCode(member.Value)}"))} ]",
+                    => $"{record.Name}: [ {string.Join(", ", record.Members.Select(member => $"{member.Key}: {GetFormatCode(member.Value)}"))} ]",
                 // TODO: print only one level
                 LLVMReferenceType reference => $"refersTo {reference.Inner.Name}",
 
