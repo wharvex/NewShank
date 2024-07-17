@@ -111,6 +111,7 @@ public class CompileOptions
         HelpText = "target cpu (run clang -print-supported-cpus to see list"
     )]
     public string TargetCPU { get; set; }
+
     [Option('v', "vuop-test", HelpText = "Variable Usage Operation Test", Default = false)]
     public bool VuOpTest { get; set; }
 }
@@ -250,8 +251,10 @@ public class CommandLineArgsParser
 
         var fakeInterpretOptions = new InterpretOptions()
         {
-            VuOpTest = options.VuOpTest, unitTest = false, InputFiles = []
-        }; 
+            VuOpTest = options.VuOpTest,
+            unitTest = false,
+            InputFiles = []
+        };
         options
             .InputFile.ToList()
             .ForEach(
