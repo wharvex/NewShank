@@ -403,17 +403,17 @@ public class Interpreter
             }
             else if (stmt is ForNode fn)
             {
-                var target = variables[fn.Variable.Name];
+                var target = GetIdtFromVun(variables, fn.NewVariable);
                 if (target is not IntDataType index)
                     throw new Exception(
                         $"For loop has a non-integer index called {fn.Variable.Name}. This is not allowed."
                     );
-                var start = ResolveInt(fn.From, variables);
-                var end = ResolveInt(fn.To, variables);
-                for (var i = start; i < end; i++)
+                var start = NewResolveInt(fn.From, variables);
+                var end = NewResolveInt(fn.To, variables);
+                for (var i = start; i <= end; i++)
                 {
                     index.Value = i;
-                    InterpretBlock(fn.Children, variables, callingFunction);
+                    NewInterpretBlock(fn.Children, variables, callingFunction);
                 }
             }
         }

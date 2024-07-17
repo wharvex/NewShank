@@ -366,11 +366,8 @@ public class SemanticAnalysis
         VariableUsageNodeTemp target
     )
     {
-        var vtVis = new VunTypeGettingVisitor(targetType, vDecs);
-        target.Accept(vtVis);
-
         var expressionType = GetTypeOfExpression(expression, vDecs);
-        if (!vtVis.VunType.Equals(expressionType))
+        if (!(target.Type ?? throw new InvalidOperationException()).Equals(expressionType))
         {
             throw new SemanticErrorException(
                 "Type mismatch; cannot assign `"
@@ -912,9 +909,7 @@ public class SemanticAnalysis
             }
 
             vun.GetPlain().ReferencesGlobalVariable = vdn.IsGlobal;
-            var vtVis = new VunTypeGettingVisitor(vdn.Type, vdnByName);
-            vun.Accept(vtVis);
-            return vtVis.VunType;
+            return vun.GetInnerType(vdn.Type, vdnByName);
         }
     }
 

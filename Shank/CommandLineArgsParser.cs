@@ -279,6 +279,7 @@ public class CommandLineArgsParser
         OutputHelper.DebugPrintAst(program, "pre-SA");
         SemanticAnalysis.ActiveInterpretOptions = options;
         BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
+
         SemanticAnalysis.CheckModules(program);
 
         SAVisitor.ActiveInterpretOptions = options;
@@ -296,10 +297,10 @@ public class CommandLineArgsParser
         program.Walk(vgVis);
         OutputHelper.DebugPrintAst(program, "post-vgVis");
         program.Walk(etVis);
+        OutputHelper.DebugPrintAst(program, "post-etVis");
 
         NewSemanticAnalysis.Run(program);
 
-        OutputHelper.DebugPrintAst(program, "post-etVis");
         Interpreter.ActiveInterpretOptions = options;
         Interpreter.Modules = program.Modules;
         Interpreter.StartModule = program.GetStartModuleSafe();
