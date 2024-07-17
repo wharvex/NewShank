@@ -8,14 +8,11 @@ public class IteratorDataType : InterpreterDataType
     {
         Enumerator = Enumerable.Range(0, count).GetEnumerator();
     }
-    
+
     public override string ToString()
     {
         return "IteratorDataType";
     }
 
-    public override void FromString(string input)
-    {
-       
-    }
+    public override void FromString(string input) { }
 }
