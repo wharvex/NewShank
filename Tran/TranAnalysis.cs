@@ -35,14 +35,26 @@ namespace Tran
                                 call.Arguments.Add(assignment.Expression);
                                 function.Statements[i] = call;
                             }
-                            assignment.Expression = WalkExpression(assignment.Expression, module, ref variableRef);
-                            if(variableRef.Name != "temp")
+                            assignment.Expression = WalkExpression(
+                                assignment.Expression,
+                                module,
+                                ref variableRef
+                            );
+                            if (variableRef.Name != "temp")
                             {
                                 function.Statements[i] = assignment;
-                                var accessor = new FunctionCallNode("_" + variableRef.Name + "_accessor");
+                                var accessor = new FunctionCallNode(
+                                    "_" + variableRef.Name + "_accessor"
+                                );
                                 accessor.Arguments.Add(variableRef);
                                 function.Statements.Insert(i, accessor);
-                                var tempVar = new VariableDeclarationNode(false, variableRef.Type, "_temp_" + variableRef.Name, module.Name, false);
+                                var tempVar = new VariableDeclarationNode(
+                                    false,
+                                    variableRef.Type,
+                                    "_temp_" + variableRef.Name,
+                                    module.Name,
+                                    false
+                                );
                                 function.VariablesInScope.Add(tempVar.Name, tempVar);
                                 function.LocalVariables.Add(tempVar);
                                 i++;
@@ -51,9 +63,13 @@ namespace Tran
                         else if (statement.GetType() == typeof(FunctionCallNode))
                         {
                             var call = (FunctionCallNode)statement;
-                            for (int j = 0; j<call.Arguments.Count; j++)
+                            for (int j = 0; j < call.Arguments.Count; j++)
                             {
-                                var expression = WalkExpression(call.Arguments[j], module, ref variableRef);
+                                var expression = WalkExpression(
+                                    call.Arguments[j],
+                                    module,
+                                    ref variableRef
+                                );
                                 if (expression != null)
                                 {
                                     call.Arguments[j] = expression;
@@ -64,7 +80,12 @@ namespace Tran
                         else if (statement.GetType() == typeof(WhileNode))
                         {
                             var loop = (WhileNode)statement;
-                            ((WhileNode)function.Statements[i]).Expression = (BooleanExpressionNode)WalkExpression(loop.Expression, module, ref variableRef);
+                            ((WhileNode)function.Statements[i]).Expression =
+                                (BooleanExpressionNode)WalkExpression(
+                                    loop.Expression,
+                                    module,
+                                    ref variableRef
+                                );
                         }
                         else if (statement.GetType() == typeof(IfNode))
                         {
@@ -77,11 +98,19 @@ namespace Tran
             return modules;
         }
 
-        private static IfNode? WalkIf(IfNode ifNode, ModuleNode module, ref VariableUsagePlainNode variableRef)
+        private static IfNode? WalkIf(
+            IfNode ifNode,
+            ModuleNode module,
+            ref VariableUsagePlainNode variableRef
+        )
         {
             if (ifNode.Expression != null)
             {
-                ifNode.Expression = (BooleanExpressionNode)WalkExpression(ifNode.Expression, module, ref variableRef);
+                ifNode.Expression = (BooleanExpressionNode)WalkExpression(
+                    ifNode.Expression,
+                    module,
+                    ref variableRef
+                );
                 if (ifNode.NextIfNode != null)
                 {
                     return WalkIf(ifNode.NextIfNode, module, ref variableRef);
@@ -112,7 +141,7 @@ namespace Tran
             {
                 var mathOp = (MathOpNode)expression;
                 var retVal = WalkExpression(mathOp.Left, module, ref variableRef);
-                if(retVal != null)
+                if (retVal != null)
                 {
                     mathOp.Left = retVal;
                 }
@@ -138,7 +167,7 @@ namespace Tran
                 else
                 {
                     retVal = WalkExpression(boolOp.Right, module, ref variableRef);
-                    if(retVal == null)
+                    if (retVal == null)
                     {
                         return boolOp;
                     }
@@ -150,7 +179,10 @@ namespace Tran
             return null;
         }
 
-        private static VariableDeclarationNode? VariableIsMember(ModuleNode module, VariableUsagePlainNode variable)
+        private static VariableDeclarationNode? VariableIsMember(
+            ModuleNode module,
+            VariableUsagePlainNode variable
+        )
         {
             foreach (var member in module.Records.First().Value.Members)
             {
