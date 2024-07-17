@@ -1421,13 +1421,22 @@ public class InvalidRecursiveTypeChecker : SAVisitor
     private record Void;
 
     private readonly Void _void = new();
+
     // TODO: make recordCallStack also keep which member recursed to give better fixing suggestion
     private Void CheckRecursive(Type type, List<ModuleIndex> recordCallStack) =>
         type switch
         {
-            GenericType or EnumType or StringType or RealType or ReferenceType or BooleanType or CharacterType or IntegerType => _void, 
-            ArrayType { Inner: {} inner} => CheckRecursive(inner, recordCallStack),
-            InstantiatedType { Inner: {} inner} => CheckRecursiveRecord(inner, recordCallStack),
+            GenericType
+            or EnumType
+            or StringType
+            or RealType
+            or ReferenceType
+            or BooleanType
+            or CharacterType
+            or IntegerType
+                => _void,
+            ArrayType { Inner: { } inner } => CheckRecursive(inner, recordCallStack),
+            InstantiatedType { Inner: { } inner } => CheckRecursiveRecord(inner, recordCallStack),
             RecordType record => CheckRecursiveRecord(record, recordCallStack),
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
         };
@@ -1437,18 +1446,19 @@ public class InvalidRecursiveTypeChecker : SAVisitor
         var name = new ModuleIndex(new NamedIndex(record.Name), record.ModuleName);
         if (recordCallStack.Contains(name))
         {
-            
-            throw new SemanticErrorException(recordCallStack is [var recordName] 
-                ? $"""
+            throw new SemanticErrorException(
+                recordCallStack is [var recordName]
+                    ? $"""
                    Record {recordName} is recursive.
                    Shank does not allow you to do this without a reference.
                    To fix this put a refersTo on the field of {recordName} that is recursive.
-                """ : 
-                $"""
+                """
+                    : $"""
                  Records {string.Join(", ", recordCallStack.Select(m => m.ToString()))} are mutually recursive
                  Shank does not allow you to do this without a reference.
                  To fix this put a refersTo on one of the fields that is recursive.
-                 """);
+                 """
+            );
         }
         foreach (var fieldsValue in record.Fields.Values)
         {
