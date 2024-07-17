@@ -32,7 +32,8 @@ public readonly record struct Range // the type that represents a type range in 
 
     // since this is just for arrays and strings should it be unsigned
     public static Range DefaultSmallInteger => new(uint.MinValue, uint.MaxValue);
-    public static Range DefaultStringRange => new(1, uint.MaxValue);
+
+    // public static Range DefaultStringRange => new(1, uint.MaxValue);
 
     // since this is just for characters should it be unsigned
     public static Range DefaultCharacter => new(byte.MinValue, byte.MaxValue);
@@ -75,7 +76,7 @@ public readonly record struct StringType(Range Range) : RangeType
 {
     public T Accept<T>(ITypeVisitor<T> v) => v.Visit(this);
 
-    public static Range DefaultRange => Range.DefaultStringRange;
+    public static Range DefaultRange => Range.DefaultSmallInteger;
 
     public bool Equals(StringType other) => true; // we do range checking separately as we do not know which is the one with more important range
 
@@ -151,7 +152,7 @@ public class EnumType(string name, string moduleName, List<string> variants) : T
 {
     public T Accept<T>(ITypeVisitor<T> v) => v.Visit(this);
 
-    public ModuleIndex MonomorphizedIndex() => new ModuleIndex(new NamedIndex(name), moduleName);
+    public ModuleIndex MonomorphizedIndex => new(new NamedIndex(Name), ModuleName);
 
     public string Name { get; } = name;
     public string ModuleName { get; } = moduleName;
@@ -161,7 +162,7 @@ public class EnumType(string name, string moduleName, List<string> variants) : T
 
     public int GetElementNum(string name)
     {
-        foreach (var (param, index) in variants.Select((param, index) => (param, index)))
+        foreach (var (param, index) in Variants.Select((param, index) => (param, index)))
         {
             if (param == name)
                 return index;
@@ -207,7 +208,7 @@ public class RecordType(
 
     // TODO: should this print newlines for each member as it does not get used by any other Type.ToString
     public override string ToString() =>
-        $"{Name}{(generics.Count == 0 ? "" : $"generic {string.Join(", ", Generics)}")}";
+        $"{Name}{(Generics.Count == 0 ? "" : $"generic {string.Join(", ", Generics)}")}";
 } // records need to keep the types of their members along with any generics they declare
 
 public readonly record struct ArrayType(Type Inner, Range Range) : RangeType // arrays have only one inner type
@@ -234,7 +235,9 @@ public readonly record struct ArrayType(Type Inner, Range Range) : RangeType // 
     public ArrayType(Type inner, Range? range)
         : this(inner, range ?? DefaultRange) { }
 
-    public static Range DefaultRange => Range.DefaultSmallInteger;
+    // We want to change this back to DefaultSmallInteger once we have better infrastructure in
+    // place for verifying ranges with if-statements.
+    public static Range DefaultRange => Range.DefaultInteger;
 
     public override string ToString() => $"array {this.RangeString()} of {Inner}";
 }

@@ -191,18 +191,24 @@ public class VunVsTypeCheckingVisitor(Type t, Dictionary<string, VariableDeclara
 
                 break;
             case VariableUsageMemberNode m:
-                if (CheckingType is not InstantiatedType it)
+                switch (CheckingType)
                 {
-                    throw new SemanticErrorException("Cannot dot into " + CheckingType, m);
+                    case InstantiatedType it:
+                        if (it.GetMember(m.Right.Name) is null)
+                            throw new SemanticErrorException(
+                                "Member `" + m.Right.Name + "' not found on record `" + it + "'"
+                            );
+                        break;
+                    case ReferenceType rt:
+                        if (rt.Inner is not InstantiatedType)
+                            throw new SemanticErrorException(
+                                "Cannot dot into reference to " + rt.Inner.GetType(),
+                                m
+                            );
+                        break;
+                    default:
+                        throw new SemanticErrorException("Cannot dot into " + CheckingType, m);
                 }
-
-                if (it.GetMember(m.Right.Name) is null)
-                {
-                    throw new SemanticErrorException(
-                        "Member `" + m.Right.Name + "' not found on record `" + it + "'"
-                    );
-                }
-
                 break;
         }
     }

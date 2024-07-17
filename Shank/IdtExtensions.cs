@@ -1,4 +1,6 @@
-﻿using Shank.ASTNodes;
+﻿using LLVMSharp;
+using Newtonsoft.Json;
+using Shank.ASTNodes;
 using Shank.MathOppable;
 using Shank.WalkCompliantVisitors;
 
@@ -41,6 +43,67 @@ public static class IdtExtensions
         }
     }
 
+    public static T CopyAs<T>(this InterpreterDataType idt)
+        where T : class
+    {
+        switch (idt)
+        {
+            case RecordDataType rdt:
+                return new RecordDataType(
+                        rdt.MemberTypes,
+                        rdt.Value.Select(
+                            kvp =>
+                                new KeyValuePair<string, object>(
+                                    kvp.Key,
+                                    ((InterpreterDataType)kvp.Value).CopyAs<object>()
+                                )
+                        )
+                            .ToDictionary()
+                    ) as T
+                    ?? throw new InvalidOperationException();
+
+            case ArrayDataType adt:
+                var retVal = new List<object>();
+                foreach (var o in adt.Value)
+                {
+                    retVal.Add(((InterpreterDataType)o).CopyAs<object>());
+                }
+                return new ArrayDataType(retVal, adt.Type) as T
+                    ?? throw new InvalidOperationException();
+
+            case IntDataType intVal:
+                return new IntDataType(intVal.Value) as T ?? throw new InvalidOperationException();
+            case FloatDataType floatVal:
+                return new FloatDataType(floatVal.Value) as T
+                    ?? throw new InvalidOperationException();
+            case StringDataType stringVal:
+                return new StringDataType(stringVal.Value) as T
+                    ?? throw new InvalidOperationException();
+            case CharDataType charVal:
+                return new CharDataType(charVal.Value) as T
+                    ?? throw new InvalidOperationException();
+            case BooleanDataType boolVal:
+                return new BooleanDataType(boolVal.Value) as T
+                    ?? throw new InvalidOperationException();
+            case EnumDataType enumVal:
+                return new EnumDataType(
+                        enumVal.Type ?? throw new InvalidOperationException(),
+                        enumVal.Value
+                    ) as T
+                    ?? throw new InvalidOperationException();
+            case ReferenceDataType referenceVal:
+                return new ReferenceDataType(
+                        (
+                            referenceVal.Record ?? throw new InvalidOperationException()
+                        ).CopyAs<RecordDataType>(),
+                        referenceVal.RecordType
+                    ) as T
+                    ?? throw new InvalidOperationException();
+            default:
+                throw new NotImplementedException("Cannot copy type " + idt);
+        }
+    }
+
     public static bool TryGetMathOppable(this InterpreterDataType idt, out IMathOppable val)
     {
         switch (idt)
@@ -57,5 +120,37 @@ public static class IdtExtensions
         }
 
         return true;
+    }
+
+    public static T DeepCopyJsonDotNet<T>(this T input)
+        where T : class
+    {
+        return JsonConvert.DeserializeObject<T>(JsonConvert.SerializeObject(input))
+            ?? throw new InvalidOperationException("???");
+    }
+}
+
+public class TypeConverter<T> : JsonConverter
+{
+    public override void WriteJson(JsonWriter writer, object? val, JsonSerializer serializer)
+    {
+        if (val is not null)
+            val = (T)val;
+        serializer.Serialize(writer, val);
+    }
+
+    public override object? ReadJson(
+        JsonReader reader,
+        System.Type objectType,
+        object? existingValue,
+        JsonSerializer serializer
+    )
+    {
+        return serializer.Deserialize<T>(reader);
+    }
+
+    public override bool CanConvert(System.Type objectType)
+    {
+        return objectType == typeof(Type);
     }
 }

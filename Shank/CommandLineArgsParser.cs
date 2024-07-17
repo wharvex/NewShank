@@ -95,7 +95,7 @@ public class CompileOptions
     [Option(
         "linker",
         HelpText = "add whatever linker you feel if non specified it defaults to the GNU linker (ld)",
-        Default = "ld"
+        Default = "clang"
     )]
     public string LinkerOption { get; set; }
 
@@ -111,6 +111,9 @@ public class CompileOptions
         HelpText = "target cpu (run clang -print-supported-cpus to see list"
     )]
     public string TargetCPU { get; set; }
+
+    [Option('v', "vuop-test", HelpText = "Variable Usage Operation Test", Default = false)]
+    public bool VuOpTest { get; set; }
 }
 
 [Verb("Interpret", isDefault: false, HelpText = "runs the shank interpreter")]
@@ -246,18 +249,27 @@ public class CommandLineArgsParser
         LLVMCodeGen a = new LLVMCodeGen();
         options.InputFile.ToList().ForEach(n => Console.WriteLine(n));
 
+        var fakeInterpretOptions = new InterpretOptions()
+        {
+            VuOpTest = options.VuOpTest,
+            unitTest = false,
+            InputFiles = []
+        };
         options
             .InputFile.ToList()
             .ForEach(
                 n =>
                     GetFiles(n) //multiple files
-                        .ForEach(ip => ScanAndParse(ip, program))
+                        .ForEach(ip => ScanAndParse(ip, program, fakeInterpretOptions))
             );
 
         // GetFiles(options.InputFile).ForEach(ip => ScanAndParse(ip, program));
         program.SetStartModule();
         BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
+        SemanticAnalysis.ActiveInterpretOptions = fakeInterpretOptions;
         SemanticAnalysis.CheckModules(program);
+        SAVisitor.ActiveInterpretOptions = fakeInterpretOptions;
+        NewSemanticAnalysis.Run(program);
         var monomorphization = new MonomorphizationVisitor();
         program.Accept(monomorphization);
         var monomorphizedProgram = monomorphization.ProgramNode;
@@ -276,10 +288,12 @@ public class CommandLineArgsParser
             );
         program.SetStartModule();
         OutputHelper.DebugPrintAst(program, "pre-SA");
-        BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
         SemanticAnalysis.ActiveInterpretOptions = options;
+        BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
+
         SemanticAnalysis.CheckModules(program);
 
+        SAVisitor.ActiveInterpretOptions = options;
         // program.Walk(new ImportVisitor());
         // program.Walk(new RecordVisitor());
         // program.Walk(new UnknownTypesVisitor());
@@ -294,10 +308,10 @@ public class CommandLineArgsParser
         program.Walk(vgVis);
         OutputHelper.DebugPrintAst(program, "post-vgVis");
         program.Walk(etVis);
+        OutputHelper.DebugPrintAst(program, "post-etVis");
 
         NewSemanticAnalysis.Run(program);
 
-        OutputHelper.DebugPrintAst(program, "post-etVis");
         Interpreter.ActiveInterpretOptions = options;
         Interpreter.Modules = program.Modules;
         Interpreter.StartModule = program.GetStartModuleSafe();

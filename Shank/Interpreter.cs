@@ -12,6 +12,12 @@ public class Interpreter
 {
     public static Dictionary<string, ModuleNode>? Modules { get; set; }
 
+    public delegate bool AddVunToPassedTrier(
+        ExpressionNode e,
+        Dictionary<string, InterpreterDataType> variables,
+        List<InterpreterDataType> passed
+    );
+
     public static ModuleNode? StartModule { get; set; }
     public static StringBuilder testOutput = new StringBuilder();
     public static InterpretOptions? ActiveInterpretOptions { get; set; }
@@ -291,14 +297,23 @@ public class Interpreter
         {
             if (stmt is AssignmentNode an)
             {
-                var target = GetIdtFromVun(variables, an.NewTarget);
-                switch (target)
+                var idtTarget = GetIdtFromVun(variables, an.NewTarget);
+                switch (idtTarget)
                 {
                     case IntDataType it:
                         it.Value = NewResolveInt(an.Expression, variables);
                         break;
                     case ArrayDataType at:
-                        NewAssignToArray(at, an, variables);
+                        NewAssignToArray(
+                            at,
+                            an.Expression,
+                            an.NewTarget as VariableUsageIndexNode
+                                ?? throw new InterpreterErrorException(
+                                    "Somehow we have an ArrayDataType idtTarget but a non-VariableUsageIndexNode ASTNode target.",
+                                    an.NewTarget
+                                ),
+                            variables
+                        );
                         break;
                     case FloatDataType ft:
                         ft.Value = NewResolveFloat(an.Expression, variables);
@@ -313,7 +328,16 @@ public class Interpreter
                         bt.Value = ResolveBool(an.Expression, variables);
                         break;
                     case RecordDataType rt:
-                        NewAssignToRecord(rt, an, variables);
+                        NewAssignToRecord(
+                            rt,
+                            an.Expression,
+                            an.NewTarget as VariableUsageMemberNode
+                                ?? throw new InterpreterErrorException(
+                                    "Somehow we have a RecordDataType idtTarget but a non-VariableUsageMemberNode ASTNode target.",
+                                    an.NewTarget
+                                ),
+                            variables
+                        );
                         break;
                     case EnumDataType et:
                         et.Value = ResolveEnum(et, an.Expression, variables);
@@ -321,9 +345,18 @@ public class Interpreter
                     case ReferenceDataType rt:
                         if (rt.Record == null)
                             throw new Exception(
-                                $"{an.Target.Name} must be allocated before it can be addressed."
+                                $"{an.NewTarget} must be allocated before it can be addressed."
                             );
-                        NewAssignToRecord(rt.Record, an, variables);
+                        NewAssignToRecord(
+                            rt.Record,
+                            an.Expression,
+                            an.NewTarget as VariableUsageMemberNode
+                                ?? throw new InterpreterErrorException(
+                                    "Somehow we have a ReferenceDataType idtTarget but a non-VariableUsageMemberNode ASTNode target.",
+                                    an.NewTarget
+                                ),
+                            variables
+                        );
                         break;
                     default:
                         throw new Exception("Unknown type in assignment");
@@ -370,17 +403,17 @@ public class Interpreter
             }
             else if (stmt is ForNode fn)
             {
-                var target = variables[fn.Variable.Name];
+                var target = GetIdtFromVun(variables, fn.NewVariable);
                 if (target is not IntDataType index)
                     throw new Exception(
                         $"For loop has a non-integer index called {fn.Variable.Name}. This is not allowed."
                     );
-                var start = ResolveInt(fn.From, variables);
-                var end = ResolveInt(fn.To, variables);
-                for (var i = start; i < end; i++)
+                var start = NewResolveInt(fn.From, variables);
+                var end = NewResolveInt(fn.To, variables);
+                for (var i = start; i <= end; i++)
                 {
                     index.Value = i;
-                    InterpretBlock(fn.Children, variables, callingFunction);
+                    NewInterpretBlock(fn.Children, variables, callingFunction);
                 }
             }
         }
@@ -424,35 +457,34 @@ public class Interpreter
 
     private static void NewAssignToRecord(
         RecordDataType rdt,
-        AssignmentNode an,
+        ExpressionNode e,
+        VariableUsageMemberNode target,
         Dictionary<string, InterpreterDataType> variables
     )
     {
-        // Create/dispatch a visitor that expects/collects a member on an's NewTarget.
-        var mev = new MemberExpectingVisitor();
-        an.NewTarget.Accept(mev);
+        if (!rdt.Value.TryAdd(target.Right.Name, GetIdtFromExpr(e, variables)))
+            throw new InterpreterErrorException("Could not add the value to the record.", target);
 
-        var t = rdt.GetMemberType(mev.Contents.Name);
+        //var t = rdt.GetMemberType(mev.Contents.Name);
 
-        rdt.Value[mev.Contents.Name] = t switch
-        {
-            BooleanType => ResolveBool(an.Expression, variables),
-            StringType => ResolveString(an.Expression, variables),
-            RealType => NewResolveFloat(an.Expression, variables),
-            IntegerType => NewResolveInt(an.Expression, variables),
-            CharacterType => ResolveChar(an.Expression, variables),
-            InstantiatedType => ResolveRecord(an.Expression, variables),
-            ReferenceType => ResolveReference(an.Expression, variables),
-            EnumType => ResolveEnum(an.Expression, variables),
+        //rdt.Value[mev.Contents.Name] = t switch
+        //{
+        //    BooleanType => ResolveBool(an.Expression, variables),
+        //    StringType => ResolveString(an.Expression, variables),
+        //    RealType => NewResolveFloat(an.Expression, variables),
+        //    IntegerType => NewResolveInt(an.Expression, variables),
+        //    CharacterType => ResolveChar(an.Expression, variables),
+        //    InstantiatedType => ResolveRecord(an.Expression, variables),
+        //    ReferenceType => ResolveReference(an.Expression, variables),
+        //    EnumType => ResolveEnum(an.Expression, variables),
 
-            _
-                => throw new NotImplementedException(
-                    "Assigning a value of type "
-                        + t
-                        + " to a record variable member is not implemented yet."
-                )
-        };
-        OutputHelper.DebugPrintJson(rdt, "rdt");
+        //    _
+        //        => throw new NotImplementedException(
+        //            "Assigning a value of type "
+        //                + t
+        //                + " to a record variable member is not implemented yet."
+        //        )
+        //};
     }
 
     private static void AssignToArray(
@@ -491,27 +523,30 @@ public class Interpreter
 
     private static void NewAssignToArray(
         ArrayDataType adt,
-        AssignmentNode an,
+        ExpressionNode e,
+        VariableUsageIndexNode target,
         Dictionary<string, InterpreterDataType> variables
     )
     {
-        adt.AddElement(
-            adt.ArrayContentsType switch
-            {
-                IntegerType => NewResolveInt(an.Expression, variables),
-                RealType => NewResolveFloat(an.Expression, variables),
-                StringType => ResolveString(an.Expression, variables),
-                CharacterType => ResolveChar(an.Expression, variables),
-                BooleanType => ResolveBool(an.Expression, variables),
-                _
-                    => throw new NotImplementedException(
-                        "Assigning a value of type "
-                            + adt.ArrayContentsType
-                            + " to an array index is not implemented yet."
-                    )
-            },
-            NewResolveInt(((VariableUsageIndexNode)an.NewTarget).Right, variables)
-        );
+        adt.AddElement(GetIdtFromExpr(e, variables), NewResolveInt(target.Right, variables));
+
+        //adt.AddElement(
+        //    adt.ArrayContentsType switch
+        //    {
+        //        IntegerType => NewResolveInt(e, variables),
+        //        RealType => NewResolveFloat(e, variables),
+        //        StringType => ResolveString(e, variables),
+        //        CharacterType => ResolveChar(e, variables),
+        //        BooleanType => ResolveBool(e, variables),
+        //        _
+        //            => throw new NotImplementedException(
+        //                "Assigning a value of type "
+        //                    + adt.ArrayContentsType
+        //                    + " to an array index is not implemented yet."
+        //            )
+        //    },
+        //    NewResolveInt(target.Right, variables)
+        //);
     }
 
     private static bool ResolveBool(ASTNode node, Dictionary<string, InterpreterDataType> variables)
@@ -656,71 +691,74 @@ public class Interpreter
         var passed = new List<InterpreterDataType>();
         foreach (var fcp in fc.Arguments)
         {
-            if (fcp is VariableUsagePlainNode variableUsagePlainNode)
-            {
-                var name = variableUsagePlainNode.Name;
-                var value = variables[name];
-                switch (value)
-                {
-                    case IntDataType intVal:
-                        passed.Add(new IntDataType(intVal.Value));
-                        break;
-                    case FloatDataType floatVal:
-                        passed.Add(new FloatDataType(floatVal.Value));
-                        break;
-                    case StringDataType stringVal:
-                        passed.Add(new StringDataType(stringVal.Value));
-                        break;
-                    case CharDataType charVal:
-                        passed.Add(new CharDataType(charVal.Value));
-                        break;
-                    case BooleanDataType boolVal:
-                        passed.Add(new BooleanDataType(boolVal.Value));
-                        break;
-                    case ArrayDataType arrayVal:
-                        AddToParamsArray(arrayVal, variableUsagePlainNode, passed, variables);
-                        break;
-                    case RecordDataType recordVal:
-                        AddToParamsRecord(recordVal, variableUsagePlainNode, passed);
-                        break;
-                    case EnumDataType enumVal:
-                        passed.Add(new EnumDataType(enumVal.Type, enumVal.Value));
-                        break;
-                    case ReferenceDataType referenceVal:
-                        if (variableUsagePlainNode.Extension != null)
-                        {
-                            var vrn = ((VariableUsagePlainNode)variableUsagePlainNode.Extension);
-                            if (referenceVal.Record is null)
-                                throw new Exception(
-                                    $"{variableUsagePlainNode.Name} was never allocated."
-                                );
-                            if (referenceVal.Record.Value[vrn.Name] is int)
-                                passed.Add(
-                                    new IntDataType((int)referenceVal.Record.Value[vrn.Name])
-                                );
-                            else if (referenceVal.Record.Value[vrn.Name] is float)
-                                passed.Add(
-                                    new FloatDataType((float)referenceVal.Record.Value[vrn.Name])
-                                );
-                            else if (referenceVal.Record.Value[vrn.Name] is char)
-                                passed.Add(
-                                    new CharDataType((char)referenceVal.Record.Value[vrn.Name])
-                                );
-                            else if (referenceVal.Record.Value[vrn.Name] is string)
-                                passed.Add(
-                                    new StringDataType((string)referenceVal.Record.Value[vrn.Name])
-                                );
-                            else if (referenceVal.Record.Value[vrn.Name] is float)
-                                passed.Add(
-                                    new BooleanDataType((bool)referenceVal.Record.Value[vrn.Name])
-                                );
-                        }
-                        else
-                            passed.Add(new ReferenceDataType(referenceVal));
-                        break;
-                }
-            }
-            else
+            //if (fcp is VariableUsagePlainNode variableUsagePlainNode)
+            //{
+            //    var name = variableUsagePlainNode.Name;
+            //    var value = variables[name];
+            //    switch (value)
+            //    {
+            //        case IntDataType intVal:
+            //            passed.Add(new IntDataType(intVal.Value));
+            //            break;
+            //        case FloatDataType floatVal:
+            //            passed.Add(new FloatDataType(floatVal.Value));
+            //            break;
+            //        case StringDataType stringVal:
+            //            passed.Add(new StringDataType(stringVal.Value));
+            //            break;
+            //        case CharDataType charVal:
+            //            passed.Add(new CharDataType(charVal.Value));
+            //            break;
+            //        case BooleanDataType boolVal:
+            //            passed.Add(new BooleanDataType(boolVal.Value));
+            //            break;
+            //        case ArrayDataType arrayVal:
+            //            AddToParamsArray(arrayVal, variableUsagePlainNode, passed, variables);
+            //            break;
+            //        case RecordDataType recordVal:
+            //            AddToParamsRecord(recordVal, variableUsagePlainNode, passed);
+            //            break;
+            //        case EnumDataType enumVal:
+            //            passed.Add(new EnumDataType(enumVal.Type, enumVal.Value));
+            //            break;
+            //        case ReferenceDataType referenceVal:
+            //            if (variableUsagePlainNode.Extension != null)
+            //            {
+            //                var vrn = ((VariableUsagePlainNode)variableUsagePlainNode.Extension);
+            //                if (referenceVal.Record is null)
+            //                    throw new Exception(
+            //                        $"{variableUsagePlainNode.Name} was never allocated."
+            //                    );
+            //                if (referenceVal.Record.Value[vrn.Name] is int)
+            //                    passed.Add(
+            //                        new IntDataType((int)referenceVal.Record.Value[vrn.Name])
+            //                    );
+            //                else if (referenceVal.Record.Value[vrn.Name] is float)
+            //                    passed.Add(
+            //                        new FloatDataType((float)referenceVal.Record.Value[vrn.Name])
+            //                    );
+            //                else if (referenceVal.Record.Value[vrn.Name] is char)
+            //                    passed.Add(
+            //                        new CharDataType((char)referenceVal.Record.Value[vrn.Name])
+            //                    );
+            //                else if (referenceVal.Record.Value[vrn.Name] is string)
+            //                    passed.Add(
+            //                        new StringDataType((string)referenceVal.Record.Value[vrn.Name])
+            //                    );
+            //                else if (referenceVal.Record.Value[vrn.Name] is float)
+            //                    passed.Add(
+            //                        new BooleanDataType((bool)referenceVal.Record.Value[vrn.Name])
+            //                    );
+            //            }
+            //            else
+            //                passed.Add(new ReferenceDataType(referenceVal));
+            //            break;
+            //    }
+            //}
+            AddVunToPassedTrier addVunToPassedTrier = GetVuopTestFlag()
+                ? NewTryAddVunToPassed
+                : TryAddVunToPassed;
+            if (!addVunToPassedTrier(fcp, variables, passed))
             {
                 var value = fcp;
                 switch (value)
@@ -863,7 +901,57 @@ public class Interpreter
         }
     }
 
+    private static void NewAddToParamsArray(
+        ArrayDataType adt,
+        VariableUsageIndexNode vi,
+        List<InterpreterDataType> paramsList,
+        Dictionary<string, InterpreterDataType> variables
+    )
+    {
+        paramsList.Add(GetIdtFromVun(variables, vi));
+    }
+
     private static void AddToParamsRecord(
+        RecordDataType rdt,
+        VariableUsagePlainNode args, //ParameterNode pn,
+        List<InterpreterDataType> paramsList
+    )
+    {
+        var pnVrn = args; //pn.GetVariableSafe();
+        if (pnVrn.ExtensionType == VariableUsagePlainNode.VrnExtType.RecordMember)
+        {
+            var rmVrn = pnVrn.GetRecordMemberReferenceSafe();
+            paramsList.Add(
+                rdt.GetMemberType(rmVrn.Name) switch
+                {
+                    CharacterType => new CharDataType(rdt.GetValueCharacter(rmVrn.Name)),
+                    BooleanType => new BooleanDataType(rdt.GetValueBoolean(rmVrn.Name)),
+                    StringType => new StringDataType(rdt.GetValueString(rmVrn.Name)),
+                    IntegerType => new IntDataType(rdt.GetValueInteger(rmVrn.Name)),
+                    RealType => new FloatDataType(rdt.GetValueReal(rmVrn.Name)),
+                    ReferenceType => new ReferenceDataType(rdt.GetValueReference(rmVrn.Name)),
+                    RecordType
+                        => GetNestedParam(
+                            rdt,
+                            args
+                                ?? throw new Exception("Could not find extension for nested record")
+                        ),
+                    EnumType => rdt.GetValueEnum(rmVrn.Name),
+                    _
+                        => throw new NotImplementedException(
+                            "It has not been implemented yet to pass a complex Record member"
+                                + " type into a function."
+                        )
+                }
+            );
+        }
+        else
+        {
+            paramsList.Add(new RecordDataType(rdt));
+        }
+    }
+
+    private static void NewAddToParamsRecord(
         RecordDataType rdt,
         VariableUsagePlainNode args, //ParameterNode pn,
         List<InterpreterDataType> paramsList
@@ -967,7 +1055,7 @@ public class Interpreter
                 return new BooleanDataType(((vn.InitialValue as BoolNode)?.Value) ?? true);
             case ArrayType a:
             {
-                return new ArrayDataType(a);
+                return new ArrayDataType([], a);
             }
             // TODO: merge record type and record node into one
             case InstantiatedType r:
@@ -1565,5 +1653,101 @@ public class Interpreter
             default:
                 throw new ArgumentException("Unsupported expression type", nameof(e));
         }
+    }
+
+    public static bool TryAddVunToPassed(
+        ExpressionNode e,
+        Dictionary<string, InterpreterDataType> variables,
+        List<InterpreterDataType> passed
+    )
+    {
+        if (e is not VariableUsagePlainNode variableUsagePlainNode)
+        {
+            return false;
+        }
+
+        var name = variableUsagePlainNode.Name;
+        var value = variables[name];
+        switch (value)
+        {
+            case IntDataType intVal:
+                passed.Add(new IntDataType(intVal.Value));
+                break;
+            case FloatDataType floatVal:
+                passed.Add(new FloatDataType(floatVal.Value));
+                break;
+            case StringDataType stringVal:
+                passed.Add(new StringDataType(stringVal.Value));
+                break;
+            case CharDataType charVal:
+                passed.Add(new CharDataType(charVal.Value));
+                break;
+            case BooleanDataType boolVal:
+                passed.Add(new BooleanDataType(boolVal.Value));
+                break;
+            case ArrayDataType arrayVal:
+                AddToParamsArray(arrayVal, variableUsagePlainNode, passed, variables);
+                break;
+            case RecordDataType recordVal:
+                AddToParamsRecord(recordVal, variableUsagePlainNode, passed);
+                break;
+            case EnumDataType enumVal:
+                passed.Add(new EnumDataType(enumVal.Type, enumVal.Value));
+                break;
+            case ReferenceDataType referenceVal:
+                if (variableUsagePlainNode.Extension != null)
+                {
+                    var vrn = ((VariableUsagePlainNode)variableUsagePlainNode.Extension);
+                    if (referenceVal.Record is null)
+                        throw new Exception($"{variableUsagePlainNode.Name} was never allocated.");
+                    if (referenceVal.Record.Value[vrn.Name] is int)
+                        passed.Add(new IntDataType((int)referenceVal.Record.Value[vrn.Name]));
+                    else if (referenceVal.Record.Value[vrn.Name] is float)
+                        passed.Add(new FloatDataType((float)referenceVal.Record.Value[vrn.Name]));
+                    else if (referenceVal.Record.Value[vrn.Name] is char)
+                        passed.Add(new CharDataType((char)referenceVal.Record.Value[vrn.Name]));
+                    else if (referenceVal.Record.Value[vrn.Name] is string)
+                        passed.Add(new StringDataType((string)referenceVal.Record.Value[vrn.Name]));
+                    else if (referenceVal.Record.Value[vrn.Name] is float)
+                        passed.Add(new BooleanDataType((bool)referenceVal.Record.Value[vrn.Name]));
+                }
+                else
+                    passed.Add(new ReferenceDataType(referenceVal));
+                break;
+        }
+
+        return true;
+    }
+
+    public static bool NewTryAddVunToPassed(
+        ExpressionNode ex,
+        Dictionary<string, InterpreterDataType> variables,
+        List<InterpreterDataType> passed
+    )
+    {
+        if (ex is not VariableUsageNodeTemp vun)
+        {
+            return false;
+        }
+
+        var val = GetIdtFromVun(variables, vun);
+
+        passed.Add(
+            val switch
+            {
+                IntDataType i => i.CopyAs<IntDataType>(),
+                FloatDataType f => f.CopyAs<FloatDataType>(),
+                StringDataType s => s.CopyAs<StringDataType>(),
+                CharDataType c => c.CopyAs<CharDataType>(),
+                BooleanDataType b => b.CopyAs<BooleanDataType>(),
+                ArrayDataType a => a.CopyAs<ArrayDataType>(),
+                RecordDataType r => r.CopyAs<RecordDataType>(),
+                EnumDataType e => e.CopyAs<EnumDataType>(),
+                ReferenceDataType r => r.CopyAs<ReferenceDataType>(),
+                _ => throw new Exception("Unknown data type")
+            }
+        );
+
+        return true;
     }
 }
