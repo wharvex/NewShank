@@ -14,7 +14,7 @@ public enum Types
     STRING,
 }
 
-public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef module)
+public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef module, CompileOptions options)
 {
     private readonly LLVMTypeRef _charStar = LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0);
 
@@ -39,12 +39,9 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
             IntNode intNode => CompileInteger(intNode),
             MathOpNode mathOpNode => CompileMathExpression(mathOpNode),
             StringNode stringNode => CompileString(stringNode),
-            // TODO: recursive variable usage with variable usage node hierarchy
-            // VariableUsageIndexNode variableUsageIndexNode => Visit(),
-            // VariableUsageMemberNode variableUsageMemberNode => Visit(),
-            // VariableUsageNodeTemp variableUsageNodeTemp => Visit(),
+            VariableUsageNodeTemp variableUsageNodeTemp when options.VuOpTest => CompileVariableUsageNew(variableUsageNodeTemp, load),
             VariableUsagePlainNode variableUsagePlainNode
-                => CompileVariableUsage(variableUsagePlainNode, load),
+                =>  CompileVariableUsage(variableUsagePlainNode, load),
             _ => throw new ArgumentOutOfRangeException(nameof(expression))
         };
     }
@@ -224,6 +221,85 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         return load ? CopyVariable(variable) : variable.ValueRef;
     }
 
+    private LLVMValueRef CompileVariableUsageNew(VariableUsageNodeTemp node, bool load)
+    {
+        
+        if (node is VariableUsagePlainNode { ExtensionType: VariableUsagePlainNode.VrnExtType.Enum } enumUsageNode)
+        {
+            return CompileEnum(enumUsageNode);
+        }
+
+        var variable = CompileVariableUsageNew(node);
+        return load ? CopyVariable(variable) : variable.ValueRef;
+    }
+    private LLVMValue CompileVariableUsageNew(VariableUsageNodeTemp node) => node switch
+    {
+        VariableUsageIndexNode variableUsageIndexNode => CompileVariableUsageNew(variableUsageIndexNode),
+        VariableUsageMemberNode variableUsageMemberNode => CompileVariableUsageNew(variableUsageMemberNode),
+        VariableUsagePlainNode variableUsagePlainNode => context.GetVariable(variableUsagePlainNode.MonomorphizedName())
+    };
+
+    private LLVMValue CompileVariableUsageNew(VariableUsageMemberNode node)
+    {
+        var value = CompileVariableUsageNew(node.Left);
+                if (value is LLVMReference r)
+                {
+                    var inner = builder.BuildStructGEP2(r.TypeRef.TypeRef, r.ValueRef, 0);
+                    inner = builder.BuildLoad2(LLVMTypeRef.CreatePointer(r.TypeOf.Inner.TypeRef, 0), inner);
+                    value = new LLVMStruct(inner, r.IsMutable, r.TypeOf.Inner);
+                }
+        
+                var varType = (LLVMStruct)value;
+                var varField = node.Right;
+                var dataType = varType.GetTypeOf(varField.Name);
+                var structField = builder.BuildStructGEP2(
+                    value.TypeRef.TypeRef,
+                    value.ValueRef,
+                    (uint)varType.Access(varField.Name)
+                );
+        
+                return dataType.IntoValue(structField, value.IsMutable);
+    }
+    private LLVMValue CompileVariableUsageNew(VariableUsageIndexNode node)
+    {
+        var value = CompileVariableUsageNew(node.Left);
+         var newValue = (LLVMArray)value;
+         var arrayInnerType = ((LLVMArray)value).Inner();
+         var elementType = arrayInnerType.TypeRef;
+         var start = builder.BuildStructGEP2(newValue.TypeRef.TypeRef, value.ValueRef, 1);
+         start = builder.BuildLoad2(LLVMTypeRef.Int32, start);
+ 
+         var index = builder.BuildIntCast(CompileExpression(node.Right), LLVMTypeRef.Int32);
+         var size = builder.BuildStructGEP2(newValue.TypeRef.TypeRef, value.ValueRef, 2);
+         size = builder.BuildLoad2(LLVMTypeRef.Int32, size);
+         var indexOutOfBoundsBlock = module.Context.AppendBasicBlock(
+             context.CurrentFunction.Function,
+             "index out of bounds"
+         );
+         var okIndexBlock = module.Context.AppendBasicBlock(context.CurrentFunction.Function, "ok");
+         var smaller = builder.BuildICmp(LLVMIntPredicate.LLVMIntSLT, index, start);
+         var bigger = builder.BuildICmp(
+             LLVMIntPredicate.LLVMIntSGT,
+             index,
+             builder.BuildAdd(start, size)
+         );
+         var goodIndex = builder.BuildOr(smaller, bigger);
+         builder.BuildCondBr(goodIndex, indexOutOfBoundsBlock, okIndexBlock);
+         builder.PositionAtEnd(indexOutOfBoundsBlock);
+         // TODO: in the error say which side the index is out of bounds for
+         Error(
+             $"Index %d is out of bounds, for array {node.GetPlain().Name} of type {newValue.Inner()}",
+             [index],
+             node
+         );
+         builder.PositionAtEnd(okIndexBlock);
+         var array = builder.BuildStructGEP2(newValue.TypeRef.TypeRef, value.ValueRef, 0);
+         var a = builder.BuildLoad2(LLVMTypeRef.CreatePointer(elementType, 0), array);
+         index = builder.BuildSub(index, start);
+         a = builder.BuildInBoundsGEP2(elementType, a, [index]);
+         return arrayInnerType.IntoValue(a, value.IsMutable);       
+    }
+
     private LLVMValueRef CopyVariable(LLVMValue variable)
     {
         // not happening (should happen during semantic analysis) check for uninitialized access when doing this load
@@ -290,7 +366,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
             value = new LLVMStruct(inner, r.IsMutable, r.TypeOf.Inner);
         }
 
-        LLVMStruct varType = (LLVMStruct)value;
+        var varType = (LLVMStruct)value;
         var varField = (VariableUsagePlainNode)node.GetExtensionSafe();
         var dataType = varType.GetTypeOf(varField.Name);
         var structField = builder.BuildStructGEP2(

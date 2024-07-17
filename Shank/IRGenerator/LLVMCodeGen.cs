@@ -23,8 +23,8 @@ public class LLVMCodeGen
 
         // string? directory = Path.GetDirectoryName(compileOptions.OutFile);
 
-        var context = new Context(null, new CFuntions(module));
-        var compiler = new Compiler(context, builder, module);
+        var context = new Context(programNode, new CFuntions(module));
+        var compiler = new Compiler(context, builder, module, compileOptions);
         compiler.Compile(programNode);
 
         //outputting directly to an object file

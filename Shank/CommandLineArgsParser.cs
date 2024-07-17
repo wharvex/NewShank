@@ -111,6 +111,8 @@ public class CompileOptions
         HelpText = "target cpu (run clang -print-supported-cpus to see list"
     )]
     public string TargetCPU { get; set; }
+    [Option('v', "vuop-test", HelpText = "Variable Usage Operation Test", Default = false)]
+    public bool VuOpTest { get; set; }
 }
 
 [Verb("Interpret", isDefault: false, HelpText = "runs the shank interpreter")]
@@ -246,18 +248,24 @@ public class CommandLineArgsParser
         LLVMCodeGen a = new LLVMCodeGen();
         options.InputFile.ToList().ForEach(n => Console.WriteLine(n));
 
+        var fakeInterpretOptions = new InterpretOptions()
+        {
+            VuOpTest = options.VuOpTest, unitTest = false, InputFiles = []
+        }; 
         options
             .InputFile.ToList()
             .ForEach(
                 n =>
                     GetFiles(n) //multiple files
-                        .ForEach(ip => ScanAndParse(ip, program))
+                        .ForEach(ip => ScanAndParse(ip, program, fakeInterpretOptions))
             );
 
         // GetFiles(options.InputFile).ForEach(ip => ScanAndParse(ip, program));
         program.SetStartModule();
         BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
+        SemanticAnalysis.ActiveInterpretOptions = fakeInterpretOptions;
         SemanticAnalysis.CheckModules(program);
+        SAVisitor.ActiveInterpretOptions = fakeInterpretOptions;
         NewSemanticAnalysis.Run(program);
         var monomorphization = new MonomorphizationVisitor();
         program.Accept(monomorphization);

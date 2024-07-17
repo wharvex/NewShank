@@ -67,7 +67,7 @@ public struct CFuntions
     public LLVMFunction realloc { get; }
 
     // we use memcmp as opposed to str*cmp to not have to deal with null termination
-    // int strncmp(const char* lhs, const char* rhs, size_t count );
+    // int memcmp(const char* lhs, const char* rhs, size_t count );
     public LLVMFunction memcmp { get; }
 }
 
