@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using LLVMSharp.Interop;
 using Shank.ASTNodes;
 using Shank.ExprVisitors;
@@ -7,7 +8,7 @@ namespace Shank.ASTNodes;
 
 public class WhileNode : StatementNode
 {
-    public WhileNode(BooleanExpressionNode exp, List<StatementNode> children)
+    public WhileNode(ExpressionNode exp, List<StatementNode> children)
     {
         Expression = exp;
         Children = children;
@@ -22,14 +23,32 @@ public class WhileNode : StatementNode
         Expression = copy.Expression;
     }
 
-    public BooleanExpressionNode Expression { get; set; }
+    public ExpressionNode Expression { get; set; }
     public List<StatementNode> Children { get; set; }
 
     public override object[] returnStatementTokens()
     {
-        object[] arr = { "WHILE", Expression.Left, Expression.Op, Expression.Right, Children };
+        // object[] arr;
+        // if(Expression is BooleanExpressionNode booleanExpressionNode)
+        //     arr = new object[] { "WHILE", booleanExpressionNode.Left, booleanExpressionNode.Op, booleanExpressionNode.Right, Children };
+        return Expression switch
+        {
+            BooleanExpressionNode booleanExpressionNode
+                =>
+                [
+                    "WHILE",
+                    booleanExpressionNode.Left,
+                    booleanExpressionNode.Op,
+                    booleanExpressionNode.Right,
+                    Children
+                ],
+            BoolNode boolNode => ["WHILE", boolNode, Children],
+            VariableUsageNodeTemp variableUsageNodeTemp
+                => ["WHILE", variableUsageNodeTemp, Children],
+            _ => throw new SemanticErrorException("Wrong tokens in while loop.", Expression)
+        };
 
-        return arr;
+        // return arr;
     }
 
     public override string ToString()
@@ -75,7 +94,7 @@ public class WhileNode : StatementNode
         if (temp != null)
             return temp;
 
-        Expression = (BooleanExpressionNode)(Expression.Walk(v) ?? Expression);
+        Expression = (ExpressionNode)(Expression.Walk(v) ?? Expression);
 
         for (var index = 0; index < Children.Count; index++)
         {

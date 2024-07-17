@@ -209,7 +209,7 @@ public class SemanticAnalysis
                         )
                             .ToList();
                         fn.FunctionDefinitionModule = builtInVariadicFunctionNode.parentModuleName!;
-                        Console.WriteLine(builtInFunctionNode.parentModuleName);
+                        // Console.WriteLine(builtInFunctionNode.parentModuleName);
                     }
                     else
                     {
@@ -339,6 +339,8 @@ public class SemanticAnalysis
                 throw new SemanticErrorException($"ambiguous variable name {v.Name}", expression);
             }
 
+            v.ExtensionType = VariableUsagePlainNode.VrnExtType.Enum;
+            v.Extension = new IntNode(e.Variants.IndexOf(v.Name));
             v.ReferencesGlobalVariable = true;
         }
         else
@@ -364,11 +366,8 @@ public class SemanticAnalysis
         VariableUsageNodeTemp target
     )
     {
-        var vtVis = new VunTypeGettingVisitor(targetType, vDecs);
-        target.Accept(vtVis);
-
         var expressionType = GetTypeOfExpression(expression, vDecs);
-        if (!vtVis.VunType.Equals(expressionType))
+        if (!(target.Type ?? throw new InvalidOperationException()).Equals(expressionType))
         {
             throw new SemanticErrorException(
                 "Type mismatch; cannot assign `"
@@ -893,6 +892,7 @@ public class SemanticAnalysis
                         $"Invalid member access, tried to access non record {t}",
                         variableReferenceNode
                     ),
+                (ExtensionType: VariableUsagePlainNode.VrnExtType.Enum, _) => variable.Type
             };
         }
 
@@ -909,9 +909,7 @@ public class SemanticAnalysis
             }
 
             vun.GetPlain().ReferencesGlobalVariable = vdn.IsGlobal;
-            var vtVis = new VunTypeGettingVisitor(vdn.Type, vdnByName);
-            vun.Accept(vtVis);
-            return vtVis.VunType;
+            return vun.GetInnerType(vdn.Type, vdnByName);
         }
     }
 
@@ -1404,7 +1402,6 @@ public class SemanticAnalysis
 
     public static void AssignNestedTypes()
     {
-        Dictionary<(string, string), RecordNode> resolvedRecords = new();
         foreach (var module in Modules.Values)
         {
             foreach (var record in module.Records.Values)
@@ -1450,12 +1447,12 @@ public class SemanticAnalysis
         return member switch
         {
             UnknownType u => ResolveType(u, module, generics, genericCollector),
-            ReferenceType(UnknownType u) => handleReferenceType(u),
-            ArrayType(UnknownType u, Range r) => HandleArrayType(u, r),
+            ReferenceType(var u) => handleReferenceType(u),
+            ArrayType(var u, Range r) => HandleArrayType(u, r),
             _ => member
         };
 
-        Type handleReferenceType(UnknownType type)
+        Type handleReferenceType(Type type)
         {
             var resolvedType = ResolveType(type, module, generics, genericCollector);
             if (resolvedType is not (RecordType or InstantiatedType or GenericType))
@@ -1469,7 +1466,7 @@ public class SemanticAnalysis
             return new ReferenceType(resolvedType);
         }
 
-        Type HandleArrayType(UnknownType t, Range r)
+        Type HandleArrayType(Type t, Range r)
         {
             var resolvedType = ResolveType(t, module, generics, genericCollector);
             return new ArrayType(resolvedType, r);

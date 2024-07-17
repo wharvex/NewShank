@@ -166,6 +166,12 @@ public class ReferenceDataType : InterpreterDataType
         RecordType = rn;
     }
 
+    public ReferenceDataType(RecordDataType rdt, InstantiatedType it)
+    {
+        Record = rdt;
+        RecordType = it;
+    }
+
     public ReferenceDataType(ReferenceDataType rdt)
     {
         RecordType = rdt.RecordType;
@@ -185,17 +191,10 @@ public class ReferenceDataType : InterpreterDataType
 
 public class ArrayDataType : InterpreterDataType
 {
-    public List<object> Value { get; }
+    public List<object> Value { get; set; }
     private Range range { get; }
     public ArrayType Type => new(ArrayContentsType, range);
     public Type ArrayContentsType { get; init; }
-
-    public ArrayDataType(ArrayType arrayType)
-    {
-        Value = [];
-        range = arrayType.Range;
-        ArrayContentsType = arrayType.Inner;
-    }
 
     public ArrayDataType(List<object> val, ArrayType arrayType)
     {
@@ -266,7 +265,7 @@ public class ArrayDataType : InterpreterDataType
 
 public class RecordDataType : InterpreterDataType
 {
-    public Dictionary<string, object> Value { get; init; } = [];
+    public Dictionary<string, object> Value { get; set; } = [];
 
     // public Dictionary<string, Type> MemberTypes { get; init; } = [];
     public InstantiatedType MemberTypes;

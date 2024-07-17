@@ -15,7 +15,7 @@ public class IfNode : StatementNode
     }
 
     public IfNode(
-        BooleanExpressionNode expression,
+        ExpressionNode expression,
         List<StatementNode> children,
         IfNode? nextIfNode = null
     )
@@ -34,7 +34,7 @@ public class IfNode : StatementNode
         NextIfNode = nextIfNode;
     }
 
-    public BooleanExpressionNode? Expression { get; set; }
+    public ExpressionNode? Expression { get; set; }
     public List<StatementNode> Children { get; init; }
     public IfNode? NextIfNode { get; set; }
 
@@ -109,7 +109,7 @@ public class IfNode : StatementNode
             return temp;
 
         if (Expression != null)
-            Expression = (BooleanExpressionNode)(Expression.Walk(v) ?? Expression);
+            Expression = (ExpressionNode)(Expression.Walk(v) ?? Expression);
 
         for (var index = 0; index < Children.Count; index++)
         {

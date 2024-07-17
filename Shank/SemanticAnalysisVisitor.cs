@@ -326,6 +326,12 @@ public class SemanticAnalysisVisitor : Visitor
             {
                 throw new SemanticErrorException($"ambiguous variable name {v.Name}", expression);
             }
+
+            v.ExtensionType = VariableUsagePlainNode.VrnExtType.Enum;
+            v.Extension = new IntNode(e.Variants.IndexOf(v.Name));
+            // expression = new IntNode(e.Variants.IndexOf(v.Name));
+            // v = expression;
+            // e.Variants.IndexOf(v.Name);
         }
         else
         {

@@ -71,6 +71,7 @@ public class Lexer
         twoCharacterHash["-="] = TokenType.MINUSEQUALS;
         twoCharacterHash["&&"] = TokenType.AND;
         twoCharacterHash["||"] = TokenType.OR;
+        twoCharacterHash["\n\t"] = TokenType.BLOCKID;
     }
 
     private void OneCharacterHashmap()

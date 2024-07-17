@@ -760,21 +760,7 @@ public class Parser
             Token.TokenType.Character
                 => new CharacterType(CheckRange(NormalRangeVerifier, CharacterType.DefaultRange)),
             Token.TokenType.String
-                => new StringType(
-                    CheckRange(
-                        (from, to) =>
-                            NormalRangeVerifier(from, to)
-                                .FlatMap(
-                                    _ =>
-                                        Option
-                                            .Some(
-                                                $"a string type's range `from` must be 1, but was {from}"
-                                            )
-                                            .Filter(from is IntNode { Value: not 1 })
-                                ),
-                        StringType.DefaultRange
-                    )
-                ),
+                => new StringType(CheckRange(NormalRangeVerifier, StringType.DefaultRange)),
             Token.TokenType.Array => ArrayTypeParser(declarationContext, typeToken),
             // we cannot check unknown type for refersTo being on enum, but if we have refersTo integer we can check that at parse time
             Token.TokenType.RefersTo
@@ -1102,9 +1088,13 @@ public class Parser
             return null;
 
         //parse the conditional
-        var boolExp = BooleanExpression(moduleName);
+        // var boolExp = BooleanExpression(moduleName);
+        //
+        // if (boolExp == null)
+        //     throw new SyntaxErrorException("Expected a boolean expression in the if.", Peek(0));
+        var expression = Expression(moduleName);
 
-        if (boolExp == null)
+        if (expression == null)
             throw new SyntaxErrorException("Expected a boolean expression in the if.", Peek(0));
 
         //parse "then" keyword
@@ -1119,7 +1109,8 @@ public class Parser
 
         //parse our body of statements
         StatementsBody(body, moduleName);
-        return new IfNode(boolExp, body, ElseAndElseIf(moduleName));
+        //return new IfNode(boolExp, body, ElseAndElseIf(moduleName));
+        return new IfNode(expression, body, ElseAndElseIf(moduleName));
     }
 
     private IfNode? ElseAndElseIf(string moduleName)
@@ -1166,7 +1157,14 @@ public class Parser
             return null;
 
         //parse the boolean expression
-        var boolExp = BooleanExpression(moduleName);
+        // var boolExp = BooleanExpression(moduleName);
+        var expression = Expression(moduleName);
+
+        if (expression == null)
+            throw new SyntaxErrorException(
+                "Expected a boolean expression at the end of the repeat.",
+                Peek(0)
+            );
 
         //make sure we put the body content on a new line
         RequiresEndOfLine();
@@ -1177,7 +1175,8 @@ public class Parser
         //parse the statments using the template
         StatementsBody(statements, moduleName);
 
-        return new WhileNode(boolExp, statements);
+        // return new WhileNode(boolExp, statements);
+        return new WhileNode(expression, statements);
     }
 
     /// <summary>
@@ -1218,9 +1217,11 @@ public class Parser
             throw new SyntaxErrorException("Expected an until to end the repeat.", Peek(0));
 
         //parse a boolean expression
-        var boolExp = BooleanExpression(moduleName);
+        // var boolExp = BooleanExpression(moduleName);
 
-        if (boolExp == null)
+        var expression = Expression(moduleName);
+
+        if (expression == null)
             throw new SyntaxErrorException(
                 "Expected a boolean expression at the end of the repeat.",
                 Peek(0)
@@ -1229,7 +1230,7 @@ public class Parser
         //make sure other statements are on lines following
         RequiresEndOfLine();
 
-        return new RepeatNode(boolExp, statements);
+        return new RepeatNode(expression, statements);
     }
 
     /// <summary>
@@ -1266,7 +1267,9 @@ public class Parser
             return null;
 
         //get the variable to be used for the for conditionals
-        var indexVariable = GetVariableUsagePlainNode(moduleName);
+        var indexVariable = GetVuopTestFlag()
+            ? GetVariableUsageNode(moduleName)
+            : GetVariableUsagePlainNode(moduleName);
         if (indexVariable == null)
             throw new SyntaxErrorException("Expected a variable in the for statement.", Peek(0));
 
@@ -1299,7 +1302,9 @@ public class Parser
 
         //parse the statements using our template
         StatementsBody(statements, moduleName);
-        return new ForNode(indexVariable, fromExp, toExp, statements);
+        return GetVuopTestFlag()
+            ? new ForNode(fromExp, toExp, statements, indexVariable)
+            : new ForNode((VariableUsagePlainNode)indexVariable, fromExp, toExp, statements);
     }
 
     /// <summary>

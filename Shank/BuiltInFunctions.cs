@@ -16,7 +16,18 @@ public class BuiltInFunctions
         var retVal = new List<BuiltInFunctionNode>
         {
             new BuiltInVariadicFunctionNode("write", Write),
-            new BuiltInVariadicFunctionNode("read", Read, false),
+            MakeNode(
+                "read",
+                [
+                    new VariableDeclarationNode()
+                    {
+                        Name = "input",
+                        Type = new StringType(),
+                        IsConstant = false
+                    }
+                ],
+                Read
+            ),
             new BuiltInVariadicFunctionNode("writeToTest", WriteToTest),
             MakeNode(
                 "squareRoot",

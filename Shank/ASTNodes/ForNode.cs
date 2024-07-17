@@ -11,15 +11,28 @@ public class ForNode : StatementNode
         VariableUsagePlainNode variable,
         ExpressionNode from,
         ExpressionNode to,
-        List<StatementNode> children,
-        VariableUsageNodeTemp? newVariable = null
+        List<StatementNode> children
     )
     {
         Variable = variable;
         From = from;
         To = to;
         Children = children;
-        NewVariable = newVariable ?? new VariableUsagePlainNode("empty", "default");
+        NewVariable = new VariableUsagePlainNode("emptyNewVariable", "default");
+    }
+
+    public ForNode(
+        ExpressionNode from,
+        ExpressionNode to,
+        List<StatementNode> children,
+        VariableUsageNodeTemp newVariable
+    )
+    {
+        Variable = new VariableUsagePlainNode("emptyOldVariable", "default");
+        From = from;
+        To = to;
+        Children = children;
+        NewVariable = newVariable;
     }
 
     // Copy constructor for monomorphization
