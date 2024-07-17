@@ -1449,9 +1449,9 @@ public class InvalidRecursiveTypeChecker : SAVisitor
             throw new SemanticErrorException(
                 recordCallStack is [var recordName]
                     ? $"""
-                   Record {recordName} is recursive.
-                   Shank does not allow you to do this without a reference.
-                   To fix this put a refersTo on the field of {recordName} that is recursive.
+                Record {recordName} is recursive.
+                Shank does not allow you to do this without a reference.
+                To fix this put a refersTo on the field of {recordName} that is recursive.
                 """
                     : $"""
                  Records {string.Join(", ", recordCallStack.Select(m => m.ToString()))} are mutually recursive
