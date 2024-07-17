@@ -153,6 +153,8 @@ class start
         mutator:
             x = value
     string y
+        mutator:
+            y = value
 
     start()
         x = 100
