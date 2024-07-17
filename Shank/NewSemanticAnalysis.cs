@@ -11,6 +11,7 @@ public class NewSemanticAnalysis
         // program.Walk(new UnknownTypesVisitor());
         // program.Walk(new TestVisitor());
 
+        program.Walk(new InvalidRecursiveTypeChecker());
         program.Walk(new VariableDeclarationVisitor());
         // program.Walk(new AssignmentVisitor());
         program.Walk(new BooleanExpressionNodeVisitor());

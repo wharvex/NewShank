@@ -152,7 +152,7 @@ public class EnumType(string name, string moduleName, List<string> variants) : T
 {
     public T Accept<T>(ITypeVisitor<T> v) => v.Visit(this);
 
-    public ModuleIndex MonomorphizedIndex => new ModuleIndex(new NamedIndex(name), moduleName);
+    public ModuleIndex MonomorphizedIndex => new(new NamedIndex(Name), ModuleName);
 
     public string Name { get; } = name;
     public string ModuleName { get; } = moduleName;
@@ -162,7 +162,7 @@ public class EnumType(string name, string moduleName, List<string> variants) : T
 
     public int GetElementNum(string name)
     {
-        foreach (var (param, index) in variants.Select((param, index) => (param, index)))
+        foreach (var (param, index) in Variants.Select((param, index) => (param, index)))
         {
             if (param == name)
                 return index;
@@ -208,7 +208,7 @@ public class RecordType(
 
     // TODO: should this print newlines for each member as it does not get used by any other Type.ToString
     public override string ToString() =>
-        $"{Name}{(generics.Count == 0 ? "" : $"generic {string.Join(", ", Generics)}")}";
+        $"{Name}{(Generics.Count == 0 ? "" : $"generic {string.Join(", ", Generics)}")}";
 } // records need to keep the types of their members along with any generics they declare
 
 public readonly record struct ArrayType(Type Inner, Range Range) : RangeType // arrays have only one inner type

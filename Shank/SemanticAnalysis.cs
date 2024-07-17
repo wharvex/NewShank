@@ -1407,7 +1407,6 @@ public class SemanticAnalysis
 
     public static void AssignNestedTypes()
     {
-        Dictionary<(string, string), RecordNode> resolvedRecords = new();
         foreach (var module in Modules.Values)
         {
             foreach (var record in module.Records.Values)
