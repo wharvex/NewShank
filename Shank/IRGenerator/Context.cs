@@ -9,11 +9,12 @@ public struct CFuntions
     public CFuntions(LLVMModuleRef llvmModule)
     {
         var sizeT = LLVMTypeRef.Int32;
+        var charStar = LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0);
         printf = llvmModule.addFunction(
             "printf",
             LLVMTypeRef.CreateFunction(
                 sizeT,
-                [LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0)],
+                [charStar],
                 true
             )
         );
@@ -43,6 +44,11 @@ public struct CFuntions
             LLVMTypeRef.CreateFunction(voidStar, [voidStar, sizeT])
         );
         realloc.Linkage = LLVMLinkage.LLVMExternalLinkage;
+        memcmp = llvmModule.addFunction(
+            "memcmp",
+            LLVMTypeRef.CreateFunction(LLVMTypeRef.Int32, [charStar, charStar, sizeT])
+        );
+        memcmp.Linkage = LLVMLinkage.LLVMExternalLinkage;
     }
 
     //  int printf(const char *restrict format, ...);
@@ -63,6 +69,10 @@ public struct CFuntions
 
     // void *realloc(void *ptr, size_t size);
     public LLVMFunction realloc { get; }
+
+    // we use memcmp as opposed to str*cmp to not have to deal with null termination
+    // int strncmp(const char* lhs, const char* rhs, size_t count );
+    public LLVMFunction memcmp { get; }
 }
 
 public class Context(MonomorphizedProgramNode moduleNode, CFuntions cFuntions)
