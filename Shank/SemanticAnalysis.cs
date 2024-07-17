@@ -1452,12 +1452,12 @@ public class SemanticAnalysis
         return member switch
         {
             UnknownType u => ResolveType(u, module, generics, genericCollector),
-            ReferenceType(UnknownType u) => handleReferenceType(u),
-            ArrayType(UnknownType u, Range r) => HandleArrayType(u, r),
+            ReferenceType(var u) => handleReferenceType(u),
+            ArrayType(var u, Range r) => HandleArrayType(u, r),
             _ => member
         };
 
-        Type handleReferenceType(UnknownType type)
+        Type handleReferenceType(Type type)
         {
             var resolvedType = ResolveType(type, module, generics, genericCollector);
             if (resolvedType is not (RecordType or InstantiatedType or GenericType))
@@ -1471,7 +1471,7 @@ public class SemanticAnalysis
             return new ReferenceType(resolvedType);
         }
 
-        Type HandleArrayType(UnknownType t, Range r)
+        Type HandleArrayType(Type t, Range r)
         {
             var resolvedType = ResolveType(t, module, generics, genericCollector);
             return new ArrayType(resolvedType, r);
