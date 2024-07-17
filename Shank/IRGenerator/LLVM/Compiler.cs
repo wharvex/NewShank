@@ -16,6 +16,8 @@ public enum Types
 
 public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef module)
 {
+    private readonly LLVMTypeRef _charStar = LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0);
+
     public void DebugRuntime(string format, LLVMValueRef value)
     {
         builder.BuildCall2(
@@ -37,16 +39,17 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
             IntNode intNode => CompileInteger(intNode),
             MathOpNode mathOpNode => CompileMathExpression(mathOpNode),
             StringNode stringNode => CompileString(stringNode),
+            // TODO: recursive variable usage with variable usage node hierarchy
             // VariableUsageIndexNode variableUsageIndexNode => Visit(),
             // VariableUsageMemberNode variableUsageMemberNode => Visit(),
+            // VariableUsageNodeTemp variableUsageNodeTemp => Visit(),
             VariableUsagePlainNode variableUsagePlainNode
                 => CompileVariableUsage(variableUsagePlainNode, load),
-            // VariableUsageNodeTemp variableUsageNodeTemp => Visit(),
             _ => throw new ArgumentOutOfRangeException(nameof(expression))
         };
     }
 
-    private Types _types(LLVMTypeRef typeRef)
+    private static Types _types(LLVMTypeRef typeRef)
     {
         if (typeRef == LLVMTypeRef.Int64 || typeRef == LLVMTypeRef.Int8)
             return Types.INTEGER;
@@ -60,42 +63,42 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
     }
 
     private LLVMValueRef HandleIntOp(
-        LLVMValueRef L, //L
-        MathOpNode.MathOpType Op, // OP
-        LLVMValueRef R //R
+        LLVMValueRef left, //L
+        MathOpNode.MathOpType operation, // OP
+        LLVMValueRef right //R
     )
     {
-        return Op switch
+        return operation switch
         {
-            MathOpNode.MathOpType.Plus => builder.BuildAdd(L, R, "addtmp"),
-            MathOpNode.MathOpType.Minus => builder.BuildSub(L, R, "subtmp"),
-            MathOpNode.MathOpType.Times => builder.BuildMul(L, R, "multmp"),
-            MathOpNode.MathOpType.Divide => builder.BuildSDiv(L, R, "divtmp"),
-            MathOpNode.MathOpType.Modulo => builder.BuildURem(L, R, "modtmp"),
+            MathOpNode.MathOpType.Plus => builder.BuildAdd(left, right, "addtmp"),
+            MathOpNode.MathOpType.Minus => builder.BuildSub(left, right, "subtmp"),
+            MathOpNode.MathOpType.Times => builder.BuildMul(left, right, "multmp"),
+            MathOpNode.MathOpType.Divide => builder.BuildSDiv(left, right, "divtmp"),
+            MathOpNode.MathOpType.Modulo => builder.BuildURem(left, right, "modtmp"),
             _ => throw new Exception("unsupported operation")
         };
     }
 
     private LLVMValueRef HandleFloatOp(
-        LLVMValueRef L, //L
-        MathOpNode.MathOpType Op, // OP
-        LLVMValueRef R //R
+        LLVMValueRef left, //L
+        MathOpNode.MathOpType operation, // OP
+        LLVMValueRef right //R
     )
     {
-        return Op switch
+        return operation switch
         {
-            MathOpNode.MathOpType.Plus => builder.BuildFAdd(L, R, "addtmp"),
-            MathOpNode.MathOpType.Minus => builder.BuildFSub(L, R, "subtmp"),
-            MathOpNode.MathOpType.Times => builder.BuildFMul(L, R, "multmp"),
-            MathOpNode.MathOpType.Divide => builder.BuildFDiv(L, R, "divtmp"),
+            MathOpNode.MathOpType.Plus => builder.BuildFAdd(left, right, "addtmp"),
+            MathOpNode.MathOpType.Minus => builder.BuildFSub(left, right, "subtmp"),
+            MathOpNode.MathOpType.Times => builder.BuildFMul(left, right, "multmp"),
+            MathOpNode.MathOpType.Divide => builder.BuildFDiv(left, right, "divtmp"),
             _ => throw new Exception("unsupported operation")
         };
     }
 
-    private LLVMValueRef HandleString(LLVMValueRef L, LLVMValueRef R)
+    private LLVMValueRef HandleString(LLVMValueRef leftString, LLVMValueRef rightString)
     {
-        var lSize = builder.BuildExtractValue(L, 1);
-        var rSize = builder.BuildExtractValue(R, 1);
+        var lSize = builder.BuildExtractValue(leftString, 1);
+        var rSize = builder.BuildExtractValue(rightString, 1);
         var newSize = builder.BuildAdd(lSize, rSize);
         // allocate enough (or perhaps in the future more than enough) space, for the concatenated string
         // I think this has to be heap allocated, because we can assign this to an out parameter of a function, and we would then lose it if it was stack allocated
@@ -108,7 +111,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         builder.BuildCall2(
             context.CFuntions.memcpy.TypeOf,
             context.CFuntions.memcpy.Function,
-            [newContent, builder.BuildExtractValue(L, 0), lSize]
+            [newContent, builder.BuildExtractValue(leftString, 0), lSize]
         );
         // fill the second part of the string
         // first "increment" the pointer of the string to be after the contents of the first part
@@ -116,11 +119,11 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         builder.BuildCall2(
             context.CFuntions.memcpy.TypeOf,
             context.CFuntions.memcpy.Function,
-            [secondPart, builder.BuildExtractValue(R, 0), rSize]
+            [secondPart, builder.BuildExtractValue(rightString, 0), rSize]
         );
         var String = LLVMValueRef.CreateConstStruct(
             [
-                LLVMValueRef.CreateConstNull(LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0)),
+                LLVMValueRef.CreateConstNull(_charStar),
                 LLVMValueRef.CreateConstNull(LLVMTypeRef.Int32),
             ],
             false
@@ -131,21 +134,21 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
     }
 
     private LLVMValueRef HandleIntBoolOp(
-        LLVMValueRef L, //L
-        LLVMIntPredicate Op, // OP
-        LLVMValueRef R //R
+        LLVMValueRef left, //L
+        LLVMIntPredicate comparer, // OP
+        LLVMValueRef right //R
     )
     {
-        return builder.BuildICmp(Op, L, R);
+        return builder.BuildICmp(comparer, left, right);
     }
 
     private LLVMValueRef HandleFloatBoolOp(
-        LLVMValueRef L, //L
-        LLVMRealPredicate Op, // OP
-        LLVMValueRef R //R
+        LLVMValueRef left, //L
+        LLVMRealPredicate comparer, // OP
+        LLVMValueRef right //R
     )
     {
-        return builder.BuildFCmp(Op, L, R);
+        return builder.BuildFCmp(comparer, left, right);
     }
 
     private LLVMValueRef CompileInteger(IntNode node)
@@ -196,7 +199,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         builder.BuildUnreachable();
     }
 
-    public LLVMValueRef CompileEnum(VariableUsagePlainNode node)
+    private LLVMValueRef CompileEnum(VariableUsagePlainNode node)
     {
         return CompileExpression(node.Extension);
     }
@@ -210,25 +213,23 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
 
         LLVMValue value = context.GetVariable(node.MonomorphizedName());
 
-        var varaiable = node.ExtensionType switch
+        var variable = node.ExtensionType switch
         {
             VariableUsagePlainNode.VrnExtType.ArrayIndex => CompileArrayUsage(node, value),
 
             VariableUsagePlainNode.VrnExtType.RecordMember => CompileRecordUsage(node, value),
-            // VariableUsagePlainNode.VrnExtType.Enum => CompileEnum(node, value),
 
-            VariableUsagePlainNode.VrnExtType.None
-                => value,
+            VariableUsagePlainNode.VrnExtType.None => value,
         };
-        return load ? CopyVariable(varaiable) : varaiable.ValueRef;
+        return load ? CopyVariable(variable) : variable.ValueRef;
     }
 
-    private LLVMValueRef CopyVariable(LLVMValue varaiable)
+    private LLVMValueRef CopyVariable(LLVMValue variable)
     {
-        // not happening (should happen during semantic analysis) check for unitizialized access when doing this load
-        // TODO: copy everything recursivly
-        var value = builder.BuildLoad2(varaiable.TypeRef.TypeRef, varaiable.ValueRef);
-        return CopyVariable(varaiable.TypeRef, value);
+        // not happening (should happen during semantic analysis) check for uninitialized access when doing this load
+        // TODO: copy everything recursively
+        var value = builder.BuildLoad2(variable.TypeRef.TypeRef, variable.ValueRef);
+        return CopyVariable(variable.TypeRef, value);
     }
 
     private LLVMValueRef CopyVariable(LLVMType type, LLVMValueRef value) =>
@@ -292,7 +293,6 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         LLVMStruct varType = (LLVMStruct)value;
         var varField = (VariableUsagePlainNode)node.GetExtensionSafe();
         var dataType = varType.GetTypeOf(varField.Name);
-        // var fieldType = (LLVMTypeRef)context.GetLLVMTypeFromShankType(dataType);
         var structField = builder.BuildStructGEP2(
             value.TypeRef.TypeRef,
             value.ValueRef,
@@ -357,7 +357,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         );
     }
 
-    public LLVMValueRef CompileString(StringNode node)
+    private LLVMValueRef CompileString(StringNode node)
     {
         var stringLength = LLVMValueRef.CreateConstInt(
             module.Context.Int32Type,
@@ -381,7 +381,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         );
         var String = LLVMValueRef.CreateConstStruct(
             [
-                LLVMValueRef.CreateConstNull(LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0)),
+                LLVMValueRef.CreateConstNull(_charStar),
                 LLVMValueRef.CreateConstNull(LLVMTypeRef.Int32),
             ],
             false
@@ -391,32 +391,33 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         return String;
     }
 
-    public LLVMValueRef CompileMathExpression(MathOpNode node)
+    private LLVMValueRef CompileMathExpression(MathOpNode node)
     {
-        LLVMValueRef R = CompileExpression(node.Right);
-        LLVMValueRef L = CompileExpression(node.Left);
+        var left = CompileExpression(node.Left);
+        var right = CompileExpression(node.Right);
         // TODO: don't use _types, once we add types to ExpressionNode
-        var types = _types(L.TypeOf);
+        var types = _types(left.TypeOf);
         return types switch
         {
-            Types.INTEGER => HandleIntOp(L, node.Op, R),
-            Types.FLOAT => HandleFloatOp(L, node.Op, R),
-            Types.STRING => HandleString(L, R),
+            Types.INTEGER => HandleIntOp(left, node.Op, right),
+            Types.FLOAT => HandleFloatOp(left, node.Op, right),
+            Types.STRING => HandleString(left, right),
             _ => throw new NotImplementedException()
         };
     }
 
-    public LLVMValueRef CompileBooleanExpression(BooleanExpressionNode node)
+    private LLVMValueRef CompileBooleanExpression(BooleanExpressionNode node)
     {
-        LLVMValueRef R = CompileExpression(node.Right);
-        LLVMValueRef L = CompileExpression(node.Left);
+        var left = CompileExpression(node.Left);
+        var right = CompileExpression(node.Right);
+        // TODO: string and boolean, and enum equality character comparison
         // TODO: don't use _types, once we add types to ExpressionNode
-        var types = _types(L.TypeOf);
+        var types = _types(left.TypeOf);
         return types switch
         {
             Types.INTEGER
                 => HandleIntBoolOp(
-                    L,
+                    left,
                     node.Op switch
                     {
                         BooleanExpressionNode.BooleanExpressionOpType.eq
@@ -432,11 +433,11 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
                         BooleanExpressionNode.BooleanExpressionOpType.ge
                             => LLVMIntPredicate.LLVMIntSGE,
                     },
-                    R
+                    right
                 ),
             Types.FLOAT
                 => HandleFloatBoolOp(
-                    L,
+                    left,
                     node.Op switch
                     {
                         BooleanExpressionNode.BooleanExpressionOpType.eq
@@ -452,29 +453,22 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
                         BooleanExpressionNode.BooleanExpressionOpType.ge
                             => LLVMRealPredicate.LLVMRealOGE,
                     },
-                    R
+                    right
                 ),
             _ => throw new NotImplementedException()
         };
     }
 
-    public void CompileRecord(RecordNode node)
+    private void CompileRecord(RecordNode node)
     {
-        // this cannot be done from the prototype becuase we cannot attach llvm types to Type without putting dependency of llvm for the Types file
+        // this cannot be done from the prototype because we cannot attach llvm types to Type without putting dependency of llvm for the Types file
         // also we do not know the order by which types are added to the llvm module
         var record = context.Records[node.Type.MonomorphizedIndex];
         var members = node.Type.Fields.Select(
             s =>
                 (
                     s.Key,
-                    // This is now longer case: we are assuming that (mutaully) recursive records are behind a refersTo
-                    // for records (and eventually references) we do not hold the actual type of the record, but rather a pointer to it, because llvm does not like direct recursive types
-                    // s.Value is RecordType
-                    //     ? LLVMTypeRef.CreatePointer(
-                    //         (LLVMTypeRef)context.GetLLVMTypeFromShankType(s.Value)!,
-                    //         0
-                    //     )
-                    //     :
+                    // we are assuming that (mutually) recursive records are behind a refersTo (which already has a level of indirection, so we don't have to worry about llvm being cranky about recursive structs)
                     context.GetLLVMTypeFromShankType(s.Value)
                 )
         )
@@ -483,17 +477,17 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         record.TypeRef.StructSetBody(members.Select(s => s.Value.TypeRef).ToArray(), false);
     }
 
-    public void CompileFunctionCall(FunctionCallNode node)
+    private void CompileFunctionCall(FunctionCallNode node)
     {
         {
             var function = context.GetFunction(node.MonomphorizedFunctionLocater);
 
             var parameters = node.Arguments.Zip(function.Parameters.Select(p => p.Mutable))
                 .Select(
-                    (arguementAndMutability) =>
+                    argumentAndMutability =>
                         CompileExpression(
-                            arguementAndMutability.First,
-                            !arguementAndMutability.Second
+                            argumentAndMutability.First,
+                            !argumentAndMutability.Second
                         )
                 );
             // function.
@@ -501,7 +495,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         }
     }
 
-    public void CompileFunction(FunctionNode node)
+    private void CompileFunction(FunctionNode node)
     {
         var function = context.GetFunction(node.MonomorphizedName);
         context.CurrentFunction = function;
@@ -527,7 +521,6 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
             else
             {
                 var llvmParam = function.GetParam((uint)index);
-                var name = param.GetNameSafe();
                 var parameter = context.NewVariable(param.Type)(
                     llvmParam, //a
                     !param.IsConstant
@@ -540,11 +533,11 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
 
         node.LocalVariables.ForEach(CompileVariableDeclaration);
         node.Statements.ForEach(CompileStatement);
-        builder.BuildRet(LLVMValueRef.CreateConstInt(module.Context.Int32Type, 0));
+        builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
         context.ResetLocal();
     }
 
-    public void CompileWhile(WhileNode node)
+    private void CompileWhile(WhileNode node)
     {
         var whileCond = context.CurrentFunction.AppendBasicBlock("while.cond");
         var whileBody = context.CurrentFunction.AppendBasicBlock("while.body");
@@ -607,7 +600,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         // so is it's an if statement, and since we compile
         // if statements recursively, like how we parse them
         // we know that we already created the block for the
-        // else statement, when compiling the if part
+        // else statement, when compiling the if part,
         // so we just compile the statements in the else block
         // if the condition is not null we compile the condition,
         // create two blocks one for if it's true, and for when the condition is false
@@ -658,7 +651,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
     private void CompileVariableDeclaration(VariableDeclarationNode node)
     {
         var name = node.GetNameSafe();
-        // only alloca when !isConstant (is somewhat problametic with structs)
+        // only alloca when !isConstant (is somewhat problematic with structs)
 
         var llvmTypeFromShankType = context.GetLLVMTypeFromShankType(node.Type);
         LLVMValueRef v = builder.BuildAlloca(
@@ -734,17 +727,15 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
 
         // create the actual constant array of bytes corresponding to the string
         var stringContent = module.Context.GetConstString(s.Value, false);
-        // hold the array in seperate global, so that we can gep it as a pointer (you can't gep a raw array)
+        // hold the array in separate global, so that we can gep it as a pointer (you can't gep a raw array)
         var stringVariable = module.AddGlobal(stringContent.TypeOf, s.Value + "Content");
         stringVariable.Initializer = stringContent;
         // now gep the array which is the global variable, this is done to convert the array to an i8*
+        var int32 = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0);
         stringContent = LLVMValueRef.CreateConstInBoundsGEP2(
             stringContent.TypeOf,
             stringVariable,
-            [
-                LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0),
-                LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0)
-            ]
+            [int32, int32]
         );
 
         var size = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, (ulong)s.Value.Length);
@@ -756,7 +747,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         var forStart = context.CurrentFunction.AppendBasicBlock("for.start");
         var afterFor = context.CurrentFunction.AppendBasicBlock("for.after");
         var forBody = context.CurrentFunction.AppendBasicBlock("for.body");
-        var forIncremnet = context.CurrentFunction.AppendBasicBlock("for.inc");
+        var forIncrement = context.CurrentFunction.AppendBasicBlock("for.inc");
         var mutableCurrentIterable = CompileExpression(node.Variable, false);
         var fromValue = CompileExpression(node.From);
         builder.BuildStore(fromValue, mutableCurrentIterable);
@@ -777,8 +768,8 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         builder.BuildCondBr(condition, forBody, afterFor);
         builder.PositionAtEnd(forBody);
         node.Children.ForEach(CompileStatement);
-        builder.BuildBr(forIncremnet);
-        builder.PositionAtEnd(forIncremnet);
+        builder.BuildBr(forIncrement);
+        builder.PositionAtEnd(forIncrement);
 
         var incremented = builder.BuildAdd(
             currentIterable,
@@ -845,14 +836,14 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
     {
         // TODO: should read keep the \n
         var output = function.Function.FirstParam;
-        var read_bb = module.Context.AppendBasicBlock(function.Function, "read char");
-        var reallocate_bb = module.Context.AppendBasicBlock(function.Function, "reallocate");
-        var check_done_bb = module.Context.AppendBasicBlock(function.Function, "check done");
-        var done_bb = module.Context.AppendBasicBlock(function.Function, "done");
+        var readBb = module.Context.AppendBasicBlock(function.Function, "read char");
+        var reallocateBb = module.Context.AppendBasicBlock(function.Function, "reallocate");
+        var checkDoneBb = module.Context.AppendBasicBlock(function.Function, "check done");
+        var doneBb = module.Context.AppendBasicBlock(function.Function, "done");
         // init part
         var size = builder.BuildAlloca(LLVMTypeRef.Int32);
         builder.BuildStore(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 128), size);
-        var content = builder.BuildAlloca(LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0));
+        var content = builder.BuildAlloca(_charStar);
         builder.BuildStore(
             builder.BuildCall2(
                 context.CFuntions.malloc.TypeOf,
@@ -862,10 +853,11 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
             content
         );
         var index = builder.BuildAlloca(LLVMTypeRef.Int32);
-        builder.BuildStore(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0), index);
+        var int32 = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0);
+        builder.BuildStore(int32, index);
         // read part
-        builder.BuildBr(read_bb);
-        builder.PositionAtEnd(read_bb);
+        builder.BuildBr(readBb);
+        builder.PositionAtEnd(readBb);
         var read = builder.BuildCall2(
             context.CFuntions.getchar.TypeOf,
             context.CFuntions.getchar.Function,
@@ -877,53 +869,44 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
             loadedIndex,
             builder.BuildLoad2(LLVMTypeRef.Int32, size)
         );
-        builder.BuildCondBr(reallocate, reallocate_bb, check_done_bb);
+        builder.BuildCondBr(reallocate, reallocateBb, checkDoneBb);
         // reallocation
-        builder.PositionAtEnd(reallocate_bb);
-        var newSize = builder.BuildLShr(
-            builder.BuildLoad2(LLVMTypeRef.Int32, size),
-            LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 1)
-        );
+        builder.PositionAtEnd(reallocateBb);
+        var int33 = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 1);
+        var newSize = builder.BuildLShr(builder.BuildLoad2(LLVMTypeRef.Int32, size), int33);
         var newContent = builder.BuildCall2(
             context.CFuntions.realloc.TypeOf,
             context.CFuntions.realloc.Function,
-            [builder.BuildLoad2(LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0), content), newSize]
+            [builder.BuildLoad2(_charStar, content), newSize]
         );
         builder.BuildStore(newContent, content);
         builder.BuildStore(newSize, size);
-        builder.BuildBr(check_done_bb);
+        builder.BuildBr(checkDoneBb);
         // updating string and checking if we are done
-        builder.PositionAtEnd(check_done_bb);
+        builder.PositionAtEnd(checkDoneBb);
         var current = builder.BuildInBoundsGEP2(
             LLVMTypeRef.Int8,
-            builder.BuildLoad2(LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0), content),
+            builder.BuildLoad2(_charStar, content),
             [loadedIndex]
         );
         builder.BuildStore(read, current);
-        builder.BuildStore(
-            builder.BuildAdd(loadedIndex, LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 1)),
-            index
-        );
+        builder.BuildStore(builder.BuildAdd(loadedIndex, int33), index);
         var isNewline = builder.BuildICmp(
             LLVMIntPredicate.LLVMIntEQ,
             read,
             LLVMValueRef.CreateConstInt(LLVMTypeRef.Int8, '\n')
         );
-        builder.BuildCondBr(isNewline, done_bb, read_bb);
-        builder.PositionAtEnd(done_bb);
+        builder.BuildCondBr(isNewline, doneBb, readBb);
+        builder.PositionAtEnd(doneBb);
         var newString = LLVMType.StringType.Undef;
-        newString = builder.BuildInsertValue(
-            newString,
-            builder.BuildLoad2(LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0), content),
-            0
-        );
+        newString = builder.BuildInsertValue(newString, builder.BuildLoad2(_charStar, content), 0);
         newString = builder.BuildInsertValue(
             newString,
             builder.BuildLoad2(LLVMTypeRef.Int32, size),
             1
         );
         builder.BuildStore(newString, output);
-        builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
+        builder.BuildRet(int32);
     }
 
     private void CompileBuiltinHigh(LLVMShankFunction function)
@@ -974,7 +957,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
 
     private void CompileBuiltinAllocateMemory(LLVMShankFunction function)
     {
-        // TODO: do refernces need to keep their size for `size` builtin?
+        // TODO: do references need to keep their size for `size` builtin?
         var param = function.Function.FirstParam;
 
         var type = (LLVMReferenceType)function.Parameters.First().Type;
@@ -1010,23 +993,24 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         );
         builder.BuildFree(memory);
 
+        var int32 = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0);
         var newReference = LLVMValueRef.CreateConstStruct(
             [
                 LLVMValueRef.CreateConstNull(
                     LLVMTypeRef.CreatePointer(llvmTypeOfReferenceInner, 0)
                 ),
-                LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0),
+                int32,
                 LLVMValueRef.CreateConstInt(LLVMTypeRef.Int1, 0)
             ],
             false
         );
         builder.BuildStore(newReference, param);
-        builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
+        builder.BuildRet(int32);
     }
 
-    private LLVMValueRef HandleEnum(LLVMValueRef valueRef, List<string> list, int Index = 0)
+    private LLVMValueRef HandleEnum(LLVMValueRef valueRef, List<string> list, int index = 0)
     {
-        if (Index >= list.Count)
+        if (index >= list.Count)
         {
             return builder.BuildSelect(
                 builder.BuildICmp(
@@ -1042,11 +1026,11 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         return builder.BuildSelect(
             builder.BuildICmp(
                 LLVMIntPredicate.LLVMIntEQ,
-                LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, (ulong)Index),
+                LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, (ulong)index),
                 valueRef
             ),
-            builder.BuildGlobalStringPtr(list[Index]),
-            HandleEnum(valueRef, list, Index + 1)
+            builder.BuildGlobalStringPtr(list[index]),
+            HandleEnum(valueRef, list, index + 1)
         );
     }
 
@@ -1117,7 +1101,6 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
                     _ => throw new NotImplementedException(n.First.ToString())
                 };
             }
-            ;
         }
     }
 
@@ -1131,7 +1114,8 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         var length = function.Function.GetParam(2);
         var resultString = function.Function.GetParam(3);
         index = builder.BuildIntCast(index, LLVMTypeRef.Int32);
-        var indexZero = builder.BuildSub(index, LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 1));
+        var int32 = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 1);
+        var indexZero = builder.BuildSub(index, int32);
         var indexOutOfBoundsBlock = module.Context.AppendBasicBlock(
             context.CurrentFunction.Function,
             "out of bounds"
@@ -1142,11 +1126,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         );
         var stringLength = builder.BuildExtractValue(someString, 1);
         var outOfBounds = builder.BuildOr(
-            builder.BuildICmp(
-                LLVMIntPredicate.LLVMIntSLT,
-                index,
-                LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 1)
-            ),
+            builder.BuildICmp(LLVMIntPredicate.LLVMIntSLT, index, int32),
             builder.BuildICmp(LLVMIntPredicate.LLVMIntSGT, index, stringLength)
         );
 
@@ -1165,7 +1145,7 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
             context.CurrentFunction.Function,
             "in bounds"
         );
-        // we use index zero because when we substring we start at index and go for length characters (start..=start+length) so the first character we take is the start and we will have length - 1 characters left
+        // we use index zero because when we substring, we start at index and go for length characters (start...=start+length) so the first character we take is the start, and we will have length - 1 characters left
         var outOfBoundsWithLength = builder.BuildICmp(
             LLVMIntPredicate.LLVMIntSGT,
             builder.BuildAdd(indexZero, builder.BuildIntCast(length, LLVMTypeRef.Int32)),
@@ -1196,12 +1176,9 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         var length32 = builder.BuildIntCast(length, LLVMTypeRef.Int32);
         var resultString = function.Function.GetParam(2);
         var stringLength = builder.BuildExtractValue(someString, 1);
+        var int32 = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0);
         var toBigLength = builder.BuildOr(
-            builder.BuildICmp(
-                LLVMIntPredicate.LLVMIntSLT,
-                length32,
-                LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0)
-            ),
+            builder.BuildICmp(LLVMIntPredicate.LLVMIntSLT, length32, int32),
             builder.BuildICmp(LLVMIntPredicate.LLVMIntSGT, length32, stringLength)
         );
         var toBigLengthBlock = module.Context.AppendBasicBlock(
@@ -1219,11 +1196,11 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
             [length, stringLength]
         );
         builder.PositionAtEnd(goodLengthBlock);
-        // substring starting string.lenth - length
+        // substring starting string.length - length
         var index = builder.BuildIntCast(length, LLVMTypeRef.Int32);
         index = builder.BuildSub(stringLength, index);
         SubString(someString, index, length, resultString);
-        builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
+        builder.BuildRet(int32);
     }
 
     private void CompileBuiltinLeft(LLVMShankFunction function)
@@ -1233,12 +1210,9 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         var length32 = builder.BuildIntCast(length, LLVMTypeRef.Int32);
         var resultString = function.Function.GetParam(2);
         var stringLength = builder.BuildExtractValue(someString, 1);
+        var int32 = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0);
         var toBigLength = builder.BuildOr(
-            builder.BuildICmp(
-                LLVMIntPredicate.LLVMIntSLT,
-                length32,
-                LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0)
-            ),
+            builder.BuildICmp(LLVMIntPredicate.LLVMIntSLT, length32, int32),
             builder.BuildICmp(LLVMIntPredicate.LLVMIntSGT, length32, stringLength)
         );
         var toBigLengthBlock = module.Context.AppendBasicBlock(
@@ -1257,16 +1231,11 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
         );
         builder.PositionAtEnd(goodLengthBlock);
 
-        SubString(
-            someString,
-            LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0),
-            length,
-            resultString
-        );
-        builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
+        SubString(someString, int32, length, resultString);
+        builder.BuildRet(int32);
     }
 
-    // index passed in are zero based (must be 32 bit integers)
+    // index passed in are zero based (must be 32-bit integers)
     // bounds must be checked beforehand (so each string manipulation method can give its own specific errors)
     private void SubString(
         LLVMValueRef someString,
@@ -1288,20 +1257,20 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
             context.CFuntions.memcpy.Function,
             [newContent, subString, length]
         );
-        var String = LLVMValueRef.CreateConstStruct(
+        var newString = LLVMValueRef.CreateConstStruct(
             [
-                LLVMValueRef.CreateConstNull(LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0)),
+                LLVMValueRef.CreateConstNull(_charStar),
                 LLVMValueRef.CreateConstNull(LLVMTypeRef.Int32),
             ],
             false
         );
-        String = builder.BuildInsertValue(String, newContent, 0);
-        String = builder.BuildInsertValue(
-            String,
+        newString = builder.BuildInsertValue(newString, newContent, 0);
+        newString = builder.BuildInsertValue(
+            newString,
             builder.BuildIntCast(length, LLVMTypeRef.Int32),
             1
         );
-        builder.BuildStore(String, resultString);
+        builder.BuildStore(newString, resultString);
     }
 
     private void CompileBuiltinRealToInteger(LLVMShankFunction function)

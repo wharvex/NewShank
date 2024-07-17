@@ -14,14 +14,14 @@ public class PrototypeCompiler(Context context, LLVMBuilderRef builder, LLVMModu
         );
     }
 
-    public void CompileFunctionPrototype(FunctionNode node)
+    private void CompileFunctionPrototype(FunctionNode node)
     {
         var fnRetTy = module.Context.Int32Type;
         var parameters = node.ParameterVariables.Select(
             s => new LLVMParameter(context.GetLLVMTypeFromShankType(s.Type), !s.IsConstant)
         )
             .ToList();
-        node.Name = (node.Name.Equals("start") ? "main" : node.Name);
+        node.Name = node.Name.Equals("start") ? "main" : node.Name;
         var function = module.addFunction(
             node.Name,
             LLVMTypeRef.CreateFunction(
@@ -49,21 +49,17 @@ public class PrototypeCompiler(Context context, LLVMBuilderRef builder, LLVMModu
         context.AddFunction((TypedModuleIndex)node.MonomorphizedName, function);
     }
 
-    public void CompileRecordPrototype(RecordNode node)
+    private void CompileRecordPrototype(RecordNode node)
     {
         var llvmRecord = module.Context.CreateNamedStruct(node.Name);
         var record = new LLVMStructType(node.Name, llvmRecord);
         context.Records.Add(node.Type.MonomorphizedIndex, record);
     }
 
-    public void CompilePrototypeGlobalVariable(VariableDeclarationNode node)
+    private void CompilePrototypeGlobalVariable(VariableDeclarationNode node)
     {
         var type = context.GetLLVMTypeFromShankType(node.Type);
         var a = module.AddGlobal(type.TypeRef, node.GetNameSafe());
-        // a.Linkage = LLVMLinkage.LLVMExternalLinkage;
-        // a.Linkage = LLVMLinkage.LLVMCommonLinkage;
-        // a.SetAlignment(4);
-        // a.Initializer = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, 0);
         var variable = context.NewVariable(node.Type);
         a.Initializer = LLVMValueRef.CreateConstNull(type.TypeRef);
         context.AddVariable(node.MonomorphizedName(), variable(a, !node.IsConstant));
@@ -80,32 +76,8 @@ public class PrototypeCompiler(Context context, LLVMBuilderRef builder, LLVMModu
 
     private void CompileEnumPrototype(EnumNode obj)
     {
-        // var llvmRecord = module.Context.CreateNamedStruct(node.Name);
         var enumType = new LLVMEnumType(obj.TypeName, obj.EType.Variants);
         context.Enums.Add(obj.EType.MonomorphizedIndex, enumType);
-
-        // var variable = context.NewVariable(obj.EType);
-
-        // foreach (
-        //     var (param, index) in obj.EnumElementsVariables.Select((param, index) => (param, index))
-        // )
-        // {
-        //     var a = module.AddGlobal(LLVMTypeRef.Int64, param.GetNameSafe());
-        //     // a.Linkage = LLVMLinkage.LLVMExternalLinkage;
-        //     // a.Linkage = LLVMLinkage.LLVMCommonLinkage;
-        //     // a.SetAlignment(4);
-        //     // a.Initializer = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, 0);
-        //     // var variable = context.NewVariable(node.Type);
-        //     a.Initializer = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, (ulong)index);
-        //     context.AddVariable(param.MonomorphizedName(), variable(a, false));
-        // }
-
-        // context.AddVariable(
-        //     obj.EType.MonomorphizedIndex(),
-        //     variable(LLVMValueRef.CreateConstNull(LLVMTypeRef.Int64), false)
-        // );
-
-        // context.Records.Add(node.Type.MonomorphizedIndex, record);
     }
 
     private void CompileBuiltinFunctionPrototype(BuiltInFunctionNode node)
@@ -117,7 +89,7 @@ public class PrototypeCompiler(Context context, LLVMBuilderRef builder, LLVMModu
         )
             .ToList();
 
-        node.Name = (node.Name.Equals("start") ? "main" : node.Name);
+        node.Name = node.Name.Equals("start") ? "main" : node.Name;
 
         var function = module.addFunction(
             node.Name,

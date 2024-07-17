@@ -3,7 +3,7 @@ using LLVMSharp.Interop;
 namespace Shank.IRGenerator;
 
 /// <summary>
-/// container for Varaibles (we need a type and refrence)
+/// container for Variables (we need a type and reference)
 /// </summary>
 public abstract class LLVMValue(LLVMValueRef valueRef, bool isMutable, LLVMType typeRef)
 {

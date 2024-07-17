@@ -69,32 +69,15 @@ public class Context(MonomorphizedProgramNode moduleNode, CFuntions cFuntions)
 {
     private readonly MonomorphizedProgramNode moduleNode = moduleNode;
 
-    // public LLVMTypeRef StringType = LLVMTypeRef.CreateStruct(
-    //     [
-    //         LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0), // content
-    //         // LLVMTypeRef.Int32, // start
-    //         LLVMTypeRef.Int32 // size
-    //     ],
-    //     false
-    // );
-
-    // public ModuleNode moduleNode { get; set; }
     public CFuntions CFuntions { get; } = cFuntions;
     public LLVMFunction CurrentFunction { get; set; }
 
-    // public Dictionary<string, LLVMShankFunction> BuiltinFunctions { get; } = new();
-    public Dictionary<string, LLVMValue> Variables { get; set; } = new();
-    public Dictionary<ModuleIndex, LLVMValue> GlobalVariables { get; set; } = new();
-    public Dictionary<TypedBuiltinIndex, LLVMShankFunction> BuiltinFunctions { get; set; } = new();
-    public Dictionary<TypedModuleIndex, LLVMShankFunction> Functions { get; set; } = new();
+    private Dictionary<string, LLVMValue> Variables { get; set; } = [];
+    private Dictionary<ModuleIndex, LLVMValue> GlobalVariables { get; } = [];
+    public Dictionary<TypedBuiltinIndex, LLVMShankFunction> BuiltinFunctions { get; } = [];
+    private Dictionary<TypedModuleIndex, LLVMShankFunction> Functions { get; } = [];
     public Dictionary<TypedModuleIndex, LLVMStructType> Records { get; } = [];
     public Dictionary<ModuleIndex, LLVMEnumType> Enums { get; } = [];
-
-    // public void SetCurrentModule(string module) => CurrentModule = Modules[module];
-
-    // public Module CurrentModule { get; private set; }
-
-    // public Dictionary<string, Module> Modules = new();
 
     /// <summary>
     /// converts shank type to LLVM type
@@ -104,7 +87,6 @@ public class Context(MonomorphizedProgramNode moduleNode, CFuntions cFuntions)
     /// <returns></returns>
     public LLVMType GetLLVMTypeFromShankType(Type dataType)
     {
-        //broken with structs
         return dataType switch
         {
             IntegerType => new LLVMIntegerType(),
@@ -170,7 +152,7 @@ public class Context(MonomorphizedProgramNode moduleNode, CFuntions cFuntions)
     }
 
     /// <summary>
-    /// gets the varaible
+    /// gets the variable
     /// </summary>
     /// <param name="index"></param>
     /// <returns></returns>
@@ -187,7 +169,7 @@ public class Context(MonomorphizedProgramNode moduleNode, CFuntions cFuntions)
         }
         else
         {
-            throw new Exception($"undefined varname {index}");
+            throw new Exception($"undefined variable name {index}");
         }
     }
 
@@ -218,7 +200,7 @@ public class Context(MonomorphizedProgramNode moduleNode, CFuntions cFuntions)
     }
 
     /// <summary>
-    /// resets the Varaible dictionary run at the end of a function
+    /// resets the Variable dictionary run at the end of a function
     /// </summary>
     public void ResetLocal() => Variables = new();
 
@@ -230,10 +212,4 @@ public class Context(MonomorphizedProgramNode moduleNode, CFuntions cFuntions)
 
     public LLVMShankFunction GetFunction(Index name) =>
         name is TypedModuleIndex m ? Functions[m] : BuiltinFunctions[(TypedBuiltinIndex)name];
-
-    public LLVMType GetCustomType(Index nodeName) =>
-        nodeName is TypedModuleIndex m ? Records[m] : Enums[(ModuleIndex)nodeName];
-
-    // public void AddCustomType(string import, LLVMType value) =>
-    //     CurrentModule.CustomTypes[import] = value;
 }
