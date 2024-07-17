@@ -14,6 +14,16 @@ public interface Type // our marker interface anything that implements is known 
     public string ToString();
     public void Accept(InnerTypeGettingVisitor visitor) => visitor.Visit(this);
     public void Accept(IAstTypeVisitor visitor) => visitor.Visit(this);
+    public static Type Default => new DefaultType();
+}
+
+public readonly struct DefaultType : Type
+{
+    public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;
+
+    public T Accept<T>(ITypeVisitor<T> v) => v.Visit(this);
+
+    public override string ToString() => "default";
 }
 
 /// <summary>
@@ -355,7 +365,8 @@ public readonly record struct ReferenceType(Type Inner) : Type
             instantiate is InstantiatedType or GenericType
                 ? instantiate
                 : throw new SemanticErrorException(
-                    $"tried to use refersTo (dynamic memory management) on a non record type ",
+                    $"tried to use refersTo (dynamic memory management) on a non record type "
+                        + instantiate.GetType(),
                     null
                 )
         );

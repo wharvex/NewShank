@@ -80,7 +80,7 @@ public class AssignmentNode : StatementNode
 
         if (v is ExpressionTypingVisitor etv && etv.GetVuopTestFlag())
         {
-            NewTarget = (VariableUsageNodeTemp)NewTarget.Walk(v);
+            NewTarget = (VariableUsageNodeTemp)NewTarget.Walk(etv);
         }
         else
         {

@@ -283,9 +283,11 @@ public class InnerTypeGettingVisitor(VariableUsageNodeTemp vun) : IAstVisitor
             case ArrayType at:
                 InnerType = at.Inner;
                 break;
-            default:
-                InnerType = null;
+            case ReferenceType rt:
+                InnerType = rt.Inner;
                 break;
+            default:
+                throw new UnreachableException("Bad type for getting inner: " + t.GetType());
         }
     }
 }

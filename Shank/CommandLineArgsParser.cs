@@ -287,16 +287,13 @@ public class CommandLineArgsParser
                         .ForEach(ip => ScanAndParse(ip, program, options))
             );
         program.SetStartModule();
-        OutputHelper.DebugPrintAst(program, "pre-SA");
         SemanticAnalysis.ActiveInterpretOptions = options;
         BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
-
-        SemanticAnalysis.CheckModules(program);
 
         SAVisitor.ActiveInterpretOptions = options;
         // program.Walk(new ImportVisitor());
         // program.Walk(new RecordVisitor());
-        // program.Walk(new UnknownTypesVisitor());
+        program.Walk(new UnknownTypesVisitor());
         // program.Walk(new TestVisitor());
 
         // Some visiting.
@@ -306,9 +303,9 @@ public class CommandLineArgsParser
             ActiveInterpretOptions = options
         };
         program.Walk(vgVis);
-        OutputHelper.DebugPrintAst(program, "post-vgVis");
+        //program.Walk(etVis);
+        SemanticAnalysis.CheckModules(program);
         program.Walk(etVis);
-        OutputHelper.DebugPrintAst(program, "post-etVis");
 
         NewSemanticAnalysis.Run(program);
 

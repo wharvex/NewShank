@@ -6,7 +6,12 @@ namespace Shank.ASTNodes;
 
 public abstract class ExpressionNode : ASTNode
 {
-    public Type? Type { get; set; }
+    private Type? _type;
+    public Type Type
+    {
+        get => _type ?? Type.Default;
+        set => _type = value;
+    }
 
     public void Accept(IAstExpressionVisitor visitor) => visitor.Visit(this);
 
@@ -22,10 +27,9 @@ public abstract class ExpressionNode : ASTNode
     public override ASTNode Walk(WalkCompliantVisitor v)
     {
         var ret = v.Visit(this, out var shortCircuit);
+
         if (shortCircuit)
-        {
             return ret;
-        }
 
         return v.Final(this);
     }

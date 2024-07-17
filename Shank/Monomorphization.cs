@@ -402,6 +402,8 @@ public class MonomorphizationTypeVisitor(
     MonomorphizedProgramNode programNode
 ) : ITypeVisitor<Type>
 {
+    public Type Visit(DefaultType type) => type;
+
     public Type Visit(RealType type) => type;
 
     public Type Visit(RecordType type)

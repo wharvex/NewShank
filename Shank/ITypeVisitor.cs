@@ -14,4 +14,5 @@ public interface ITypeVisitor<out T>
     public T Visit(ReferenceType type);
     public T Visit(UnknownType type);
     public T Visit(GenericType type);
+    public T Visit(DefaultType type);
 }

@@ -93,6 +93,12 @@ public abstract class VariableUsageNodeTemp : ExpressionNode
         // Set t to the outermost type in the target's type structure.
         var t = outerType;
 
+        if (Line == 9)
+        {
+            OutputHelper.DebugPrintJson(this, "head_data_var");
+            OutputHelper.DebugPrintJson(t, "head_data_ty");
+        }
+
         // Ensure vun and type agree internally, and end up with t set to the type which the
         // assignment's "expression" (it's RHS) should be.
         while (true)

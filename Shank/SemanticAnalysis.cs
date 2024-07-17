@@ -360,24 +360,23 @@ public class SemanticAnalysis
 
     private static void NewCheckAssignment(
         string targetName,
-        Type targetType,
+        Type baseTargetType,
         ExpressionNode expression,
         Dictionary<string, VariableDeclarationNode> vDecs,
         VariableUsageNodeTemp target
     )
     {
-        var expressionType = GetTypeOfExpression(expression, vDecs);
-        if (!(target.Type ?? throw new InvalidOperationException()).Equals(expressionType))
+        if (!target.Type.Equals(expression.Type))
         {
             throw new SemanticErrorException(
                 "Type mismatch; cannot assign `"
                     + expression
                     + " : "
-                    + expressionType
+                    + expression.Type
                     + "' to `"
                     + targetName
                     + " : "
-                    + targetType
+                    + target.Type
                     + "'.",
                 expression
             );
