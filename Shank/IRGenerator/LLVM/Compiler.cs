@@ -457,34 +457,70 @@ public class Compiler(Context context, LLVMBuilderRef builder, LLVMModuleRef mod
                     right
                 ),
             // booleans can only be compared using equality
-            Types.BOOLEAN => builder.BuildICmp(node.Op is BooleanExpressionNode.BooleanExpressionOpType.eq ? LLVMIntPredicate.LLVMIntEQ : LLVMIntPredicate.LLVMIntNE, left, right),
+            Types.BOOLEAN
+                => builder.BuildICmp(
+                    node.Op is BooleanExpressionNode.BooleanExpressionOpType.eq
+                        ? LLVMIntPredicate.LLVMIntEQ
+                        : LLVMIntPredicate.LLVMIntNE,
+                    left,
+                    right
+                ),
             Types.STRING => HandleStringComparison(left, node.Op, right),
             _ => throw new NotImplementedException()
         };
     }
 
-    private LLVMValueRef HandleStringComparison(LLVMValueRef left, BooleanExpressionNode.BooleanExpressionOpType operation, LLVMValueRef right)
+    private LLVMValueRef HandleStringComparison(
+        LLVMValueRef left,
+        BooleanExpressionNode.BooleanExpressionOpType operation,
+        LLVMValueRef right
+    )
     {
         // string comparison is lexicographical unless the strings differ in size (in that case the bigger one is the one with a bigger size)
         var leftLength = builder.BuildExtractValue(left, 1);
         var rightLength = builder.BuildExtractValue(right, 1);
         var sizeDifference = builder.BuildSub(leftLength, rightLength);
-        var sameLength = builder.BuildICmp(LLVMIntPredicate.LLVMIntEQ, sizeDifference,
-            LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
-        var lexicographicDifference  =
-            builder.BuildCall2(context.CFuntions.memcmp.TypeOf, context.CFuntions.memcmp.Function, [builder.BuildExtractValue(left, 0), builder.BuildExtractValue(right, 0), 
-             builder.BuildSelect(builder.BuildICmp(LLVMIntPredicate.LLVMIntSLT, sizeDifference, LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0)), leftLength, rightLength)
-            ]);
-       var stringComparison = builder.BuildSelect(sameLength, lexicographicDifference, sizeDifference);
-       return builder.BuildICmp( operation switch {
-           BooleanExpressionNode.BooleanExpressionOpType.lt => LLVMIntPredicate.LLVMIntSLT,
-           BooleanExpressionNode.BooleanExpressionOpType.le => LLVMIntPredicate.LLVMIntSLE,
-           BooleanExpressionNode.BooleanExpressionOpType.gt => LLVMIntPredicate.LLVMIntSGT,
-           BooleanExpressionNode.BooleanExpressionOpType.ge => LLVMIntPredicate.LLVMIntSGE,
-           BooleanExpressionNode.BooleanExpressionOpType.eq => LLVMIntPredicate.LLVMIntEQ,
-           BooleanExpressionNode.BooleanExpressionOpType.ne => LLVMIntPredicate.LLVMIntNE,
-           _ => throw new ArgumentOutOfRangeException(nameof(operation), operation, null)
-       }, stringComparison, LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
+        var sameLength = builder.BuildICmp(
+            LLVMIntPredicate.LLVMIntEQ,
+            sizeDifference,
+            LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0)
+        );
+        var lexicographicDifference = builder.BuildCall2(
+            context.CFuntions.memcmp.TypeOf,
+            context.CFuntions.memcmp.Function,
+            [
+                builder.BuildExtractValue(left, 0),
+                builder.BuildExtractValue(right, 0),
+                builder.BuildSelect(
+                    builder.BuildICmp(
+                        LLVMIntPredicate.LLVMIntSLT,
+                        sizeDifference,
+                        LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0)
+                    ),
+                    leftLength,
+                    rightLength
+                )
+            ]
+        );
+        var stringComparison = builder.BuildSelect(
+            sameLength,
+            lexicographicDifference,
+            sizeDifference
+        );
+        return builder.BuildICmp(
+            operation switch
+            {
+                BooleanExpressionNode.BooleanExpressionOpType.lt => LLVMIntPredicate.LLVMIntSLT,
+                BooleanExpressionNode.BooleanExpressionOpType.le => LLVMIntPredicate.LLVMIntSLE,
+                BooleanExpressionNode.BooleanExpressionOpType.gt => LLVMIntPredicate.LLVMIntSGT,
+                BooleanExpressionNode.BooleanExpressionOpType.ge => LLVMIntPredicate.LLVMIntSGE,
+                BooleanExpressionNode.BooleanExpressionOpType.eq => LLVMIntPredicate.LLVMIntEQ,
+                BooleanExpressionNode.BooleanExpressionOpType.ne => LLVMIntPredicate.LLVMIntNE,
+                _ => throw new ArgumentOutOfRangeException(nameof(operation), operation, null)
+            },
+            stringComparison,
+            LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0)
+        );
     }
 
     private void CompileRecord(RecordNode node)

@@ -12,11 +12,7 @@ public struct CFuntions
         var charStar = LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0);
         printf = llvmModule.addFunction(
             "printf",
-            LLVMTypeRef.CreateFunction(
-                sizeT,
-                [charStar],
-                true
-            )
+            LLVMTypeRef.CreateFunction(sizeT, [charStar], true)
         );
         printf.Linkage = LLVMLinkage.LLVMExternalLinkage;
         // llvm does not like void pointers, so we most places I've seen use i8* instead
