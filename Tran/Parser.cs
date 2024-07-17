@@ -177,12 +177,14 @@ public class Parser
             if ((name = handler.MatchAndRemove(TokenType.WORD)) != null)
             {
                 thisClass = new ModuleNode(name.GetValue());
+                if (ParseInterfaceFunctions() == false)
+                {
+                    throw new Exception("Nothing enclosed within the interface");
+                }
                 return true;
             }
-
             throw new Exception("No name provided for interface");
         }
-
         return false;
     }
 
@@ -889,5 +891,79 @@ public class Parser
         }
 
         return GetTypeUsageFromToken(tokenType);
+    }
+
+    private bool ParseInterfaceFunctions()
+    {
+        while (handler.MoreTokens())
+        {
+            int currentLevel;
+            while (handler.MatchAndRemove(TokenType.NEWLINE) != null)
+            {
+                AcceptNewlines();
+                currentLevel = 0;
+                while (handler.MatchAndRemove(TokenType.TAB) != null)
+                {
+                    blockLevel++;
+                    currentLevel++;
+                }
+
+                if (currentLevel != blockLevel)
+                {
+                    break;
+                }
+            }
+            FunctionNode functionNode;
+            Token? function;
+            //debug
+            //Console.WriteLine("here");
+            List<VariableDeclarationNode> parameters;
+            var isPublic = handler.MatchAndRemove(TokenType.PRIVATE) == null;
+            var isShared = (isPublic && handler.MatchAndRemove(TokenType.SHARED) != null);
+
+            if ((function = handler.MatchAndRemove(TokenType.FUNCTION)) != null)
+            {
+                functionNode = new FunctionNode(function.GetValue(), thisClass.Name, isPublic);
+
+                thisClass.addFunction(functionNode);
+                if (isShared)
+                {
+                    sharedNames.AddLast(function.GetValue());
+                }
+
+                if (handler.MatchAndRemove(TokenType.OPENPARENTHESIS) != null)
+                {
+                    parameters = ParseParameters(true);
+                    if (handler.MatchAndRemove(TokenType.CLOSEDPARENTHESIS) == null)
+                        throw new Exception("Function declaration missing end parenthesis");
+                }
+                else
+                {
+                    throw new Exception("Function declaration missing open parenthesis");
+                }
+
+                if (handler.MatchAndRemove(TokenType.COLON) != null)
+                {
+                    parameters.AddRange(ParseParameters(false));
+                }
+
+                functionNode.ParameterVariables = parameters;
+                foreach (var parameter in functionNode.ParameterVariables)
+                {
+                    functionNode.VariablesInScope.Add(parameter.Name, parameter);
+                }
+
+                currentFunction = functionNode;
+                blockLevel--;
+                return true;
+            }
+            else
+            {
+                blockLevel--;
+                return false;
+            }
+        }
+        blockLevel--;
+        return false;
     }
 }
