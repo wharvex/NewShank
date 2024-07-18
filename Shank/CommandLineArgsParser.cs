@@ -291,25 +291,36 @@ public class CommandLineArgsParser
         BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
 
         SAVisitor.ActiveInterpretOptions = options;
-        // program.Walk(new ImportVisitor());
-        // program.Walk(new RecordVisitor());
-        program.Walk(new UnknownTypesVisitor());
-        // program.Walk(new TestVisitor());
-        var nuVis = new NestedUnknownTypesResolvingVisitor(SemanticAnalysis.ResolveType);
-        program.Walk(nuVis);
+        program.Walk(new ImportVisitor());
+        SemanticAnalysis.AreExportsDone = true;
+        SemanticAnalysis.AreImportsDone = true;
 
-        // Some visiting.
+        // This resolves unknown types.
+        //program.Walk(new RecordVisitor());
+
+        program.Walk(new UnknownTypesVisitor());
+        SemanticAnalysis.AreSimpleUnknownTypesDone = true;
+
+        // program.Walk(new TestVisitor());
+
+        // Create WalkCompliantVisitors.
+        var nuVis = new NestedUnknownTypesResolvingVisitor(SemanticAnalysis.ResolveType);
         var vgVis = new VariablesGettingVisitor();
         var etVis = new ExpressionTypingVisitor(SemanticAnalysis.GetTypeOfExpression)
         {
             ActiveInterpretOptions = options
         };
+
+        // Apply WalkCompliantVisitors.
+        program.Walk(nuVis);
+        SemanticAnalysis.AreNestedUnknownTypesDone = true;
         program.Walk(vgVis);
         program.Walk(etVis);
+
+        //Run old SA.
         OutputHelper.DebugPrintJson(program, "pre_old_sa");
         SemanticAnalysis.CheckModules(program);
         OutputHelper.DebugPrintJson(program, "post_old_sa");
-        //program.Walk(etVis);
 
         NewSemanticAnalysis.Run(program);
 

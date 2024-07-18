@@ -14,10 +14,23 @@ public class SemanticAnalysis
     public static Dictionary<string, ModuleNode>? Modules { get; set; }
     public static ModuleNode? StartModule { get; set; }
     public static InterpretOptions? ActiveInterpretOptions { get; set; }
+    public static bool AreSimpleUnknownTypesDone;
+    public static bool AreNestedUnknownTypesDone;
+    public static bool AreTestsDone;
+    public static bool AreExportsDone;
+    public static bool AreImportsDone;
 
     public static bool GetVuopTestFlag()
     {
         return ActiveInterpretOptions?.VuOpTest ?? false;
+    }
+
+    public static void DoIfNotDoneAndSetAreDone(Action a, ref bool areDone)
+    {
+        if (areDone)
+            return;
+        a();
+        areDone = true;
     }
 
     private static ProgramNode GetAstRootSafe() =>
@@ -1029,8 +1042,8 @@ public class SemanticAnalysis
         setStartModule();
         HandleExports();
         HandleImports();
-        handleUnknownTypes();
         AssignNestedTypes();
+        HandleUnknownTypes();
         handleTests();
         foreach (KeyValuePair<string, ModuleNode> module in Modules)
         {
@@ -1094,11 +1107,11 @@ public class SemanticAnalysis
     {
         Modules = pn.Modules;
         StartModule = pn.GetStartModuleSafe();
-        HandleExports();
-        HandleImports();
-        AssignNestedTypes();
-        handleUnknownTypes();
-        handleTests();
+        DoIfNotDoneAndSetAreDone(HandleExports, ref AreExportsDone);
+        DoIfNotDoneAndSetAreDone(HandleImports, ref AreImportsDone);
+        DoIfNotDoneAndSetAreDone(HandleUnknownTypes, ref AreSimpleUnknownTypesDone);
+        DoIfNotDoneAndSetAreDone(AssignNestedTypes, ref AreNestedUnknownTypesDone);
+        DoIfNotDoneAndSetAreDone(handleTests, ref AreTestsDone);
         foreach (KeyValuePair<string, ModuleNode> module in Modules)
         {
             if (module.Value.getName() == "default")
@@ -1274,7 +1287,7 @@ public class SemanticAnalysis
         }
     }
 
-    public static void handleUnknownTypes()
+    public static void HandleUnknownTypes()
     {
         foreach (KeyValuePair<string, ModuleNode> currentModule in Modules)
         {
