@@ -85,6 +85,59 @@ public abstract class VariableUsageNodeTemp : ExpressionNode
         return vc;
     }
 
+    public static Type GetTypeOfVariableUsage(
+        VariableUsageNodeTemp variableReferenceNode,
+        Dictionary<string, VariableDeclarationNode> variableDeclarations
+    )
+    {
+        return variableReferenceNode switch
+        {
+            VariableUsagePlainNode v
+                => (
+                    variableDeclarations.GetValueOrDefault(v.Name)
+                    ?? throw new SemanticErrorException(
+                        $"Variable {v.Name} not found",
+                        variableReferenceNode
+                    )
+                ).Type,
+            VariableUsageIndexNode iv
+                => SemanticAnalysis.GetTypeOfExpression(iv.Right, variableDeclarations)
+                is IntegerType
+                    ? GetTypeOfVariableUsage(iv.Left, variableDeclarations) switch
+                    {
+                        ArrayType a => a.Inner,
+                        var notAArrayType
+                            => throw new SemanticErrorException(
+                                $"cannot index non array type {notAArrayType}",
+                                variableReferenceNode
+                            )
+                    }
+                    : throw new SemanticErrorException(
+                        $"cannot index into array with non integer value {iv.Right}",
+                        variableReferenceNode
+                    ),
+            VariableUsageMemberNode mv
+                => GetTypeOfVariableUsage(mv.Left, variableDeclarations) switch
+                {
+                    InstantiatedType record
+                        => record.Inner.GetMember(mv.Right.Name, record.InstantiatedGenerics)
+                            ?? throw new SemanticErrorException(
+                                $"member {mv.Right.Name} is not declared for {record}"
+                            ),
+                    ReferenceType(InstantiatedType record)
+                        => record.Inner.GetMember(mv.Right.Name, record.InstantiatedGenerics)
+                            ?? throw new SemanticErrorException(
+                                $"member {mv.Right.Name} is not declared for {record}"
+                            ),
+                    var notARecord
+                        => throw new SemanticErrorException(
+                            $"cannot access non record type {notARecord}, with member {mv.Right.Name}",
+                            variableReferenceNode
+                        ),
+                },
+        };
+    }
+
     public Type GetInnerType(Type outerType, Dictionary<string, VariableDeclarationNode> vDecs)
     {
         // Get the innermost vun vc in this vun's structure, and vc's depth.
