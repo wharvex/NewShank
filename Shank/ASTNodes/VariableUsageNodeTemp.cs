@@ -120,7 +120,11 @@ public abstract class VariableUsageNodeTemp : ExpressionNode
                 return m.Left.GetMyType(dexInScope, exTyGetter) switch
                 {
                     InstantiatedType rec => rec.GetMemberSafe(m.Right.Name, m),
+
+                    // This is record deconstruction.
+                    // See: https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/functional/deconstruct#record-types
                     ReferenceType(InstantiatedType rec) => rec.GetMemberSafe(m.Right.Name, m),
+
                     var bad
                         => throw new SemanticErrorException(
                             "Only records can be dotted into. Found: " + bad.GetType(),
