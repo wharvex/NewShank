@@ -94,11 +94,12 @@ public static class IdtExtensions
             case ReferenceDataType referenceVal:
                 return new ReferenceDataType(
                         (
-                            referenceVal.Record ?? throw new InvalidOperationException()
+                            referenceVal.Record
+                            ?? throw new InvalidOperationException(referenceVal.ToString())
                         ).CopyAs<RecordDataType>(),
                         referenceVal.RecordType
                     ) as T
-                    ?? throw new InvalidOperationException();
+                    ?? throw new InvalidOperationException("T " + typeof(T) + " is not right.");
             default:
                 throw new NotImplementedException("Cannot copy type " + idt);
         }

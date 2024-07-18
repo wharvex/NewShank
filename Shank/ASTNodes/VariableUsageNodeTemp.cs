@@ -85,6 +85,55 @@ public abstract class VariableUsageNodeTemp : ExpressionNode
         return vc;
     }
 
+    // Adapted from Mendel's GetTypeOfVariableUsage.
+    public Type GetMyType(
+        Dictionary<string, VariableDeclarationNode> dexInScope,
+        Func<ExpressionNode, Dictionary<string, VariableDeclarationNode>, Type> exTyGetter
+    )
+    {
+        switch (this)
+        {
+            case VariableUsagePlainNode p:
+                if (!dexInScope.TryGetValue(p.Name, out var dec))
+                    throw new SemanticErrorException(
+                        "Only variables in scope can be used. Found: " + p.Name,
+                        p
+                    );
+                return dec.Type;
+            case VariableUsageIndexNode i:
+                var idxTy = exTyGetter(i.Right, dexInScope);
+                if (idxTy is not IntegerType)
+                    throw new SemanticErrorException(
+                        "Only integers can index into arrays. Found: " + idxTy.GetType(),
+                        i.Right
+                    );
+
+                var maybeArrRet = i.Left.GetMyType(dexInScope, exTyGetter);
+                if (maybeArrRet is ArrayType arrRet)
+                    return arrRet.Inner;
+
+                throw new SemanticErrorException(
+                    "Only arrays can be indexed into. Found: " + maybeArrRet.GetType(),
+                    i.Left
+                );
+            case VariableUsageMemberNode m:
+                return m.Left.GetMyType(dexInScope, exTyGetter) switch
+                {
+                    InstantiatedType rec => rec.GetMemberSafe(m.Right.Name, m),
+                    ReferenceType(InstantiatedType rec) => rec.GetMemberSafe(m.Right.Name, m),
+                    var bad
+                        => throw new SemanticErrorException(
+                            "Only records can be dotted into. Found: " + bad.GetType(),
+                            m
+                        )
+                };
+
+            default:
+                throw new UnreachableException();
+        }
+    }
+
+    // Mendel's version of GetInnerType.
     public static Type GetTypeOfVariableUsage(
         VariableUsageNodeTemp variableReferenceNode,
         Dictionary<string, VariableDeclarationNode> variableDeclarations
@@ -146,14 +195,6 @@ public abstract class VariableUsageNodeTemp : ExpressionNode
         // Set t to the outermost type in the target's type structure.
         var t = outerType;
 
-        if (Line == 9)
-        {
-            OutputHelper.DebugPrintJson(this, "head_data_var");
-            OutputHelper.DebugPrintJson(t, "head_data_ty");
-        }
-
-        // Ensure vun and type agree internally, and end up with t set to the type which the
-        // assignment's "expression" (it's RHS) should be.
         while (true)
         {
             // Back up through the vun structure (backward recursion).

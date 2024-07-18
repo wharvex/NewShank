@@ -216,6 +216,15 @@ public class RecordType(
         return member?.Instantiate(instantiatedGenerics);
     }
 
+    public Type GetMemberSafe(string memberName, Dictionary<string, Type> instGens, ASTNode cause)
+    {
+        return GetMember(memberName, instGens)
+            ?? throw new SemanticErrorException(
+                "Only existent members can be accessed. Found: " + memberName,
+                cause
+            );
+    }
+
     // TODO: should this print newlines for each member as it does not get used by any other Type.ToString
     public override string ToString() =>
         $"{Name}{(Generics.Count == 0 ? "" : $"generic {string.Join(", ", Generics)}")}";

@@ -921,7 +921,7 @@ public class SemanticAnalysis
             }
 
             vun.GetPlain().ReferencesGlobalVariable = vdn.IsGlobal;
-            return vun.GetInnerType(vdn.Type, vdnByName);
+            return vun.GetMyType(vdnByName, GetTypeOfExpression);
         }
     }
 
