@@ -295,6 +295,8 @@ public class CommandLineArgsParser
         // program.Walk(new RecordVisitor());
         program.Walk(new UnknownTypesVisitor());
         // program.Walk(new TestVisitor());
+        var nuVis = new NestedUnknownTypesResolvingVisitor(SemanticAnalysis.ResolveType);
+        program.Walk(nuVis);
 
         // Some visiting.
         var vgVis = new VariablesGettingVisitor();
@@ -303,9 +305,11 @@ public class CommandLineArgsParser
             ActiveInterpretOptions = options
         };
         program.Walk(vgVis);
-        //program.Walk(etVis);
-        SemanticAnalysis.CheckModules(program);
         program.Walk(etVis);
+        OutputHelper.DebugPrintJson(program, "pre_old_sa");
+        SemanticAnalysis.CheckModules(program);
+        OutputHelper.DebugPrintJson(program, "post_old_sa");
+        //program.Walk(etVis);
 
         NewSemanticAnalysis.Run(program);
 

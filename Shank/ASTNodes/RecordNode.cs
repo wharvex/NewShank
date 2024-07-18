@@ -1,4 +1,5 @@
 using Shank.ExprVisitors;
+using Shank.WalkCompliantVisitors;
 
 namespace Shank.ASTNodes;
 
@@ -83,5 +84,15 @@ public class RecordNode(
         }
 
         return v.PostWalk(this);
+    }
+
+    public override ASTNode Walk(WalkCompliantVisitor v)
+    {
+        var ret = v.Visit(this, out var shortCircuit);
+
+        if (shortCircuit)
+            return ret;
+
+        return v.Final(this);
     }
 }

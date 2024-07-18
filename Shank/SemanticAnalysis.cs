@@ -1436,7 +1436,7 @@ public class SemanticAnalysis
         }
     }
 
-    private static Type ResolveType(
+    public static Type ResolveType(
         Type member,
         ModuleNode module,
         List<string> generics,
