@@ -738,7 +738,9 @@ public class Compiler(
 
     private void CompileAssignment(AssignmentNode node)
     {
-        var llvmValue = options.VuOpTest ? context.GetVariable(node.NewTarget.GetPlain().MonomorphizedName()) : context.GetVariable(node.Target.MonomorphizedName());
+        var llvmValue = options.VuOpTest
+            ? context.GetVariable(node.NewTarget.GetPlain().MonomorphizedName())
+            : context.GetVariable(node.Target.MonomorphizedName());
         var expression = CompileExpression(node.Expression);
         var target = CompileExpression(options.VuOpTest ? node.NewTarget : node.Target, false);
         if (!llvmValue.IsMutable)
@@ -905,7 +907,10 @@ public class Compiler(
         var afterFor = context.CurrentFunction.AppendBasicBlock("for.after");
         var forBody = context.CurrentFunction.AppendBasicBlock("for.body");
         var forIncrement = context.CurrentFunction.AppendBasicBlock("for.inc");
-        var mutableCurrentIterable = CompileExpression(options.VuOpTest ? node.NewVariable : node.Variable, false);
+        var mutableCurrentIterable = CompileExpression(
+            options.VuOpTest ? node.NewVariable : node.Variable,
+            false
+        );
         var fromValue = CompileExpression(node.From);
         builder.BuildStore(fromValue, mutableCurrentIterable);
 
