@@ -11,6 +11,7 @@ namespace Tran
     {
         private static FunctionNode function;
         private static int index;
+
         public static Dictionary<string, ModuleNode> Walk(Dictionary<string, ModuleNode> modules)
         {
             VariableUsagePlainNode variableRef = new VariableUsagePlainNode("temp", "temp");
@@ -38,11 +39,9 @@ namespace Tran
                                 call.Arguments.Add(assignment.Expression);
                                 function.Statements[index] = call;
                             }
-                            assignment.Expression = WalkExpression(
-                                assignment.Expression,
-                                module,
-                                ref variableRef
-                            ) ?? assignment.Expression;
+                            assignment.Expression =
+                                WalkExpression(assignment.Expression, module, ref variableRef)
+                                ?? assignment.Expression;
                             AddAccessor(variableRef, module, assignment);
                         }
                         else if (statement.GetType() == typeof(FunctionCallNode))
@@ -50,11 +49,9 @@ namespace Tran
                             var call = (FunctionCallNode)statement;
                             for (int j = 0; j < call.Arguments.Count; j++)
                             {
-                                call.Arguments[j] = WalkExpression(
-                                    call.Arguments[j],
-                                    module,
-                                    ref variableRef
-                                ) ?? call.Arguments[j];
+                                call.Arguments[j] =
+                                    WalkExpression(call.Arguments[j], module, ref variableRef)
+                                    ?? call.Arguments[j];
                                 AddAccessor(variableRef, module, call);
                             }
                         }
@@ -80,14 +77,19 @@ namespace Tran
             return modules;
         }
 
-        private static void AddAccessor(VariableUsagePlainNode variableRef, ModuleNode module, StatementNode statement)
+        private static void AddAccessor(
+            VariableUsagePlainNode variableRef,
+            ModuleNode module,
+            StatementNode statement
+        )
         {
-            if (variableRef.Name != "temp" && !function.VariablesInScope.ContainsKey("_temp_" + variableRef.Name))
+            if (
+                variableRef.Name != "temp"
+                && !function.VariablesInScope.ContainsKey("_temp_" + variableRef.Name)
+            )
             {
                 function.Statements[index] = statement;
-                var accessor = new FunctionCallNode(
-                    "_" + variableRef.Name + "_accessor"
-                );
+                var accessor = new FunctionCallNode("_" + variableRef.Name + "_accessor");
                 accessor.Arguments.Add(variableRef);
                 function.Statements.Insert(index, accessor);
                 var tempVar = new VariableDeclarationNode(
@@ -111,11 +113,12 @@ namespace Tran
         {
             if (ifNode.Expression != null)
             {
-                ifNode.Expression = (BooleanExpressionNode?)WalkExpression(
-                    ifNode.Expression,
-                    module,
-                    ref variableRef
-                ) ?? ifNode.Expression;
+                ifNode.Expression =
+                    (BooleanExpressionNode?)WalkExpression(
+                        ifNode.Expression,
+                        module,
+                        ref variableRef
+                    ) ?? ifNode.Expression;
                 AddAccessor(variableRef, module, ifNode);
                 if (ifNode.NextIfNode != null)
                 {
