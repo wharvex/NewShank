@@ -48,6 +48,8 @@ public readonly record struct Range // the type that represents a type range in 
     // since this is just for characters should it be unsigned
     public static Range DefaultCharacter => new(byte.MinValue, byte.MaxValue);
 
+    public float Length { get; } = To - From;
+
     public override string ToString() => $"from {From} to {To}";
 }
 
@@ -260,12 +262,12 @@ public readonly record struct ArrayType(Type Inner, Range Range) : RangeType // 
 
     public void Accept(IArrayTypeVisitor visitor) => visitor.Visit(this);
 
-    public bool Equals(ArrayType other)
-    {
-        return other.Inner.Equals(Inner);
-    }
+    // public bool Equals(ArrayType other)
+    // {
+    //     return other.Inner.Equals(Inner) && other.Range == Range;
+    // }
 
-    public override int GetHashCode() => Inner.GetHashCode();
+    // public override int GetHashCode() => HashCode.Combine(Inner.GetHashCode(), Range.GetHashCode);
 
     public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) =>
         this with
@@ -273,8 +275,8 @@ public readonly record struct ArrayType(Type Inner, Range Range) : RangeType // 
             Inner = Inner.Instantiate(instantiatedGenerics)
         };
 
-    public ArrayType(Type inner, Range? range)
-        : this(inner, range ?? DefaultRange) { }
+    // public ArrayType(Type inner, Range? range)
+    //     : this(inner, range ?? DefaultRange) { }
 
     // We want to change this back to DefaultSmallInteger once we have better infrastructure in
     // place for verifying ranges with if-statements.

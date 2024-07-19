@@ -281,14 +281,15 @@ public class Compiler(
     {
         var value = CompileVariableUsageNew(node.Left);
         var newValue = (LLVMArray)value;
+        var arrayType = (LLVMArrayType)newValue.TypeRef;
+        var length = newValue.TypeRef.TypeRef.ArrayLength;
         var arrayInnerType = ((LLVMArray)value).Inner();
         var elementType = arrayInnerType.TypeRef;
-        var start = builder.BuildStructGEP2(newValue.TypeRef.TypeRef, value.ValueRef, 1);
-        start = builder.BuildLoad2(LLVMTypeRef.Int32, start);
+        var start = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, (uint)arrayType.Range.From);
 
         var index = builder.BuildIntCast(CompileExpression(node.Right), LLVMTypeRef.Int32);
-        var size = builder.BuildStructGEP2(newValue.TypeRef.TypeRef, value.ValueRef, 2);
-        size = builder.BuildLoad2(LLVMTypeRef.Int32, size);
+
+        var size = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, length);
         var indexOutOfBoundsBlock = module.Context.AppendBasicBlock(
             context.CurrentFunction.Function,
             "index out of bounds"
@@ -305,16 +306,15 @@ public class Compiler(
         builder.PositionAtEnd(indexOutOfBoundsBlock);
         // TODO: in the error say which side the index is out of bounds for
         Error(
-            $"Index %d is out of bounds, for array {node.GetPlain().Name} of type {newValue.Inner()}",
-            [index],
+            $"Index %d is out of bounds, for array {node.GetPlain().Name} of type {newValue.Inner()} of length {length} with the first index at {(int)arrayType.Range.From}",
+            [index, size],
             node
         );
         builder.PositionAtEnd(okIndexBlock);
-        var array = builder.BuildStructGEP2(newValue.TypeRef.TypeRef, value.ValueRef, 0);
-        var a = builder.BuildLoad2(LLVMTypeRef.CreatePointer(elementType, 0), array);
+        var array = value.ValueRef;
         index = builder.BuildSub(index, start);
-        a = builder.BuildInBoundsGEP2(elementType, a, [index]);
-        return arrayInnerType.IntoValue(a, value.IsMutable);
+        array = builder.BuildInBoundsGEP2(elementType, array, [index]);
+        return arrayInnerType.IntoValue(array, value.IsMutable);
     }
 
     private LLVMValueRef CopyVariable(LLVMValue variable)
@@ -400,12 +400,12 @@ public class Compiler(
         var newValue = (LLVMArray)value;
         var arrayInnerType = ((LLVMArray)value).Inner();
         var elementType = arrayInnerType.TypeRef;
-        var start = builder.BuildStructGEP2(newValue.TypeRef.TypeRef, value.ValueRef, 1);
-        start = builder.BuildLoad2(LLVMTypeRef.Int32, start);
+        var arrayType = (LLVMArrayType)newValue.TypeRef;
+        var length = newValue.TypeRef.TypeRef.ArrayLength;
+        var start = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, (uint)arrayType.Range.From);
 
         var index = builder.BuildIntCast(CompileExpression(node.Extension), LLVMTypeRef.Int32);
-        var size = builder.BuildStructGEP2(newValue.TypeRef.TypeRef, value.ValueRef, 2);
-        size = builder.BuildLoad2(LLVMTypeRef.Int32, size);
+        var size = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, length);
         var indexOutOfBoundsBlock = module.Context.AppendBasicBlock(
             context.CurrentFunction.Function,
             "index out of bounds"
@@ -422,16 +422,15 @@ public class Compiler(
         builder.PositionAtEnd(indexOutOfBoundsBlock);
         // TODO: in the error say which side the index is out of bounds for
         Error(
-            $"Index %d is out of bounds, for array {node.Name} of type {newValue.Inner()}",
-            [index],
+            $"Index %d is out of bounds, for array {node.Name} of type {newValue.Inner()} of length %d",
+            [index, start],
             node
         );
         builder.PositionAtEnd(okIndexBlock);
-        var array = builder.BuildStructGEP2(newValue.TypeRef.TypeRef, value.ValueRef, 0);
-        var a = builder.BuildLoad2(LLVMTypeRef.CreatePointer(elementType, 0), array);
+        var array = value.ValueRef;
         index = builder.BuildSub(index, start);
-        a = builder.BuildInBoundsGEP2(elementType, a, [index]);
-        return arrayInnerType.IntoValue(a, value.IsMutable);
+        array = builder.BuildInBoundsGEP2(elementType, array, [index]);
+        return arrayInnerType.IntoValue(array, value.IsMutable);
     }
 
     private LLVMValueRef CompileCharacter(CharNode node)
@@ -813,6 +812,7 @@ public class Compiler(
         // only alloca when !isConstant (is somewhat problematic with structs)
 
         var llvmTypeFromShankType = context.GetLLVMTypeFromShankType(node.Type);
+        Console.WriteLine(llvmTypeFromShankType.TypeRef);
         LLVMValueRef v = builder.BuildAlloca(
             // isVar is false, because we are already creating it using alloca which makes it var
             llvmTypeFromShankType.TypeRef,
@@ -825,25 +825,25 @@ public class Compiler(
         }
 
         // TODO: preallocate arrays in records to (might need to be recursive)
-        if (node.Type is ArrayType a && llvmTypeFromShankType is LLVMArrayType shankType)
-        {
-            var arraySize = LLVMValueRef.CreateConstInt(
-                LLVMTypeRef.Int32,
-                (ulong)(a.Range.To - a.Range.From)
-            );
-            var arrayStart = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, (ulong)a.Range.From);
-            var arrayAllocation = builder.BuildArrayAlloca(shankType.Inner.TypeRef, arraySize);
-            var array = builder.BuildInsertValue(
-                LLVMValueRef.CreateConstStruct(
-                    [LLVMValueRef.CreateConstNull(arrayAllocation.TypeOf), arrayStart, arraySize],
-                    false
-                ),
-                arrayAllocation,
-                0
-            );
-            builder.BuildStore(array, v);
-        }
-
+        // if (node.Type is ArrayType a && llvmTypeFromShankType is LLVMArrayType shankType)
+        // {
+        //     var arraySize = LLVMValueRef.CreateConstInt(
+        //         LLVMTypeRef.Int32,
+        //         (ulong)(a.Range.To - a.Range.From)
+        //     );
+        //     // var arrayStart = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, (ulong)a.Range.From);
+        //     var arrayAllocation = builder.BuildArrayAlloca(shankType.Inner.TypeRef, arraySize);
+        //     // var array = builder.BuildInsertValue(
+        //     //     LLVMValueRef.CreateConstStruct(
+        //             // [LLVMValueRef.CreateConstNull(arrayAllocation.TypeOf), arrayStart, arraySize],
+        //             // false
+        //     //     ),
+        //     //     arrayAllocation,
+        //     //     0
+        //     // );
+        //     builder.BuildStore(arrayAllocation, v);
+        // }
+        //
         // TODO: NewVariableCalls GetLLVMTypeForShankType even though in order to allocate we need to already know the type so we call the aforementioned function,
         // maybe the aforementioned function should take a function that takes a type and gives back an LLVMValueRef (so it would work here, but also for parameters)
         var variable = context.NewVariable(node.Type);
@@ -1223,10 +1223,11 @@ public class Compiler(
                 LLVMEnumType => "%s",
                 LLVMRealType => "%.2f",
                 LLVMStringType => "%.*s",
-                // LLVMArray Array => ,
+                LLVMArrayType Array
+                    => $"[ {string.Join(", ", Enumerable.Repeat(GetFormatCode(Array.Inner), (int)Array.Range.Length).Take(15))} ] ",
                 LLVMStructType record
                     => $"{record.Name}: [ {string.Join(", ", record
-                        .Members.Select(member => $"{member.Key}: {GetFormatCode(member.Value)}"))} ]",
+                        .Members.Select(member => $"{member.Key} = {GetFormatCode(member.Value)}"))} ]",
                 // TODO: print only one level
                 LLVMReferenceType reference => $"refersTo {reference.Inner.Name}",
                 _
@@ -1239,6 +1240,7 @@ public class Compiler(
         IEnumerable<LLVMValueRef> GetValues((LLVMType First, LLVMValueRef Second) n)
         {
             {
+                Console.WriteLine(n);
                 return n.First switch
                 {
                     LLVMEnumType e => [HandleEnum(n.Second, e.Variants)],
@@ -1266,6 +1268,16 @@ public class Compiler(
                                 )
                         ),
                     LLVMReferenceType => [],
+                    LLVMArrayType array
+                        => Enumerable
+                            .Range(0, (int)array.Range.Length)
+                            .Take(15)
+                            .SelectMany(
+                                i =>
+                                    GetValues(
+                                        (array.Inner, builder.BuildExtractValue(n.Second, (uint)i))
+                                    )
+                            ),
                     _ => throw new NotImplementedException(n.First.ToString())
                 };
             }

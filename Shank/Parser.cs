@@ -874,17 +874,12 @@ public class Parser
         Token? arrayToken
     )
     {
-        var range = CheckRangeInner(NormalRangeVerifier, ArrayType.DefaultRange);
-        if (
-            range is null
-            && declarationContext == VariableDeclarationNode.DeclarationContext.VariablesLine
-        )
-        {
-            throw new SyntaxErrorException(
+        var range =
+            CheckRangeInner(NormalRangeVerifier, ArrayType.DefaultRange)
+            ?? throw new SyntaxErrorException(
                 "Array in variables declared without a size",
                 arrayToken
             );
-        }
 
         var _ =
             MatchAndRemove(Token.TokenType.Of)

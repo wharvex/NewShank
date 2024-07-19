@@ -63,13 +63,10 @@ public readonly record struct LLVMStringType : LLVMType
         new LLVMString(llvmValue, mutable);
 }
 
-public readonly record struct LLVMArrayType(LLVMType Inner) : LLVMType
+public readonly record struct LLVMArrayType(LLVMType Inner, Range Range) : LLVMType
 {
     public LLVMTypeRef TypeRef =>
-        LLVMTypeRef.CreateStruct(
-            [LLVMTypeRef.CreatePointer(Inner.TypeRef, 0), LLVMTypeRef.Int32, LLVMTypeRef.Int32],
-            false
-        );
+        LLVMTypeRef.CreateArray(Inner.TypeRef, (uint)(Range.To - Range.From));
 
     public LLVMValue IntoValue(LLVMValueRef llvmValue, bool mutable) =>
         new LLVMArray(llvmValue, mutable, this);
