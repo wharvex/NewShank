@@ -11,6 +11,7 @@ public abstract class InterpreterDataType
 {
     public abstract override string ToString();
     public abstract void FromString(string input);
+    public static InterpreterDataType Default => new DefaultDataType();
 }
 
 public class IntDataType : InterpreterDataType
@@ -166,7 +167,7 @@ public class ReferenceDataType : InterpreterDataType
         RecordType = rn;
     }
 
-    public ReferenceDataType(RecordDataType rdt, InstantiatedType it)
+    public ReferenceDataType(RecordDataType? rdt, InstantiatedType it)
     {
         Record = rdt;
         RecordType = it;
@@ -371,5 +372,18 @@ public class RecordDataType : InterpreterDataType
     public Type GetMemberType(string rmVrnName)
     {
         return MemberTypes.Inner.GetMember(rmVrnName, MemberTypes.InstantiatedGenerics);
+    }
+}
+
+public class DefaultDataType : InterpreterDataType
+{
+    public override string ToString()
+    {
+        return "default";
+    }
+
+    public override void FromString(string input)
+    {
+        throw new NotImplementedException();
     }
 }

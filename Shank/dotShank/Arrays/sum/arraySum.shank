@@ -28,7 +28,7 @@ variables arr3: array from 0 to 30 of integer
 	arraySum arr3, 5
 	
 
-define arraySum(arr: array of integer; finalIdx : integer)
+define arraySum(arr: array from 0 to 30 of integer; finalIdx : integer)
 variables total, num, i : integer
 	total := 0
 	i := 0

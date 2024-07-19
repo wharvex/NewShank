@@ -554,12 +554,25 @@ public class BuiltInFunctions
 
     public static void AllocateMemory(List<InterpreterDataType> parameters)
     {
-        if (parameters[0] is ReferenceDataType rdt)
+        if (parameters.TryGetIdt(0, out var maybeRefDt) && maybeRefDt is ReferenceDataType refDt)
         {
-            rdt.Record = new RecordDataType(rdt.RecordType);
+            refDt.Record = (RecordDataType)refDt.RecordType.ToIdt();
+            refDt.Record.Value = refDt
+                .Record.getMemberTypes()
+                .Select(
+                    kvp => new KeyValuePair<string, object>(kvp.Key, kvp.Value.ToIdtDangerous(null))
+                )
+                .ToDictionary();
+            return;
         }
-        else
-            throw new Exception("Can only allocate memory for record pointers.");
+
+        //if (
+        //    parameters.TryGetIdt(1, out var failSilently)
+        //    && failSilently is BooleanDataType { Value: true }
+        //)
+        //    return;
+
+        throw new Exception("Can only allocate memory for record pointers.");
     }
 
     public static void FreeMemory(List<InterpreterDataType> parameters)
