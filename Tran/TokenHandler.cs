@@ -39,6 +39,17 @@ public class TokenHandler
         return null;
     }
 
+    public void PrintRemainingTokens()
+    {
+        int count = 0;
+        int total = tokens.Count;
+        while (count < tokens.Count)
+        {
+            Console.Write(tokens.ElementAt(count));
+            count++;
+        }
+    }
+
     //to debug
     public void PrintToken(Token token)
     {
