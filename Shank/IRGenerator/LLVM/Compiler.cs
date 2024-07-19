@@ -1226,8 +1226,8 @@ public class Compiler(
                 LLVMArrayType Array
                     => $"[ {string.Join(", ", Enumerable.Repeat(GetFormatCode(Array.Inner), (int)Array.Range.Length).Take(15))} ] ",
                 LLVMStructType record
-                    => $"{record.Name}: [ {string.Join(", ", record
-                        .Members.Select(member => $"{member.Key} = {GetFormatCode(member.Value)}"))} ]",
+                    => $"{record.Name}: {{ {string.Join(", ", record
+                        .Members.Select(member => $"{member.Key} = {GetFormatCode(member.Value)}"))} }}",
                 // TODO: print only one level
                 LLVMReferenceType reference => $"refersTo {reference.Inner.Name}",
                 _
