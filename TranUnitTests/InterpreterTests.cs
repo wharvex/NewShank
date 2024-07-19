@@ -164,7 +164,7 @@ class start
         }
 
         [TestMethod]
-        public void InterpreterTestAccessors()
+        public void InterpreterTestAccessorAssignment()
         {
             InitializeInterpreter(
                 @"
@@ -175,7 +175,74 @@ class start
 
     start()
         number a
-        a = x + 10".Replace("    ", "\t")
+        a = x + 10
+        a = a + x + 100 + (x*2)
+        a = (x+(x+x)+x)".Replace("    ", "\t")
+            );
+            RunInterpreter();
+        }
+
+        [TestMethod]
+        public void InterpreterTestAccessorFunctionCall()
+        {
+            InitializeInterpreter(
+                @"
+class start
+    number x
+        accessor:
+            value = 100
+    number y
+        accessor:
+            value = 99
+
+    start()
+        doStuff(x, y)
+
+    doStuff(number a, number b)
+        number c
+        c = a + b".Replace("    ", "\t")
+            );
+            RunInterpreter();
+        }
+
+        [TestMethod]
+        public void InterpreterTestAccessorLoop()
+        {
+            InitializeInterpreter(
+                @"
+class start
+    number x
+        accessor:
+            value = 100
+
+    start()
+        number sum
+        loop x.times()
+            sum = sum + x".Replace("    ", "\t")
+            );
+            RunInterpreter();
+        }
+
+        [TestMethod]
+        public void InterpreterTestAccessorIf()
+        {
+            InitializeInterpreter(
+                @"
+class start
+    number x
+        accessor:
+            value = 100
+
+    start()
+        number a
+        a = 100
+        if x == a
+            a = 50
+        else if x == 50
+            a = 25
+        else if x == (x+100)
+            a = 10
+        ".Replace("    ", "\t")
             );
             RunInterpreter();
         }

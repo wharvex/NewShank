@@ -9,20 +9,23 @@ namespace Tran
 {
     public class TranAnalysis
     {
+        private static FunctionNode function;
+        private static int index;
         public static Dictionary<string, ModuleNode> Walk(Dictionary<string, ModuleNode> modules)
         {
             VariableUsagePlainNode variableRef = new VariableUsagePlainNode("temp", "temp");
             foreach (var module in modules.Values)
             {
-                foreach (FunctionNode function in module.Functions.Values)
+                foreach (FunctionNode functionNode in module.Functions.Values)
                 {
+                    function = functionNode;
                     if (function.Name[0] == '_')
                         continue;
-                    for (int i = 0; i < function.Statements.Count; i++)
+                    for (index = 0; index < function.Statements.Count; index++)
                     {
                         //TODO: replace "variable = ..." with actually replacing the variable reference with accessor call
                         //Unsure how to do that since function call is a statement not an expression
-                        var statement = function.Statements[i];
+                        var statement = function.Statements[index];
 
                         if (statement.GetType() == typeof(AssignmentNode))
                         {
@@ -33,64 +36,43 @@ namespace Tran
                                     "_" + assignment.Target.Name + "_mutator"
                                 );
                                 call.Arguments.Add(assignment.Expression);
-                                function.Statements[i] = call;
+                                function.Statements[index] = call;
                             }
                             assignment.Expression = WalkExpression(
                                 assignment.Expression,
                                 module,
                                 ref variableRef
-                            );
-                            if (variableRef.Name != "temp")
-                            {
-                                function.Statements[i] = assignment;
-                                var accessor = new FunctionCallNode(
-                                    "_" + variableRef.Name + "_accessor"
-                                );
-                                accessor.Arguments.Add(variableRef);
-                                function.Statements.Insert(i, accessor);
-                                var tempVar = new VariableDeclarationNode(
-                                    false,
-                                    variableRef.Type,
-                                    "_temp_" + variableRef.Name,
-                                    module.Name,
-                                    false
-                                );
-                                function.VariablesInScope.Add(tempVar.Name, tempVar);
-                                function.LocalVariables.Add(tempVar);
-                                i++;
-                            }
+                            ) ?? assignment.Expression;
+                            AddAccessor(variableRef, module, assignment);
                         }
                         else if (statement.GetType() == typeof(FunctionCallNode))
                         {
                             var call = (FunctionCallNode)statement;
                             for (int j = 0; j < call.Arguments.Count; j++)
                             {
-                                var expression = WalkExpression(
+                                call.Arguments[j] = WalkExpression(
                                     call.Arguments[j],
                                     module,
                                     ref variableRef
-                                );
-                                if (expression != null)
-                                {
-                                    call.Arguments[j] = expression;
-                                }
+                                ) ?? call.Arguments[j];
+                                AddAccessor(variableRef, module, call);
                             }
-                            function.Statements[i] = call;
                         }
                         else if (statement.GetType() == typeof(WhileNode))
                         {
                             var loop = (WhileNode)statement;
-                            ((WhileNode)function.Statements[i]).Expression =
-                                (BooleanExpressionNode)WalkExpression(
+                            ((WhileNode)function.Statements[index]).Expression =
+                                (BooleanExpressionNode?)WalkExpression(
                                     loop.Expression,
                                     module,
                                     ref variableRef
-                                );
+                                ) ?? ((WhileNode)function.Statements[index]).Expression;
+                            AddAccessor(variableRef, module, loop);
                         }
                         else if (statement.GetType() == typeof(IfNode))
                         {
                             var ifNode = (IfNode)statement;
-                            function.Statements[i] = WalkIf(ifNode, module, ref variableRef);
+                            WalkIf(ifNode, module, ref variableRef);
                         }
                     }
                 }
@@ -98,7 +80,30 @@ namespace Tran
             return modules;
         }
 
-        private static IfNode? WalkIf(
+        private static void AddAccessor(VariableUsagePlainNode variableRef, ModuleNode module, StatementNode statement)
+        {
+            if (variableRef.Name != "temp" && !function.VariablesInScope.ContainsKey("_temp_" + variableRef.Name))
+            {
+                function.Statements[index] = statement;
+                var accessor = new FunctionCallNode(
+                    "_" + variableRef.Name + "_accessor"
+                );
+                accessor.Arguments.Add(variableRef);
+                function.Statements.Insert(index, accessor);
+                var tempVar = new VariableDeclarationNode(
+                    false,
+                    variableRef.Type,
+                    "_temp_" + variableRef.Name,
+                    module.Name,
+                    false
+                );
+                function.VariablesInScope.Add(tempVar.Name, tempVar);
+                function.LocalVariables.Add(tempVar);
+                index++;
+            }
+        }
+
+        private static void WalkIf(
             IfNode ifNode,
             ModuleNode module,
             ref VariableUsagePlainNode variableRef
@@ -106,18 +111,17 @@ namespace Tran
         {
             if (ifNode.Expression != null)
             {
-                ifNode.Expression = (BooleanExpressionNode)WalkExpression(
+                ifNode.Expression = (BooleanExpressionNode?)WalkExpression(
                     ifNode.Expression,
                     module,
                     ref variableRef
-                );
+                ) ?? ifNode.Expression;
+                AddAccessor(variableRef, module, ifNode);
                 if (ifNode.NextIfNode != null)
                 {
-                    return WalkIf(ifNode.NextIfNode, module, ref variableRef);
+                    WalkIf(ifNode.NextIfNode, module, ref variableRef);
                 }
-                return ifNode;
             }
-            return null;
         }
 
         private static ExpressionNode? WalkExpression(
