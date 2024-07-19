@@ -64,13 +64,32 @@ public interface RangeType : Type // this is a bit more specific than a plain IT
 
 public static class RangeTypeExt
 {
+    // each method here is overloaded with taking RangeType, and T where T is RangeType
+    // we need both because in the second case it can be done at compile time
+    // but in the first case since we do not know the specific range type we have to switch on it to the default range which is only available in on the type
+    public static Range DefaultRange(this RangeType range)
+        => range switch {
+            ArrayType  => ArrayType.DefaultRange,
+            CharacterType => CharacterType.DefaultRange ,
+            IntegerType  => IntegerType.DefaultRange,
+            RealType  => RealType.DefaultRange  ,
+            StringType  => StringType.DefaultRange,
+            _ => throw new ArgumentOutOfRangeException(nameof(range))
+        };
     public static Range DefaultRange<T>(this T _)
         where T : RangeType => T.DefaultRange;
 
     // get the string version of the range
     // if the range is the default one we don't do anything
+    public static string RangeString(this RangeType range)
+     =>   IsDefaultRange(range) ? "" : $" {range.Range}";
+
     public static string RangeString<T>(this T range)
-        where T : RangeType => T.DefaultRange == range.Range ? "" : $" {range.Range}";
+        where T : RangeType => IsDefaultRange(range) ? "" : $" {range.Range}";
+
+    public static bool IsDefaultRange<T>(this T range) where T : RangeType => T.DefaultRange == range.Range;
+
+    public static bool IsDefaultRange(this RangeType range) => range.DefaultRange() == range.Range;
 }
 
 public readonly struct BooleanType : Type
