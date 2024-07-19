@@ -779,6 +779,11 @@ public class Interpreter
                     case BoolNode boolVal:
                         passed.Add(new BooleanDataType(boolVal.Value));
                         break;
+                    case BooleanExpressionNode booleanExpressionVal:
+                        passed.Add(
+                            new BooleanDataType(ResolveBool(booleanExpressionVal, variables))
+                        );
+                        break;
                     case EnumNode enumVal:
                         // passed.Add(new EnumDataType(enumVal.Type, enumVal.Value));
                         break;

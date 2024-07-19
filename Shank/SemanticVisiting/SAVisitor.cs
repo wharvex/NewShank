@@ -317,6 +317,8 @@ public abstract class SAVisitor
                 return new CharacterType();
             case BoolNode:
                 return new BooleanType();
+            case BooleanExpressionNode:
+                return new BooleanType();
             case MathOpNode mathVal:
                 switch (mathVal.Left)
                 {
