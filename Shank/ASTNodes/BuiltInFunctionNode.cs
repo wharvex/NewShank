@@ -5,6 +5,23 @@ using Shank.IRGenerator;
 
 namespace Shank.ASTNodes;
 
+public enum BuiltInFunction
+{
+    Write,
+    Substring,
+    RealToInt,
+    IntToReal,
+    Read,
+    AllocateMem,
+    FreeMem,
+    High,
+    Low,
+    IsSet,
+    Left,
+    Right,
+    Size
+}
+
 public class BuiltInFunctionNode : CallableNode
 {
     public BuiltInFunctionNode(string name, BuiltInCall execute)
@@ -55,6 +72,27 @@ public class BuiltInFunctionNode : CallableNode
         }
 
         return v.PostWalk(this);
+    }
+
+    public BuiltInFunction GetBuiltIn()
+    {
+        Dictionary<string, BuiltInFunction> dict =
+            new()
+            {
+                ["write"] = BuiltInFunction.Write,
+                ["read"] = BuiltInFunction.Read,
+                ["allocateMemory"] = BuiltInFunction.AllocateMem,
+                ["freeMemory"] = BuiltInFunction.FreeMem,
+                ["isSet"] = BuiltInFunction.IsSet,
+                ["high"] = BuiltInFunction.High,
+                ["low"] = BuiltInFunction.Low,
+                ["left"] = BuiltInFunction.Left,
+                ["right"] = BuiltInFunction.Right,
+                ["realToInteger"] = BuiltInFunction.RealToInt,
+                ["integerToReal"] = BuiltInFunction.IntToReal,
+                ["substring"] = BuiltInFunction.Substring
+            };
+        return dict[Name];
     }
 }
 

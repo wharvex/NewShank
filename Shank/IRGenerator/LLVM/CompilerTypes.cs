@@ -14,6 +14,8 @@ public interface LLVMType
     public static LLVMTypeRef IntegerType { get; } = LLVMTypeRef.Int64;
     public static LLVMTypeRef RealType { get; } = LLVMTypeRef.Double;
 
+    // public int line_number = 0;
+
     public static LLVMTypeRef StringType { get; } =
         LLVMTypeRef.CreateStruct(
             [LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0), LLVMTypeRef.Int32,],

@@ -948,49 +948,50 @@ public class Compiler(
         context.CurrentFunction = function;
         var block = function.AppendBasicBlock("entry");
         builder.PositionAtEnd(block);
-        switch (node.Name)
+
+        switch (node.GetBuiltIn())
         {
-            case "write":
+            case BuiltInFunction.Write:
                 CompileBuiltinWrite(function);
                 break;
-            case "read":
-                CompileBuiltinRead(function);
-                break;
-            case "substring":
+            case BuiltInFunction.Substring:
                 CompileBuiltinSubString(function);
                 break;
-            case "realToInteger":
+            case BuiltInFunction.RealToInt:
                 CompileBuiltinRealToInteger(function);
                 break;
-            case "integerToReal":
+            case BuiltInFunction.IntToReal:
                 CompileBuiltinIntegerToReal(function);
                 break;
-            case "allocateMemory":
+            case BuiltInFunction.Read:
+                CompileBuiltinRead(function);
+                break;
+            case BuiltInFunction.AllocateMem:
                 CompileBuiltinAllocateMemory(function);
                 break;
-            case "freeMemory":
+            case BuiltInFunction.FreeMem:
                 CompileBuiltinFreeMemory(function);
                 break;
-            case "isSet":
-                CompileBuiltinIsSet(function);
-                break;
-            case "high":
+            case BuiltInFunction.High:
                 CompileBuiltinHigh(function);
                 break;
-            case "low":
+            case BuiltInFunction.Low:
                 CompileBuiltinLow(function);
                 break;
-            case "size":
-                CompileBuiltinSize(function);
+            case BuiltInFunction.IsSet:
+                CompileBuiltinIsSet(function);
                 break;
-            case "left":
+            case BuiltInFunction.Left:
                 CompileBuiltinLeft(function);
                 break;
-            case "right":
+            case BuiltInFunction.Right:
                 CompileBuiltinRight(function);
                 break;
+            case BuiltInFunction.Size:
+                CompileBuiltinSize(function);
+                break;
             default:
-                throw new CompilerException("Undefined builtin", 0);
+                throw new ArgumentOutOfRangeException();
         }
     }
 
@@ -1222,12 +1223,17 @@ public class Compiler(
                 LLVMEnumType => "%s",
                 LLVMRealType => "%.2f",
                 LLVMStringType => "%.*s",
+                // LLVMArray Array => ,
                 LLVMStructType record
-                    => $"{record.Name}: [ {string.Join(", ", record.Members.Select(member => $"{member.Key}: {GetFormatCode(member.Value)}"))} ]",
+                    => $"{record.Name}: [ {string.Join(", ", record
+                        .Members.Select(member => $"{member.Key}: {GetFormatCode(member.Value)}"))} ]",
                 // TODO: print only one level
                 LLVMReferenceType reference => $"refersTo {reference.Inner.Name}",
-
-                _ => throw new NotImplementedException(type.ToString())
+                _
+                    => throw new CompilerException(
+                        $"type is undefined{type.ToString()} in function write",
+                        0
+                    )
             };
 
         IEnumerable<LLVMValueRef> GetValues((LLVMType First, LLVMValueRef Second) n)
