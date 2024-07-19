@@ -44,7 +44,9 @@ public static class TypesHelper
             case EnumType et:
                 return new EnumDataType(et);
             case ReferenceType rt:
-                return new ReferenceDataType((InstantiatedType)rt.Inner);
+                var innerIt = (InstantiatedType)rt.Inner;
+                return new ReferenceDataType(innerIt);
+            // TODO: GenericType case
             default:
                 throw new UnreachableException("Type not recognized");
         }
@@ -72,5 +74,18 @@ public static class TypesHelper
                 adtArr[i] = t.Inner.ToIdt(null);
             });
         return new ArrayDataType([..adtArr], t);
+    }
+
+    public static InterpreterDataType ToIdtDangerous(this Type t, ExpressionNode? e)
+    {
+        switch (t)
+        {
+            case ReferenceType refDt:
+                var innerIt = (InstantiatedType)refDt.Inner;
+                var recDt = (RecordDataType)innerIt.ToIdt();
+                return new ReferenceDataType(recDt, innerIt);
+            default:
+                return t.ToIdt(e);
+        }
     }
 }
