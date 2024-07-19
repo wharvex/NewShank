@@ -58,7 +58,7 @@ public class Parser
                 AcceptSeparators();
                 continue;
             }
-           // Console.WriteLine("Unexpected statement: " + handler.Peek(0)?.GetValue());
+            // Console.WriteLine("Unexpected statement: " + handler.Peek(0)?.GetValue());
             throw new Exception("Statement is not a function or field");
         }
         thisClass.ExportTargetNames = sharedNames;
