@@ -264,12 +264,7 @@ public class CommandLineArgsParser
             );
 
         // GetFiles(options.InputFile).ForEach(ip => ScanAndParse(ip, program));
-        program.SetStartModule();
-        BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
-        SemanticAnalysis.ActiveInterpretOptions = fakeInterpretOptions;
-        SemanticAnalysis.CheckModules(program);
-        SAVisitor.ActiveInterpretOptions = fakeInterpretOptions;
-        NewSemanticAnalysis.Run(program);
+        RunSemanticAnalysis(fakeInterpretOptions, program);
         var monomorphization = new MonomorphizationVisitor();
         program.Accept(monomorphization);
         var monomorphizedProgram = monomorphization.ProgramNode;
@@ -331,6 +326,49 @@ public class CommandLineArgsParser
             It1(program);
         else
             It2();
+    }
+
+    // extract semantic analysis into one function so that both compiler and interpreter do the same thing
+    // this is copied from interpreter as it seems to have had the most up to date semantic analysis at the time of doing this
+    private static void RunSemanticAnalysis(InterpretOptions options, ProgramNode program)
+    {
+        program.SetStartModule();
+        SemanticAnalysis.ActiveInterpretOptions = options;
+        BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
+
+        SAVisitor.ActiveInterpretOptions = options;
+        program.Walk(new ImportVisitor());
+        SemanticAnalysis.AreExportsDone = true;
+        SemanticAnalysis.AreImportsDone = true;
+
+        // This resolves unknown types.
+        //program.Walk(new RecordVisitor());
+
+        program.Walk(new UnknownTypesVisitor());
+        SemanticAnalysis.AreSimpleUnknownTypesDone = true;
+
+        // program.Walk(new TestVisitor());
+
+        // Create WalkCompliantVisitors.
+        var nuVis = new NestedUnknownTypesResolvingVisitor(SemanticAnalysis.ResolveType);
+        var vgVis = new VariablesGettingVisitor();
+        var etVis = new ExpressionTypingVisitor(SemanticAnalysis.GetTypeOfExpression)
+        {
+            ActiveInterpretOptions = options
+        };
+
+        // Apply WalkCompliantVisitors.
+        program.Walk(nuVis);
+        SemanticAnalysis.AreNestedUnknownTypesDone = true;
+        program.Walk(vgVis);
+        program.Walk(etVis);
+
+        //Run old SA.
+        OutputHelper.DebugPrintJson(program, "pre_old_sa");
+        SemanticAnalysis.CheckModules(program);
+        OutputHelper.DebugPrintJson(program, "post_old_sa");
+
+        NewSemanticAnalysis.Run(program);
     }
 
     public void RunCompilePractice(CompilePracticeOptions options, ProgramNode program)
