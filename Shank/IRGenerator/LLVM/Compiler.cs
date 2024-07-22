@@ -230,7 +230,6 @@ public class Compiler(
 
     private LLVMValueRef CompileVariableUsageNew(VariableUsageNodeTemp node, bool load)
     {
-        Console.WriteLine(node);
         if (
             node is VariableUsagePlainNode
             {
@@ -245,8 +244,9 @@ public class Compiler(
         return load ? CopyVariable(variable) : variable.ValueRef;
     }
 
-    private LLVMValue CompileVariableUsageNew(VariableUsageNodeTemp node) =>
-        node switch
+    private LLVMValue CompileVariableUsageNew(VariableUsageNodeTemp node)
+    {
+        return node switch
         {
             VariableUsageIndexNode variableUsageIndexNode
                 => CompileVariableUsageNew(variableUsageIndexNode),
@@ -255,6 +255,7 @@ public class Compiler(
             VariableUsagePlainNode variableUsagePlainNode
                 => context.GetVariable(variableUsagePlainNode.MonomorphizedName())
         };
+    }
 
     private LLVMValue CompileVariableUsageNew(VariableUsageMemberNode node)
     {
@@ -813,7 +814,6 @@ public class Compiler(
         // only alloca when !isConstant (is somewhat problematic with structs)
 
         var llvmTypeFromShankType = context.GetLLVMTypeFromShankType(node.Type);
-        Console.WriteLine(llvmTypeFromShankType.TypeRef);
         LLVMValueRef v = builder.BuildAlloca(
             // isVar is false, because we are already creating it using alloca which makes it var
             llvmTypeFromShankType.TypeRef,
@@ -957,10 +957,8 @@ public class Compiler(
         var afterFor = context.CurrentFunction.AppendBasicBlock("for.after");
         var forBody = context.CurrentFunction.AppendBasicBlock("for.body");
         var forIncrement = context.CurrentFunction.AppendBasicBlock("for.inc");
-        var mutableCurrentIterable = CompileExpression(
-            options.VuOpTest ? node.NewVariable : node.Variable,
-            false
-        );
+        var variable = options.VuOpTest ? node.NewVariable : node.Variable;
+        var mutableCurrentIterable = CompileExpression(variable, false);
         var fromValue = CompileExpression(node.From);
         builder.BuildStore(fromValue, mutableCurrentIterable);
 
@@ -973,7 +971,7 @@ public class Compiler(
 
         var toValue = CompileExpression(node.To);
 
-        var currentIterable = CompileExpression(node.Variable);
+        var currentIterable = CompileExpression(variable);
         // right now we assume, from, to, and the variable are all integers
         // in the future we should check and give some error at runtime/compile time if not
         var condition = builder.BuildICmp(LLVMIntPredicate.LLVMIntSLE, currentIterable, toValue);
@@ -1290,7 +1288,6 @@ public class Compiler(
         IEnumerable<LLVMValueRef> GetValues((LLVMType First, LLVMValueRef Second) n)
         {
             {
-                Console.WriteLine(n);
                 return n.First switch
                 {
                     LLVMEnumType e => [HandleEnum(n.Second, e.Variants)],
