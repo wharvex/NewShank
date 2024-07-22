@@ -1,3 +1,4 @@
+using System.Collections;
 using LLVMSharp.Interop;
 using Shank.ASTNodes;
 
@@ -823,6 +824,10 @@ public class Compiler(
             var init = CompileExpression(node.InitialValue);
             builder.BuildStore(init, v);
         }
+        else
+        {
+            builder.BuildStore(CompileDefaultExpression(llvmTypeFromShankType), v);
+        }
 
         // TODO: preallocate arrays in records to (might need to be recursive)
         // if (node.Type is ArrayType a && llvmTypeFromShankType is LLVMArrayType shankType)
@@ -848,6 +853,51 @@ public class Compiler(
         // maybe the aforementioned function should take a function that takes a type and gives back an LLVMValueRef (so it would work here, but also for parameters)
         var variable = context.NewVariable(node.Type);
         context.AddVariable(node.MonomorphizedName(), variable(v, !node.IsConstant));
+    }
+
+    private LLVMValueRef CompileDefaultExpression(LLVMType llvmTypeFromShankType)
+    {
+        return llvmTypeFromShankType switch
+        {
+            LLVMArrayType type
+                => LLVMValueRef.CreateConstArray(
+                    type.Inner.TypeRef,
+                    Enumerable
+                        .Range(0, (int)type.Range.Length)
+                        .Select(_ => CompileDefaultExpression(type.Inner))
+                        .ToArray()
+                ),
+            LLVMReferenceType type
+                => LLVMValueRef.CreateConstStruct(
+                    [
+                        LLVMValueRef.CreateConstPointerNull(type.Inner.TypeRef),
+                        LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0),
+                        LLVMValueRef.CreateConstInt(LLVMTypeRef.Int1, 0)
+                    ],
+                    false
+                ),
+            LLVMStringType type
+                => LLVMValueRef.CreateConstStruct(
+                    [
+                        LLVMValueRef.CreateConstArray(LLVMTypeRef.Int8, []),
+                        // TODO: should this be a malloc
+                        LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0),
+                    ],
+                    false
+                ),
+            LLVMStructType type
+                => LLVMValueRef.CreateConstNamedStruct(
+                    type.TypeRef,
+                    type.Members.Values.Select(CompileDefaultExpression).ToArray()
+                ),
+            LLVMRealType type => LLVMValueRef.CreateConstReal(type.TypeRef, 0.0),
+            // TODO: first declared variant
+            LLVMEnumType type => LLVMValueRef.CreateConstInt(type.TypeRef, 0),
+            LLVMIntegerType type => LLVMValueRef.CreateConstInt(type.TypeRef, 0),
+            LLVMCharacterType type => LLVMValueRef.CreateConstInt(type.TypeRef, 0),
+            LLVMBooleanType type => LLVMValueRef.CreateConstInt(type.TypeRef, 0),
+            _ => throw new ArgumentOutOfRangeException(nameof(llvmTypeFromShankType))
+        };
     }
 
     public void Compile(MonomorphizedProgramNode node)
