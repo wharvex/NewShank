@@ -738,11 +738,11 @@ public class Parser
     /// <param name="declarationContext">The declaration context for the construct</param>
     /// <returns>A Type object representing the type of the parsed construct</returns>
     /// <exception cref="SyntaxErrorException">
-    ///     <list type="bullet"> 
-    ///         <item> 
+    ///     <list type="bullet">
+    ///         <item>
     ///             <description>If a valid type declartion is not found</description>
     ///         </item>
-    ///         <item> 
+    ///         <item>
     ///             <description>If refersTo is being used on a non-record type</description>
     ///         </item>
     ///     </list>
@@ -865,8 +865,8 @@ public class Parser
     }
 
     /// <summary>
-    ///     <para> 
-    ///         Method <c>InBetweenOpt</c> 
+    ///     <para>
+    ///         Method <c>InBetweenOpt</c>
     ///     </para>
     /// </summary>
     /// <typeparam name="T"></typeparam>
@@ -1497,8 +1497,8 @@ public class Parser
     }
 
     /// <summary>
-    ///     <para> 
-    ///         Method <c>ProcessVaraibelsDoWhile</c> 
+    ///     <para>
+    ///         Method <c>ProcessVaraibelsDoWhile</c>
     ///     </para>
     /// </summary>
     /// <param name="parentModule"></param>
