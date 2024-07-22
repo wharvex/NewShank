@@ -58,6 +58,7 @@ public class Parser
                 AcceptSeparators();
                 continue;
             }
+            // Console.WriteLine("Unexpected statement: " + handler.Peek(0)?.GetValue());
             throw new Exception("Statement is not a function or field");
         }
         thisClass.ExportTargetNames = sharedNames;
@@ -241,7 +242,6 @@ public class Parser
     {
         FunctionNode functionNode;
         Token? function;
-        //debug
         //Console.WriteLine("here");
         List<VariableDeclarationNode> parameters;
         var isPublic = handler.MatchAndRemove(TokenType.PRIVATE) == null;

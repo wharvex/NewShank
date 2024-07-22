@@ -48,6 +48,8 @@ public readonly record struct Range // the type that represents a type range in 
     // since this is just for characters should it be unsigned
     public static Range DefaultCharacter => new(byte.MinValue, byte.MaxValue);
 
+    public float Length { get; } = To - From;
+
     public override string ToString() => $"from {From} to {To}";
 }
 
@@ -64,13 +66,35 @@ public interface RangeType : Type // this is a bit more specific than a plain IT
 
 public static class RangeTypeExt
 {
+    // each method here is overloaded with taking RangeType, and T where T is RangeType
+    // we need both because in the second case it can be done at compile time
+    // but in the first case since we do not know the specific range type we have to switch on it to the default range which is only available in on the type
+    public static Range DefaultRange(this RangeType range) =>
+        range switch
+        {
+            ArrayType => ArrayType.DefaultRange,
+            CharacterType => CharacterType.DefaultRange,
+            IntegerType => IntegerType.DefaultRange,
+            RealType => RealType.DefaultRange,
+            StringType => StringType.DefaultRange,
+            _ => throw new ArgumentOutOfRangeException(nameof(range))
+        };
+
     public static Range DefaultRange<T>(this T _)
         where T : RangeType => T.DefaultRange;
 
     // get the string version of the range
     // if the range is the default one we don't do anything
+    public static string RangeString(this RangeType range) =>
+        IsDefaultRange(range) ? "" : $" {range.Range}";
+
     public static string RangeString<T>(this T range)
-        where T : RangeType => T.DefaultRange == range.Range ? "" : $" {range.Range}";
+        where T : RangeType => IsDefaultRange(range) ? "" : $" {range.Range}";
+
+    public static bool IsDefaultRange<T>(this T range)
+        where T : RangeType => T.DefaultRange == range.Range;
+
+    public static bool IsDefaultRange(this RangeType range) => range.DefaultRange() == range.Range;
 }
 
 public readonly struct BooleanType : Type
@@ -238,12 +262,12 @@ public readonly record struct ArrayType(Type Inner, Range Range) : RangeType // 
 
     public void Accept(IArrayTypeVisitor visitor) => visitor.Visit(this);
 
-    public bool Equals(ArrayType other)
-    {
-        return other.Inner.Equals(Inner);
-    }
+    // public bool Equals(ArrayType other)
+    // {
+    //     return other.Inner.Equals(Inner) && other.Range == Range;
+    // }
 
-    public override int GetHashCode() => Inner.GetHashCode();
+    // public override int GetHashCode() => HashCode.Combine(Inner.GetHashCode(), Range.GetHashCode);
 
     public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) =>
         this with
@@ -251,8 +275,8 @@ public readonly record struct ArrayType(Type Inner, Range Range) : RangeType // 
             Inner = Inner.Instantiate(instantiatedGenerics)
         };
 
-    public ArrayType(Type inner, Range? range)
-        : this(inner, range ?? DefaultRange) { }
+    // public ArrayType(Type inner, Range? range)
+    //     : this(inner, range ?? DefaultRange) { }
 
     // We want to change this back to DefaultSmallInteger once we have better infrastructure in
     // place for verifying ranges with if-statements.

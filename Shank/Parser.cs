@@ -57,8 +57,7 @@ public class Parser
     ///    the parameter's type
     /// </summary>
     /// <param name="t">TokenType passed in</param>
-    /// <returns>Token's value otherwise null</returns>
-    ///
+    /// <returns>Token's value (<see cref="Token"/>) otherwise null</returns>
 
     private Token? MatchAndRemove(Token.TokenType t)
     {
@@ -106,7 +105,7 @@ public class Parser
     ///     matches the array of parameters passed in
     /// </summary>
     /// <param name="ts">List of TokenTypes</param>
-    /// <returns>Values of the tokens removeed otherwise null</returns>
+    /// <returns>Values of the tokens removed (<see cref="Token"/>) otherwise null</returns>
 
     private Token? MatchAndRemoveMultiple(params Token.TokenType[] ts)
     {
@@ -126,7 +125,7 @@ public class Parser
     ///     the function may return null.
     /// </summary>
     /// <param name="offset">Number of characters you are peeking ahead</param>
-    /// <returns>Token value or else null</returns>
+    /// <returns>Token value (<see cref="Token"/>) or else null</returns>
 
     private Token? Peek(int offset)
     {
@@ -135,11 +134,11 @@ public class Parser
 
     /// <summary>
     ///     Method <c>PeekSafe</c> reads the value of the next value with <e>n</e> offset
-    ///     and returns the value fetched from <e>Peek</e>. If it returns null, an exception is thrown.
+    ///     and returns the value fetched from <see cref="Peek"/>. If it returns null, an exception is thrown.
     ///     See Peek documentation for null cases.
     /// </summary>
     /// <param name="offset">Number of characters you are peeking ahead</param>
-    /// <returns>Token value</returns>
+    /// <returns>Token value (<see cref="Token"/>)</returns>
     /// <exception cref="SyntaxErrorException">If the offset is at or past the end of the file</exception>
 
     private Token PeekSafe(int offset) =>
@@ -149,7 +148,7 @@ public class Parser
     ///     Method <c>ExpectsEndOfLine</c> reads attempts to match the next token to EndOfLine.
     ///     If found, the Token is returned and removed from our list. If not null is returned.
     /// </summary>
-    /// <returns>Token value otherwise null</returns>
+    /// <returns>Value representing if a EndOfLine token is present (<see cref="bool"/>)</returns>
     private bool ExpectsEndOfLine()
     {
         var ret = MatchAndRemove(Token.TokenType.EndOfLine) is not null;
@@ -200,7 +199,7 @@ public class Parser
     ///
     ///             IDENTIFIER.reference
     /// </summary>
-    /// <returns>new VariableUsagePlainNode otherwise exception</returns>
+    /// <returns>new <see cref="VariableUsagePlainNode"/> otherwise exception</returns>
     /// <exception cref="SyntaxErrorException">
     ///     <list type="bullet">
     ///         <item>
@@ -280,7 +279,7 @@ public class Parser
     ///
     ///             IDENTIFIER.reference.reference...
     /// </summary>
-    /// <returns>VariableUsageTempNode or VariableUsageIndexNode or VariableUsageMemberNode else exception</returns>
+    /// <returns><see cref="VariableUsageTempNode"/> or <see cref="VariableUsageIndexNode"/> or <see cref="VariableUsageMemberNode"/> else exception</returns>
     /// <exception cref="SyntaxErrorException">Expression is not present in an array index</exception>
     /// <exception cref="UnreachableException">if neither an index or member is encountered (should never be reached)</exception>
     private VariableUsageNodeTemp? GetVariableUsageNode(string moduleName)
@@ -597,11 +596,11 @@ public class Parser
 
     /// <summary>
     ///     <para>
-    ///         Method <c>BodyFunction</c>
+    ///         Method <c>BodyFunction</c> parses and returns a body function
     ///     </para>
     /// </summary>
-    /// <param name="function"></param>
-    /// <param name="moduleName"></param>
+    /// <param name="function">The function to be parsed</param>
+    /// <param name="moduleName">The parent module to whcih the function belongs to</param>
 
     private void BodyFunction(FunctionNode function, string moduleName)
     {
@@ -705,6 +704,15 @@ public class Parser
             ?? FunctionCall(moduleName);
     }
 
+    /// <summary>
+    ///     <para>
+    ///         Method <c>GetDataTypeFromConstantNodeType</c> gets the data type of the object passed
+    ///         in by returning a new type object
+    ///     </para>
+    /// </summary>
+    /// <param name="constantNode">The node passed in</param>
+    /// <returns>IntegerType or RealType or StringType or CharacterType or BooleanType representing the type of the object passed in</returns>
+    /// <exception cref="InvalidOperationException">If the type of the node passed in cannot be read</exception>
     public static Type GetDataTypeFromConstantNodeType(ASTNode constantNode) =>
         constantNode switch
         {
@@ -727,9 +735,18 @@ public class Parser
     ///         Method <c>Type</c> reads a valid construct type
     ///     </para>
     /// </summary>
-    /// <param name="declarationContext"></param>
-    /// <returns></returns>
-    /// <exception cref="SyntaxErrorException"></exception>
+    /// <param name="declarationContext">The declaration context for the construct</param>
+    /// <returns>A Type object representing the type of the parsed construct</returns>
+    /// <exception cref="SyntaxErrorException">
+    ///     <list type="bullet">
+    ///         <item>
+    ///             <description>If a valid type declartion is not found</description>
+    ///         </item>
+    ///         <item>
+    ///             <description>If refersTo is being used on a non-record type</description>
+    ///         </item>
+    ///     </list>
+    /// </exception>
 
     private Type Type(VariableDeclarationNode.DeclarationContext declarationContext)
     {
@@ -781,7 +798,7 @@ public class Parser
     ///         Method <c>Repeat</c> returns the parameter passed in while a next iteration is present
     ///     </para>
     /// </summary>
-    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="T">The type to be used for our generator</typeparam>
     /// <param name="generator">Contents of the next iteration to whatever was passed in</param>
     /// <returns>Content of the generator as an enumerator</returns>
     static IEnumerable<T> Repeat<T>(Func<T> generator)
@@ -847,6 +864,19 @@ public class Parser
             );
     }
 
+    /// <summary>
+    ///     <para>
+    ///         Method <c>InBetweenOpt</c>
+    ///     </para>
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="first"></param>
+    /// <param name="parser"></param>
+    /// <param name="last"></param>
+    /// <param name="type"></param>
+    /// <returns></returns>
+    /// <exception cref="SyntaxErrorException"></exception>
+
     private T InBetweenOpt<T>(
         Token.TokenType first,
         Func<T> parser,
@@ -874,17 +904,12 @@ public class Parser
         Token? arrayToken
     )
     {
-        var range = CheckRangeInner(NormalRangeVerifier, ArrayType.DefaultRange);
-        if (
-            range is null
-            && declarationContext == VariableDeclarationNode.DeclarationContext.VariablesLine
-        )
-        {
-            throw new SyntaxErrorException(
+        var range =
+            CheckRangeInner(NormalRangeVerifier, ArrayType.DefaultRange)
+            ?? throw new SyntaxErrorException(
                 "Array in variables declared without a size",
                 arrayToken
             );
-        }
 
         var _ =
             MatchAndRemove(Token.TokenType.Of)
@@ -1471,6 +1496,14 @@ public class Parser
         return retVal;
     }
 
+    /// <summary>
+    ///     <para>
+    ///         Method <c>ProcessVaraibelsDoWhile</c>
+    ///     </para>
+    /// </summary>
+    /// <param name="parentModule"></param>
+    /// <param name="isGlobal"></param>
+    /// <returns></returns>
     private List<VariableDeclarationNode> ProcessVariablesDoWhile(
         string parentModule,
         bool isGlobal

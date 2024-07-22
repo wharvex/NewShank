@@ -19,7 +19,7 @@ public record struct TypeIndex(List<Type> InstantiatedTypes)
 {
     private int? hashCode = null;
 
-    public bool Equals(TypeIndex other)
+    public readonly bool Equals(TypeIndex other)
     {
         return other.InstantiatedTypes.SequenceEqual(InstantiatedTypes);
     }

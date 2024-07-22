@@ -63,7 +63,6 @@ public enum TokenType
     OR,
     RETURN,
     ELSE,
-    BLOCKID,
     TAB,
     NEWLINE,
     TIMES,

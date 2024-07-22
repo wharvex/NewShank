@@ -343,9 +343,10 @@ public class Interpreter
                         et.Value = ResolveEnum(et, an.Expression, variables);
                         break;
                     case ReferenceDataType rt:
-                        if (rt.Record == null)
-                            throw new Exception(
-                                $"{an.NewTarget} must be allocated before it can be addressed."
+                        if (rt.Record is null)
+                            throw new InterpreterErrorException(
+                                "References must be allocated before they can be addressed.",
+                                an.NewTarget
                             );
                         NewAssignToRecord(
                             rt.Record,
@@ -462,8 +463,9 @@ public class Interpreter
         Dictionary<string, InterpreterDataType> variables
     )
     {
-        if (!rdt.Value.TryAdd(target.Right.Name, GetIdtFromExpr(e, variables)))
-            throw new InterpreterErrorException("Could not add the value to the record.", target);
+        //if (!rdt.Value.TryAdd(target.Right.Name, GetIdtFromExpr(e, variables)))
+        //    throw new InterpreterErrorException("Could not add the value to the record.", target);
+        rdt.Value[target.Right.Name] = GetIdtFromExpr(e, variables);
 
         //var t = rdt.GetMemberType(mev.Contents.Name);
 
@@ -778,6 +780,11 @@ public class Interpreter
                         break;
                     case BoolNode boolVal:
                         passed.Add(new BooleanDataType(boolVal.Value));
+                        break;
+                    case BooleanExpressionNode booleanExpressionVal:
+                        passed.Add(
+                            new BooleanDataType(ResolveBool(booleanExpressionVal, variables))
+                        );
                         break;
                     case EnumNode enumVal:
                         // passed.Add(new EnumDataType(enumVal.Type, enumVal.Value));

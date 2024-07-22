@@ -105,7 +105,7 @@ public class Context(MonomorphizedProgramNode moduleNode, CFuntions cFuntions)
             // if it's a custom type we look it up in the context
             ReferenceType r
                 => new LLVMReferenceType((LLVMStructType)GetLLVMTypeFromShankType(r.Inner)),
-            ArrayType a => new LLVMArrayType(GetLLVMTypeFromShankType(a.Inner))
+            ArrayType a => new LLVMArrayType(GetLLVMTypeFromShankType(a.Inner), a.Range)
         };
     }
 
@@ -136,7 +136,10 @@ public class Context(MonomorphizedProgramNode moduleNode, CFuntions cFuntions)
                     new LLVMArray(
                         value,
                         mutable,
-                        new LLVMArrayType(GetLLVMTypeFromShankType(arrayType.Inner))
+                        new LLVMArrayType(
+                            GetLLVMTypeFromShankType(arrayType.Inner),
+                            arrayType.Range
+                        )
                     ),
         };
 

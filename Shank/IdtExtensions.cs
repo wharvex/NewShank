@@ -38,6 +38,15 @@ public static class IdtExtensions
                     throw new InvalidOperationException();
 
                 return (InterpreterDataType)adt.Value[resolveInt(i.Right, variables)];
+            case ReferenceDataType refDt:
+                if (vun is VariableUsageMemberNode mm)
+                {
+                    if (mm.Line == 9)
+                        OutputHelper.DebugPrintJson(refDt.Record, "blah");
+                    return refDt.Record?.Value[mm.Right.Name] as InterpreterDataType
+                        ?? throw new InvalidOperationException("Record has not been allocated.");
+                }
+                throw new InvalidOperationException();
             default:
                 return null;
         }
@@ -93,10 +102,7 @@ public static class IdtExtensions
                     ?? throw new InvalidOperationException();
             case ReferenceDataType referenceVal:
                 return new ReferenceDataType(
-                        (
-                            referenceVal.Record
-                            ?? throw new InvalidOperationException(referenceVal.ToString())
-                        ).CopyAs<RecordDataType>(),
+                        referenceVal.Record?.CopyAs<RecordDataType>(),
                         referenceVal.RecordType
                     ) as T
                     ?? throw new InvalidOperationException("T " + typeof(T) + " is not right.");
@@ -128,6 +134,22 @@ public static class IdtExtensions
     {
         return JsonConvert.DeserializeObject<T>(JsonConvert.SerializeObject(input))
             ?? throw new InvalidOperationException("???");
+    }
+
+    public static bool TryGetIdt(
+        this List<InterpreterDataType> these,
+        int idx,
+        out InterpreterDataType idt
+    )
+    {
+        if (idx < these.Count)
+        {
+            idt = these[idx];
+            return true;
+        }
+
+        idt = InterpreterDataType.Default;
+        return false;
     }
 }
 
