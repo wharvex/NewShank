@@ -230,7 +230,6 @@ public class Compiler(
 
     private LLVMValueRef CompileVariableUsageNew(VariableUsageNodeTemp node, bool load)
     {
-
         if (
             node is VariableUsagePlainNode
             {
@@ -958,12 +957,8 @@ public class Compiler(
         var afterFor = context.CurrentFunction.AppendBasicBlock("for.after");
         var forBody = context.CurrentFunction.AppendBasicBlock("for.body");
         var forIncrement = context.CurrentFunction.AppendBasicBlock("for.inc");
-        var variable =
-            options.VuOpTest ? node.NewVariable : node.Variable;
-        var mutableCurrentIterable = CompileExpression(
-                variable,
-            false
-        );
+        var variable = options.VuOpTest ? node.NewVariable : node.Variable;
+        var mutableCurrentIterable = CompileExpression(variable, false);
         var fromValue = CompileExpression(node.From);
         builder.BuildStore(fromValue, mutableCurrentIterable);
 
