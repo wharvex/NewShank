@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using BenchmarkDotNet.Attributes;
 using Shank;
 using Shank.ASTNodes;
@@ -9,7 +10,7 @@ public class Setup
 {
     public static ProgramNode pn;
 
-    public static void ParseAndLex()
+    public static int ParseAndLex()
     {
         pn = new ProgramNode();
         Lexer l = new Lexer();
@@ -106,7 +107,8 @@ public class Setup
 
         NewSemanticAnalysis.Run(pn);
 
-        // RunInterpeter();
+        RunInterpeter();
+        return 1;
     }
 
     public static int RunInterpeter()
@@ -125,14 +127,16 @@ public class Setup
 
 public class BenchMarkShank
 {
-    public BenchMarkShank()
+    [Benchmark]
+    public int RunInterper() => Setup.ParseAndLex();
+
+    [Benchmark]
+    public int RunInterper2()
     {
-        Setup.ParseAndLex();
+        Process link = new Process();
+        link.StartInfo.FileName = "./../../../../../Fib.exe";
+        link.Start();
+        link.WaitForExit();
+        return 1;
     }
-
-    [Benchmark]
-    public int RunInterper() => Setup.RunInterpeter();
-
-    [Benchmark]
-    public int RunInterper2() => 0;
 }

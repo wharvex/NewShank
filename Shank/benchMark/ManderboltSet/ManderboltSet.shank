@@ -3,7 +3,7 @@ variables px, py, idx1, idx2, idx3 : integer
 variables x0, y0, x, y, xtemp, tmp: real
     x0 := -1.0
     y0 := 0.47
-    
+    write "manderbolt set"
     px := 0
     py := 0
     for px from 0 to 100
@@ -13,12 +13,11 @@ variables x0, y0, x, y, xtemp, tmp: real
             tmp := x * x + y * y
             while tmp <= 4.0 
                 idx3 := 0
-                while idx3 <= 10
+                while idx3 <= 100
                     xtemp := x*x - y*y + x0
                     y := 2.0 *x*y+y0
                     x := xtemp
                     idx3 := idx3 + 1
-                    write x, y
                     tmp := x * x + y * y
 
                 
