@@ -1,0 +1,5 @@
+define start()
+varaibles i : integer
+    for i from 0 to 1000
+        i := i + i
+     

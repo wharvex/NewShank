@@ -79,6 +79,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="ComparisonBetweenShankAndC#\" />
     <Folder Include="dotShank\Globals\" />
     <Folder Include="dotShank\VarsSetBeforeUse\" />
     <Folder Include="dotShank\Overloads\" />

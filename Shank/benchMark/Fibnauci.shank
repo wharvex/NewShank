@@ -1,0 +1,12 @@
+define start()
+constants start = 1, end = 40000
+variables i,prev1 : integer
+variables prev2,curr : integer
+	prev1:=start
+	prev2:=start
+	write prev1
+	write prev2
+	for i from start to end
+		curr := prev1 + prev2
+		prev2:=prev1
+		prev1 := curr
