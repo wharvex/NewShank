@@ -1497,8 +1497,8 @@ public class Parser
     }
 
     /// <summary>
-    ///     <para> 
-    ///         Method <c>ProcessVaraibelsDoWhile</c> 
+    ///     <para>
+    ///         Method <c>ProcessVaraibelsDoWhile</c>
     ///     </para>
     /// </summary>
     /// <param name="parentModule"></param>
