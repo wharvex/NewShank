@@ -1,0 +1,3 @@
+Interpret Shank/benchMark/Factorial --vuop-test
+Interpret Shank/benchMark/Fibonacci --vuop-test
+Interpret Shank/benchMark/ManderboltSet --vuop-test

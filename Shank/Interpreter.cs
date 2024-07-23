@@ -378,7 +378,7 @@ public class Interpreter
                         && theIc?.Children != null
                     )
                     {
-                        InterpretBlock(theIc.Children, variables, callingFunction);
+                        NewInterpretBlock(theIc.Children, variables, callingFunction);
                         theIc = null;
                     }
                     else
@@ -386,20 +386,20 @@ public class Interpreter
                 }
 
                 if (theIc?.Children != null)
-                    InterpretBlock(theIc.Children, variables, callingFunction);
+                    NewInterpretBlock(theIc.Children, variables, callingFunction);
             }
             else if (stmt is WhileNode wn)
             {
                 while (ResolveBool(wn.Expression, variables))
                 {
-                    InterpretBlock(wn.Children, variables, callingFunction);
+                    NewInterpretBlock(wn.Children, variables, callingFunction);
                 }
             }
             else if (stmt is RepeatNode rn)
             {
                 do
                 {
-                    InterpretBlock(rn.Children, variables, callingFunction);
+                    NewInterpretBlock(rn.Children, variables, callingFunction);
                 } while (!ResolveBool(rn.Expression, variables));
             }
             else if (stmt is ForNode fn)
@@ -1420,15 +1420,7 @@ public class Interpreter
             {
                 var left = NewResolveInt(m.Left, variables);
                 var right = NewResolveInt(m.Right, variables);
-                return m.Op switch
-                {
-                    MathOpNode.MathOpType.Plus => left + right,
-                    MathOpNode.MathOpType.Minus => left - right,
-                    MathOpNode.MathOpType.Times => left * right,
-                    MathOpNode.MathOpType.Divide => left / right,
-                    MathOpNode.MathOpType.Modulo => left % right,
-                    _ => throw new ArgumentOutOfRangeException()
-                };
+                return m.GetResultOfOp(left, right);
             }
             case IntNode i:
                 return i.Value;

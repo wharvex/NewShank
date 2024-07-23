@@ -1,0 +1,3 @@
+Interpret Shank/benchMark/Factorial
+Interpret Shank/benchMark/Fibonacci
+Interpret Shank/benchMark/ManderboltSet

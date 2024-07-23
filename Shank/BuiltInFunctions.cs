@@ -332,15 +332,18 @@ public class BuiltInFunctions
     {
         if (parameters.Count == 0 || !(parameters[0] is IntDataType intParam))
         {
-            throw new ArgumentException("First parameter must be an IntDataType.");
+            throw new Exception("First parameter must be an integer parameter.");
+        }
+
+        if (parameters.Count < 2)
+        {
+            throw new Exception("Second parameter is missing.");
         }
 
         int count = intParam.Value;
-        for (int i = 1; i <= count; i++)
-        {
-            //fix this
-            Console.WriteLine(i);
-        }
+        var iteratorDataType = new IteratorDataType(count);
+
+        parameters[1] = iteratorDataType;
     }
 
     public static void Clone(List<InterpreterDataType> parameters)

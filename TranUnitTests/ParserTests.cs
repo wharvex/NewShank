@@ -275,8 +275,8 @@ class Tran
             Lexer newLexer = new Lexer(testString);
             LinkedList<Token> tokens = newLexer.Lex();
             Parser newParser = new Parser(tokens);
-            // var expression = newParser.ParseBuiltInFunctionNode();
-            // Console.Write(expression);
+            var expression = newParser.ParseBuiltInFunctionNode();
+            Console.Write(expression);
         }
 
         [TestMethod]
@@ -286,8 +286,8 @@ class Tran
             Lexer newLexer = new Lexer(testString);
             LinkedList<Token> tokens = newLexer.Lex();
             Parser newParser = new Parser(tokens);
-            //  var expression = newParser.ParseBuiltInFunctionNode();
-            //  Console.Write(expression);
+            var expression = newParser.ParseBuiltInFunctionNode();
+            Console.Write(expression);
         }
 
         [TestMethod]

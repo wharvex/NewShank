@@ -315,7 +315,11 @@ public class Compiler(
         builder.PositionAtEnd(okIndexBlock);
         var array = value.ValueRef;
         index = builder.BuildSub(index, start);
-        array = builder.BuildInBoundsGEP2(elementType, array, [index]);
+        array = builder.BuildInBoundsGEP2(
+            arrayType.TypeRef,
+            array,
+            [LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0), index]
+        );
         return arrayInnerType.IntoValue(array, value.IsMutable);
     }
 
