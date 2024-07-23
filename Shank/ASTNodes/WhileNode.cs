@@ -12,13 +12,12 @@ namespace Shank.ASTNodes;
 ///
 public class WhileNode : StatementNode
 {
-
     ///<summary>
     ///     Initializes a new instance of the <see cref="WhileNode"/> class with the specified expression and child statements.
     ///</summary>
     ///<param name="exp">The condition expression for the 'while' loop.</param>
     ///<param name="children">The list of statements to be executed within the loop.</param>
- 
+
     public WhileNode(ExpressionNode exp, List<StatementNode> children)
     {
         Expression = exp;

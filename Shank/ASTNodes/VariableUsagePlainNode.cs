@@ -78,7 +78,6 @@ public class VariableUsagePlainNode : VariableUsageNodeTemp
 
     public string? EnclosingVrnName { get; set; }
 
-
     ///<summary>
     ///     Gets or sets a value indicating whether the variable usage represents a function call.
     ///</summary>
@@ -124,7 +123,6 @@ public class VariableUsagePlainNode : VariableUsageNodeTemp
     public VariableUsagePlainNode GetRecordMemberReferenceSafe() =>
         GetExtensionSafe() as VariableUsagePlainNode
         ?? throw new InvalidOperationException("Expected Extension to be a VariableReferenceNode.");
-
 
     ///<summary>
     ///     Gets the nested names as a list of strings.
@@ -195,7 +193,6 @@ public class VariableUsagePlainNode : VariableUsageNodeTemp
         };
     }
 
-
     ///<summary>
     ///     Gets the nested names as a list of strings.
     ///</summary>
@@ -227,7 +224,6 @@ public class VariableUsagePlainNode : VariableUsageNodeTemp
         None
     }
 
-
     ///<summary>
     ///     Gets the nested names as a list of strings.
     ///</summary>
@@ -236,7 +232,6 @@ public class VariableUsagePlainNode : VariableUsageNodeTemp
     ///     Throws an <see cref="InvalidOperationException"/> if the extension type is not <see cref="VrnExtType.RecordMember"/> or if the variable reference node is enclosed.
     ///</returns>
     public override T Accept<T>(ExpressionVisitor<T> visit) => visit.Visit(this);
-
 
     ///<summary>
     ///     Accepts a generic visitor for processing this node.
