@@ -16,8 +16,9 @@ public class LLVMCodeGen
         LLVM.InitializeAllTargetMCs();
         LLVM.InitializeAllAsmPrinters();
         LLVM.InitializeAllAsmParsers();
-        var module = LLVMModuleRef.CreateWithName("main");
-
+        var module = LLVMModuleRef.CreateWithName(
+            Path.ChangeExtension(compileOptions.OutFile, ".ll")
+        );
         LLVMBuilderRef builder = module.Context.CreateBuilder();
         FileStream fs;
 
