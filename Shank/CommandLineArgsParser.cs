@@ -127,6 +127,9 @@ public class InterpretOptions
 
     [Option('v', "vuop-test", HelpText = "Variable Usage Operation Test", Default = false)]
     public bool VuOpTest { get; set; }
+
+    [Option('b', "bench-mark", HelpText = "an option to bench mark shank", Default = false)]
+    public bool BenchMark { get; set; }
 }
 
 [Verb("CompilePractice", isDefault: false, HelpText = "dev use only")]
@@ -411,13 +414,14 @@ public class CommandLineArgsParser
             It2();
     }
 
-    private void It1(ProgramNode program)
+    private int It1(ProgramNode program)
     {
         Interpreter.InterpretFunction(
             program.GetStartModuleSafe().GetStartFunctionSafe(),
             [],
             program.GetStartModuleSafe()
         );
+        return 1;
     }
 
     private void ScanAndParse(string inPath, ProgramNode program, InterpretOptions? options = null)

@@ -1,0 +1,10 @@
+define threeFunc(a : integer; b : integer; c : integer)
+	write a
+    write b
+    write c
+
+
+define start()
+    write "hello world"
+    threeFunc 2, 1, 3
+    

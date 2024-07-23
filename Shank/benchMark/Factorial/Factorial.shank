@@ -1,0 +1,10 @@
+define start()
+variables n, n1, i, i1  : integer
+    n := 1
+    write "factorial.shank"
+    n1 := 4
+    for i1 from 1 to 10000
+        for i from 1 to n1
+            n := n * i
+        n := 1
+    

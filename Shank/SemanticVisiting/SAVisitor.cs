@@ -333,7 +333,7 @@ public abstract class SAVisitor
                     case VariableUsagePlainNode variableUsage:
                         return GetTypeOfExpression(variableUsage, variables);
                     default:
-                        throw new Exception();
+                        throw new Exception(mathVal.ToString());
                 }
                 break;
             default:

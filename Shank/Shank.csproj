@@ -79,6 +79,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="ComparisonBetweenShankAndC#\" />
     <Folder Include="dotShank\Globals\" />
     <Folder Include="dotShank\VarsSetBeforeUse\" />
     <Folder Include="dotShank\Overloads\" />
@@ -93,6 +94,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ClCompile Include="benchMark\Factorial\Factorial.c" />
+    <ClCompile Include="benchMark\ManderboltSet\Manderbolt.c" />
     <ClCompile Include="Shank-IR\Test.c" />
   </ItemGroup>
 

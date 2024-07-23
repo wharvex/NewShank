@@ -1,3 +1,4 @@
+using System.Collections;
 using LLVMSharp.Interop;
 using Shank.ASTNodes;
 
@@ -229,7 +230,6 @@ public class Compiler(
 
     private LLVMValueRef CompileVariableUsageNew(VariableUsageNodeTemp node, bool load)
     {
-        Console.WriteLine(node);
         if (
             node is VariableUsagePlainNode
             {
@@ -244,8 +244,9 @@ public class Compiler(
         return load ? CopyVariable(variable) : variable.ValueRef;
     }
 
-    private LLVMValue CompileVariableUsageNew(VariableUsageNodeTemp node) =>
-        node switch
+    private LLVMValue CompileVariableUsageNew(VariableUsageNodeTemp node)
+    {
+        return node switch
         {
             VariableUsageIndexNode variableUsageIndexNode
                 => CompileVariableUsageNew(variableUsageIndexNode),
@@ -254,6 +255,7 @@ public class Compiler(
             VariableUsagePlainNode variableUsagePlainNode
                 => context.GetVariable(variableUsagePlainNode.MonomorphizedName())
         };
+    }
 
     private LLVMValue CompileVariableUsageNew(VariableUsageMemberNode node)
     {
@@ -812,7 +814,6 @@ public class Compiler(
         // only alloca when !isConstant (is somewhat problematic with structs)
 
         var llvmTypeFromShankType = context.GetLLVMTypeFromShankType(node.Type);
-        Console.WriteLine(llvmTypeFromShankType.TypeRef);
         LLVMValueRef v = builder.BuildAlloca(
             // isVar is false, because we are already creating it using alloca which makes it var
             llvmTypeFromShankType.TypeRef,
@@ -822,6 +823,10 @@ public class Compiler(
         {
             var init = CompileExpression(node.InitialValue);
             builder.BuildStore(init, v);
+        }
+        else
+        {
+            builder.BuildStore(CompileDefaultExpression(llvmTypeFromShankType), v);
         }
 
         // TODO: preallocate arrays in records to (might need to be recursive)
@@ -848,6 +853,51 @@ public class Compiler(
         // maybe the aforementioned function should take a function that takes a type and gives back an LLVMValueRef (so it would work here, but also for parameters)
         var variable = context.NewVariable(node.Type);
         context.AddVariable(node.MonomorphizedName(), variable(v, !node.IsConstant));
+    }
+
+    private LLVMValueRef CompileDefaultExpression(LLVMType llvmTypeFromShankType)
+    {
+        return llvmTypeFromShankType switch
+        {
+            LLVMArrayType type
+                => LLVMValueRef.CreateConstArray(
+                    type.Inner.TypeRef,
+                    Enumerable
+                        .Range(0, (int)type.Range.Length)
+                        .Select(_ => CompileDefaultExpression(type.Inner))
+                        .ToArray()
+                ),
+            LLVMReferenceType type
+                => LLVMValueRef.CreateConstStruct(
+                    [
+                        LLVMValueRef.CreateConstPointerNull(type.Inner.TypeRef),
+                        LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0),
+                        LLVMValueRef.CreateConstInt(LLVMTypeRef.Int1, 0)
+                    ],
+                    false
+                ),
+            LLVMStringType type
+                => LLVMValueRef.CreateConstStruct(
+                    [
+                        LLVMValueRef.CreateConstArray(LLVMTypeRef.Int8, []),
+                        // TODO: should this be a malloc
+                        LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0),
+                    ],
+                    false
+                ),
+            LLVMStructType type
+                => LLVMValueRef.CreateConstNamedStruct(
+                    type.TypeRef,
+                    type.Members.Values.Select(CompileDefaultExpression).ToArray()
+                ),
+            LLVMRealType type => LLVMValueRef.CreateConstReal(type.TypeRef, 0.0),
+            // TODO: first declared variant
+            LLVMEnumType type => LLVMValueRef.CreateConstInt(type.TypeRef, 0),
+            LLVMIntegerType type => LLVMValueRef.CreateConstInt(type.TypeRef, 0),
+            LLVMCharacterType type => LLVMValueRef.CreateConstInt(type.TypeRef, 0),
+            LLVMBooleanType type => LLVMValueRef.CreateConstInt(type.TypeRef, 0),
+            _ => throw new ArgumentOutOfRangeException(nameof(llvmTypeFromShankType))
+        };
     }
 
     public void Compile(MonomorphizedProgramNode node)
@@ -907,10 +957,8 @@ public class Compiler(
         var afterFor = context.CurrentFunction.AppendBasicBlock("for.after");
         var forBody = context.CurrentFunction.AppendBasicBlock("for.body");
         var forIncrement = context.CurrentFunction.AppendBasicBlock("for.inc");
-        var mutableCurrentIterable = CompileExpression(
-            options.VuOpTest ? node.NewVariable : node.Variable,
-            false
-        );
+        var variable = options.VuOpTest ? node.NewVariable : node.Variable;
+        var mutableCurrentIterable = CompileExpression(variable, false);
         var fromValue = CompileExpression(node.From);
         builder.BuildStore(fromValue, mutableCurrentIterable);
 
@@ -923,7 +971,7 @@ public class Compiler(
 
         var toValue = CompileExpression(node.To);
 
-        var currentIterable = CompileExpression(node.Variable);
+        var currentIterable = CompileExpression(variable);
         // right now we assume, from, to, and the variable are all integers
         // in the future we should check and give some error at runtime/compile time if not
         var condition = builder.BuildICmp(LLVMIntPredicate.LLVMIntSLE, currentIterable, toValue);
@@ -1240,7 +1288,6 @@ public class Compiler(
         IEnumerable<LLVMValueRef> GetValues((LLVMType First, LLVMValueRef Second) n)
         {
             {
-                Console.WriteLine(n);
                 return n.First switch
                 {
                     LLVMEnumType e => [HandleEnum(n.Second, e.Variants)],

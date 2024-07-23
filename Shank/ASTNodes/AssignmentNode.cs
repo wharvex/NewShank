@@ -10,12 +10,26 @@ namespace Shank.ASTNodes;
 /// </summary>
 public class AssignmentNode : StatementNode
 {
+    ///<summary>
+    /// Initializes a new instance of the <see cref="AssignmentNode"/> class.
+    ///</summary>
+    ///<param name="target">The target variable to which the expression is assigned.</param>
+    ///<param name="expression">The expression assigned to the target variable.</param>
+
     public AssignmentNode(VariableUsagePlainNode target, ExpressionNode expression)
     {
         Target = target;
         Expression = expression;
         NewTarget = new VariableUsagePlainNode("emptyNewTarget", "default");
     }
+
+    ///<summary>
+    /// Initializes a new instance of the <see cref="AssignmentNode"/> class.
+    ///</summary>
+    ///<param name="target">The target variable (temporary).</param>
+    ///<param name="expression">The expression assigned to the target variable.</param>
+    ///<param name="isVuopReroute">A boolean flag for rerouting.</param>
+
 
     public AssignmentNode(
         VariableUsageNodeTemp target,
@@ -31,7 +45,12 @@ public class AssignmentNode : StatementNode
     /// <summary>
     /// The target variable to which the expression is assigned (LHS of the :=).
     /// </summary>
+    ///
     public VariableUsagePlainNode Target { get; set; }
+
+    ///<summary>
+    /// The temporary target variable.
+    ///</summary>
 
     public VariableUsageNodeTemp NewTarget { get; set; }
 
@@ -39,6 +58,11 @@ public class AssignmentNode : StatementNode
     /// The expression assigned to the target variable (RHS of the :=).
     /// </summary>
     public ExpressionNode Expression { get; set; }
+
+    ///<summary>
+    /// Returns an array of statement tokens.
+    ///</summary>
+    ///<returns>An array containing the statement tokens.</returns>
 
     public override object[] returnStatementTokens()
     {
@@ -70,6 +94,12 @@ public class AssignmentNode : StatementNode
         return $"{Target} assigned as {Expression}";
     }
 
+    ///<summary>
+    /// Walks the node with a compliant visitor.
+    ///</summary>
+    ///<param name="v">The visitor to walk with.</param>
+    ///<returns>The resulting AST node.</returns>
+
     public override ASTNode Walk(WalkCompliantVisitor v)
     {
         var ret = v.Visit(this, out var shortCircuit);
@@ -91,6 +121,12 @@ public class AssignmentNode : StatementNode
 
         return v.Final(this);
     }
+
+    ///<summary>
+    /// Walks the node with a semantic analysis visitor.
+    ///</summary>
+    ///<param name="v">The visitor to walk with.</param>
+    ///<returns>The resulting AST node if changes are made, or null if no changes are made.</returns>
 
     public override ASTNode? Walk(SAVisitor v)
     {
