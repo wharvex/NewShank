@@ -1,0 +1,18 @@
+record row
+    cells: array from 0 to 100 of integer
+
+record matrix
+    rows: array from 0 to 100 of row
+
+define start()
+variables a, b, c: matrix
+    matrixMultiply a, b, var c
+
+define matrixMultiply(a, b: matrix; var c:matrix)
+variables i, j, k, sum: integer
+    for i from 0 to 99
+        for j from 0 to 99
+            sum := 0
+            for k from 0 to 99
+                sum := sum + a.rows[i].cells[k] * b.rows[k].cells[j]
+            c.rows[i].cells[j] := sum
