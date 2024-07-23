@@ -10,7 +10,6 @@ namespace Shank.ASTNodes;
 /// </summary>
 public class AssignmentNode : StatementNode
 {
-
     ///<summary>
     /// Initializes a new instance of the <see cref="AssignmentNode"/> class.
     ///</summary>
@@ -46,7 +45,7 @@ public class AssignmentNode : StatementNode
     /// <summary>
     /// The target variable to which the expression is assigned (LHS of the :=).
     /// </summary>
-    /// 
+    ///
     public VariableUsagePlainNode Target { get; set; }
 
     ///<summary>
