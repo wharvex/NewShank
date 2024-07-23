@@ -350,7 +350,7 @@ public class Parser
     /// <summary>
     ///     Method <c>MemberAccess</c> creATES MemberAccessNode containing the value of the next token
     /// </summary>
-    /// <returns>MemberAccessNode with value</returns>
+    /// <returns> <see cref="MemberAccessNode"/> with value</returns>
 
     private MemberAccessNode MemberAccess() =>
         new MemberAccessNode(RequiresAndReturnsToken(Token.TokenType.Identifier).GetValueSafe());
@@ -358,7 +358,7 @@ public class Parser
     /// <summary>
     ///     Method <c>Module</c> parses a module and consumes constructs contained within
     /// </summary>
-    /// <returns>ModuleNode containing the constructs as its contents</returns>
+    /// <returns><see cref="ModuleNode"/> containing the constructs as its contents</returns>
     /// <exception cref="SyntaxErrorException">
     ///     <list type="bullet">
     ///         <item>
@@ -473,7 +473,7 @@ public class Parser
     ///     </para>
     /// </summary>
     /// <param name="moduleName">The module that is processed along with the function(string)</param>
-    /// <returns>FunctionNode containing the functions contents</returns>
+    /// <returns> <see cref="FunctionNode"/> containing the functions contents</returns>
     /// <exception cref="SyntaxErrorException">
     ///     <list type="bullet">
     ///         <item>
@@ -546,7 +546,7 @@ public class Parser
     ///     </para>
     /// </summary>
     /// <param name="moduleName">The name of the parent module</param>
-    /// <returns>A RecordNode containing its contents</returns>
+    /// <returns>A <see cref="RecordNode"/> containing its contents</returns>
 
     private RecordNode Record(string moduleName)
     {
@@ -572,7 +572,7 @@ public class Parser
     ///         Method <c>ParseGenericKeywordAndTypeParams</c> parses a generic keyword along with its list of type parameters (identifiers)
     ///     </para>
     /// </summary>
-    /// <returns>List of type parameters</returns>
+    /// <returns> <see cref="List{T} "/> (<see cref="string"/>) of type parameters</returns>
     /// <exception cref="SyntaxErrorException">A generic is not immediately followed by an identifier token</exception>
     private List<string>? ParseGenericKeywordAndTypeParams()
     {
@@ -613,7 +613,7 @@ public class Parser
     ///     </para>
     /// </summary>
     /// <param name="parentModule">The name of the parent module</param>
-    /// <returns>List of the contents of the body</returns>
+    /// <returns><see cref="List{T}"/> (<see cref="VariableDeclarationNode"/>) of the contents of the body</returns>
 
     private List<VariableDeclarationNode> BodyRecord(string parentModule)
     {
@@ -689,7 +689,7 @@ public class Parser
     ///     </para>
     /// </summary>
     /// <param name="moduleName">The name of the parent module to which the statement belongs</param>
-    /// <returns>Assignment or While or Repeat or For or If or FunctionCall</returns>
+    /// <returns><see cref="AssignmentNode"/> or <see cref="StringNode"/> or <see cref="RepeatNode"/> or <see cref="ForNode"/> or <see cref="IfNode"/> or <see cref="FunctionCallNode"/> containg the contents of the statement</returns>
     private StatementNode? Statement(string moduleName)
     {
         return (
@@ -711,7 +711,7 @@ public class Parser
     ///     </para>
     /// </summary>
     /// <param name="constantNode">The node passed in</param>
-    /// <returns>IntegerType or RealType or StringType or CharacterType or BooleanType representing the type of the object passed in</returns>
+    /// <returns><see cref="IntegerType"/> or <see cref="RealType"/> or <see cref="StringType"/> or <see cref="CharacterType"/> or <see cref="BooleanType"/> representing the type of the object passed in</returns>
     /// <exception cref="InvalidOperationException">If the type of the node passed in cannot be read</exception>
     public static Type GetDataTypeFromConstantNodeType(ASTNode constantNode) =>
         constantNode switch
@@ -736,7 +736,7 @@ public class Parser
     ///     </para>
     /// </summary>
     /// <param name="declarationContext">The declaration context for the construct</param>
-    /// <returns>A Type object representing the type of the parsed construct</returns>
+    /// <returns>A <see cref="Shank.Type"/> object representing the type of the parsed construct</returns>
     /// <exception cref="SyntaxErrorException">
     ///     <list type="bullet">
     ///         <item>
@@ -800,7 +800,7 @@ public class Parser
     /// </summary>
     /// <typeparam name="T">The type to be used for our generator</typeparam>
     /// <param name="generator">Contents of the next iteration to whatever was passed in</param>
-    /// <returns>Content of the generator as an enumerator</returns>
+    /// <returns>Content of the generator as an <see cref="IEnumerable{T}"/></returns>
     static IEnumerable<T> Repeat<T>(Func<T> generator)
     {
         yield return generator();
@@ -814,7 +814,7 @@ public class Parser
     /// </summary>
     /// <param name="declarationContext">The context of the type identifier</param>
     /// <param name="typeToken">The type token encountered</param>
-    /// <returns>UnknownType token containing its value and parameters (custom type)</returns>
+    /// <returns><see cref="UnknownType"/> token containing its value and parameters (custom type)</returns>
     private Type CustomType(
         VariableDeclarationNode.DeclarationContext declarationContext,
         Token typeToken
@@ -926,7 +926,7 @@ public class Parser
     /// </summary>
     /// <param name="isFloat">Whether or not the range provided is measured using float values</param>
     /// <param name="defaultRange">The expected default range</param>
-    /// <returns>Range object returned from <c>CheckRangeInner</c></returns>
+    /// <returns><see cref="Range"/> object returned from <c>CheckRangeInner</c></returns>
     private Range CheckRange(
         Func<ExpressionNode, ExpressionNode, Option<string>> rangeVerifier,
         Range defaultRange
@@ -950,7 +950,7 @@ public class Parser
     /// </summary>
     /// <param name="isFloat">If the range requires bounds of float type</param>
     /// <param name="defaultRange">The default range expected</param>
-    /// <returns>Range object containing its upper and lower bounds</returns>
+    /// <returns><see cref="Range"/> object containing its upper and lower bounds</returns>
     /// <exception cref="SyntaxErrorException">
     ///     <list type="bullet">
     ///         <item>
@@ -1038,7 +1038,7 @@ public class Parser
     ///     </para>
     /// </summary>
     /// <param name="moduleName">The name of the parent module to which the function call belongs</param>
-    /// <returns>FunctionCallNode containing the contents of the function call statement</returns>
+    /// <returns><see cref="FunctionCallNode"/> containing the contents of the function call statement</returns>
     /// <exception cref="SyntaxErrorException">If an invalid constant or expression was found for a non-variable argument</exception>
     private FunctionCallNode? FunctionCall(string moduleName)
     {
@@ -1095,7 +1095,7 @@ public class Parser
     ///     </para>
     /// </summary>
     /// <param name="moduleName">The name of the parent module to which the if statement belongs</param>
-    /// <returns>IfNode containing the contenets of the if statement</returns>
+    /// <returns><see cref="IfNode"/> containing the contenets of the if statement</returns>
     /// <exception cref="SyntaxErrorException">
     ///     <list type="bullet">
     ///         <item>
@@ -1173,7 +1173,7 @@ public class Parser
     ///     </para>
     /// </summary>
     /// <param name="moduleName">The name of the parent module to which the while statement belongs</param>
-    /// <returns>A WhileNode containing the contents of the while statement</returns>
+    /// <returns> <see cref="WhileNode"/> containing the contents of the while statement</returns>
 
     private StatementNode? While(string moduleName)
     {
@@ -1210,7 +1210,7 @@ public class Parser
     ///     </para>
     /// </summary>
     /// <param name="moduleName">The name of hte parent module to which the repeat statement belongs</param>
-    /// <returns>A RepeatNode containing the contents of the repeat statement</returns>
+    /// <returns><see cref="RepeatNode"/> containing the contents of the repeat statement</returns>
     /// <exception cref="SyntaxErrorException">
     ///     <list type="bullet">
     ///         <item>
@@ -1264,7 +1264,7 @@ public class Parser
     ///     </para>
     /// </summary>
     /// <param name="moduleName">The name of the parent module to which the for statement belongs</param>
-    /// <returns>ForNode containing the contents of the for statement</returns>
+    /// <returns><see cref="ForNode"/> containing the contents of the for statement</returns>
     /// <exception cref="SyntaxErrorException">
     ///     <list type="bullet">
     ///         <item>
@@ -1338,7 +1338,7 @@ public class Parser
     ///     </para>
     /// </summary>
     /// <param name="moduleName">The parent module's name to whcih the boolean expression belongs to</param>
-    /// <returns>A BooleanExpressionNode containing the boolean expression's contents</returns>
+    /// <returns><see cref="BooleanExpressionNode"/> containing the boolean expression's contents</returns>
     /// <exception cref="SyntaxErrorException">If the expression parsed does not match the format of a boolean expression</exception>
     private BooleanExpressionNode BooleanExpression(string moduleName)
     {
@@ -1357,7 +1357,7 @@ public class Parser
     ///     </para>
     /// </summary>
     /// <param name="moduleName">The name of the parent module containing the assignment</param>
-    /// <returns>a new AssignmentNode else null</returns>
+    /// <returns>new <see cref="AssignmentNode"/> else <see cref="null"/></returns>
     /// <exception cref="SyntaxErrorException">
     ///     <list type="bullet">
     ///         <item>
@@ -1409,7 +1409,7 @@ public class Parser
     ///     </para>
     /// </summary>
     /// <param name="moduleName">The name of the parent module to which the assigment belongs</param>
-    /// <returns>the new AssignmentNode containing its contents else null</returns>
+    /// <returns>new <see cref="AssignmentNode"/> containing its contents else <see cref="null"/></returns>
     /// <exception cref="SyntaxErrorException">
     ///     <list type="bullet">
     ///         <item>
@@ -1449,7 +1449,7 @@ public class Parser
     ///     Method <c>FindBeforeEol</c> checks to see if the token matching the type passed in is before the next EndOfLine token
     /// </summary>
     /// <param name="tokenType">The desired token's type</param>
-    /// <returns>true if found or else false</returns>
+    /// <returns>true if found or else false (<see cref="bool"/>)</returns>
     private bool FindBeforeEol(Token.TokenType tokenType)
     {
         var i = 0;
@@ -1470,11 +1470,11 @@ public class Parser
     }
 
     /// <summary>
-    /// Process an arbitrary number of consecutive variables declaration lines (i.e. lines that
-    /// start with the 'variables' keyword).
+    ///     Process an arbitrary number of consecutive variables declaration lines (i.e. lines that
+    ///     start with the 'variables' keyword).
     /// </summary>
-    /// <param name="parentModule"></param>
-    /// <returns></returns>
+    /// <param name="parentModule">The parent module to which the variable declarations belong</param>
+    /// <returns>A <see cref="List{T}"/> (<see cref="VariableDeclarationNode"/>) containing the variable declarations</returns>
     private List<VariableDeclarationNode> ProcessVariables(string parentModule, bool isGlobal)
     {
         var retVal = new List<VariableDeclarationNode>();
@@ -1497,8 +1497,8 @@ public class Parser
     }
 
     /// <summary>
-    ///     <para>
-    ///         Method <c>ProcessVaraibelsDoWhile</c>
+    ///     <para> 
+    ///         Method <c>ProcessVaraibelsDoWhile</c> 
     ///     </para>
     /// </summary>
     /// <param name="parentModule"></param>
@@ -1528,17 +1528,6 @@ public class Parser
         return retVal;
     }
 
-    /// <summary>
-    ///     <para>
-    ///         Method <c>CreateVariables</c>
-    ///     </para>
-    /// </summary>
-    /// <param name="names"></param>
-    /// <param name="isConstant"></param>
-    /// <param name="parentModuleName"></param>
-    /// <param name="declarationContext"></param>
-    /// <returns></returns>
-    /// <exception cref="SyntaxErrorException"></exception>
     private List<VariableDeclarationNode> CreateVariables(
         List<string> names,
         bool isConstant,
@@ -1646,7 +1635,7 @@ public class Parser
     /// <param name="declarationContext">The context of the variable declaration</param>
     /// <param name="hasVar">If a "var" keyword is present</param>
     /// <param name="varToken">A token containing the "var" keyword (used for error messages)</param>
-    /// <returns></returns>
+    /// <returns><c>true</c> if the character is mutable or else <c>false</c> (<see cref="bool"/>) </returns>
     /// <exception cref="SyntaxErrorException">
     ///     <list type="bullet">
     ///         <item>
@@ -1712,7 +1701,7 @@ public class Parser
     /// </summary>
     /// <param name="parentModuleName">the module in which the variables reside</param>
     /// <param name="declarationContext">the conext of the variable declaration (used to get the mutability of the variable)</param>
-    /// <returns>List of variable declartions</returns>
+    /// <returns><see cref="List{T}"/> (<see cref="VariableDeclarationNode"/>) of variable declarations</returns>
     private List<VariableDeclarationNode>? GetVariables(
         string parentModuleName,
         bool isGlobal,
@@ -1801,7 +1790,7 @@ public class Parser
     ///     </para>
     /// </summary>
     /// <param name="tokenType">TokenType of the requested token</param>
-    /// <returns>Token otherwise throw an exception</returns>
+    /// <returns><see cref="Token"/> otherwise throw an exception</returns>
     /// <exception cref="SyntaxErrorException">If the TokenType passed in does not match the TokenType of the next Token</exception>
 
     private Token RequiresAndReturnsToken(Token.TokenType tokenType) =>
@@ -2020,7 +2009,7 @@ public class Parser
     ///     </para>
     /// </summary>
     /// <param name="num">The number being processed</param>
-    /// <returns>FloatNode or IntNode containing the value of the number</returns>
+    /// <returns><see cref="FloatNode"/> or <see cref="IntNode"/> containing the value of the number</returns>
     private ExpressionNode ProcessNumericConstant(Token num)
     {
         return (num.Value ?? "").Contains('.')
@@ -2041,7 +2030,7 @@ public class Parser
     ///     </para>
     /// </summary>
     /// <param name="moduleName">The name of the parent module to which the expression belongs</param>
-    /// <returns>An ExpressionRHS object containing the expression contents</returns>
+    /// <returns>An <see cref="ExpressionNode"/> containing the expression contents</returns>
     public ExpressionNode? Expression(string moduleName)
     {
         //get the term in the expression
@@ -2147,7 +2136,7 @@ public class Parser
     ///     </para>
     /// </summary>
     /// <param name="moduleName">The name of the parent module to which the term belongs</param>
-    /// <returns>A TermRHS object containing the terms contents</returns>
+    /// <returns>A <see cref="ExpressionNode"/> containing the terms contents</returns>
     private ExpressionNode? Term(string moduleName)
     {
         //get the factor in the term
@@ -2195,7 +2184,7 @@ public class Parser
     ///     </para>
     /// </summary>
     /// <param name="moduleName">The name of the parent module to which the factor belongs</param>
-    /// <returns>ExpressionRHS or VariableUsageNode or StringNode or CharNode or BoolNode or FloatNode or IntNode</returns>
+    /// <returns><see cref="ExpressionNode"/> or <see cref="VariableUsageNodeTemp"/> or <see cref="StringNode"/> or <see cref="CharNode"/> or <see cref="BoolNode"/> or <see cref="FloatNode"/> or <see cref="IntNode"/> containing the factor's contents</returns>
     /// <exception cref="SyntaxErrorException">
     ///     <list type="bullet">
     ///         <item>
@@ -2270,7 +2259,7 @@ public class Parser
     /// <summary>
     ///     Method <c>Export</c> parses a list of export identifiers which are separated by commas
     /// </summary>
-    /// <returns>The list of export identifiers</returns>
+    /// <returns><see cref="LinkedList{T}"/> (<see cref="string"/>) of export identifiers</returns>
     /// <exception cref="SyntaxErrorException">
     /// <list type="bullet">
     ///     <item>
@@ -2329,7 +2318,7 @@ public class Parser
     ///         Method <c>checkForFunctions</c> parses a list of imports and adds the a list which is returned
     ///     </para>
     /// </summary>
-    /// <returns>A LinkedList of import statements (string)</returns>
+    /// <returns><see cref="LinkedList{T}"/> (<see cref="string"/>) of import statements </returns>
     /// <exception cref="SyntaxErrorException">
     ///     <list>
     ///         <item>
