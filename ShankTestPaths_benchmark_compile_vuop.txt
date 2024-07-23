@@ -1,3 +1,3 @@
-Compile Shank/benchMark/Factorial --print-ir --vuop-test --linker clang -o ./TestCompileOutput/Factorial.exe
-Compile Shank/benchMark/Fibonacci --print-ir --vuop-test --linker clang -o ./TestCompileOutput/Fibonacci.exe
-Compile Shank/benchMark/ManderboltSet --print-ir --vuop-test --linker clang -o ./TestCompileOutput/Manderbolt.exe
+Compile Shank/benchMark/Factorial --vuop-test --linker clang -o ./TestCompileOutput/Factorial.exe
+Compile Shank/benchMark/Fibonacci --vuop-test --linker clang -o ./TestCompileOutput/Fibonacci.exe
+Compile Shank/benchMark/ManderboltSet --vuop-test --linker clang -o ./TestCompileOutput/Manderbolt.exe

@@ -692,11 +692,7 @@ public class Parser
     /// <returns><see cref="AssignmentNode"/> or <see cref="StringNode"/> or <see cref="RepeatNode"/> or <see cref="ForNode"/> or <see cref="IfNode"/> or <see cref="FunctionCallNode"/> containg the contents of the statement</returns>
     private StatementNode? Statement(string moduleName)
     {
-        return (
-                ActiveInterpretOptions is not null && ActiveInterpretOptions.VuOpTest
-                    ? NewAssignment(moduleName)
-                    : Assignment(moduleName)
-            )
+        return (GetVuopTestFlag() ? NewAssignment(moduleName) : Assignment(moduleName))
             ?? While(moduleName)
             ?? Repeat(moduleName)
             ?? For(moduleName)
@@ -1424,9 +1420,7 @@ public class Parser
     {
         //makes sure our assignment is on the current line being parsed
         if (!FindBeforeEol(Token.TokenType.Assignment))
-        {
             return null;
-        }
 
         //the variable is parsed
         var target =
@@ -1454,6 +1448,10 @@ public class Parser
     {
         var i = 0;
         var next = Peek(i);
+
+        // Short-circuit if this line needs to fall out of "Statement" first.
+        if (next?.Type == Token.TokenType.Dedent)
+            return false;
 
         //looks to see if the required token is before an the end of the line
         while (next is not null && next.Type != Token.TokenType.EndOfLine)
