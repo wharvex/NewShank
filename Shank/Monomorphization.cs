@@ -254,7 +254,6 @@ public class MonomorphizationVisitor(
 
     public override void Visit(FunctionNode node)
     {
-        Console.WriteLine("func node: " + node.ToString());
         var typedModuleIndex = new TypedModuleIndex(
             new ModuleIndex(new NamedIndex(node.Name), node.parentModuleName!),
             new TypeIndex(

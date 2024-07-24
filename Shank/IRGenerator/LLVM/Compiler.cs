@@ -8,7 +8,7 @@ namespace Shank.IRGenerator;
 
 public enum Types
 {
-    STRUCT,
+    Struct,
     FLOAT,
     INTEGER,
     BOOLEAN,
