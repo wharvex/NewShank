@@ -182,6 +182,8 @@ public class Parser
                 {
                     throw new Exception("Nothing enclosed within the interface");
                 }
+                //RecordNode? recordNode = new RecordNode(name.GetValue(), thisClass.getName(), members, null);
+                //thisClass.AddRecord(recordNode);
                 return true;
             }
             throw new Exception("No name provided for interface");
@@ -217,6 +219,7 @@ public class Parser
                             if (record != null)
                             {
                                 thisClass.AddRecord(record);
+                                return true;
                             }
                         }
                         throw new Exception(
@@ -924,7 +927,6 @@ public class Parser
             if ((function = handler.MatchAndRemove(TokenType.FUNCTION)) != null)
             {
                 functionNode = new FunctionNode(function.GetValue(), thisClass.Name, isPublic);
-
                 thisClass.addFunction(functionNode);
                 if (isShared)
                 {
