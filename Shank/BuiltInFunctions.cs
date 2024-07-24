@@ -330,12 +330,11 @@ public class BuiltInFunctions
 
     public static void Times(List<InterpreterDataType> parameters)
     {
-        if (parameters[0] is IntDataType intParam 
-            && parameters[1] is IteratorDataType dest)
+        if (parameters[0] is IntDataType intParam && parameters[1] is IteratorDataType dest)
         {
             int count = intParam.Value;
             var iteratorDataType = new IteratorDataType(count);
-       
+
             dest.Value = iteratorDataType.Value;
         }
         else

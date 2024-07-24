@@ -37,10 +37,12 @@ public class IntDataType : InterpreterDataType
 public class IteratorDataType : InterpreterDataType
 {
     public IEnumerator<int> Value { get; set; }
+
     public IteratorDataType(int count)
     {
         Value = Enumerable.Range(0, count).GetEnumerator();
     }
+
     public bool MoveNext()
     {
         return Value.MoveNext();
@@ -56,10 +58,7 @@ public class IteratorDataType : InterpreterDataType
         return Value.ToString();
     }
 
-    public override void FromString(string input)
-    {
-        
-    }
+    public override void FromString(string input) { }
 }
 
 public class FloatDataType : InterpreterDataType
