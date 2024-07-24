@@ -1,7 +1,5 @@
-import sys
-
-INNER_LOOP_LEN = 88
-OUTER_LOOP_LEN = 10000000
+INNER_LOOP_LEN = 44
+OUTER_LOOP_LEN = 70000000
 
 def fibonacci(m, n):
     curr = 1
@@ -16,5 +14,4 @@ def fibonacci(m, n):
     return curr
 
 
-sys.set_int_max_str_digits(10000000)
 print(fibonacci(OUTER_LOOP_LEN, INNER_LOOP_LEN))
