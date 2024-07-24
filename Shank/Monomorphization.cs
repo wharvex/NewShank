@@ -3,6 +3,9 @@ using Shank.ExprVisitors;
 
 namespace Shank;
 
+/// <summary>
+/// does monopmorphism
+/// </summary>
 public interface Index;
 
 public record struct NamedIndex(string Name) : Index;

@@ -4,6 +4,13 @@ using Shank.ASTNodes;
 
 namespace Shank.IRGenerator;
 
+/// <summary>
+/// this is the 1st pass. it generates the headers.
+/// for functions, global vars, types
+/// </summary>
+/// <param name="context"></param>
+/// <param name="builder"></param>
+/// <param name="module"></param>
 public class PrototypeCompiler(Context context, LLVMBuilderRef builder, LLVMModuleRef module)
 {
     public void DebugRuntime(string format, LLVMValueRef value)
@@ -17,16 +24,16 @@ public class PrototypeCompiler(Context context, LLVMBuilderRef builder, LLVMModu
 
     private void CompileFunctionPrototype(FunctionNode node)
     {
-        var fnRetTy = module.Context.Int32Type;
+        var functionReturnType = module.Context.Int32Type; //error code return
         var parameters = node.ParameterVariables.Select(
             s => new LLVMParameter(context.GetLLVMTypeFromShankType(s.Type), !s.IsConstant)
         )
             .ToList();
-        node.Name = node.Name.Equals("start") ? "main" : node.Name;
+        node.Name = node.Name.Equals("start") ? "main" : node.Name; //main is not sttart :<
         var function = module.addFunction(
             node.Name,
             LLVMTypeRef.CreateFunction(
-                fnRetTy,
+                functionReturnType,
                 parameters
                     .Select(
                         p =>
@@ -59,11 +66,12 @@ public class PrototypeCompiler(Context context, LLVMBuilderRef builder, LLVMModu
 
     private void CompilePrototypeGlobalVariable(VariableDeclarationNode node)
     {
+        //global vars
         var type = context.GetLLVMTypeFromShankType(node.Type);
-        var a = module.AddGlobal(type.TypeRef, node.GetNameSafe());
+        var value = module.AddGlobal(type.TypeRef, node.GetNameSafe());
         var variable = context.NewVariable(node.Type);
-        a.Initializer = LLVMValueRef.CreateConstNull(type.TypeRef);
-        context.AddVariable(node.MonomorphizedName(), variable(a, !node.IsConstant));
+        value.Initializer = LLVMValueRef.CreateConstNull(type.TypeRef);
+        context.AddVariable(node.MonomorphizedName(), variable(value, !node.IsConstant));
     }
 
     public void CompilePrototypes(MonomorphizedProgramNode programNode)
