@@ -182,6 +182,32 @@ public class Interpreter
         }
     }
 
+    public void InterpretLoop(WhileNode loopNode)
+    {
+        if (!(loopNode.Expression is IntNode intNode))
+        {
+            throw new ArgumentException("InterpretLoop, Loop count must be an integer.");
+        }
+
+        int loopCount = intNode.Value;
+        List<InterpreterDataType> parameters = new List<InterpreterDataType>
+        {
+          // new IntNode(loopCount),
+            null // Placeholder for the iterator
+        };
+        BuiltInFunctions.Times(parameters);
+        var iteratorDataType = parameters[1] as IteratorDataType;
+        var enumerator = iteratorDataType?.Enumerator;
+        
+        while (enumerator.MoveNext())
+        {
+            foreach (var child in loopNode.Children)
+            {
+                //Interpret(child);
+            }
+        }
+    }
+
     private static void InterpretBlock(
         List<StatementNode> fnStatements,
         Dictionary<string, InterpreterDataType> variables,
