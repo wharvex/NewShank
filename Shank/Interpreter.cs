@@ -182,30 +182,22 @@ public class Interpreter
         }
     }
 
-    public void InterpretLoop(WhileNode loopNode)
+    public static bool InterpretLoop(WhileNode loopNode)
     {
         if (!(loopNode.Expression is IntNode intNode))
         {
             throw new ArgumentException("InterpretLoop, Loop count must be an integer.");
         }
-
         int loopCount = intNode.Value;
+        var iterator = new IteratorDataType(loopCount); 
         List<InterpreterDataType> parameters = new List<InterpreterDataType>
         {
-          // new IntNode(loopCount),
-            null // Placeholder for the iterator
+            new IntDataType(loopCount),
+            iterator 
         };
         BuiltInFunctions.Times(parameters);
-        var iteratorDataType = parameters[1] as IteratorDataType;
-        var enumerator = iteratorDataType?.Enumerator;
-        
-        while (enumerator.MoveNext())
-        {
-            foreach (var child in loopNode.Children)
-            {
-                //Interpret(child);
-            }
-        }
+         var iteratorDataType = parameters[1] as IteratorDataType;
+         return iteratorDataType.Value.MoveNext();
     }
 
     private static void InterpretBlock(
@@ -282,10 +274,19 @@ public class Interpreter
                     InterpretBlock(theIc.Children, variables, callingFunction);
             }
             else if (stmt is WhileNode wn)
-            {
+                
+            { if (InterpretLoop(wn))
+                 {
+                 while (ResolveBool(wn.Expression, variables))
+                 {
+                     InterpretBlock(wn.Children, variables, callingFunction);
+                 }
+                 }
+                else{
                 while (ResolveBool(wn.Expression, variables))
                 {
                     InterpretBlock(wn.Children, variables, callingFunction);
+                }
                 }
             }
             else if (stmt is RepeatNode rn)
