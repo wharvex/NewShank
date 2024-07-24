@@ -7,9 +7,9 @@
  * The 46th Fibonacci number was chosen as the target because it is the largest
  * Fibonacci number that is smaller than INT_MAX (2147483647).
  */
-#define INNER_LOOP_LEN 44
 
-#define OUTER_LOOP_LEN 70000000
+#define INNER_LOOP_LEN 44
+#define OUTER_LOOP_LEN 9000000
 
 int main() {
   int curr = 1;

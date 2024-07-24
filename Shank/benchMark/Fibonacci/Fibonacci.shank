@@ -1,5 +1,13 @@
+{
+Setting innerLoopLen to 44 and start to 1 causes the inner loop to calculate the 
+46th Fibonacci number: 1836311903
+See: https://planetmath.org/listoffibonaccinumbers
+The 46th Fibonacci number was chosen as the target because it is the largest
+Fibonacci number that is smaller than INT_MAX (2147483647).
+}
+
 define start()
-constants start = 1, innerLoopLen = 44, outerLoopLen = 70000000
+constants start = 1, innerLoopLen = 44, outerLoopLen = 9000000
 variables i, j, prev1, prev2, curr : integer
     for j from start to outerLoopLen
         prev1 := 1
