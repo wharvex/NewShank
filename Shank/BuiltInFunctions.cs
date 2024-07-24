@@ -330,7 +330,6 @@ public class BuiltInFunctions
 
     public static void Times(List<InterpreterDataType> parameters)
     {
-       
         if (parameters.Count == 0 || !(parameters[0] is IntDataType intParam))
         {
             throw new Exception("First parameter must be an integer parameter.");
@@ -343,7 +342,7 @@ public class BuiltInFunctions
 
         int count = intParam.Value;
         var iteratorDataType = new IteratorDataType(count);
-        
+
         parameters[1] = iteratorDataType;
     }
 

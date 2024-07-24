@@ -1,0 +1,3 @@
+Compile Shank/benchMark/Factorial --linker clang -o ./TestCompileOutput/Factorial.exe
+Compile Shank/benchMark/Fibonacci --linker clang -o ./TestCompileOutput/Fibonacci.exe
+Compile Shank/benchMark/ManderboltSet --linker clang -o ./TestCompileOutput/Manderbolt.exe

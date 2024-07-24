@@ -40,12 +40,8 @@ public static class IdtExtensions
                 return (InterpreterDataType)adt.Value[resolveInt(i.Right, variables)];
             case ReferenceDataType refDt:
                 if (vun is VariableUsageMemberNode mm)
-                {
-                    if (mm.Line == 9)
-                        OutputHelper.DebugPrintJson(refDt.Record, "blah");
                     return refDt.Record?.Value[mm.Right.Name] as InterpreterDataType
                         ?? throw new InvalidOperationException("Record has not been allocated.");
-                }
                 throw new InvalidOperationException();
             default:
                 return null;

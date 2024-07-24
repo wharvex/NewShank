@@ -8,15 +8,17 @@ public class IteratorDataType : InterpreterDataType
     {
         Enumerator = Enumerable.Range(0, count).GetEnumerator();
     }
+
     public bool MoveNext()
     {
         return Enumerator.MoveNext();
     }
-    
+
     public int Current
     {
         get { return Enumerator.Current; }
     }
+
     public override string ToString()
     {
         return "IteratorDataType";
