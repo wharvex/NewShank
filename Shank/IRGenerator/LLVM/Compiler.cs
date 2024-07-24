@@ -655,7 +655,9 @@ public class Compiler(
                         CompileExpression(
                             argumentAndMutability.First,
                             // for struct and arrays and really anything else we do not have to copy anything for function call because if they are marked var they need to be mutated, if they are not then the function cannot mutate them - and any time it assign part of this to a different value that will get copied
-                            !argumentAndMutability.Second.Mutable && argumentAndMutability.Second.Type is not (LLVMArrayType or LLVMStructType)
+                            !argumentAndMutability.Second.Mutable
+                                && argumentAndMutability.Second.Type
+                                    is not (LLVMArrayType or LLVMStructType)
                         )
                 );
             // function.
@@ -1262,7 +1264,16 @@ public class Compiler(
         var format = $"{string.Join(" ", formatList)}\n";
         var paramList = function
             .Parameters.Select(param => param.Type)
-            .Zip(function.Function.Params).Select(p => (p.First, p.First is LLVMArrayType or LLVMStructType ? builder.BuildLoad2(p.First.TypeRef, p.Second) : p.Second))
+            .Zip(function.Function.Params)
+            .Select(
+                p =>
+                    (
+                        p.First,
+                        p.First is LLVMArrayType or LLVMStructType
+                            ? builder.BuildLoad2(p.First.TypeRef, p.Second)
+                            : p.Second
+                    )
+            )
             .SelectMany(GetValues)
             .Prepend(builder.BuildGlobalStringPtr(format, "printf-format"));
         builder.BuildCall2(
