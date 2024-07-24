@@ -259,6 +259,11 @@ public class Compiler(
 
     private LLVMValue CompileVariableUsageNew(VariableUsageMemberNode node)
     {
+        // Problem with big array (is not using pointer for non mutable aggregate parameters, we could just always pass load as true when doing function calls)
+        // and then check if its aggregate type like array or struct if its not then load it after (and then there no need to copy)
+        // or maybe (and/or) the fact that llvm doesn't like massive constants (initialization/copying - could be paratially elvated by making the constant global?)/or function calls with massive parameter counts
+        // for initializtion look into memset - split things up into loops if we go past certain size?
+        // memset I think would work in all cases (but you cannot memset a struct directly) (looking at what rustc does you basically have to do a loop when arrays are involved)
         var value = CompileVariableUsageNew(node.Left);
         if (value is LLVMReference r)
         {
@@ -644,12 +649,15 @@ public class Compiler(
         {
             var function = context.GetFunction(node.MonomphorizedFunctionLocater);
 
-            var parameters = node.Arguments.Zip(function.Parameters.Select(p => p.Mutable))
+            var parameters = node.Arguments.Zip(function.Parameters)
                 .Select(
                     argumentAndMutability =>
                         CompileExpression(
                             argumentAndMutability.First,
-                            !argumentAndMutability.Second
+                            // for struct and arrays and really anything else we do not have to copy anything for function call because if they are marked var they need to be mutated, if they are not then the function cannot mutate them - and any time it assign part of this to a different value that will get copied
+                            !argumentAndMutability.Second.Mutable
+                                && argumentAndMutability.Second.Type
+                                    is not (LLVMArrayType or LLVMStructType)
                         )
                 );
             // function.
@@ -668,7 +676,7 @@ public class Compiler(
             var (param, index) in node.ParameterVariables.Select((param, index) => (param, index))
         )
         {
-            if (param.IsConstant)
+            if (param.IsConstant && param.Type is not (ArrayType or RecordType))
             {
                 var llvmParam = function.GetParam((uint)index);
                 var name = param.GetNameSafe();
@@ -1257,6 +1265,15 @@ public class Compiler(
         var paramList = function
             .Parameters.Select(param => param.Type)
             .Zip(function.Function.Params)
+            .Select(
+                p =>
+                    (
+                        p.First,
+                        p.First is LLVMArrayType or LLVMStructType
+                            ? builder.BuildLoad2(p.First.TypeRef, p.Second)
+                            : p.Second
+                    )
+            )
             .SelectMany(GetValues)
             .Prepend(builder.BuildGlobalStringPtr(format, "printf-format"));
         builder.BuildCall2(

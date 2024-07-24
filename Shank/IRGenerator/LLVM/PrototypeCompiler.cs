@@ -1,3 +1,4 @@
+using LLVMSharp;
 using LLVMSharp.Interop;
 using Shank.ASTNodes;
 
@@ -29,7 +30,7 @@ public class PrototypeCompiler(Context context, LLVMBuilderRef builder, LLVMModu
                 parameters
                     .Select(
                         p =>
-                            p.Mutable
+                            p.Mutable || p.Type is LLVMStructType or LLVMArrayType
                                 ? LLVMTypeRef.CreatePointer(p.Type.TypeRef, 0)
                                 : p.Type.TypeRef
                     )
@@ -89,8 +90,6 @@ public class PrototypeCompiler(Context context, LLVMBuilderRef builder, LLVMModu
         )
             .ToList();
 
-        node.Name = node.Name.Equals("start") ? "main" : node.Name;
-
         var function = module.addFunction(
             node.Name,
             LLVMTypeRef.CreateFunction(
@@ -98,7 +97,8 @@ public class PrototypeCompiler(Context context, LLVMBuilderRef builder, LLVMModu
                 parameters
                     .Select(
                         p =>
-                            p.Mutable
+                            // p.Mutable
+                            p.Mutable || p.Type is LLVMStructType or LLVMArrayType
                                 ? LLVMTypeRef.CreatePointer(p.Type.TypeRef, 0)
                                 : p.Type.TypeRef
                     )
