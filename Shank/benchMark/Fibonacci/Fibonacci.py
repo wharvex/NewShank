@@ -1,13 +1,20 @@
-def fibnauci(n):
-    prev1 = 1
-    prev2 = 1
+import sys
+
+INNER_LOOP_LEN = 88
+OUTER_LOOP_LEN = 10000000
+
+def fibonacci(m, n):
     curr = 1
-    for i in range(n):
-        curr = prev1 + prev2
-        prev2 = prev1
-        prev1 = curr
+    for i in range(m):
+        prev1 = 1
+        prev2 = 1
+        curr = 1
+        for j in range(n):
+            curr = prev1 + prev2
+            prev2 = prev1
+            prev1 = curr
     return curr
-        
 
 
-(fibnauci(100000))
+sys.set_int_max_str_digits(10000000)
+print(fibonacci(OUTER_LOOP_LEN, INNER_LOOP_LEN))
