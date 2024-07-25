@@ -248,6 +248,9 @@ public class Compiler(
         }
 
         var variable = CompileVariableUsageNew(node);
+        // TODO: remove load (and espicially) copy variable as they are only used for assignments (not for function calls)
+        // this would make it that copy variable (which would only be used for assignments) would not have to build up a new value, but could just store in the current one (current variable the programmer was assigning to)
+        // so essentially we delegate the reponsiblility of actually loading/copying to the caller (this would also mean making CompileExpression return LLVMValue)
         return load ? CopyVariable(variable) : variable.ValueRef;
     }
 
@@ -335,6 +338,10 @@ public class Compiler(
         return arrayInnerType.IntoValue(array, value.IsMutable);
     }
 
+    // copy variable ensures value semantics for everything besides refernces (so basically if you assign one string variable to another string variable changing the second one does not change the first one)
+    // we couldn't just do a memcpy because then string would not be copied becasue they are pointers
+    // it also ensures that stack allocated memory does not escape the function it was allocated in
+    // for large values this may segault (but we just ignore this currently)
     private LLVMValueRef CopyVariable(LLVMValue variable)
     {
         // not happening (should happen during semantic analysis) check for uninitialized access when doing this load
@@ -347,7 +354,7 @@ public class Compiler(
         type switch
         {
             // TODO: arrays might need to be copied just need a better way to do it
-            LLVMArrayType => value,
+            LLVMArrayType llvmArrayType => CopyArray(llvmArrayType, value),
             LLVMEnumType
             or LLVMCharacterType
             or LLVMBooleanType
@@ -358,6 +365,12 @@ public class Compiler(
             LLVMStringType => CopyString(value),
             LLVMStructType llvmStructType => CopyStruct(llvmStructType, value),
         };
+
+    private LLVMValueRef CopyArray(LLVMArrayType llvmArrayType, LLVMValueRef value)
+    {
+        // TODO: perhaps turn this into a loop instead of doing this as a "unrolled loop"
+        return Enumerable.Range(0, (int)llvmArrayType.Range.Length).Select(i => (i, CopyVariable(llvmArrayType.Inner, builder.BuildExtractValue(value, (uint)i)))).Aggregate(llvmArrayType.TypeRef.Undef, (array, element) => builder.BuildInsertValue(array, element.Item2, (uint)element.i));
+    }
 
     private LLVMValueRef CopyStruct(LLVMStructType llvmStructType, LLVMValueRef value)
     {
