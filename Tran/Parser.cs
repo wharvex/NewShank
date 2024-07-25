@@ -785,11 +785,17 @@ public class Parser
         }
 
         var functionCall = (FunctionCallNode)ParseFunctionCall()!;
-        if(functionCall != null)
+        if (functionCall != null)
         {
             //Declare the temp variable to hold the return value
             var returnType = GetReturnType(functionCall);
-            var tempVar = new VariableDeclarationNode(false, returnType, "_temp_" + tempVarNum, thisClass.Name, false);
+            var tempVar = new VariableDeclarationNode(
+                false,
+                returnType,
+                "_temp_" + tempVarNum,
+                thisClass.Name,
+                false
+            );
             currentFunction.VariablesInScope.Add(tempVar.Name, tempVar);
             currentFunction.LocalVariables.Add(tempVar);
 
@@ -814,9 +820,9 @@ public class Parser
 
     private Type GetReturnType(FunctionCallNode functionCall)
     {
-        foreach(var argument in  functionCall.Arguments)
+        foreach (var argument in functionCall.Arguments)
         {
-            if(argument is VariableUsagePlainNode reference)
+            if (argument is VariableUsagePlainNode reference)
             {
                 VariableDeclarationNode variable = currentFunction.VariablesInScope[reference.Name];
                 if (variable != null && !variable.IsConstant)
