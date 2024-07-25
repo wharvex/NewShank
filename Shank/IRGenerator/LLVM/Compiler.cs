@@ -838,10 +838,10 @@ public class Compiler(
             llvmTypeFromShankType.TypeRef,
             name
         );
-        if (node.IsDefaultValue)
+        if (node.InitialValue is  {}init)
         {
-            var init = CompileExpression(node.InitialValue);
-            builder.BuildStore(init, v);
+            var initLLVM = CompileExpression(node.InitialValue);
+            builder.BuildStore(initLLVM, v);
         }
         else
         {
@@ -1009,7 +1009,6 @@ public class Compiler(
         builder.PositionAtEnd(repeatLoopHeader);
         var currentElementPhi = builder.BuildPhi(LLVMTypeRef.CreatePointer(type.Inner.TypeRef, 0));
         var done = builder.BuildICmp(LLVMIntPredicate.LLVMIntNE, currentElementPhi, lastElement);
-        DebugRuntime("start\n", done);
         builder.BuildCondBr(done, repeatLoopBody, repeatLoopNext);
         builder.PositionAtEnd(repeatLoopBody);
 
@@ -1023,7 +1022,6 @@ public class Compiler(
             context.CFuntions.memcpy.Function,
             [elementi8, inneri8, builder.BuildIntCast(type.TypeRef.SizeOf, LLVMTypeRef.Int32)]
         );
-        DebugRuntime("start 12\n", done);
         var next = builder.BuildInBoundsGEP2(
             type.Inner.TypeRef,
             currentElementPhi,
@@ -1032,7 +1030,6 @@ public class Compiler(
         currentElementPhi.AddIncoming([firstElement, next], [startBlock, repeatLoopBody], 2);
         builder.BuildBr(repeatLoopHeader);
         builder.PositionAtEnd(repeatLoopNext);
-        DebugRuntime("repeat\n", done);
     }
 
     public void Compile(MonomorphizedProgramNode node)
@@ -1097,7 +1094,6 @@ public class Compiler(
         var fromValue = CompileExpression(node.From);
         builder.BuildStore(fromValue, mutableCurrentIterable);
 
-        // TODO: assign loop variable initial from value
         builder.BuildBr(forStart);
         builder.PositionAtEnd(forStart);
         // we have to compile the to and from in the loop so that the get run each time, we go through the loop
