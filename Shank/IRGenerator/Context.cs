@@ -45,6 +45,11 @@ public struct CFuntions
             LLVMTypeRef.CreateFunction(LLVMTypeRef.Int32, [charStar, charStar, sizeT])
         );
         memcmp.Linkage = LLVMLinkage.LLVMExternalLinkage;
+        memset = llvmModule.addFunction(
+            "memset",
+            LLVMTypeRef.CreateFunction(voidStar, [voidStar, LLVMTypeRef.Int32, sizeT])
+        );
+        memset.Linkage = LLVMLinkage.LLVMExternalLinkage;
     }
 
     //  int printf(const char *restrict format, ...);
@@ -69,6 +74,9 @@ public struct CFuntions
     // we use memcmp as opposed to str*cmp to not have to deal with null termination
     // int memcmp(const char* lhs, const char* rhs, size_t count );
     public LLVMFunction memcmp { get; }
+
+    // void *memset( void *dest, int ch, size_t count );
+    public LLVMFunction memset { get; }
 }
 
 public class Context(MonomorphizedProgramNode moduleNode, CFuntions cFuntions)
