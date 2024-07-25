@@ -1,9 +1,0 @@
-define start()
-	tester 4
-    
-define tester(a : integer; c : integer = 2+2)
-variables i,j,k : integer = 1
-    write i
-    write j
-    write k
-    write c

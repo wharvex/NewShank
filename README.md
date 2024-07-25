@@ -1,20 +1,26 @@
-# ShankCompiler
-## How to run
+# Shank Programming langauge
+## How to run the compiler
+
 These commands will clone and run the project:
 ```
 git clone https://github.com/mphipps1/ShankCompiler.git
-cd ShankCompiler
-dotnet run
+cd shank
+# different commands
+
+dotnet run -- Compile ./ShankTestFiles/Fibonacci.shank --print-ir -o Fibonacci.exe # runs compiler
+dotnet run -- Interpret ./ShankTestFiles/Fibonacci.shank # runs interpreter
+. .\ShankTestScripts.ps1
+st # powershell script testing refer to dotshank dir for explanation 
 ```
+refer to the wiki if you want a detailed explanation of the commands.
+
 If you pass in the absolute/relative path of a shank file it just interprets that file.
 
 If you pass in the path of a directory it recursively interprets all *.shank files in that directory.
 
-If you pass in no arguments it recursively interprets all *.shank files in the current directory.
+You can list different files and it compiles/interprets each one. please do mind they will
+be treated like each of the files is 1 program.
 
-It currently ignores all command line arguments except the first one. Stay tuned for variadic arguments in the future.
-
-When parsing each function with Parser.function(), it catches any SyntaxErrorException, prints the exception message and skips to the next file.
 
 ## Formatting
 

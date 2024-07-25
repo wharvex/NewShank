@@ -1,7 +1,0 @@
-{ this is a comment }
-
-enum colors = [red, green, blue]
-
-define start()
-variables e : colors
-    e := green
