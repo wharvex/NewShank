@@ -447,6 +447,8 @@ public class Parser
                 {
                     if (handler.MatchAndRemove(TokenType.CLOSEDPARENTHESIS) != null)
                     {
+                        var variableDec = ParseVariableDeclaration();
+
                         return "Times Function";
                     }
                 }
@@ -560,9 +562,7 @@ public class Parser
         {
             functionName = functionToken.GetValue();
         }
-        else if (functionName != null)
-        {
-        }
+        else if (functionName != null) { }
         else
         {
             return null;

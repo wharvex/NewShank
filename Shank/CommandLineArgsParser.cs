@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using CommandLine;
-using LLVMSharp.Interop;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Shank.ASTNodes;
@@ -8,6 +7,14 @@ using Shank.IRGenerator.CompilerPractice;
 using Shank.WalkCompliantVisitors;
 
 namespace Shank;
+
+public enum OptPasses
+{
+    Level0,
+    Level1,
+    Level2,
+    Level3
+}
 
 [Verb("Settings", isDefault: false, HelpText = "sets settings for you")]
 public class Settings
@@ -52,22 +59,21 @@ public class CompileOptions
     [Option('c', "compile", HelpText = "compile to object file")]
     public bool CompileToObj { get; set; }
 
-    public LLVMCodeGenOptLevel OptLevel { get; set; }
+    public OptPasses OptLevel { get; set; }
 
     [Option('O', "optimize", Default = "0", Required = false, HelpText = "Set optimization level.")]
     public string? OptimizationLevels
     {
-        get { return null; }
         set
         {
-            if (value.Equals("1"))
-                OptLevel = LLVMCodeGenOptLevel.LLVMCodeGenLevelLess;
-            else if (value.Equals("2"))
-                OptLevel = LLVMCodeGenOptLevel.LLVMCodeGenLevelDefault;
-            else if (value.Equals("3"))
-                OptLevel = LLVMCodeGenOptLevel.LLVMCodeGenLevelAggressive;
-            else if (value.Equals("0"))
-                OptLevel = LLVMCodeGenOptLevel.LLVMCodeGenLevelNone;
+            OptLevel = value switch
+            {
+                "0" => OptPasses.Level0,
+                "1" => OptPasses.Level1,
+                "2" => OptPasses.Level2,
+                "3" => OptPasses.Level3,
+                _ => OptPasses.Level3
+            };
         }
     }
 

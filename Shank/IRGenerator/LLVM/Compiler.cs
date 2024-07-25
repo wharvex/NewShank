@@ -248,6 +248,9 @@ public class Compiler(
         }
 
         var variable = CompileVariableUsageNew(node);
+        // TODO: remove load (and espicially) copy variable as they are only used for assignments (not for function calls)
+        // this would make it that copy variable (which would only be used for assignments) would not have to build up a new value, but could just store in the current one (current variable the programmer was assigning to)
+        // so essentially we delegate the reponsiblility of actually loading/copying to the caller (this would also mean making CompileExpression return LLVMValue)
         return load ? CopyVariable(variable) : variable.ValueRef;
     }
 
@@ -335,6 +338,10 @@ public class Compiler(
         return arrayInnerType.IntoValue(array, value.IsMutable);
     }
 
+    // copy variable ensures value semantics for everything besides refernces (so basically if you assign one string variable to another string variable changing the second one does not change the first one)
+    // we couldn't just do a memcpy because then string would not be copied becasue they are pointers
+    // it also ensures that stack allocated memory does not escape the function it was allocated in
+    // for large values this may segault (but we just ignore this currently)
     private LLVMValueRef CopyVariable(LLVMValue variable)
     {
         // not happening (should happen during semantic analysis) check for uninitialized access when doing this load
@@ -347,7 +354,7 @@ public class Compiler(
         type switch
         {
             // TODO: arrays might need to be copied just need a better way to do it
-            LLVMArrayType => value,
+            LLVMArrayType llvmArrayType => CopyArray(llvmArrayType, value),
             LLVMEnumType
             or LLVMCharacterType
             or LLVMBooleanType
@@ -358,6 +365,24 @@ public class Compiler(
             LLVMStringType => CopyString(value),
             LLVMStructType llvmStructType => CopyStruct(llvmStructType, value),
         };
+
+    private LLVMValueRef CopyArray(LLVMArrayType llvmArrayType, LLVMValueRef value)
+    {
+        // TODO: perhaps turn this into a loop instead of doing this as a "unrolled loop"
+        return Enumerable
+            .Range(0, (int)llvmArrayType.Range.Length)
+            .Select(
+                i =>
+                    (
+                        i,
+                        CopyVariable(llvmArrayType.Inner, builder.BuildExtractValue(value, (uint)i))
+                    )
+            )
+            .Aggregate(
+                llvmArrayType.TypeRef.Undef,
+                (array, element) => builder.BuildInsertValue(array, element.Item2, (uint)element.i)
+            );
+    }
 
     private LLVMValueRef CopyStruct(LLVMStructType llvmStructType, LLVMValueRef value)
     {
@@ -838,14 +863,24 @@ public class Compiler(
             llvmTypeFromShankType.TypeRef,
             name
         );
-        if (node.IsDefaultValue)
+        if (node.InitialValue is { } init)
         {
-            var init = CompileExpression(node.InitialValue);
-            builder.BuildStore(init, v);
+            var initLLVM = CompileExpression(node.InitialValue);
+            builder.BuildStore(initLLVM, v);
         }
         else
         {
-            builder.BuildStore(CompileDefaultExpression(llvmTypeFromShankType), v);
+            builder.BuildCall2(
+                context.CFuntions.memset.TypeOf,
+                context.CFuntions.memset.Function,
+                [
+                    builder.BuildBitCast(v, LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0)),
+                    LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0),
+                    builder.BuildIntCast(llvmTypeFromShankType.TypeRef.SizeOf, LLVMTypeRef.Int32)
+                ]
+            );
+            // builder.BuildStore(CompileDefaultExpression(llvmTypeFromShankType), v);
+            // CompileDefaultExpression(llvmTypeFromShankType, v);
         }
 
         // TODO: preallocate arrays in records to (might need to be recursive)
@@ -874,49 +909,152 @@ public class Compiler(
         context.AddVariable(node.MonomorphizedName(), variable(v, !node.IsConstant));
     }
 
-    private LLVMValueRef CompileDefaultExpression(LLVMType llvmTypeFromShankType)
+    private void CompileDefaultExpression(LLVMType llvmTypeFromShankType, LLVMValueRef variable)
     {
-        return llvmTypeFromShankType switch
+        switch (llvmTypeFromShankType)
         {
-            LLVMArrayType type
-                => LLVMValueRef.CreateConstArray(
-                    type.Inner.TypeRef,
-                    Enumerable
-                        .Range(0, (int)type.Range.Length)
-                        .Select(_ => CompileDefaultExpression(type.Inner))
-                        .ToArray()
-                ),
-            LLVMReferenceType type
-                => LLVMValueRef.CreateConstStruct(
-                    [
-                        LLVMValueRef.CreateConstPointerNull(type.Inner.TypeRef),
-                        LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0),
-                        LLVMValueRef.CreateConstInt(LLVMTypeRef.Int1, 0)
-                    ],
-                    false
-                ),
-            LLVMStringType type
-                => LLVMValueRef.CreateConstStruct(
-                    [
-                        LLVMValueRef.CreateConstArray(LLVMTypeRef.Int8, []),
-                        // TODO: should this be a malloc
-                        LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0),
-                    ],
-                    false
-                ),
-            LLVMStructType type
-                => LLVMValueRef.CreateConstNamedStruct(
-                    type.TypeRef,
-                    type.Members.Values.Select(CompileDefaultExpression).ToArray()
-                ),
-            LLVMRealType type => LLVMValueRef.CreateConstReal(type.TypeRef, 0.0),
+            case LLVMArrayType arrayType:
+                CompileDefaultExpression(arrayType, variable);
+                break;
+            case LLVMReferenceType referenceType:
+                builder.BuildStore(
+                    LLVMValueRef.CreateConstStruct(
+                        [
+                            LLVMValueRef.CreateConstPointerNull(referenceType.Inner.TypeRef),
+                            LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0),
+                            LLVMValueRef.CreateConstInt(LLVMTypeRef.Int1, 0)
+                        ],
+                        false
+                    ),
+                    variable
+                );
+                break;
+            case LLVMStringType:
+                builder.BuildStore(
+                    LLVMValueRef.CreateConstStruct(
+                        [
+                            LLVMValueRef.CreateConstArray(LLVMTypeRef.Int8, []),
+                            // TODO: should this be a malloc
+                            LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0),
+                        ],
+                        false
+                    ),
+                    variable
+                );
+                break;
+            case LLVMStructType structType:
+                CompileDefaultExpression(structType, variable);
+                break;
+            case LLVMRealType type:
+                builder.BuildStore(LLVMValueRef.CreateConstReal(type.TypeRef, 0.0), variable);
+                break;
             // TODO: first declared variant
-            LLVMEnumType type => LLVMValueRef.CreateConstInt(type.TypeRef, 0),
-            LLVMIntegerType type => LLVMValueRef.CreateConstInt(type.TypeRef, 0),
-            LLVMCharacterType type => LLVMValueRef.CreateConstInt(type.TypeRef, 0),
-            LLVMBooleanType type => LLVMValueRef.CreateConstInt(type.TypeRef, 0),
-            _ => throw new ArgumentOutOfRangeException(nameof(llvmTypeFromShankType))
-        };
+            case LLVMEnumType type:
+                builder.BuildStore(LLVMValueRef.CreateConstInt(type.TypeRef, 0), variable);
+                break;
+            case LLVMIntegerType type:
+                builder.BuildStore(LLVMValueRef.CreateConstInt(type.TypeRef, 0), variable);
+                break;
+            case LLVMCharacterType type:
+                builder.BuildStore(LLVMValueRef.CreateConstInt(type.TypeRef, 0), variable);
+                break;
+            case LLVMBooleanType type:
+                builder.BuildStore(LLVMValueRef.CreateConstInt(type.TypeRef, 0), variable);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(llvmTypeFromShankType));
+        }
+        ;
+    }
+
+    private void CompileDefaultExpression(LLVMStructType type, LLVMValueRef variable)
+    {
+        foreach (
+            var (llvmType, index) in type.Members.Values.Select((llvmType, i) => (llvmType, i))
+        )
+        {
+            var field = builder.BuildStructGEP2(type.TypeRef, variable, (uint)index);
+            CompileDefaultExpression(llvmType, field);
+        }
+    }
+
+    private LLVMValueRef CreateEntryBlockAlloca(LLVMTypeRef type)
+    {
+        var currentInsertionPoint = builder.InsertBlock;
+        var entry = context.CurrentFunction.Function.EntryBasicBlock;
+        if (entry.FirstInstruction is { } inst)
+        {
+            builder.PositionBefore(inst);
+        }
+        else
+        {
+            builder.PositionAtEnd(entry);
+        }
+
+        LLVMValueRef lLVMValueRef = builder.BuildAlloca(type);
+        builder.PositionAtEnd(currentInsertionPoint);
+        return lLVMValueRef;
+    }
+
+    private void CompileDefaultExpression(LLVMArrayType type, LLVMValueRef variable)
+    {
+        var inner = CreateEntryBlockAlloca(type.Inner.TypeRef);
+        CompileDefaultExpression(type.Inner, inner);
+        var inneri8 = builder.BuildBitCast(inner, LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0));
+        var lastElement = builder.BuildInBoundsGEP2(
+            type.TypeRef,
+            variable,
+            [
+                LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, 0),
+                LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, (ulong)type.Range.Length)
+            ]
+        );
+        var firstElement = builder.BuildInBoundsGEP2(
+            type.TypeRef,
+            variable,
+            [
+                LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, 0),
+                LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, 0)
+            ]
+        );
+        var repeatLoopHeader = module.Context.AppendBasicBlock(
+            context.CurrentFunction.Function,
+            "repeat_loop_header"
+        );
+        var repeatLoopBody = module.Context.AppendBasicBlock(
+            context.CurrentFunction.Function,
+            "repeat_loop_body"
+        );
+        var repeatLoopNext = module.Context.AppendBasicBlock(
+            context.CurrentFunction.Function,
+            "repeat_loop_next"
+        );
+        var startBlock = builder.InsertBlock;
+        builder.BuildBr(repeatLoopHeader);
+        builder.PositionAtEnd(repeatLoopHeader);
+        var currentElementPhi = builder.BuildPhi(LLVMTypeRef.CreatePointer(type.Inner.TypeRef, 0));
+        var done = builder.BuildICmp(LLVMIntPredicate.LLVMIntNE, currentElementPhi, lastElement);
+        builder.BuildCondBr(done, repeatLoopBody, repeatLoopNext);
+        builder.PositionAtEnd(repeatLoopBody);
+
+        // should this be i8*
+        var elementi8 = builder.BuildBitCast(
+            currentElementPhi,
+            LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0)
+        );
+        builder.BuildCall2(
+            context.CFuntions.memcpy.TypeOf,
+            context.CFuntions.memcpy.Function,
+            [elementi8, inneri8, builder.BuildIntCast(type.TypeRef.SizeOf, LLVMTypeRef.Int32)]
+        );
+        var next = builder.BuildInBoundsGEP2(
+            type.Inner.TypeRef,
+            currentElementPhi,
+            [LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, 1)]
+        );
+        currentElementPhi.AddIncoming([firstElement, next], [startBlock, repeatLoopBody], 2);
+        builder.BuildBr(repeatLoopHeader);
+        builder.PositionAtEnd(repeatLoopNext);
     }
 
     public void Compile(MonomorphizedProgramNode node)
@@ -981,7 +1119,6 @@ public class Compiler(
         var fromValue = CompileExpression(node.From);
         builder.BuildStore(fromValue, mutableCurrentIterable);
 
-        // TODO: assign loop variable initial from value
         builder.BuildBr(forStart);
         builder.PositionAtEnd(forStart);
         // we have to compile the to and from in the loop so that the get run each time, we go through the loop

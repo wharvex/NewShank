@@ -1,16 +1,25 @@
 typedef struct row {
-  long cells[100];
+  long cells[586];
 } row;
 
 typedef struct matix {
-  row rows[100];
+  row rows[586];
 } matrix;
-void matrixMultiply(matrix a, matrix b, matrix *c) {
+
+void initMatrix(matrix *c, int seed) {
+  int i, j = 0;
+  for (i = 0; i < 585; i++) {
+    for (j = 0; j < 585; j++) {
+      c->rows[i].cells[j] = seed * (i + j);
+    }
+  }
+}
+void matrixMultiply(matrix *a, matrix *b, matrix *c) {
   int i, j, k, sum = 0;
-  for (i = 0; i < 99; i++) {
-    for (j = 0; j < 99; j++) {
-      for (k = 0; k < 99; k++) {
-        sum += a.rows[i].cells[k] * b.rows[k].cells[j];
+  for (i = 0; i < 585; i++) {
+    for (j = 0; j < 585; j++) {
+      for (k = 0; k < 585; k++) {
+        sum += a->rows[i].cells[k] * b->rows[k].cells[j];
       }
       c->rows[i].cells[j] = sum;
     }
@@ -18,6 +27,7 @@ void matrixMultiply(matrix a, matrix b, matrix *c) {
 }
 int main() {
   matrix a, b, c;
-  // TODO: simulate printing or remove it from shank example
-  matrixMultiply(a, b, &c);
+  initMatrix(&a, 1);
+  initMatrix(&b, 3);
+  matrixMultiply(&a, &b, &c);
 }

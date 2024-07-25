@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Shank;
 using Shank.ASTNodes;
 
 namespace Tran
@@ -62,15 +63,6 @@ namespace Tran
                                     module,
                                     ref variableRef
                                 ) ?? ((WhileNode)function.Statements[index]).Expression;
-                            //TODO: Make a function which transforms an iterator loop to a Shank compatible version (i.e. loop x.times())
-                            //For example: loop x.times() -> getIterator(x, temp) etc.
-                            //Note: take a look at some of the code, e.g. AddAccessor, WalkExpression
-
-                            //Essentially, what you should do is add two statements above the loop to initialize the iterator,
-                            //replace the expression in the loop with a boolean indicating if the iterator is complete,
-                            //and then add a statement within the loop to get the next value of the iterator
-
-                            //TODO: Sleep 8 hours
                             AddAccessor(variableRef, module, loop);
                         }
                         else if (statement.GetType() == typeof(IfNode))
@@ -134,6 +126,8 @@ namespace Tran
             }
         }
 
+        //Returns a new expression if it finds a variable reference that is a member
+        //Replaces the variable reference with a new variable called temp
         private static ExpressionNode? WalkExpression(
             ExpressionNode expression,
             ModuleNode module,

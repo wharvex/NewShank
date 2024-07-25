@@ -59,6 +59,12 @@
     <None Include="bin\Debug\net8.0\win-x64\dotShank\UnitTestTests1\simpleTest.shank" />
     <None Include="bin\Debug\net8.0\win-x64\dotShank\VarsSetBeforeUse\varsSetBeforeUseTest.shank" />
     <None Include="bin\Debug\net8.0\win-x64\dotShank\Var\varTest.shank" />
+    <None Update="ShankTestFiles\fibonacci.shank">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="ShankTestFiles\GCD.shank">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
@@ -67,15 +73,6 @@
     <PackageReference Include="LLVMSharp.Interop" Version="16.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Optional" Version="4.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="fibonacci.shank">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="GCD.shank">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 
   <ItemGroup>
@@ -96,7 +93,6 @@
   <ItemGroup>
     <ClCompile Include="benchMark\Factorial\Factorial.c" />
     <ClCompile Include="benchMark\ManderboltSet\Manderbolt.c" />
-    <ClCompile Include="Shank-IR\Test.c" />
   </ItemGroup>
 
 </Project>

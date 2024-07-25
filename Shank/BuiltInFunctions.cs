@@ -328,20 +328,22 @@ public class BuiltInFunctions
 
     private static readonly Random R = new();
 
-    public static void Times(List<InterpreterDataType> parameters)
-    {
-        if (parameters[0] is IntDataType intParam && parameters[1] is IteratorDataType dest)
-        {
-            int count = intParam.Value;
-            var iteratorDataType = new IteratorDataType(count);
-
-            dest.Value = iteratorDataType.Value;
-        }
-        else
-        {
-            throw new Exception("First parameter must be an integer parameter.");
-        }
-    }
+    //change the paramters to expression node
+    //line 881
+    // public static void Times(List<InterpreterDataType> parameters)
+    // {
+    //     if (parameters[0] is IntDataType intParam && parameters[1] is IteratorDataType dest)
+    //     {
+    //         int count = intParam.Value;
+    //         var iteratorDataType = new IteratorDataType(count);
+    //
+    //         dest.Value = iteratorDataType.Value;
+    //     }
+    //     else
+    //     {
+    //         throw new Exception("First parameter must be an integer parameter.");
+    //     }
+    // }
 
     public static void Clone(List<InterpreterDataType> parameters)
     {

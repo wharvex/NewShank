@@ -34,7 +34,14 @@ public class LLVMCodeGen
         var target = LLVMTargetRef.GetTargetFromTriple(targetTriple);
         var cpu = compileOptions.TargetCPU;
         var features = "";
-        var opt = compileOptions.OptLevel;
+        var opt = compileOptions.OptLevel switch
+        {
+            OptPasses.Level0 => LLVMCodeGenOptLevel.LLVMCodeGenLevelNone,
+            OptPasses.Level1 => LLVMCodeGenOptLevel.LLVMCodeGenLevelLess,
+            OptPasses.Level2 => LLVMCodeGenOptLevel.LLVMCodeGenLevelDefault,
+            OptPasses.Level3 => LLVMCodeGenOptLevel.LLVMCodeGenLevelAggressive,
+            _ => throw new Exception("eerror")
+        };
         var targetMachine = target.CreateTargetMachine(
             targetTriple,
             cpu,
