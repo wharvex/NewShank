@@ -7,8 +7,10 @@ Fibonacci number that is smaller than INT_MAX (2147483647).
 }
 
 define start()
-constants start = 1, innerLoopLen = 44, outerLoopLen = 9000000
-variables i, j, prev1, prev2, curr : integer
+variables start, innerLoopLen, outerLoopLen, i, j, prev1, prev2, curr : integer
+    innerLoopLen := 44
+    outerLoopLen := 9000000
+    start := 1
     for j from start to outerLoopLen
         prev1 := 1
         prev2 := 1

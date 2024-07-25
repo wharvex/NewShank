@@ -3,6 +3,8 @@
 ##
 ## Get latest from `dotnet new gitignore`
 
+BenchmarkScriptOutput.txt
+
 Shank/IR/
 IR/
 IR/output.ll
