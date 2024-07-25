@@ -58,20 +58,11 @@ public class Parser
                 AcceptSeparators();
                 continue;
             }
-            // Console.WriteLine("Unexpected statement: " + handler.Peek(0)?.GetValue());
             throw new Exception("Statement is not a function or field");
         }
         thisClass.ExportTargetNames = sharedNames;
         thisClass.UpdateExports();
 
-        //TODO: how do we pass the record into every function if we can't parse every field before parsing functions (e.g. how do we pass in the record if it is incomplete?)
-        //Loop through functions and add this to the parameters
-        //Test object-oriented stuff
-        //Interfaces after were done
-        //Semantic Analysis: check scope of variables (local, member, shared)
-        //Built-in functions should only be in interpreter, probably remove all the parser stuff
-        //Function call to built-in function node
-        //Append strings should be built in
         RecordNode? record = new RecordNode(thisClass.Name, thisClass.Name, members, null);
         thisClass.AddRecord(record);
         program.AddToModules(thisClass);
@@ -572,7 +563,6 @@ public class Parser
         }
         else if (functionName != null)
         {
-            Console.WriteLine(functionName);
         }
         else
         {
@@ -915,8 +905,6 @@ public class Parser
             }
             FunctionNode functionNode;
             Token? function;
-            //debug
-            //Console.WriteLine("here");
             List<VariableDeclarationNode> parameters;
             var isPublic = handler.MatchAndRemove(TokenType.PRIVATE) == null;
             var isShared = (isPublic && handler.MatchAndRemove(TokenType.SHARED) != null);

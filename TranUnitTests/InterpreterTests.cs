@@ -105,7 +105,8 @@ namespace TranUnitTests
 class start
     start()
         number x
-        x = 1+1".Replace("    ", "\t")
+        x = 1+1
+        console.print(x)".Replace("    ", "\t")
             );
             RunInterpreter();
         }
@@ -121,11 +122,11 @@ class start
         x = 10
         number y
         y = 15
-        number temp
-        temp = 0
-        addStuff(x, y, temp)
+        number retVal
+        retVal = addStuff(x, y) { becomes in Shank addStuff ( x,y,var retval) }
+        console.print(retVal)
     
-    addStuff(number a, number b) : number retVal
+    addStuff(number a, number b) : number retVal  { becomes in Shank addStuff ( x,y,var retval) }
         retVal = a+b".Replace("    ", "\t")
             );
             RunInterpreter();
