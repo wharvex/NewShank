@@ -184,8 +184,8 @@ public class Interpreter
 
     // public static bool InterpretLoop(WhileNode loopNode, Dictionary<string, InterpreterDataType> variables)
     // {
-    //     //look at the first statment node in while node. childern make sure is a builtinfunction node of name 
-    //     //times ( parse time) then execute 
+    //     //look at the first statment node in while node. childern make sure is a builtinfunction node of name
+    //     //times ( parse time) then execute
     //     //call ProcessFunctionCall
     //     if (!(loopNode.Expression is VariableUsageNodeTemp variable))
     //     {
@@ -279,10 +279,10 @@ public class Interpreter
             }
             else if (stmt is WhileNode wn)
             {
-                    while (ResolveBool(wn.Expression, variables))
-                    {
-                        InterpretBlock(wn.Children, variables, callingFunction);
-                    }
+                while (ResolveBool(wn.Expression, variables))
+                {
+                    InterpretBlock(wn.Children, variables, callingFunction);
+                }
             }
             else if (stmt is RepeatNode rn)
             {
