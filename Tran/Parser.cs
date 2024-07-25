@@ -272,7 +272,7 @@ public class Parser
             {
                 currentFunction.VariablesInScope.Add(parameter.Name, parameter);
             }
-            currentFunction.Statements = ParseBlock();
+            currentFunction.Statements.AddRange(ParseBlock());
             return true;
         }
         return false;
@@ -789,7 +789,7 @@ public class Parser
         {
             //Declare the temp variable to hold the return value
             var returnType = GetReturnType(functionCall);
-            var tempVar = new VariableDeclarationNode(true, returnType, "_temp_" + tempVarNum, thisClass.Name, false);
+            var tempVar = new VariableDeclarationNode(false, returnType, "_temp_" + tempVarNum, thisClass.Name, false);
             currentFunction.VariablesInScope.Add(tempVar.Name, tempVar);
             currentFunction.LocalVariables.Add(tempVar);
 
