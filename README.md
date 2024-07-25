@@ -2,7 +2,7 @@
 ## How to run the compiler
 
 These commands will clone and run the project:
-```
+```SH
 git clone https://github.com/mphipps1/ShankCompiler.git
 cd shank
 # different commands
