@@ -8,13 +8,20 @@ namespace Shank.IRGenerator;
 
 public enum Types
 {
-    STRUCT,
-    FLOAT,
-    INTEGER,
-    BOOLEAN,
-    STRING,
+    Struct,
+    Float,
+    Integer,
+    Boolean,
+    String,
 }
 
+/// <summary>
+/// statement pass. this adds the Values.
+/// </summary>
+/// <param name="context"></param>
+/// <param name="builder"></param>
+/// <param name="module"></param>
+/// <param name="options"></param>
 public class Compiler(
     Context context,
     LLVMBuilderRef builder,
@@ -56,13 +63,13 @@ public class Compiler(
     private static Types _types(LLVMTypeRef typeRef)
     {
         if (typeRef == LLVMTypeRef.Int64 || typeRef == LLVMTypeRef.Int8)
-            return Types.INTEGER;
+            return Types.Integer;
         if (typeRef == LLVMTypeRef.Int1)
-            return Types.BOOLEAN;
+            return Types.Boolean;
         if (typeRef == LLVMTypeRef.Double)
-            return Types.FLOAT;
+            return Types.Float;
         if (typeRef == LLVMType.StringType)
-            return Types.STRING;
+            return Types.String;
         throw new Exception("undefined type");
     }
 
@@ -502,9 +509,9 @@ public class Compiler(
         var types = _types(left.TypeOf);
         return types switch
         {
-            Types.INTEGER => HandleIntOp(left, node.Op, right),
-            Types.FLOAT => HandleFloatOp(left, node.Op, right),
-            Types.STRING => HandleString(left, right),
+            Types.Integer => HandleIntOp(left, node.Op, right),
+            Types.Float => HandleFloatOp(left, node.Op, right),
+            Types.String => HandleString(left, right),
             _ => throw new NotImplementedException()
         };
     }
@@ -519,7 +526,7 @@ public class Compiler(
         var types = _types(left.TypeOf);
         return types switch
         {
-            Types.INTEGER
+            Types.Integer
                 => HandleIntBoolOp(
                     left,
                     node.Op switch
@@ -539,7 +546,7 @@ public class Compiler(
                     },
                     right
                 ),
-            Types.FLOAT
+            Types.Float
                 => HandleFloatBoolOp(
                     left,
                     node.Op switch
@@ -560,7 +567,7 @@ public class Compiler(
                     right
                 ),
             // booleans can only be compared using equality
-            Types.BOOLEAN
+            Types.Boolean
                 => builder.BuildICmp(
                     node.Op is BooleanExpressionNode.BooleanExpressionOpType.eq
                         ? LLVMIntPredicate.LLVMIntEQ
@@ -568,7 +575,7 @@ public class Compiler(
                     left,
                     right
                 ),
-            Types.STRING => HandleStringComparison(left, node.Op, right),
+            Types.String => HandleStringComparison(left, node.Op, right),
             _ => throw new NotImplementedException()
         };
     }
@@ -1306,18 +1313,19 @@ public class Compiler(
                     )
             };
 
-        IEnumerable<LLVMValueRef> GetValues((LLVMType First, LLVMValueRef Second) n)
+        //prints an enum
+        IEnumerable<LLVMValueRef> GetValues((LLVMType First, LLVMValueRef Second) varValue)
         {
             {
-                return n.First switch
+                return varValue.First switch
                 {
-                    LLVMEnumType e => [HandleEnum(n.Second, e.Variants)],
-                    LLVMIntegerType or LLVMRealType or LLVMCharacterType => [n.Second],
+                    LLVMEnumType Enum => [HandleEnum(varValue.Second, Enum.Variants)],
+                    LLVMIntegerType or LLVMRealType or LLVMCharacterType => [varValue.Second],
                     LLVMBooleanType
                         =>
                         [
                             builder.BuildSelect(
-                                n.Second,
+                                varValue.Second,
                                 builder.BuildGlobalStringPtr("true"),
                                 builder.BuildGlobalStringPtr("false")
                             )
@@ -1325,14 +1333,17 @@ public class Compiler(
                     LLVMStringType
                         =>
                         [
-                            builder.BuildExtractValue(n.Second, 1),
-                            builder.BuildExtractValue(n.Second, 0)
+                            builder.BuildExtractValue(varValue.Second, 1),
+                            builder.BuildExtractValue(varValue.Second, 0)
                         ],
                     LLVMStructType record
                         => record.Members.Values.SelectMany(
                             (member, index) =>
                                 GetValues(
-                                    (member, builder.BuildExtractValue(n.Second, (uint)index))
+                                    (
+                                        member,
+                                        builder.BuildExtractValue(varValue.Second, (uint)index)
+                                    )
                                 )
                         ),
                     LLVMReferenceType => [],
@@ -1343,10 +1354,13 @@ public class Compiler(
                             .SelectMany(
                                 i =>
                                     GetValues(
-                                        (array.Inner, builder.BuildExtractValue(n.Second, (uint)i))
+                                        (
+                                            array.Inner,
+                                            builder.BuildExtractValue(varValue.Second, (uint)i)
+                                        )
                                     )
                             ),
-                    _ => throw new NotImplementedException(n.First.ToString())
+                    _ => throw new NotImplementedException(varValue.First.ToString())
                 };
             }
         }

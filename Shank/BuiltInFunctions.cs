@@ -330,20 +330,17 @@ public class BuiltInFunctions
 
     public static void Times(List<InterpreterDataType> parameters)
     {
-        if (parameters.Count == 0 || !(parameters[0] is IntDataType intParam))
+        if (parameters[0] is IntDataType intParam && parameters[1] is IteratorDataType dest)
+        {
+            int count = intParam.Value;
+            var iteratorDataType = new IteratorDataType(count);
+
+            dest.Value = iteratorDataType.Value;
+        }
+        else
         {
             throw new Exception("First parameter must be an integer parameter.");
         }
-
-        if (parameters.Count < 2)
-        {
-            throw new Exception("Second parameter is missing.");
-        }
-
-        int count = intParam.Value;
-        var iteratorDataType = new IteratorDataType(count);
-
-        parameters[1] = iteratorDataType;
     }
 
     public static void Clone(List<InterpreterDataType> parameters)

@@ -3,6 +3,9 @@ using Shank.ExprVisitors;
 
 namespace Shank;
 
+/// <summary>
+/// does monopmorphism
+/// </summary>
 public interface Index;
 
 public record struct NamedIndex(string Name) : Index;
@@ -254,7 +257,6 @@ public class MonomorphizationVisitor(
 
     public override void Visit(FunctionNode node)
     {
-        Console.WriteLine("func node: " + node.ToString());
         var typedModuleIndex = new TypedModuleIndex(
             new ModuleIndex(new NamedIndex(node.Name), node.parentModuleName!),
             new TypeIndex(
