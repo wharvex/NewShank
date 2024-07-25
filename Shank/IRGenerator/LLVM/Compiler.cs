@@ -369,7 +369,19 @@ public class Compiler(
     private LLVMValueRef CopyArray(LLVMArrayType llvmArrayType, LLVMValueRef value)
     {
         // TODO: perhaps turn this into a loop instead of doing this as a "unrolled loop"
-        return Enumerable.Range(0, (int)llvmArrayType.Range.Length).Select(i => (i, CopyVariable(llvmArrayType.Inner, builder.BuildExtractValue(value, (uint)i)))).Aggregate(llvmArrayType.TypeRef.Undef, (array, element) => builder.BuildInsertValue(array, element.Item2, (uint)element.i));
+        return Enumerable
+            .Range(0, (int)llvmArrayType.Range.Length)
+            .Select(
+                i =>
+                    (
+                        i,
+                        CopyVariable(llvmArrayType.Inner, builder.BuildExtractValue(value, (uint)i))
+                    )
+            )
+            .Aggregate(
+                llvmArrayType.TypeRef.Undef,
+                (array, element) => builder.BuildInsertValue(array, element.Item2, (uint)element.i)
+            );
     }
 
     private LLVMValueRef CopyStruct(LLVMStructType llvmStructType, LLVMValueRef value)
