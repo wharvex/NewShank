@@ -1,29 +1,32 @@
-# Shank Programming langauge
-## How to run the compiler
+# The Shank Programming Langauge V3
+
+## Setup
+
+please check Shank.csproj to make sure you have the required dependencies downloaded. 
 
 These commands will clone and run the project:
 ```SH
+# clone project
 git clone https://github.com/mphipps1/ShankCompiler.git
 cd ShankCompile/Shank
 
 # run different commands of shank
 
-dotnet run -- Compile ./ShankTestFiles/Fibonacci.shank --print-ir -o Fibonacci.exe # runs compiler
-dotnet run -- Interpret ./ShankTestFiles/Fibonacci.shank # runs interpreter
+dotnet run -- Compile ./ShankTestFiles/HelloWorld.shank --print-ir -o HelloWorld.exe # runs compiler
+
+dotnet run -- Interpret ./ShankTestFiles/HelloWorld.shank # runs interpreter
+
+# powershell script testing
+
 . .\ShankTestScripts.ps1
-st # powershell script testing
+st 
 ```
+if done correctly you should see a "hello world" in the console
+depending on what you run
 
-If you pass in the absolute/relative path of a shank file it just interprets that file.
+for a more detailed explanation about each CLI command
+<a href=https://github.com/mphipps1/ShankCompiler/wiki/Shank-CLI-(Command-Line-Interface)-documentation>CLI documentation</a>
 
-If you pass in the path of a directory it recursively interprets all *.shank files in that directory.
-
-You can list different files and it compiles/interprets each one. please do mind they will
-be treated like each of the files is 1 program.
-
-please read the wiki on github if you are confused about how the code works
-there is a PDF of the shank langauge definition in the "PDF's" directory please refer to that
-to learn the syntax. 
 
 ## Formatting
 
@@ -32,3 +35,7 @@ This project has a GitHub Action that uses the CSharpier formatter to format all
 The action is triggered when pushing to the master branch. It formats if needed and creates a new commit if formatting occurs.
 
 If formatting occurs and the commit is pushed, please remember to pull the changes to your local repo afterwards.
+
+# Documentation
+
+- <a href=https://github.com/mphipps1/ShankCompiler/wiki>Documentation</a>
