@@ -838,7 +838,7 @@ public class Compiler(
             llvmTypeFromShankType.TypeRef,
             name
         );
-        if (node.InitialValue is  {}init)
+        if (node.InitialValue is { } init)
         {
             var initLLVM = CompileExpression(node.InitialValue);
             builder.BuildStore(initLLVM, v);
