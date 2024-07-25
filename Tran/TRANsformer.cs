@@ -7,7 +7,7 @@ using Shank.ASTNodes;
 
 namespace Tran
 {
-    public class TranAnalysis
+    public class TRANsformer
     {
         private static FunctionNode function;
         private static int index;

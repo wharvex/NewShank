@@ -39,7 +39,7 @@ namespace TranUnitTests
             SemanticAnalysis.reset();
             CreateParser(file);
             Dictionary<string, ModuleNode> modules = parser.Parse().Modules;
-            modules = TranAnalysis.Walk(modules);
+            modules = TRANsformer.Walk(modules);
             Interpreter.setModules(modules);
             var startModule = Interpreter.setStartModule();
             SemanticAnalysis.setStartModule();
@@ -64,7 +64,7 @@ namespace TranUnitTests
             Interpreter.Reset();
             SemanticAnalysis.reset();
             Dictionary<string, ModuleNode> modules = GetModules(files);
-            modules = TranAnalysis.Walk(modules);
+            modules = TRANsformer.Walk(modules);
             Interpreter.setModules(modules);
             var startModule = Interpreter.setStartModule();
             SemanticAnalysis.setStartModule();

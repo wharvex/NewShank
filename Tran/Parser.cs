@@ -14,6 +14,7 @@ public class Parser
     public List<VariableDeclarationNode> members;
     private int blockLevel;
     private FunctionNode currentFunction;
+    private int tempVarNum;
 
     public Parser(LinkedList<Token> tokens)
     {
@@ -24,6 +25,7 @@ public class Parser
         blockLevel = 0;
         currentFunction = new FunctionNode("default");
         thisClass = new ModuleNode("default");
+        tempVarNum = 0;
     }
 
     public bool AcceptSeparators()
@@ -234,7 +236,6 @@ public class Parser
     //TODO: double-check the work here
     public bool ParseFunction()
     {
-        FunctionNode functionNode;
         Token? function;
         //Console.WriteLine("here");
         List<VariableDeclarationNode> parameters;
@@ -243,9 +244,9 @@ public class Parser
 
         if ((function = handler.MatchAndRemove(TokenType.FUNCTION)) != null)
         {
-            functionNode = new FunctionNode(function.GetValue(), thisClass.Name, isPublic);
+            currentFunction = new FunctionNode(function.GetValue(), thisClass.Name, isPublic);
 
-            thisClass.addFunction(functionNode);
+            thisClass.addFunction(currentFunction);
             if (isShared)
             {
                 sharedNames.AddLast(function.GetValue());
@@ -266,13 +267,12 @@ public class Parser
             {
                 parameters.AddRange(ParseParameters(false));
             }
-            functionNode.ParameterVariables = parameters;
-            foreach (var parameter in functionNode.ParameterVariables)
+            currentFunction.ParameterVariables = parameters;
+            foreach (var parameter in currentFunction.ParameterVariables)
             {
-                functionNode.VariablesInScope.Add(parameter.Name, parameter);
+                currentFunction.VariablesInScope.Add(parameter.Name, parameter);
             }
-            currentFunction = functionNode;
-            functionNode.Statements = ParseBlock();
+            currentFunction.Statements = ParseBlock();
             return true;
         }
         return false;
@@ -520,10 +520,6 @@ public class Parser
 
             if (currentLevel != blockLevel)
             {
-                //if (statement != null)
-                //{
-                //    throw new Exception("Invalid indentation in block");
-                //}
                 break;
             }
             var statement = ParseStatement();
@@ -782,11 +778,29 @@ public class Parser
             throw new Exception("String literal missing end quotes");
         }
 
-        VariableUsagePlainNode? variable;
-        if ((variable = ParseVariableReference()) != null)
+        var variable = ParseVariableReference();
+        if (variable != null)
         {
             return variable;
         }
+
+        var functionCall = (FunctionCallNode)ParseFunctionCall()!;
+        if(functionCall != null)
+        {
+            //Declare the temp variable to hold the return value
+            var returnType = GetReturnType(functionCall);
+            var tempVar = new VariableDeclarationNode(true, returnType, "_temp_" + tempVarNum, thisClass.Name, false);
+            currentFunction.VariablesInScope.Add(tempVar.Name, tempVar);
+            currentFunction.LocalVariables.Add(tempVar);
+
+            //Insert statement to call the function
+            var varRef = new VariableUsagePlainNode(tempVar.Name, thisClass.Name);
+            functionCall.Arguments.Add(varRef);
+            currentFunction.Statements.Insert(currentFunction.Statements.Count, functionCall);
+
+            return varRef;
+        }
+
         if (handler.MatchAndRemove(TokenType.TRUE) is { })
             return new BoolNode(true);
         if (handler.MatchAndRemove(TokenType.FALSE) is { })
@@ -796,6 +810,22 @@ public class Parser
         if (token == null)
             return null;
         return new FloatNode(float.Parse(token.GetValue()));
+    }
+
+    private Type GetReturnType(FunctionCallNode functionCall)
+    {
+        foreach(var argument in  functionCall.Arguments)
+        {
+            if(argument is VariableUsagePlainNode reference)
+            {
+                VariableDeclarationNode variable = currentFunction.VariablesInScope[reference.Name];
+                if (variable != null && !variable.IsConstant)
+                {
+                    return variable.Type;
+                }
+            }
+        }
+        throw new NotImplementedException();
     }
 
     public static Type GetDataTypeFromConstantNodeType(ASTNode constantNode) =>
