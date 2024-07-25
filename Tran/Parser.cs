@@ -447,6 +447,8 @@ public class Parser
                 {
                     if (handler.MatchAndRemove(TokenType.CLOSEDPARENTHESIS) != null)
                     {
+                        var variableDec = ParseVariableDeclaration();
+                   
                         return "Times Function";
                     }
                 }
