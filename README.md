@@ -4,15 +4,15 @@
 These commands will clone and run the project:
 ```SH
 git clone https://github.com/mphipps1/ShankCompiler.git
-cd shank
-# different commands
+cd ShankCompile/Shank
+
+# run different commands of shank
 
 dotnet run -- Compile ./ShankTestFiles/Fibonacci.shank --print-ir -o Fibonacci.exe # runs compiler
 dotnet run -- Interpret ./ShankTestFiles/Fibonacci.shank # runs interpreter
 . .\ShankTestScripts.ps1
-st # powershell script testing refer to dotshank dir for explanation 
+st # powershell script testing
 ```
-refer to the wiki if you want a detailed explanation of the commands.
 
 If you pass in the absolute/relative path of a shank file it just interprets that file.
 
@@ -21,6 +21,9 @@ If you pass in the path of a directory it recursively interprets all *.shank fil
 You can list different files and it compiles/interprets each one. please do mind they will
 be treated like each of the files is 1 program.
 
+please read the wiki on github if you are confused about how the code works
+there is a PDF of the shank langauge definition in the "PDF's" directory please refer to that
+to learn the syntax. 
 
 ## Formatting
 
