@@ -131,9 +131,10 @@ namespace TranUnitTests
         [TestMethod]
         public void ParseInterfaceTest()
         {
-            CreateParser("interface Tran");
+            // CreateParser("interface Tran");
+            CreateParser("interface someName\r\n\tupdateClock()\r\n\tsquare() : number s");
             parser.ParseInterface();
-            Assert.AreEqual("Tran", parser.thisClass.Name);
+            Assert.AreEqual("someName", parser.thisClass.Name);
         }
 
         [TestMethod]
@@ -220,26 +221,33 @@ class Tran
         x = 1+1".Replace("    ", "\t")
             );
             parser.Parse();
+
+            Console.WriteLine(parser.thisClass.Functions.First().Value.ParameterVariables[1].Type);
+
+            Assert.AreEqual(
+                "doStuff",
+                parser.thisClass.Functions.First().Value.Name
+                );
+
             Assert.AreEqual(
                 "param1",
-                ((FunctionNode)parser.thisClass.Functions.First().Value).LocalVariables[0].Name
-            );
+                parser.thisClass.Functions.First().Value.ParameterVariables[0].Name
+                );
+
             Assert.AreEqual(
                 "real",
-                ((FunctionNode)parser.thisClass.Functions.First().Value)
-                    .LocalVariables[0]
-                    .Type.ToString()
-            );
+                parser.thisClass.Functions.First().Value.ParameterVariables[0].Type.ToString()
+                );
+
             Assert.AreEqual(
                 "param2",
-                ((FunctionNode)parser.thisClass.Functions.First().Value).LocalVariables[1].Name
-            );
+                parser.thisClass.Functions.First().Value.ParameterVariables[1].Name
+                );
+
             Assert.AreEqual(
                 "boolean",
-                ((FunctionNode)parser.thisClass.Functions.First().Value)
-                    .LocalVariables[1]
-                    .Type.ToString()
-            );
+                parser.thisClass.Functions.First().Value.ParameterVariables[1].Type.ToString()
+                );
         }
 
         [TestMethod]
