@@ -3,8 +3,18 @@ using Shank.AstVisitorsTim;
 
 namespace Shank.ASTNodes;
 
+///<summary>
+///     Represents an abstract base class for various types of variable usage nodes.
+///</summary>
 public abstract class VariableUsageNodeTemp : ExpressionNode
 {
+    ///<summary>
+    ///     Gets the plain variable usage node from the hierarchy.
+    ///</summary>
+    ///<returns>
+    ///     The plain variable usage node of type <see cref="VariableUsagePlainNode"/>.
+    ///     Throws an <see cref="UnreachableException"/> if the variable usage node class hierarchy is altered.
+    ///</returns>
     public VariableUsagePlainNode GetPlain()
     {
         var ret = this;
@@ -24,6 +34,13 @@ public abstract class VariableUsageNodeTemp : ExpressionNode
         return (VariableUsagePlainNode)ret;
     }
 
+    ///<summary>
+    ///     Gets the depth of the variable usage node in the hierarchy.
+    ///</summary>
+    ///<returns>
+    ///     An integer representing the depth of the variable usage node.
+    ///     Throws an <see cref="UnreachableException"/> if the variable usage node class hierarchy is altered.
+    ///</returns>
     public int GetDepth()
     {
         var vc = this;
@@ -41,7 +58,13 @@ public abstract class VariableUsageNodeTemp : ExpressionNode
 
         return ret;
     }
-
+    ///<summary>
+    ///     Gets the plain variable usage node and its depth in the hierarchy.
+    ///</summary>
+    ///<returns>
+    ///     A tuple containing the plain variable usage node of type <see cref="VariableUsagePlainNode"/> and its depth as an integer.
+    ///     Throws an <see cref="UnreachableException"/> if the variable usage node class hierarchy is altered.
+    ///</returns>
     public (VariableUsagePlainNode, int) GetPlainAndDepth()
     {
         var plainRet = this;
@@ -63,6 +86,14 @@ public abstract class VariableUsageNodeTemp : ExpressionNode
         return ((VariableUsagePlainNode)plainRet, intRet);
     }
 
+    ///<summary>
+    ///     Gets the variable usage node at the specified depth.
+    ///</summary>
+    ///<param name="depth">The depth at which to retrieve the variable usage node.</param>
+    ///<returns>
+    ///     The variable usage node of type <see cref="VariableUsageNodeTemp"/> at the specified depth.
+    ///     Throws an <see cref="UnreachableException"/> if the variable usage node class hierarchy is altered.
+    ///</returns>
     public VariableUsageNodeTemp GetVunAtDepth(int depth)
     {
         var d = 0;
@@ -85,7 +116,17 @@ public abstract class VariableUsageNodeTemp : ExpressionNode
         return vc;
     }
 
-    // Adapted from Mendel's GetTypeOfVariableUsage.
+
+    ///<summary>
+    ///     Gets the type of the current variable usage node.
+    ///     Adapted from Mendel's GetTypeOfVariableUsage.
+    ///</summary>
+    ///<param name="dexInScope">The dictionary of variable declarations in scope.</param>
+    ///<param name="exTyGetter">A function to get the type of an expression node.</param>
+    ///<returns>
+    ///     The <see cref="Type"/> of the current variable usage node.
+    ///     Throws a <see cref="SemanticErrorException"/> if the variable is not in scope, the index is not an integer, or the member is not found.
+    ///</returns>
     public Type GetMyType(
         Dictionary<string, VariableDeclarationNode> dexInScope,
         Func<ExpressionNode, Dictionary<string, VariableDeclarationNode>, Type> exTyGetter
@@ -138,6 +179,15 @@ public abstract class VariableUsageNodeTemp : ExpressionNode
     }
 
     // Mendel's version of GetInnerType.
+    ///<summary>
+    ///     Gets the type of the specified variable usage node.
+    ///</summary>
+    ///<param name="variableReferenceNode">The variable usage node to get the type for.</param>
+    ///<param name="variableDeclarations">The dictionary of variable declarations.</param>
+    ///<returns>
+    ///     The <see cref="Type"/> of the specified variable usage node.
+    ///     Throws a <see cref="SemanticErrorException"/> if the variable is not found, the index is not an integer, or the member is not found.
+    ///</returns>
     public static Type GetTypeOfVariableUsage(
         VariableUsageNodeTemp variableReferenceNode,
         Dictionary<string, VariableDeclarationNode> variableDeclarations
@@ -191,6 +241,15 @@ public abstract class VariableUsageNodeTemp : ExpressionNode
         };
     }
 
+    ///<summary>
+    ///     Gets the inner type of a variable usage node given an outer type.
+    ///</summary>
+    ///<param name="outerType">The outer type of the variable usage node.</param>
+    ///<param name="vDecs">The dictionary of variable declarations.</param>
+    ///<returns>
+    ///     The inner <see cref="Type"/> of the variable usage node.
+    ///     Throws an <see cref="InvalidOperationException"/> if the inner type is not found.
+    ///</returns>
     public Type GetInnerType(Type outerType, Dictionary<string, VariableDeclarationNode> vDecs)
     {
         // Get the innermost vun vc in this vun's structure, and vc's depth.
@@ -221,6 +280,9 @@ public abstract class VariableUsageNodeTemp : ExpressionNode
 
         return t ?? throw new InvalidOperationException();
     }
-
+    ///<summary>
+    ///     Accepts a variable usage visitor for processing this node.
+    ///</summary>
+    ///<param name="visitor">The variable usage visitor to accept.</param>
     public void Accept(IVariableUsageVisitor visitor) => visitor.Visit(this);
 }

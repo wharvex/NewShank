@@ -38,16 +38,6 @@ public class RecordNode(
             .ToList();
     public bool IsPublic { get; set; } = false;
 
-    // public VariableNode? GetFromMembersByName(string name) =>
-    //     Members2.FirstOrDefault(v => v?.Name?.Equals(name) ?? false, null);
-    //
-    // public VariableNode GetFromMembersByNameSafe(string name) =>
-    // GetFromMembersByName(name)
-    // ?? throw new ArgumentOutOfRangeException(
-    //     nameof(name),
-    //     "Member " + name + " not found on record."
-    // );
-
     public string GetParentModuleSafe()
     {
         return ParentModuleName ?? throw new Exception("Parent module name of RecordNode is null.");
