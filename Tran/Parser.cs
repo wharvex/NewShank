@@ -47,17 +47,26 @@ public class Parser
     public ProgramNode Parse()
     {
         AcceptSeparators();
-        if (!ParseInterface() && !ParseClass())
+        if (!ParseInterface())
         {
             throw new Exception("No class declaration found in file");
         }
         AcceptSeparators();
+        if (!ParseClass())
+        {
+            throw new Exception("No class declaration found in file");
+        }
 
         while (handler.MoreTokens())
         {
+            if (AcceptSeparators())
+            {
+                blockLevel++;
+            }
             if (ParseField() || ParseFunction())
             {
                 AcceptSeparators();
+                //blockLevel++;
                 continue;
             }
             throw new Exception("Statement is not a function or field");
@@ -171,12 +180,13 @@ public class Parser
             if ((name = handler.MatchAndRemove(TokenType.WORD)) != null)
             {
                 thisClass = new ModuleNode(name.GetValue());
+                program.AddToModules(thisClass);
+                RecordNode? record = new RecordNode(thisClass.Name, thisClass.Name, members, null);
+                thisClass.AddRecord(record);
                 if (ParseInterfaceFunctions() == false)
                 {
                     throw new Exception("Nothing enclosed within the interface");
                 }
-                //RecordNode? recordNode = new RecordNode(name.GetValue(), thisClass.getName(), members, null);
-                //thisClass.AddRecord(recordNode);
                 return true;
             }
             throw new Exception("No name provided for interface");
