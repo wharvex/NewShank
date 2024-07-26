@@ -1,0 +1,25 @@
+record row
+    cells: array from 0 to 585 of integer
+
+record matrix
+    rows: array from 0 to 585 of row
+
+define initMatrix(var matrix: matrix; seed: integer)
+variables i, j: integer
+    for i from 0 to 585
+        for j from 0 to 585
+            matrix.rows[i].cells[j] :=  seed * (i + j)
+define start()
+variables a, b, c: matrix
+    initMatrix var a, 1
+    initMatrix var b, 3
+    matrixMultiply a, b, var c
+
+define matrixMultiply(a, b: matrix; var c:matrix)
+variables i, j, k, sum: integer
+    for i from 0 to 585
+        for j from 0 to 585
+            sum := 0
+            for k from 0 to 585
+                sum := sum + a.rows[i].cells[k] * b.rows[k].cells[j]
+            c.rows[i].cells[j] := sum
