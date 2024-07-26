@@ -400,10 +400,10 @@ public abstract class SAVisitor
         Type handleReferenceType(Type type)
         {
             var resolvedType = ResolveType(type, module, generics, genericCollector);
-            if (resolvedType is not (RecordType or InstantiatedType or GenericType))
+            if (resolvedType is not (RecordType or InstantiatedType or ArrayType or GenericType))
             {
                 throw new SemanticErrorException(
-                    $"tried to use refersTo (dynamic memory management) on a non record type {resolvedType}",
+                    $"tried to use refersTo (dynamic memory management) on a non record or array type {resolvedType}",
                     module
                 );
             }

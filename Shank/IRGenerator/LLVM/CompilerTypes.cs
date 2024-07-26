@@ -63,7 +63,7 @@ public readonly record struct LLVMStringType : LLVMType
         new LLVMString(llvmValue, mutable);
 }
 
-public readonly record struct LLVMArrayType(LLVMType Inner, Range Range) : LLVMType
+public readonly record struct LLVMArrayType(LLVMType Inner, Range Range) : LLVMInnerReferenceType
 {
     public LLVMTypeRef TypeRef =>
         LLVMTypeRef.CreateArray(Inner.TypeRef, (uint)(Range.To - Range.From + 1));
@@ -82,7 +82,7 @@ public readonly record struct LLVMEnumType(string Name, List<string> Variants) :
         new LLVMEnum(llvmValue, mutable, this);
 }
 
-public class LLVMStructType(string name, LLVMTypeRef llvmTypeRef) : LLVMType
+public class LLVMStructType(string name, LLVMTypeRef llvmTypeRef) : LLVMInnerReferenceType
 {
     public int GetMemberIndex(string member) => Members.Keys.ToList().IndexOf(member);
 
@@ -94,7 +94,10 @@ public class LLVMStructType(string name, LLVMTypeRef llvmTypeRef) : LLVMType
         new LLVMStruct(llvmValue, mutable, this);
 }
 
-public readonly record struct LLVMReferenceType(LLVMStructType Inner) : LLVMType
+#pragma warning disable IDE1006 // Naming Styles
+public interface LLVMInnerReferenceType: LLVMType {}
+#pragma warning restore IDE1006 // Naming Styles
+public readonly record struct LLVMReferenceType(LLVMInnerReferenceType Inner) : LLVMType
 {
     public LLVMTypeRef TypeRef { get; } =
         LLVMTypeRef.CreateStruct(

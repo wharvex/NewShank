@@ -277,9 +277,7 @@ public class Compiler(
         var value = CompileVariableUsageNew(node.Left);
         if (value is LLVMReference r)
         {
-            var inner = builder.BuildStructGEP2(r.TypeRef.TypeRef, r.ValueRef, 0);
-            inner = builder.BuildLoad2(LLVMTypeRef.CreatePointer(r.TypeOf.Inner.TypeRef, 0), inner);
-            value = new LLVMStruct(inner, r.IsMutable, r.TypeOf.Inner);
+            value = GetReferenceInner(r);
         }
 
         var varType = (LLVMStruct)value;
@@ -297,6 +295,10 @@ public class Compiler(
     private LLVMValue CompileVariableUsageNew(VariableUsageIndexNode node)
     {
         var value = CompileVariableUsageNew(node.Left);
+        if (value is LLVMReference r)
+        {
+            value = GetReferenceInner(r);
+        }
         var newValue = (LLVMArray)value;
         var arrayType = (LLVMArrayType)newValue.TypeRef;
         var length = newValue.TypeRef.TypeRef.ArrayLength;
@@ -419,11 +421,8 @@ public class Compiler(
     {
         if (value is LLVMReference r)
         {
-            var inner = builder.BuildStructGEP2(r.TypeRef.TypeRef, r.ValueRef, 0);
-            inner = builder.BuildLoad2(LLVMTypeRef.CreatePointer(r.TypeOf.Inner.TypeRef, 0), inner);
-            value = new LLVMStruct(inner, r.IsMutable, r.TypeOf.Inner);
+            value = GetReferenceInner(r);
         }
-
         var varType = (LLVMStruct)value;
         var varField = (VariableUsagePlainNode)node.GetExtensionSafe();
         var dataType = varType.GetTypeOf(varField.Name);
@@ -436,8 +435,19 @@ public class Compiler(
         return dataType.IntoValue(structField, value.IsMutable);
     }
 
+    private LLVMValue GetReferenceInner(LLVMReference r)
+    {
+        var inner = builder.BuildStructGEP2(r.TypeRef.TypeRef, r.ValueRef, 0);
+        inner = builder.BuildLoad2(LLVMTypeRef.CreatePointer(r.TypeOf.Inner.TypeRef, 0), inner);
+        return r.TypeOf.Inner.IntoValue(inner, r.IsMutable);
+    }
+
     private LLVMValue CompileArrayUsage(VariableUsagePlainNode node, LLVMValue value)
     {
+        if (value is LLVMReference r)
+        {
+            value = GetReferenceInner(r);
+        }
         var newValue = (LLVMArray)value;
         var arrayInnerType = ((LLVMArray)value).Inner();
         var elementType = arrayInnerType.TypeRef;
@@ -1453,10 +1463,10 @@ public class Compiler(
                     => $"{record.Name}: {{ {string.Join(", ", record
                         .Members.Select(member => $"{member.Key} = {GetFormatCode(member.Value)}"))} }}",
                 // TODO: print only one level
-                LLVMReferenceType reference => $"refersTo {reference.Inner.Name}",
+                LLVMReferenceType reference => reference.ToString(),
                 _
                     => throw new CompilerException(
-                        $"type is undefined{type.ToString()} in function write",
+                        $"type is undefinedv {type} in function write",
                         0
                     )
             };

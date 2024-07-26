@@ -520,7 +520,7 @@ public class Parser
         // produce name collisions in the functions dictionary.
         var overloadNameExt = "";
         funcNode.ParameterVariables.ForEach(vn => overloadNameExt += vn.ToStringForOverloadExt());
-        funcNode.OverloadNameExt = overloadNameExt;
+        // funcNode.OverloadNameExt = overloadNameExt;
 
         funcNode.LineNum = Peek(0).LineNumber;
 
@@ -777,16 +777,22 @@ public class Parser
             Token.TokenType.Array => ArrayTypeParser(declarationContext, typeToken),
             // we cannot check unknown type for refersTo being on enum, but if we have refersTo integer we can check that at parse time
             Token.TokenType.RefersTo
-                => new ReferenceType(
-                    Type(declarationContext) is UnknownType u
-                        ? u
-                        : throw new SyntaxErrorException(
-                            "attempted to use refersTo (dynamic memory management) on non record type",
-                            typeToken
-                        )
-                ),
+                => ReferenceType(declarationContext, typeToken),
             _ => throw new SyntaxErrorException("Unknown type", typeToken)
         };
+    }
+
+    private ReferenceType ReferenceType(VariableDeclarationNode.DeclarationContext declarationContext, Token typeToken)
+    {
+        var innerType = Type(declarationContext);
+        return new ReferenceType(
+                            innerType is UnknownType or ArrayType
+                                ? innerType
+                                : throw new SyntaxErrorException(
+                                    "attempted to use refersTo (dynamic memory management) on non record or record type",
+                                    typeToken
+                                )
+                        );
     }
 
     /// <summary>

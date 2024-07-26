@@ -395,7 +395,7 @@ public readonly record struct ReferenceType(Type Inner) : Type
     {
         var instantiate = Inner.Instantiate(instantiatedGenerics);
         return new ReferenceType(
-            instantiate is InstantiatedType or GenericType
+            instantiate is InstantiatedType or ArrayType or GenericType
                 ? instantiate
                 : throw new SemanticErrorException(
                     $"tried to use refersTo (dynamic memory management) on a non record type "

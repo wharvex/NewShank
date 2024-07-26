@@ -112,7 +112,7 @@ public class Context(MonomorphizedProgramNode moduleNode, CFuntions cFuntions)
             EnumType e => Enums[e.MonomorphizedIndex],
             // if it's a custom type we look it up in the context
             ReferenceType r
-                => new LLVMReferenceType((LLVMStructType)GetLLVMTypeFromShankType(r.Inner)),
+                => new LLVMReferenceType((LLVMInnerReferenceType)GetLLVMTypeFromShankType(r.Inner)),
             ArrayType a => new LLVMArrayType(GetLLVMTypeFromShankType(a.Inner), a.Range)
         };
     }
@@ -137,7 +137,7 @@ public class Context(MonomorphizedProgramNode moduleNode, CFuntions cFuntions)
                     new LLVMReference(
                         value,
                         mutable,
-                        new LLVMReferenceType((LLVMStructType)GetLLVMTypeFromShankType(r.Inner))
+                        new LLVMReferenceType((LLVMInnerReferenceType)GetLLVMTypeFromShankType(r.Inner))
                     ),
             ArrayType arrayType
                 => (value, mutable) =>

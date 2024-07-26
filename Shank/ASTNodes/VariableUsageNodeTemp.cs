@@ -150,13 +150,16 @@ public abstract class VariableUsageNodeTemp : ExpressionNode
                     );
 
                 var maybeArrRet = i.Left.GetMyType(dexInScope, exTyGetter);
-                if (maybeArrRet is ArrayType arrRet)
-                    return arrRet.Inner;
+                return maybeArrRet switch
+                {
+                    ArrayType arrRet => arrRet.Inner,
+                    ReferenceType(Inner: ArrayType arrRet) => arrRet.Inner,
+                    _ => throw new SemanticErrorException(
+                       "Only arrays can be indexed into. Found: " + maybeArrRet.GetType(),
+                       i.Left
+                   )
+                };
 
-                throw new SemanticErrorException(
-                    "Only arrays can be indexed into. Found: " + maybeArrRet.GetType(),
-                    i.Left
-                );
             case VariableUsageMemberNode m:
                 return m.Left.GetMyType(dexInScope, exTyGetter) switch
                 {
@@ -209,6 +212,7 @@ public abstract class VariableUsageNodeTemp : ExpressionNode
                     ? GetTypeOfVariableUsage(iv.Left, variableDeclarations) switch
                     {
                         ArrayType a => a.Inner,
+                        ReferenceType(ArrayType a) => a.Inner,
                         var notAArrayType
                             => throw new SemanticErrorException(
                                 $"cannot index non array type {notAArrayType}",
