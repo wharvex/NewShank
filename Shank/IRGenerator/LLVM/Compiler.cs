@@ -345,7 +345,6 @@ public class Compiler(
     private LLVMValueRef CopyVariable(LLVMValue variable)
     {
         // not happening (should happen during semantic analysis) check for uninitialized access when doing this load
-        // TODO: copy everything recursively
         var value = builder.BuildLoad2(variable.TypeRef.TypeRef, variable.ValueRef);
         return CopyVariable(variable.TypeRef, value);
     }
@@ -353,7 +352,6 @@ public class Compiler(
     private LLVMValueRef CopyVariable(LLVMType type, LLVMValueRef value) =>
         type switch
         {
-            // TODO: arrays might need to be copied just need a better way to do it
             LLVMArrayType llvmArrayType => CopyArray(llvmArrayType, value),
             LLVMEnumType
             or LLVMCharacterType
@@ -545,7 +543,7 @@ public class Compiler(
     {
         var left = CompileExpression(node.Left);
         var right = CompileExpression(node.Right);
-        // TODO: enum equality
+        // TODO: enum equality (should arrays, structs, and references have equality defined for them)
         // for enums if we want more general comparison we cannot use pointers
         // TODO: don't use _types, once we add types to ExpressionNode
         var types = _types(left.TypeOf);
@@ -870,6 +868,7 @@ public class Compiler(
         }
         else
         {
+            // TODO: if we used memset for enum we are assuming the first enum variant is zero
             builder.BuildCall2(
                 context.CFuntions.memset.TypeOf,
                 context.CFuntions.memset.Function,
@@ -1333,6 +1332,18 @@ public class Compiler(
         var size = llvmTypeOfReference.SizeOf;
         size = builder.BuildIntCast(size, LLVMTypeRef.Int32);
         var memory = builder.BuildMalloc(llvmTypeOfReference);
+
+        // TODO: if we used memset for enum we are assuming the first enum variant is zero
+        builder.BuildCall2(
+            context.CFuntions.memset.TypeOf,
+            context.CFuntions.memset.Function,
+            [
+                builder.BuildBitCast(memory, LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0)),
+                    LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0),
+                    builder.BuildIntCast(llvmTypeOfReference.SizeOf, LLVMTypeRef.Int32)
+            ]
+        );
+
         var newReference = LLVMValueRef.CreateConstStruct(
             [
                 LLVMValueRef.CreateConstNull(LLVMTypeRef.CreatePointer(llvmTypeOfReference, 0)),
