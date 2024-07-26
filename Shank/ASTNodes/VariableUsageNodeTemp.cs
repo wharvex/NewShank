@@ -154,10 +154,11 @@ public abstract class VariableUsageNodeTemp : ExpressionNode
                 {
                     ArrayType arrRet => arrRet.Inner,
                     ReferenceType(Inner: ArrayType arrRet) => arrRet.Inner,
-                    _ => throw new SemanticErrorException(
-                       "Only arrays can be indexed into. Found: " + maybeArrRet.GetType(),
-                       i.Left
-                   )
+                    _
+                        => throw new SemanticErrorException(
+                            "Only arrays can be indexed into. Found: " + maybeArrRet.GetType(),
+                            i.Left
+                        )
                 };
 
             case VariableUsageMemberNode m:

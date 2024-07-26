@@ -1464,11 +1464,7 @@ public class Compiler(
                         .Members.Select(member => $"{member.Key} = {GetFormatCode(member.Value)}"))} }}",
                 // TODO: print only one level
                 LLVMReferenceType reference => reference.ToString(),
-                _
-                    => throw new CompilerException(
-                        $"type is undefinedv {type} in function write",
-                        0
-                    )
+                _ => throw new CompilerException($"type is undefinedv {type} in function write", 0)
             };
 
         //prints an enum

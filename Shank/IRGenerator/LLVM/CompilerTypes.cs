@@ -95,7 +95,7 @@ public class LLVMStructType(string name, LLVMTypeRef llvmTypeRef) : LLVMInnerRef
 }
 
 #pragma warning disable IDE1006 // Naming Styles
-public interface LLVMInnerReferenceType: LLVMType {}
+public interface LLVMInnerReferenceType : LLVMType { }
 #pragma warning restore IDE1006 // Naming Styles
 public readonly record struct LLVMReferenceType(LLVMInnerReferenceType Inner) : LLVMType
 {

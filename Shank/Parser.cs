@@ -782,17 +782,20 @@ public class Parser
         };
     }
 
-    private ReferenceType ReferenceType(VariableDeclarationNode.DeclarationContext declarationContext, Token typeToken)
+    private ReferenceType ReferenceType(
+        VariableDeclarationNode.DeclarationContext declarationContext,
+        Token typeToken
+    )
     {
         var innerType = Type(declarationContext);
         return new ReferenceType(
-                            innerType is UnknownType or ArrayType
-                                ? innerType
-                                : throw new SyntaxErrorException(
-                                    "attempted to use refersTo (dynamic memory management) on non record or record type",
-                                    typeToken
-                                )
-                        );
+            innerType is UnknownType or ArrayType
+                ? innerType
+                : throw new SyntaxErrorException(
+                    "attempted to use refersTo (dynamic memory management) on non record or record type",
+                    typeToken
+                )
+        );
     }
 
     /// <summary>

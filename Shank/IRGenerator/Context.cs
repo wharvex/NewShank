@@ -137,7 +137,9 @@ public class Context(MonomorphizedProgramNode moduleNode, CFuntions cFuntions)
                     new LLVMReference(
                         value,
                         mutable,
-                        new LLVMReferenceType((LLVMInnerReferenceType)GetLLVMTypeFromShankType(r.Inner))
+                        new LLVMReferenceType(
+                            (LLVMInnerReferenceType)GetLLVMTypeFromShankType(r.Inner)
+                        )
                     ),
             ArrayType arrayType
                 => (value, mutable) =>
