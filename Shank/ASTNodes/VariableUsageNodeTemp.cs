@@ -58,6 +58,7 @@ public abstract class VariableUsageNodeTemp : ExpressionNode
 
         return ret;
     }
+
     ///<summary>
     ///     Gets the plain variable usage node and its depth in the hierarchy.
     ///</summary>
@@ -115,7 +116,6 @@ public abstract class VariableUsageNodeTemp : ExpressionNode
 
         return vc;
     }
-
 
     ///<summary>
     ///     Gets the type of the current variable usage node.
@@ -280,6 +280,7 @@ public abstract class VariableUsageNodeTemp : ExpressionNode
 
         return t ?? throw new InvalidOperationException();
     }
+
     ///<summary>
     ///     Accepts a variable usage visitor for processing this node.
     ///</summary>

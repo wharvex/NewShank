@@ -51,7 +51,6 @@ public class FunctionNode : CallableNode
         Name = name;
     }
 
-
     public List<VariableDeclarationNode> LocalVariables { get; set; } = [];
     public List<StatementNode> Statements { get; set; } = [];
 
