@@ -26,10 +26,17 @@ namespace TranUnitTests
             handler = new TokenHandler(tokens);
         }
 
-        private void CreateParser(string program)
+        private void CreateParser(LinkedList<string> programs)
         {
-            lexer = new Shank.Tran.Lexer(program);
-            tokens = lexer.Lex();
+            foreach (var program in programs)
+            {
+                lexer = new Shank.Tran.Lexer(program);
+                var newTokens = lexer.Lex();
+                foreach (var token in newTokens)
+                {
+                    tokens.AddLast(token);
+                }
+            }
             parser = new Shank.Tran.Parser(tokens);
         }
 
@@ -37,7 +44,9 @@ namespace TranUnitTests
         {
             Interpreter.Reset();
             SemanticAnalysis.reset();
-            CreateParser(file);
+            var programs = new LinkedList<string>();
+            programs.AddLast(file);
+            CreateParser(programs);
             Dictionary<string, ModuleNode> modules = parser.Parse().Modules;
             modules = TRANsformer.Walk(modules);
             Interpreter.setModules(modules);
@@ -52,7 +61,7 @@ namespace TranUnitTests
             Dictionary<string, ModuleNode> modules = new Dictionary<string, ModuleNode>();
             foreach (var program in programs)
             {
-                CreateParser(program);
+                CreateParser(programs);
                 var module = parser.Parse().Modules.First();
                 modules.Add(module.Key, module.Value);
             }
@@ -302,9 +311,14 @@ interface someName
             files.AddLast(
                 @"
 class test implements someName
-    number x
-    x = 5
-    square() : number s
+    start()
+        number x 
+        x = 10
+        number y
+        y = square(x)
+        console.print(y)
+
+    square(number x) : number s
         s = x*x".Replace("    ", "\t")
             );
             InitializeInterpreter(files);
