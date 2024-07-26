@@ -224,30 +224,27 @@ class Tran
 
             Console.WriteLine(parser.thisClass.Functions.First().Value.ParameterVariables[1].Type);
 
-            Assert.AreEqual(
-                "doStuff",
-                parser.thisClass.Functions.First().Value.Name
-                );
+            Assert.AreEqual("doStuff", parser.thisClass.Functions.First().Value.Name);
 
             Assert.AreEqual(
                 "param1",
                 parser.thisClass.Functions.First().Value.ParameterVariables[0].Name
-                );
+            );
 
             Assert.AreEqual(
                 "real",
                 parser.thisClass.Functions.First().Value.ParameterVariables[0].Type.ToString()
-                );
+            );
 
             Assert.AreEqual(
                 "param2",
                 parser.thisClass.Functions.First().Value.ParameterVariables[1].Name
-                );
+            );
 
             Assert.AreEqual(
                 "boolean",
                 parser.thisClass.Functions.First().Value.ParameterVariables[1].Type.ToString()
-                );
+            );
         }
 
         [TestMethod]
