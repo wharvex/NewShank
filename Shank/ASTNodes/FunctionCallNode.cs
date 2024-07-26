@@ -71,35 +71,11 @@ public class FunctionCallNode : StatementNode
             return false;
         }
 
-        // If the param counts don't match, it's not a match.
-        // if (givenFunction.ParameterVariables.Count != Parameters.Count)
-        // {
-        //     return false;
-        // }
         if (givenFunction.ParameterVariables.Count != Arguments.Count)
         {
             return false;
         }
-        // If there's any parameter whose type and 'var' status would disqualify the given
-        // function from matching this call, return false, otherwise true.
-        // return !Parameters
-        //     .Where(
-        //         (p, i) =>
-        //             !p.EqualsWrtTypeAndVar(
-        //                 givenFunction.ParameterVariables[i],
-        //                 variablesInScope
-        //             )
-        //     )
-        //     .Any();
-        //return !Arguments
-        // .Where(
-        //     (p, i) =>
-        //         !p.EqualsWrtTypeAndVar(
-        //             givenFunction.ParameterVariables[i],
-        //             variablesInScope
-        //         )
-        // )
-        // .Any();
+
         for (int i = 0; i < Arguments.Count(); i++)
         {
             //Checks if it is a variable or constant
@@ -116,10 +92,6 @@ public class FunctionCallNode : StatementNode
     public override object[] returnStatementTokens()
     {
         var b = new StringBuilder();
-        // if (Parameters.Any())
-        // {
-        //     Parameters.ForEach(p => b.AppendLine($"   {p}"));
-        // }
 
         if (Arguments.Any())
         {

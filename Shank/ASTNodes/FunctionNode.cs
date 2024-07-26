@@ -51,10 +51,6 @@ public class FunctionNode : CallableNode
         Name = name;
     }
 
-    //DEPRECATED
-    [Obsolete("Don't use this property. Overloads will be handled differently (WIP).")]
-    public string OverloadNameExt { get; set; } = "";
-
     public List<VariableDeclarationNode> LocalVariables { get; set; } = [];
     public List<StatementNode> Statements { get; set; } = [];
 
