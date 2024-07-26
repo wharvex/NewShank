@@ -7,7 +7,8 @@ namespace Shank.Tran;
 
 public class Parser
 {
-    private TokenHandler handler;
+    private List<List<Token>> files = new List<List<Token>>();
+    private TokenHandler? handler;
     private static ProgramNode program;
     public ModuleNode thisClass;
     private LinkedList<string> sharedNames;
@@ -16,9 +17,21 @@ public class Parser
     private FunctionNode currentFunction;
     private int tempVarNum;
 
-    public Parser(LinkedList<Token> tokens)
+    public Parser(List<Token> tokens)
     {
         handler = new TokenHandler(tokens);
+        program = new ProgramNode();
+        sharedNames = new LinkedList<string>();
+        members = [];
+        blockLevel = 0;
+        currentFunction = new FunctionNode("default");
+        thisClass = new ModuleNode("default");
+        tempVarNum = 0;
+    }
+
+    public Parser(List<List<Token>> tokens)
+    {
+        files = tokens;
         program = new ProgramNode();
         sharedNames = new LinkedList<string>();
         members = [];
@@ -46,62 +59,58 @@ public class Parser
 
     public ProgramNode Parse()
     {
-        AcceptSeparators();
-        if (!ParseInterface())
+        for(int i = 0; i < files.Count; i++)
         {
-            throw new Exception("No class declaration found in file");
-        }
-        AcceptSeparators();
-        if (!ParseClass())
-        {
-            throw new Exception("No class declaration found in file");
-        }
-
-        while (handler.MoreTokens())
-        {
-            if (AcceptSeparators())
+            handler = new TokenHandler(files[i]);
+            AcceptSeparators();
+            if (!ParseInterface() && !ParseClass())
             {
-                blockLevel++;
+                throw new Exception("No class declaration found in file");
             }
-            if (ParseField() || ParseFunction())
+
+            while (handler.MoreTokens())
             {
                 AcceptSeparators();
-                //blockLevel++;
-                continue;
+                if (ParseField() || ParseFunction())
+                {
+                    AcceptSeparators();
+                    continue;
+                }
+                throw new Exception("Statement is not a function or field");
             }
-            throw new Exception("Statement is not a function or field");
-        }
-        thisClass.ExportTargetNames = sharedNames;
-        thisClass.UpdateExports();
+            thisClass.ExportTargetNames = sharedNames;
+            thisClass.UpdateExports();
 
-        RecordNode? record = new RecordNode(thisClass.Name, thisClass.Name, members, null);
-        thisClass.AddRecord(record);
-        program.AddToModules(thisClass);
+            RecordNode? record = new RecordNode(thisClass.Name, thisClass.Name, members, null);
+            thisClass.AddRecord(record);
+            program.AddToModules(thisClass);
 
-        foreach (var function in thisClass.Functions)
-        {
-            foreach (var member in record.Members)
+            foreach (var function in thisClass.Functions)
             {
-                ((FunctionNode)function.Value).LocalVariables.Add(
-                    new VariableDeclarationNode(
-                        false,
-                        member.Type,
+                foreach (var member in record.Members)
+                {
+                    ((FunctionNode)function.Value).LocalVariables.Add(
+                        new VariableDeclarationNode(
+                            false,
+                            member.Type,
+                            member.Name,
+                            thisClass.Name,
+                            false
+                        )
+                    );
+                    ((FunctionNode)function.Value).VariablesInScope.Add(
                         member.Name,
-                        thisClass.Name,
-                        false
-                    )
-                );
-                ((FunctionNode)function.Value).VariablesInScope.Add(
-                    member.Name,
-                    new VariableDeclarationNode(
-                        false,
-                        member.Type,
-                        member.Name,
-                        thisClass.Name,
-                        false
-                    )
-                );
+                        new VariableDeclarationNode(
+                            false,
+                            member.Type,
+                            member.Name,
+                            thisClass.Name,
+                            false
+                        )
+                    );
+                }
             }
+            blockLevel--;
         }
         return program;
     }

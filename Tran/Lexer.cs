@@ -6,17 +6,32 @@ namespace Shank.Tran;
 
 public class Lexer
 {
-    private StringHandler stringHandler;
+    private StringHandler? stringHandler;
     private int lineNumber = 1;
     private int characterPosition = 0;
-    private LinkedList<Token> tokens = new LinkedList<Token>();
+    private List<List<Token>> tokens = new List<List<Token>>();
     private Dictionary<string, TokenType> keywordHash = new Dictionary<string, TokenType>();
     private Dictionary<string, TokenType> twoCharacterHash = new Dictionary<string, TokenType>();
     private Dictionary<string, TokenType> oneCharacterHash = new Dictionary<string, TokenType>();
+    private List<string> files = new List<string>();
 
     public Lexer(string inputs)
     {
         stringHandler = new StringHandler(inputs);
+        tokens = new List<List<Token>>(1);
+        KeyWord();
+        TwoCharacterHashmap();
+        OneCharacterHashmap();
+    }
+
+    public Lexer(List<string> inputs)
+    {
+        files = inputs;
+        tokens = new List<List<Token>>(files.Count);
+        for(int i = 0; i<files.Count; i++)
+        {
+            tokens.Add(new List<Token>());
+        }
         KeyWord();
         TwoCharacterHashmap();
         OneCharacterHashmap();
@@ -98,64 +113,69 @@ public class Lexer
         oneCharacterHash["\n"] = TokenType.NEWLINE;
     }
 
-    public LinkedList<Token> Lex()
+    public List<List<Token>> Lex()
     {
-        while (!stringHandler.IsDone())
+        for(int i = 0; i < files.Count; i++)
         {
-            char currentCharacter = stringHandler.Peek(0);
-            if (currentCharacter == ' ')
+            stringHandler = new StringHandler(files[i]);
+            while (!stringHandler.IsDone())
             {
-                stringHandler.GetChar();
-                characterPosition++;
-            }
-            else if (currentCharacter == '\r')
-            {
-                stringHandler.GetChar();
-                characterPosition++;
-            }
-            else if (char.IsLetter(currentCharacter))
-            {
-                Token wordProcessor = ProcessWord();
-                tokens.AddLast((wordProcessor));
-            }
-            //Research this one, done for now but can be fixed.
-            else if (char.IsDigit(currentCharacter))
-            {
-                Token numberProcessor = ProcessNumber();
-                tokens.AddLast(numberProcessor);
-            }
-            else if (currentCharacter == '{')
-            {
-                while (currentCharacter != '}' && !stringHandler.IsDone())
-                {
-                    stringHandler.GetChar();
-                    characterPosition++;
-                    currentCharacter = stringHandler.Peek(0);
-                }
-                if (stringHandler.IsDone())
-                {
-                    throw new ArgumentException("Missing closing brace '}'");
-                }
-                else
+                char currentCharacter = stringHandler.Peek(0);
+                if (currentCharacter == ' ')
                 {
                     stringHandler.GetChar();
                     characterPosition++;
                 }
-            }
-            else
-            {
-                Token OneTwoSymbols = ProcessSymbols();
-                if (OneTwoSymbols != null)
+                else if (currentCharacter == '\r')
                 {
-                    tokens.AddLast(OneTwoSymbols);
+                    stringHandler.GetChar();
+                    characterPosition++;
+                }
+                else if (char.IsLetter(currentCharacter))
+                {
+                    Token wordProcessor = ProcessWord();
+                    tokens[i].Add((wordProcessor));
+                }
+                //Research this one, done for now but can be fixed.
+                else if (char.IsDigit(currentCharacter))
+                {
+                    Token numberProcessor = ProcessNumber();
+                    tokens[i].Add(numberProcessor);
+                }
+                else if (currentCharacter == '{')
+                {
+                    while (currentCharacter != '}' && !stringHandler.IsDone())
+                    {
+                        stringHandler.GetChar();
+                        characterPosition++;
+                        currentCharacter = stringHandler.Peek(0);
+                    }
+                    if (stringHandler.IsDone())
+                    {
+                        throw new ArgumentException("Missing closing brace '}'");
+                    }
+                    else
+                    {
+                        stringHandler.GetChar();
+                        characterPosition++;
+                    }
                 }
                 else
                 {
-                    throw new ArgumentException("UNRECOGNIZED CHARACTER: " + currentCharacter);
+                    Token OneTwoSymbols = ProcessSymbols();
+                    if (OneTwoSymbols != null)
+                    {
+                        tokens[i].Add(OneTwoSymbols);
+                    }
+                    else
+                    {
+                        throw new ArgumentException("UNRECOGNIZED CHARACTER: " + currentCharacter);
+                    }
                 }
             }
+            characterPosition = 0;
+            tokens[i].Add(new Token(TokenType.SEPARATOR, lineNumber, characterPosition));
         }
-        tokens.AddLast(new Token(TokenType.SEPARATOR, lineNumber, characterPosition));
         return tokens;
     }
 

@@ -12,14 +12,12 @@ namespace TranUnitTests
     {
         private Parser parser = null!;
         private Lexer lexer = null!;
-        private TokenHandler handler = null!;
-        private LinkedList<Token> tokens = null!;
+        private List<List<Token>> tokens = null!;
 
         [TestInitialize]
         public void Setup()
         {
-            tokens = new LinkedList<Token>();
-            handler = new TokenHandler(tokens);
+            tokens = new List<List<Token>>();
         }
 
         private void CreateParser(string program)
@@ -278,7 +276,7 @@ class Tran
         {
             var testString = ".times()";
             Lexer newLexer = new Lexer(testString);
-            LinkedList<Token> tokens = newLexer.Lex();
+            List<List<Token>> tokens = newLexer.Lex();
             Parser newParser = new Parser(tokens);
             var expression = newParser.ParseBuiltInFunctionNode();
             Console.Write(expression);
@@ -289,7 +287,7 @@ class Tran
         {
             var testString = "clock.getDate()";
             Lexer newLexer = new Lexer(testString);
-            LinkedList<Token> tokens = newLexer.Lex();
+            List<List<Token>> tokens = newLexer.Lex();
             Parser newParser = new Parser(tokens);
             var expression = newParser.ParseBuiltInFunctionNode();
             Console.Write(expression);

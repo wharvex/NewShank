@@ -14,7 +14,7 @@ namespace TranUnitTests
         {
             string file = "Test String";
             Lexer lexer = new Lexer(file);
-            LinkedList<Token> tokens = lexer.Lex();
+            List<List<Token>> tokens = lexer.Lex();
 
             // Collect the values of the tokens to create the expected string
             string actualTokensString = string.Join("\n", tokens) + "\n";
@@ -39,7 +39,7 @@ namespace TranUnitTests
         {
             string file = "2.22 444 888";
             Lexer lexer = new Lexer(file);
-            LinkedList<Token> tokens = lexer.Lex();
+            List<List<Token>> tokens = lexer.Lex();
 
             string expectedTokensString =
                 "NUMERAL(2.22)\n" + " NUMERAL(444)\n" + " NUMERAL(888)\n" + " SEPARATOR\n";
@@ -53,7 +53,7 @@ namespace TranUnitTests
         {
             string file = "{ Exercise??, I thought you said extra fries` }";
             Lexer lexer = new Lexer(file);
-            LinkedList<Token> tokens = lexer.Lex();
+            List<List<Token>> tokens = lexer.Lex();
             string actualTokensString = string.Join("\n", tokens) + "\n";
             Assert.AreEqual(" SEPARATOR\n", actualTokensString);
         }
@@ -63,7 +63,7 @@ namespace TranUnitTests
         {
             string file = "tyler(";
             Lexer lexer = new Lexer(file);
-            LinkedList<Token> tokens = lexer.Lex();
+            List<List<Token>> tokens = lexer.Lex();
             string expectedTokensString =
                 "FUNCTION(tyler)\n" + " OPENPARENTHESIS\n" + " SEPARATOR\n";
             string actualTokensString = string.Join("\n", tokens) + "\n";
@@ -75,7 +75,7 @@ namespace TranUnitTests
         {
             string file = "} ( ) = > < + ^ + - : * / % , ! \" \n \t";
             Lexer lexer = new Lexer(file);
-            LinkedList<Token> tokens = lexer.Lex();
+            List<List<Token>> tokens = lexer.Lex();
             string actualTokensString = string.Join("\n", tokens) + "\n";
             string expectedTokensString =
                 " CLOSEDANGLEBRACKET\n"
@@ -107,7 +107,7 @@ namespace TranUnitTests
         {
             string file = ">= ++ -- <= == != ^= %= *= /= += -= && || \n\t";
             Lexer lexer = new Lexer(file);
-            LinkedList<Token> tokens = lexer.Lex();
+            List<List<Token>> tokens = lexer.Lex();
             string actualTokensString = string.Join("\n", tokens) + "\n";
             string expectedTokensString =
                 " GREATEREQUAL\n"
@@ -137,7 +137,7 @@ namespace TranUnitTests
                 "if print getline nextfile function interface class string implements accessor "
                 + "loop mutator console datetime construct boolean true false shared \t \n return";
             Lexer lexer = new Lexer(file);
-            LinkedList<Token> tokens = lexer.Lex();
+            List<List<Token>> tokens = lexer.Lex();
             string actualTokensString = string.Join("\n", tokens) + "\n";
 
             string expectedTokensString =

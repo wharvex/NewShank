@@ -6,9 +6,9 @@ namespace Shank.Tran;
 // Helper to allow for easier handling of the token list passed by the lexer
 public class TokenHandler
 {
-    private LinkedList<Token> tokens;
+    private List<Token> tokens;
 
-    public TokenHandler(LinkedList<Token> tokens)
+    public TokenHandler(List<Token> tokens)
     {
         this.tokens = tokens;
     }
@@ -29,10 +29,10 @@ public class TokenHandler
     // else returns an empty optional
     public Token? MatchAndRemove(TokenType t)
     {
-        if (tokens.Count > 0 && tokens.First.Value.GetTokenType() == t)
+        if (tokens.Count > 0 && tokens[0].GetTokenType() == t)
         {
-            var matchedToken = tokens.First.Value;
-            tokens.RemoveFirst();
+            var matchedToken = tokens[0];
+            tokens.RemoveAt(0);
             //  PrintToken(matchedToken);
             return matchedToken;
         }

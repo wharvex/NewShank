@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestPlatform.TestHost;
 using Microsoft.VisualStudio.TestTools.UnitTesting.Logging;
 using Shank;
 using Shank.ASTNodes;
@@ -16,36 +17,26 @@ namespace TranUnitTests
     {
         private Shank.Tran.Parser parser = null!;
         private Shank.Tran.Lexer lexer = null!;
-        private Shank.Tran.TokenHandler handler = null!;
         private LinkedList<Shank.Tran.Token> tokens = null!;
 
         [TestInitialize]
         public void Setup()
         {
             tokens = new LinkedList<Shank.Tran.Token>();
-            handler = new TokenHandler(tokens);
         }
 
-        private void CreateParser(LinkedList<string> programs)
+        private void CreateParser(List<string> files)
         {
-            foreach (var program in programs)
-            {
-                lexer = new Shank.Tran.Lexer(program);
-                var newTokens = lexer.Lex();
-                foreach (var token in newTokens)
-                {
-                    tokens.AddLast(token);
-                }
-            }
-            parser = new Shank.Tran.Parser(tokens);
+            lexer = new Shank.Tran.Lexer(files);
+            parser = new Shank.Tran.Parser(lexer.Lex());
         }
 
         public void InitializeInterpreter(string file)
         {
             Interpreter.Reset();
             SemanticAnalysis.reset();
-            var programs = new LinkedList<string>();
-            programs.AddLast(file);
+            var programs = new List<string>();
+            programs.Add(file);
             CreateParser(programs);
             Dictionary<string, ModuleNode> modules = parser.Parse().Modules;
             modules = TRANsformer.Walk(modules);
@@ -56,7 +47,7 @@ namespace TranUnitTests
                 BuiltInFunctions.Register(startModule.getFunctions());
         }
 
-        private Dictionary<string, ModuleNode> GetModules(LinkedList<string> programs)
+        private Dictionary<string, ModuleNode> GetModules(List<string> programs)
         {
             Dictionary<string, ModuleNode> modules = new Dictionary<string, ModuleNode>();
             foreach (var program in programs)
@@ -68,11 +59,12 @@ namespace TranUnitTests
             return modules;
         }
 
-        public void InitializeInterpreter(LinkedList<string> files)
+        public void InitializeInterpreter(List<string> files)
         {
             Interpreter.Reset();
             SemanticAnalysis.reset();
-            Dictionary<string, ModuleNode> modules = GetModules(files);
+            CreateParser(files);
+            Dictionary<string, ModuleNode> modules = parser.Parse().Modules;
             modules = TRANsformer.Walk(modules);
             Interpreter.setModules(modules);
             var startModule = Interpreter.setStartModule();
@@ -276,18 +268,22 @@ class start
         [TestMethod]
         public void InterpreterTestMultiClass()
         {
-            LinkedList<string> files = new LinkedList<string>();
-            files.AddLast(
+            List<string> files = new List<string>();
+            files.Add(
                 @"
 class start
     number x
+        mutator:
+            x = value
     string y
+        mutator:
+            y = value
 
     start()
         x = 100
         y = ""helloworld""".Replace("    ", "\t")
             );
-            files.AddLast(
+            files.Add(
                 @"
 class test
     doStuff()
@@ -300,15 +296,15 @@ class test
 
         //TODO: we can worry about this at a later date
         [TestMethod]
-        public void InterpreterTest5()
+        public void InterpreterTestInterfaces()
         {
-            LinkedList<string> files = new LinkedList<string>();
-            files.AddLast(
+            List<string> files = new List<string>();
+            files.Add(
                 @"
 interface someName
     square() : number s".Replace("    ", "\t")
             );
-            files.AddLast(
+            files.Add(
                 @"
 class test implements someName
     start()
