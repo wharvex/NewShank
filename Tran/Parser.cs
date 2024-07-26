@@ -59,7 +59,7 @@ public class Parser
 
     public ProgramNode Parse()
     {
-        for(int i = 0; i < files.Count; i++)
+        for (int i = 0; i < files.Count; i++)
         {
             handler = new TokenHandler(files[i]);
             AcceptSeparators();

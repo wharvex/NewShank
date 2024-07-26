@@ -28,7 +28,7 @@ public class Lexer
     {
         files = inputs;
         tokens = new List<List<Token>>(files.Count);
-        for(int i = 0; i<files.Count; i++)
+        for (int i = 0; i < files.Count; i++)
         {
             tokens.Add(new List<Token>());
         }
@@ -115,7 +115,7 @@ public class Lexer
 
     public List<List<Token>> Lex()
     {
-        for(int i = 0; i < files.Count; i++)
+        for (int i = 0; i < files.Count; i++)
         {
             stringHandler = new StringHandler(files[i]);
             while (!stringHandler.IsDone())
