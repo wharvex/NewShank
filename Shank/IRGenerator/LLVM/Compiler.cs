@@ -1339,8 +1339,8 @@ public class Compiler(
             context.CFuntions.memset.Function,
             [
                 builder.BuildBitCast(memory, LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0)),
-                    LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0),
-                    builder.BuildIntCast(llvmTypeOfReference.SizeOf, LLVMTypeRef.Int32)
+                LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0),
+                builder.BuildIntCast(llvmTypeOfReference.SizeOf, LLVMTypeRef.Int32)
             ]
         );
 
