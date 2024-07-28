@@ -1537,7 +1537,7 @@ public class Parser
     }
 
     /// <summary>
-    ///     <para> 
+    ///     <para>
     ///         Method <c>CreateVariables</c> creates a list of vraibel declarations given the names, properties and context of the variables
     ///     </para>
     /// </summary>
@@ -1584,7 +1584,7 @@ public class Parser
 
     /// <summary>
     ///     <para>
-    ///         
+    ///
     ///     </para>
     /// </summary>
     /// <param name="names">A list of variable names to be created</param>
@@ -1610,8 +1610,8 @@ public class Parser
     }
 
     /// <summary>
-    ///     <para> 
-    ///         Method <c>CreateDefaultVariables</c> 
+    ///     <para>
+    ///         Method <c>CreateDefaultVariables</c>
     ///     </para>
     /// </summary>
     /// <param name="names"></param>
