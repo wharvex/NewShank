@@ -1505,12 +1505,12 @@ public class Parser
 
     /// <summary>
     ///     <para>
-    ///         Method <c>ProcessVaraibelsDoWhile</c>
+    ///         Method <c>ProcessVaraiblesDoWhile</c> parses a list of variable declarations while more are found and returns them in a list
     ///     </para>
     /// </summary>
-    /// <param name="parentModule"></param>
-    /// <param name="isGlobal"></param>
-    /// <returns></returns>
+    /// <param name="parentModule">The parent module to which the declaration belongs</param>
+    /// <param name="isGlobal">Whether or not the list of variable declarations is global</param>
+    /// <returns><see cref="List{T}"/> (<see cref="VariableDeclarationNode"/>) of variable declarations containing the contents of each declaration encoutnered</returns>
     private List<VariableDeclarationNode> ProcessVariablesDoWhile(
         string parentModule,
         bool isGlobal
@@ -1518,6 +1518,7 @@ public class Parser
     {
         var retVal = new List<VariableDeclarationNode>();
 
+        //parse variable declarations until none are found
         do
         {
             var nextOnes = GetVariables(
@@ -1535,6 +1536,18 @@ public class Parser
         return retVal;
     }
 
+    /// <summary>
+    ///     <para> 
+    ///         Method <c>CreateVariables</c> creates a list of vraibel declarations given the names, properties and context of the variables
+    ///     </para>
+    /// </summary>
+    /// <param name="names">A list of the variable names to be created</param>
+    /// <param name="isConstant">Whether or not the list of variables is set to remain constant</param>
+    /// <param name="isGlobal">Whether or not the list of variables is global</param>
+    /// <param name="parentModuleName">The parent modules name to which the list of variables belongs</param>
+    /// <param name="declarationContext">The context to which the list of variables is declared</param>
+    /// <returns><see cref="List{T}"/> (<see cref="VariableDeclarationNode"/>) of newly created variable declarations</returns>
+    /// <exception cref="SyntaxErrorException">A default value is not found following a default value declaration</exception>
     private List<VariableDeclarationNode> CreateVariables(
         List<string> names,
         bool isConstant,
@@ -1569,6 +1582,17 @@ public class Parser
         return CreateVariablesBasic(names, isConstant, isGlobal, parentModuleName, type);
     }
 
+    /// <summary>
+    ///     <para>
+    ///         
+    ///     </para>
+    /// </summary>
+    /// <param name="names">A list of variable names to be created</param>
+    /// <param name="isConstant">Whether or not the list of variables is set to remain constant</param>
+    /// <param name="isGlobal">Whether or not the list of variables is global</param>
+    /// <param name="parentModuleName">The parent modules name to which the list of variables belongs</param>
+    /// <param name="type"></param>
+    /// <returns></returns>
     private List<VariableDeclarationNode> CreateVariablesBasic(
         List<string> names,
         bool isConstant,
@@ -1585,6 +1609,18 @@ public class Parser
             .ToList();
     }
 
+    /// <summary>
+    ///     <para> 
+    ///         Method <c>CreateDefaultVariables</c> 
+    ///     </para>
+    /// </summary>
+    /// <param name="names"></param>
+    /// <param name="isConstant"></param>
+    /// <param name="isGlobal"></param>
+    /// <param name="parentModuleName"></param>
+    /// <param name="type"></param>
+    /// <returns></returns>
+    /// <exception cref="SyntaxErrorException"></exception>
     private List<VariableDeclarationNode> CreateDefaultVariables(
         List<string> names,
         bool isConstant,
