@@ -378,24 +378,27 @@ public class MonomorphizationVisitor(
 
     public override void Visit(ProgramNode node)
     {
-            nonMonomorphizedProgramNode = node;
+        nonMonomorphizedProgramNode = node;
         if (OptionsUnitTest)
         {
-            
-            var unitTests = node.Modules.Values.SelectMany(module =>
-            
-                module.Tests.Values.Select(p =>
-                { p.Accept(this);
-                    return (p, (TypedModuleIndex)Pop());
-                })
+            var unitTests = node.Modules.Values.SelectMany(
+                module =>
+                    module.Tests.Values.Select(p =>
+                    {
+                        p.Accept(this);
+                        return (p, (TypedModuleIndex)Pop());
+                    })
             );
 
-            var functionCallNodes = unitTests.Select(u => new FunctionCallNode(u.Item2.Index.Name.Name)
-            {
-                InstantiatedGenerics = [],
-                FunctionDefinitionModule = u.Item2.Index.Module,
-                MonomphorizedFunctionLocater = u.Item2
-            });
+            var functionCallNodes = unitTests.Select(
+                u =>
+                    new FunctionCallNode(u.Item2.Index.Name.Name)
+                    {
+                        InstantiatedGenerics = [],
+                        FunctionDefinitionModule = u.Item2.Index.Module,
+                        MonomphorizedFunctionLocater = u.Item2
+                    }
+            );
             node.StartModule.GetStartFunctionSafe().Statements.AddRange(functionCallNodes);
             foreach (var testNode in unitTests.Select(u => u.p))
             {

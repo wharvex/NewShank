@@ -7,7 +7,7 @@ public class TestNode : FunctionNode
     public string targetFunctionName;
     public List<VariableDeclarationNode> testingFunctionParameters = new();
 
-    public TestNode(string name,string moduleName , string targetFnName)
+    public TestNode(string name, string moduleName, string targetFnName)
         : base(name, moduleName)
     {
         Name = name;

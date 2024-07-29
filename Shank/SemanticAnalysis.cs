@@ -1167,7 +1167,10 @@ public class SemanticAnalysis
             }
 
             CheckFunctions(module.Value.getFunctions(), module.Value);
-            CheckFunctions(module.Value.getTests().Select(u=>(u.Key, (CallableNode)u.Value)).ToDictionary(), module.Value);
+            CheckFunctions(
+                module.Value.getTests().Select(u => (u.Key, (CallableNode)u.Value)).ToDictionary(),
+                module.Value
+            );
         }
     }
 

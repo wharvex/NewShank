@@ -2431,7 +2431,7 @@ public class Parser
             );
         }
 
-        test = new TestNode(testName,parentModuleName, token.Value);
+        test = new TestNode(testName, parentModuleName, token.Value);
         if (parentModuleName != null)
             test.parentModuleName = parentModuleName;
         else
