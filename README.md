@@ -19,7 +19,9 @@ dotnet --version
 
 ## Build Instructions
 
-⚠ Read up to make sure you have all the required dependencies downloaded and saved to your bin directory/PATH  ⚠
+⚠ Read up to make sure you have all the required dependencies downloaded 
+
+and saved to your bin directory/PATH  ⚠
 
 ### clone and run the project
 ```SH
