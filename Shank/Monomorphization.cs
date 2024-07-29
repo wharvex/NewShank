@@ -73,7 +73,7 @@ public class MonomorphizationVisitor(
     MonomorphizedProgramNode programNode
 ) : Visitor
 {
-    public MonomorphizedProgramNode ProgramNode = programNode;
+    public MonomorphizedProgramNode ProgramNode { get; set; } = programNode;
 
     public MonomorphizationVisitor()
         : this([], null!, null!, new MonomorphizedProgramNode()) { }

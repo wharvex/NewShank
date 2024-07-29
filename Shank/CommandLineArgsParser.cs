@@ -108,6 +108,9 @@ public class CompileOptions
     [Option('l', HelpText = "for linked files")]
     public IEnumerable<string> LinkedFiles { get; set; }
 
+    [Option('u', "unit-test", HelpText = "Unit test options", Default = false)]
+    public bool UnitTest { get; set; }
+
     [Option('L', "LinkPath", Default = "/", HelpText = "for a link path")]
     public string LinkedPath { get; set; }
 
@@ -271,9 +274,19 @@ public class CommandLineArgsParser
                     GetFiles(n) //multiple files
                         .ForEach(ip => ScanAndParse(ip, program, fakeInterpretOptions))
             );
+        RunSemanticAnalysis(fakeInterpretOptions, program);
+
+        if (options.UnitTest)
+        {
+            Interpreter.ActiveInterpretOptions = fakeInterpretOptions;
+            Interpreter.Modules = program.Modules;
+            Interpreter.StartModule = program.GetStartModuleSafe();
+            It2();
+        }
 
         // GetFiles(options.InputFile).ForEach(ip => ScanAndParse(ip, program));
-        RunSemanticAnalysis(fakeInterpretOptions, program);
+        // if (options.UnitTest)
+        //     It2();
         var monomorphization = new MonomorphizationVisitor();
         program.Accept(monomorphization);
         var monomorphizedProgram = monomorphization.ProgramNode;
