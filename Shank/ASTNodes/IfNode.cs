@@ -54,6 +54,7 @@ public class IfNode : StatementNode
 
         return b.ToString();
     }
+
     public override void Accept(Visitor v) => v.Visit(this);
 
     public override ASTNode? Walk(SAVisitor v)

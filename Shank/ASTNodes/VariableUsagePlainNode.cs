@@ -203,7 +203,6 @@ public class VariableUsagePlainNode : VariableUsageNodeTemp
         return $"{Name + (Extension != null ? (", Index: " + Extension) : string.Empty)}";
     }
 
-
     public enum VrnExtType
     {
         RecordMember,

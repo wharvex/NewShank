@@ -18,6 +18,7 @@ public class BooleanExpressionNode : ExpressionNode
     public BooleanExpressionOpType Op { get; init; }
     public ExpressionNode Left { get; set; }
     public ExpressionNode Right { get; set; }
+
     public override string ToString()
     {
         return $"{Left} {Op} {Right}";

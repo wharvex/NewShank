@@ -9,16 +9,14 @@ public class FunctionNode : CallableNode
     public FunctionNode(string name, string moduleName, bool isPublic)
         : base(name, moduleName, isPublic)
     {
-        Execute = paramList =>
-            Interpreter.InterpretFunction(this, paramList);
+        Execute = paramList => Interpreter.InterpretFunction(this, paramList);
         Name = name;
     }
 
     public FunctionNode(string name, string moduleName)
         : base(name, moduleName)
     {
-        Execute = paramList =>
-            Interpreter.InterpretFunction(this, paramList);
+        Execute = paramList => Interpreter.InterpretFunction(this, paramList);
         Name = name;
     }
 
@@ -44,8 +42,7 @@ public class FunctionNode : CallableNode
     public FunctionNode(string name)
         : base(name)
     {
-        Execute = paramList =>
-            Interpreter.InterpretFunction(this, paramList);
+        Execute = paramList => Interpreter.InterpretFunction(this, paramList);
         Name = name;
     }
 
@@ -109,8 +106,6 @@ public class FunctionNode : CallableNode
 
         return b.ToString();
     }
-
- 
 
     public override void Accept(Visitor v) => v.Visit(this);
 

@@ -25,6 +25,7 @@ public class EnumNode : ExpressionNode
             )
             .ToList();
     }
+
     public override void Accept(Visitor v) => v.Visit(this);
 
     public override ASTNode Walk(WalkCompliantVisitor v)

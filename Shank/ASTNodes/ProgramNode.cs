@@ -73,6 +73,7 @@ public class ProgramNode : ASTNode
             throw new SemanticErrorException("start functon cannot have generics", startFunction);
         }
     }
+
     public override void Accept(Visitor v) => v.Visit(this);
 
     public override ASTNode Walk(WalkCompliantVisitor v)

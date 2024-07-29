@@ -11,8 +11,7 @@ public class TestNode : FunctionNode
         Name = name;
         targetFunctionName = targetFnName;
         IsPublic = false;
-        Execute = paramList =>
-            Interpreter.InterpretFunction(this, paramList);
+        Execute = paramList => Interpreter.InterpretFunction(this, paramList);
     }
 
     public override ASTNode? Walk(SAVisitor v)

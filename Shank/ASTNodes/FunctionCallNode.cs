@@ -104,6 +104,7 @@ public class FunctionCallNode : StatementNode
         object[] arr = { "FUNCTION", Name, b.ToString() };
         return arr;
     }
+
     public string GetNameForLlvm() =>
         Name switch
         {
