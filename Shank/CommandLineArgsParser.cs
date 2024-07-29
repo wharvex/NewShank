@@ -132,7 +132,7 @@ public class InterpretOptions
     public IEnumerable<string> InputFiles { get; set; }
 
     [Option('u', "unit-test", HelpText = "Unit test options", Default = false)]
-    public bool unitTest { get; set; }
+    public bool UnitTest { get; set; }
 
     [Option('v', "vuop-test", HelpText = "Variable Usage Operation Test", Default = false)]
     public bool VuOpTest { get; set; }
@@ -264,7 +264,7 @@ public class CommandLineArgsParser
         var fakeInterpretOptions = new InterpretOptions()
         {
             VuOpTest = options.VuOpTest,
-            unitTest = false,
+            UnitTest = false,
             InputFiles = []
         };
         options
@@ -344,7 +344,7 @@ public class CommandLineArgsParser
         Interpreter.ActiveInterpretOptions = options;
         Interpreter.Modules = program.Modules;
         Interpreter.StartModule = program.GetStartModuleSafe();
-        if (!options.unitTest)
+        if (!options.UnitTest)
             It1(program);
         else
             It2();
