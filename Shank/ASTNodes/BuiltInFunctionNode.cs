@@ -19,7 +19,8 @@ public enum BuiltInFunction
     IsSet,
     Left,
     Right,
-    Size
+    Size,
+    AssertIsEqual
 }
 
 public class BuiltInFunctionNode : CallableNode
@@ -90,7 +91,8 @@ public class BuiltInFunctionNode : CallableNode
                 ["right"] = BuiltInFunction.Right,
                 ["realToInteger"] = BuiltInFunction.RealToInt,
                 ["integerToReal"] = BuiltInFunction.IntToReal,
-                ["substring"] = BuiltInFunction.Substring
+                ["substring"] = BuiltInFunction.Substring,
+                ["assertIsEqual"] = BuiltInFunction.AssertIsEqual
             };
         return dict[Name];
     }

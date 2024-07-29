@@ -295,7 +295,7 @@ public class CommandLineArgsParser
         // GetFiles(options.InputFile).ForEach(ip => ScanAndParse(ip, program));
         // if (options.UnitTest)
         //     It2();
-        var monomorphization = new MonomorphizationVisitor();
+        var monomorphization = new MonomorphizationVisitor(options.UnitTest);
         program.Accept(monomorphization);
         var monomorphizedProgram = monomorphization.ProgramNode;
 

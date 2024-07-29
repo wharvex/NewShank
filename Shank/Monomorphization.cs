@@ -73,10 +73,14 @@ public class MonomorphizationVisitor(
     MonomorphizedProgramNode programNode
 ) : Visitor
 {
+    public bool OptionsUnitTest { get; }
     public MonomorphizedProgramNode ProgramNode { get; set; } = programNode;
 
-    public MonomorphizationVisitor()
-        : this([], null!, null!, new MonomorphizedProgramNode()) { }
+    public MonomorphizationVisitor(bool optionsUnitTest)
+        : this([], null!, null!, new MonomorphizedProgramNode())
+    {
+        OptionsUnitTest = optionsUnitTest;
+    }
 
     private Stack<object> expr = new();
 
@@ -205,7 +209,6 @@ public class MonomorphizationVisitor(
         // no module means it is a builtin see FunctionCallNode.FunctionDefinitionModule
         if (node.FunctionDefinitionModule is null)
         {
-            Console.WriteLine("1st time with add");
             BuiltInFunctionNode builtInFunctionNode = (
                 nonMonomorphizedProgramNode.GetStartModuleSafe().getFunction(node.Name)
                 as BuiltInFunctionNode
@@ -215,8 +218,6 @@ public class MonomorphizationVisitor(
         }
         else
         {
-            Console.WriteLine("2nd time with add");
-
             var module = nonMonomorphizedProgramNode.GetFromModulesSafe(
                 node.FunctionDefinitionModule
             );
@@ -377,8 +378,35 @@ public class MonomorphizationVisitor(
 
     public override void Visit(ProgramNode node)
     {
-        nonMonomorphizedProgramNode = node;
-        node.StartModule!.Accept(this);
+            nonMonomorphizedProgramNode = node;
+        if (OptionsUnitTest)
+        {
+            
+            var unitTests = node.Modules.Values.SelectMany(module =>
+            
+                module.Tests.Values.Select(p =>
+                { p.Accept(this);
+                    return (p, (TypedModuleIndex)Pop());
+                })
+            );
+
+            var functionCallNodes = unitTests.Select(u => new FunctionCallNode(u.Item2.Index.Name.Name)
+            {
+                InstantiatedGenerics = [],
+                FunctionDefinitionModule = u.Item2.Index.Module,
+                MonomphorizedFunctionLocater = u.Item2
+            });
+            node.StartModule.GetStartFunctionSafe().Statements.AddRange(functionCallNodes);
+            foreach (var testNode in unitTests.Select(u => u.p))
+            {
+                node.StartModule.addFunction(testNode);
+            }
+            node.StartModule.GetStartFunctionSafe().Accept(this);
+        }
+        else
+        {
+            node.StartModule!.Accept(this);
+        }
     }
 
     public override void Visit(ForNode node)

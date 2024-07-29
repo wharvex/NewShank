@@ -10,7 +10,7 @@ public class FunctionCallNode : StatementNode
     public string Name { get; set; }
 
     // the value you need to lookup a function after monomophization
-    public Index MonomphorizedFunctionLocater { get; }
+    public Index MonomphorizedFunctionLocater { get; init; }
 
     // If its null then we have a call to a builtin
     public string? FunctionDefinitionModule { get; set; }
