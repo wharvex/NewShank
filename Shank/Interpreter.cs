@@ -934,7 +934,8 @@ public class Interpreter
         ArrayDataType adt,
         VariableUsageIndexNode vi,
         List<InterpreterDataType> paramsList,
-        Dictionary<string, InterpreterDataType> variables
+        Dictionary<string, InterpreterDataType> variables,
+        FunctionNode callingFunction
     )
     {
         paramsList.Add(GetIdtFromVun(variables, vi));
