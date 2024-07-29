@@ -2,27 +2,39 @@
 
 ## Required dependencies
 
-- clang or a linker
-- .NET runtime 8.0
+these are things you need to be able to run this program as a whole
 
-## Setup
+-  the newest version of the Clang and the LLVM
+- Newest version of .NET run time 
 
-please check Shank.csproj to make sure you have the required dependencies downloaded. 
+### verify
+<details>
+ <summary>check if you have everything installed and set up correctly</summary>
 
-These commands will clone and run the project:
+```sh
+clang -v
+dotnet --version
+```
+</details>
+
+## Build Instructions
+
+⚠ Read up to make sure you have all the required dependencies downloaded and saved to your bin directory/PATH  ⚠
+
+### clone and run the project
 ```SH
 # clone project
 git clone https://github.com/mphipps1/ShankCompiler.git
-cd ShankCompile/Shank
+cd ShankCompiler/Shank
 
-# run different commands of shank
+# runs compiler
+dotnet run -- Compile ./ShankTestFiles/HelloWorld.shank --print-ir -o HelloWorld.exe 
 
-dotnet run -- Compile ./ShankTestFiles/HelloWorld.shank --print-ir -o HelloWorld.exe # runs compiler
-
-dotnet run -- Interpret ./ShankTestFiles/HelloWorld.shank # runs interpreter
+# runs Interpreter
+dotnet run -- Interpret ./ShankTestFiles/HelloWorld.shank
 
 # powershell script testing
-
+cd ../
 . .\ShankTestScripts.ps1
 st 
 ```
@@ -33,14 +45,7 @@ for a more detailed explanation about each CLI command
 <a href=https://github.com/mphipps1/ShankCompiler/wiki/Shank-CLI-(Command-Line-Interface)-documentation>CLI documentation</a>
 
 
-## Formatting
-
-This project has a GitHub Action that uses the CSharpier formatter to format all .cs files in the repo.
-
-The action is triggered when pushing to the master branch. It formats if needed and creates a new commit if formatting occurs.
-
-If formatting occurs and the commit is pushed, please remember to pull the changes to your local repo afterwards.
-
 # Documentation
 
-- <a href=https://github.com/mphipps1/ShankCompiler/wiki>Documentation</a>
+- <a href=https://github.com/mphipps1/ShankCompiler/wiki>Code Documentation</a>
+- <a href=https://github.com/mphipps1/ShankCompiler/wiki/Shank-Language-Definition,-V3> Langauge Definition </a>
