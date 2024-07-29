@@ -61,7 +61,13 @@ public class CompileOptions
 
     public OptPasses OptLevel { get; set; }
 
-    [Option('O', "optimize", Default = "0", Required = false, HelpText = "Set optimization level.")]
+    [Option(
+        'O',
+        "optimize",
+        Default = "0",
+        Required = false,
+        HelpText = "Set optimization level.(0 being least 3 being most)"
+    )]
     public string? OptimizationLevels
     {
         set
@@ -134,11 +140,13 @@ public class InterpretOptions
     [Option('u', "unit-test", HelpText = "Unit test options", Default = false)]
     public bool UnitTest { get; set; }
 
-    [Option('v', "vuop-test", HelpText = "Variable Usage Operation Test", Default = false)]
+    [Option(
+        'v',
+        "vuop-test",
+        HelpText = "Variable Usage Operation Test (doesnt work with enums)",
+        Default = false
+    )]
     public bool VuOpTest { get; set; }
-
-    [Option('b', "bench-mark", HelpText = "an option to bench mark shank", Default = false)]
-    public bool BenchMark { get; set; }
 }
 
 [Verb("CompilePractice", isDefault: false, HelpText = "dev use only")]

@@ -8,8 +8,8 @@ public class Program
 
     public static void Main(string[] args)
     {
-        //hopefully i didnt break it up i removed all the useless code here
-        //cosnult the docs to see the different arguments
+        //hopefully i didn't break it up i removed all the useless code here
+        //consult the docs to see the different arguments
         new CommandLineArgsParser(args);
     }
 }

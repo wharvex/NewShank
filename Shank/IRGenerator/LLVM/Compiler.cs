@@ -299,6 +299,7 @@ public class Compiler(
         {
             value = GetReferenceInner(r);
         }
+
         var newValue = (LLVMArray)value;
         var arrayType = (LLVMArrayType)newValue.TypeRef;
         var length = newValue.TypeRef.TypeRef.ArrayLength;
@@ -423,6 +424,7 @@ public class Compiler(
         {
             value = GetReferenceInner(r);
         }
+
         var varType = (LLVMStruct)value;
         var varField = (VariableUsagePlainNode)node.GetExtensionSafe();
         var dataType = varType.GetTypeOf(varField.Name);
@@ -448,6 +450,7 @@ public class Compiler(
         {
             value = GetReferenceInner(r);
         }
+
         var newValue = (LLVMArray)value;
         var arrayInnerType = ((LLVMArray)value).Inner();
         var elementType = arrayInnerType.TypeRef;
