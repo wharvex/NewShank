@@ -18,6 +18,7 @@ public abstract class ASTNode
         Line = Parser.Line;
         FileName = Parser.FileName;
     }
+
     public abstract void Accept(Visitor v);
 
     public virtual ASTNode Walk(WalkCompliantVisitor v) => this;

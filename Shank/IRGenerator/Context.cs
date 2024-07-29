@@ -88,7 +88,11 @@ public struct CFuntions
     public LLVMFunction time { get; }
 }
 
-public class Context(MonomorphizedProgramNode moduleNode, CFuntions cFuntions, RandomInformation randomInformation)
+public class Context(
+    MonomorphizedProgramNode moduleNode,
+    CFuntions cFuntions,
+    RandomInformation randomInformation
+)
 {
     private readonly MonomorphizedProgramNode moduleNode = moduleNode;
 

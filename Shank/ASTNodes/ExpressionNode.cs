@@ -15,7 +15,6 @@ public abstract class ExpressionNode : ASTNode
 
     public void Accept(IAstExpressionVisitor visitor) => visitor.Visit(this);
 
-
     public override void Accept(Visitor v) => throw new NotImplementedException();
 
     public override ASTNode Walk(WalkCompliantVisitor v)

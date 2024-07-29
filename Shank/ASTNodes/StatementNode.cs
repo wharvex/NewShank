@@ -28,7 +28,6 @@ public class StatementNode : ASTNode
         throw new NotImplementedException();
     }
 
-
     //public override ASTNode Walk(WalkCompliantVisitor v)
     //{
     //    var ret = v.Visit(this, out var shortCircuit);
