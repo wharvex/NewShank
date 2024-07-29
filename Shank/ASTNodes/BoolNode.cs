@@ -41,6 +41,4 @@ public class BoolNode : ExpressionNode
 
         return v.PostWalk(this);
     }
-
-    public override T Accept<T>(ExpressionVisitor<T> visit) => visit.Visit(this);
 }

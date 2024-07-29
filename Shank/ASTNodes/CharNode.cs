@@ -30,9 +30,6 @@ public class CharNode : ExpressionNode
     //     return LLVMValueRef.CreateConstInt(module.Context.Int8Type, Value, true);
     // }
 
-
-    public override T Accept<T>(ExpressionVisitor<T> visit) => visit.Visit(this);
-
     public override void Accept(Visitor v) => v.Visit(this);
 
     public override ASTNode? Walk(SAVisitor v)

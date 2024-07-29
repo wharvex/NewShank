@@ -39,16 +39,6 @@ public class EnumNode : ExpressionNode
     // }
 
 
-    public override T Accept<T>(ExpressionVisitor<T> visit)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override void Accept<T>(StatementVisitor v)
-    {
-        throw new NotImplementedException();
-    }
-
     public override void Accept(Visitor v) => v.Visit(this);
 
     public override ASTNode Walk(WalkCompliantVisitor v)

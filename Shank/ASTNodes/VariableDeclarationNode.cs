@@ -162,20 +162,6 @@ public class VariableDeclarationNode : ASTNode
     //     return v;
     // }
 
-    public void VisitProto(VisitPrototype visitPrototype)
-    {
-        visitPrototype.Accept(this);
-    }
-
-    public void Visit(StatementVisitor visit)
-    {
-        visit.Accept(this);
-    }
-
-    public override void Accept<T>(StatementVisitor v)
-    {
-        throw new NotImplementedException();
-    }
 
     public override void Accept(Visitor v) => v.Visit(this);
 

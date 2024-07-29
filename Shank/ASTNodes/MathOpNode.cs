@@ -30,7 +30,6 @@ public class MathOpNode(ExpressionNode left, MathOpNode.MathOpType op, Expressio
     //     return visitor.Visit(this);
     // }
 
-    public override T Accept<T>(ExpressionVisitor<T> visit) => visit.Visit(this);
 
     public enum MathOpType
     {

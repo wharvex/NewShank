@@ -64,20 +64,8 @@ public abstract class CallableNode : ASTNode
     //     LLVMModuleRef module
     // );
 
-    public T Visit<T>(ExpressionVisitor<T> visit)
-    {
-        throw new NotImplementedException();
-    }
-
-    public virtual void Visit(StatementVisitor visit) { }
-
     public override string ToString()
     {
         return Name;
-    }
-
-    public override void Accept<T>(StatementVisitor v)
-    {
-        throw new NotImplementedException();
     }
 }

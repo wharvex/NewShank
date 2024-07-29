@@ -95,11 +95,6 @@ public class IfNode : StatementNode
     //     // }
     // }
 
-    public override void Visit(StatementVisitor visit)
-    {
-        visit.Accept(this);
-    }
-
     public override void Accept(Visitor v) => v.Visit(this);
 
     public override ASTNode? Walk(SAVisitor v)

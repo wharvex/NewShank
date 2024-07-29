@@ -677,20 +677,6 @@ public class FunctionNode : CallableNode
     //     return visitor.Visit(this);
     // }
 
-    public override void Visit(StatementVisitor visit)
-    {
-        visit.Accept(this);
-    }
-
-    /// <summary>
-    /// visitor anti pattern :')
-    /// </summary>
-    /// <param name="visitPrototype"></param>
-    public void VisitProto(VisitPrototype visitPrototype)
-    {
-        visitPrototype.Accept(this);
-    }
-
     public override void Accept(Visitor v) => v.Visit(this);
 
     public override ASTNode? Walk(SAVisitor v)

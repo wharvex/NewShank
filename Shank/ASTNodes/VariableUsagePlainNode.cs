@@ -225,15 +225,6 @@ public class VariableUsagePlainNode : VariableUsageNodeTemp
     }
 
     ///<summary>
-    ///     Gets the nested names as a list of strings.
-    ///</summary>
-    ///<returns>
-    ///     A list of strings representing the nested names.
-    ///     Throws an <see cref="InvalidOperationException"/> if the extension type is not <see cref="VrnExtType.RecordMember"/> or if the variable reference node is enclosed.
-    ///</returns>
-    public override T Accept<T>(ExpressionVisitor<T> visit) => visit.Visit(this);
-
-    ///<summary>
     ///     Accepts a generic visitor for processing this node.
     ///</summary>
     ///<param name="v">The generic visitor to accept.</param>

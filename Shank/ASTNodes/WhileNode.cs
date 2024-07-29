@@ -120,16 +120,6 @@ public class WhileNode : StatementNode
 
 
     ///<summary>
-    ///     Accepts a statement visitor for processing this node.
-    ///</summary>
-    ///<param name="visit">The statement visitor to accept.</param>
-
-    public override void Visit(StatementVisitor visit)
-    {
-        visit.Accept(this);
-    }
-
-    ///<summary>
     ///     Accepts a generic visitor for processing this node.
     ///</summary>
     ///<param name="v">The generic visitor to accept.</param>

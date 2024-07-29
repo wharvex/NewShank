@@ -30,11 +30,6 @@ public class IntNode : ExpressionNode
     //     return visitor.Visit(this);
     // }
 
-    public override T Accept<T>(ExpressionVisitor<T> visit) => visit.Visit(this);
-
-    // {
-    //     throw new NotImplementedException();
-    // }
     public override void Accept(Visitor v) => v.Visit(this);
 
     public override ASTNode? Walk(SAVisitor v)

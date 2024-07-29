@@ -18,16 +18,6 @@ public class EmptyNode(string comment) : ASTNode
     //     throw new NotImplementedException();
     // }
 
-    public T Visit<T>(ExpressionVisitor<T> visit)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override void Accept<T>(StatementVisitor v)
-    {
-        throw new NotImplementedException();
-    }
-
     public override void Accept(Visitor v)
     {
         throw new NotImplementedException();

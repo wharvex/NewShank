@@ -94,16 +94,6 @@ public class ProgramNode : ASTNode
     //     }
     // }
 
-    // public override void Visit(StatementVisitor visit)
-    // {
-    //     visit.Accept(this);
-    // }
-
-    public override void Accept<T>(StatementVisitor v)
-    {
-        throw new NotImplementedException();
-    }
-
     public override void Accept(Visitor v) => v.Visit(this);
 
     public override ASTNode Walk(WalkCompliantVisitor v)
