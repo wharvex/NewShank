@@ -256,6 +256,11 @@ public class Compiler(
 
     private LLVMValue CompileVariableUsageNew(VariableUsageNodeTemp node)
     {
+        // TODO:
+        //this doesnt work for enums
+        // how enums wokr with out this is by constant folding
+        // store the Value of the enum which is an integer in the Extension type
+
         return node switch
         {
             VariableUsageIndexNode variableUsageIndexNode
