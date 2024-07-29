@@ -1,5 +1,10 @@
 # The Shank Programming Langauge V3
 
+## Required dependencies
+
+- clang or a linker
+- .NET runtime 8.0
+
 ## Setup
 
 please check Shank.csproj to make sure you have the required dependencies downloaded. 
