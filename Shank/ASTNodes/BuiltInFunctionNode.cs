@@ -20,7 +20,8 @@ public enum BuiltInFunction
     Left,
     Right,
     Size,
-    AssertIsEqual
+    AssertIsEqual,
+    GetRandom,
 }
 
 public class BuiltInFunctionNode : CallableNode
@@ -92,7 +93,8 @@ public class BuiltInFunctionNode : CallableNode
                 ["realToInteger"] = BuiltInFunction.RealToInt,
                 ["integerToReal"] = BuiltInFunction.IntToReal,
                 ["substring"] = BuiltInFunction.Substring,
-                ["assertIsEqual"] = BuiltInFunction.AssertIsEqual
+                ["assertIsEqual"] = BuiltInFunction.AssertIsEqual,
+                ["getRandom"] = BuiltInFunction.GetRandom
             };
         return dict[Name];
     }

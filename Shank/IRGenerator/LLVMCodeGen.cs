@@ -24,7 +24,7 @@ public class LLVMCodeGen
 
         // string? directory = Path.GetDirectoryName(compileOptions.OutFile);
 
-        var context = new Context(programNode, new CFuntions(module));
+        var context = new Context(programNode, new CFuntions(module), new RandomInformation(module));
         var compiler = new Compiler(context, builder, module, compileOptions);
         compiler.Compile(programNode);
 
