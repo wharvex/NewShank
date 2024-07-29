@@ -357,11 +357,11 @@ public class Compiler(
         {
             LLVMArrayType llvmArrayType => CopyArray(llvmArrayType, value),
             LLVMEnumType
-                or LLVMCharacterType
-                or LLVMBooleanType
-                or LLVMIntegerType
-                or LLVMRealType
-                or LLVMReferenceType
+            or LLVMCharacterType
+            or LLVMBooleanType
+            or LLVMIntegerType
+            or LLVMRealType
+            or LLVMReferenceType
                 => value,
             LLVMStringType => CopyString(value),
             LLVMStructType llvmStructType => CopyStruct(llvmStructType, value),
@@ -374,10 +374,10 @@ public class Compiler(
             .Range(0, (int)llvmArrayType.Range.Length)
             .Select(
                 i =>
-                (
-                    i,
-                    CopyVariable(llvmArrayType.Inner, builder.BuildExtractValue(value, (uint)i))
-                )
+                    (
+                        i,
+                        CopyVariable(llvmArrayType.Inner, builder.BuildExtractValue(value, (uint)i))
+                    )
             )
             .Aggregate(
                 llvmArrayType.TypeRef.Undef,
@@ -684,13 +684,13 @@ public class Compiler(
         // also we do not know the order by which types are added to the llvm module
         var record = context.Records[node.Type.MonomorphizedIndex];
         var members = node.Type.Fields.Select(
-                s =>
+            s =>
                 (
                     s.Key,
                     // we are assuming that (mutually) recursive records are behind a refersTo (which already has a level of indirection, so we don't have to worry about llvm being cranky about recursive structs)
                     context.GetLLVMTypeFromShankType(s.Value)
                 )
-            )
+        )
             .ToDictionary();
         record.Members = members;
         record.TypeRef.StructSetBody(members.Select(s => s.Value.TypeRef).ToArray(), false);
@@ -708,8 +708,8 @@ public class Compiler(
                             argumentAndMutability.First,
                             // for struct and arrays and really anything else we do not have to copy anything for function call because if they are marked var they need to be mutated, if they are not then the function cannot mutate them - and any time it assign part of this to a different value that will get copied
                             !argumentAndMutability.Second.Mutable
-                            && argumentAndMutability.Second.Type
-                                is not (LLVMArrayType or LLVMStructType)
+                                && argumentAndMutability.Second.Type
+                                    is not (LLVMArrayType or LLVMStructType)
                         )
                 );
             // function.
@@ -756,10 +756,15 @@ public class Compiler(
         node.LocalVariables.ForEach(CompileVariableDeclaration);
         if (function.Name == "main")
         {
-            var seed = builder.BuildCall2(context.CFuntions.time.TypeOf, context.CFuntions.time.Function, [
-                LLVMValueRef.CreateConstNull(LLVMTypeRef.CreatePointer(LLVMTypeRef.Int64, 0))
-            ]);
-            builder.BuildStore(builder.BuildIntCast(seed, LLVMTypeRef.Int64), context.RandomVariables.S1);
+            var seed = builder.BuildCall2(
+                context.CFuntions.time.TypeOf,
+                context.CFuntions.time.Function,
+                [LLVMValueRef.CreateConstNull(LLVMTypeRef.CreatePointer(LLVMTypeRef.Int64, 0))]
+            );
+            builder.BuildStore(
+                builder.BuildIntCast(seed, LLVMTypeRef.Int64),
+                context.RandomVariables.S1
+            );
         }
 
         node.Statements.ForEach(CompileStatement);
@@ -827,20 +832,20 @@ public class Compiler(
     private void CompileIf(IfNode node)
     {
         if (node.Expression != null)
-            // if the condition is null then it's an else statement, which can
-            // only happen after an if statement
-            // so is it's an if statement, and since we compile
-            // if statements recursively, like how we parse them
-            // we know that we already created the block for the
-            // else statement, when compiling the if part,
-            // so we just compile the statements in the else block
-            // if the condition is not null we compile the condition,
-            // create two blocks one for if it's true, and for when the condition is false
-            // we then just compile the statements for when the condition
-            // is true under the true block, followed by a goto to an after block
-            // and we visit(compile) the IfNode for when the condition is false
-            // if needed, followed by a goto to the after branch
-            // note we could make this a bit better by checking if next is null and then make the conditional branch to after block in the false cas
+        // if the condition is null then it's an else statement, which can
+        // only happen after an if statement
+        // so is it's an if statement, and since we compile
+        // if statements recursively, like how we parse them
+        // we know that we already created the block for the
+        // else statement, when compiling the if part,
+        // so we just compile the statements in the else block
+        // if the condition is not null we compile the condition,
+        // create two blocks one for if it's true, and for when the condition is false
+        // we then just compile the statements for when the condition
+        // is true under the true block, followed by a goto to an after block
+        // and we visit(compile) the IfNode for when the condition is false
+        // if needed, followed by a goto to the after branch
+        // note we could make this a bit better by checking if next is null and then make the conditional branch to after block in the false cas
         {
             var condition = CompileExpression(node.Expression);
             var ifBlock = context.CurrentFunction.AppendBasicBlock("if block");
@@ -993,7 +998,6 @@ public class Compiler(
             default:
                 throw new ArgumentOutOfRangeException(nameof(llvmTypeFromShankType));
         }
-
         ;
     }
 
@@ -1243,35 +1247,55 @@ public class Compiler(
         var rotl0 = rotl(builder.BuildMul(s1, CreateConstInt(5)), CreateConstInt(7));
         // result = rotl * 9
         var result = builder.BuildMul(rotl0, CreateConstInt(9));
-        // t = s1 << 17 
+        // t = s1 << 17
         var t = builder.BuildShl(s1, CreateConstInt(17));
         // s2 ^= s0 (s2 = s2 ^ s0)
         builder.BuildStore(
-            builder.BuildXor(builder.BuildLoad2(LLVMTypeRef.Int64, randomVariables.S2),
-                builder.BuildLoad2(LLVMTypeRef.Int64, randomVariables.S0)), randomVariables.S2);
+            builder.BuildXor(
+                builder.BuildLoad2(LLVMTypeRef.Int64, randomVariables.S2),
+                builder.BuildLoad2(LLVMTypeRef.Int64, randomVariables.S0)
+            ),
+            randomVariables.S2
+        );
         // s3 ^= s1
         builder.BuildStore(
-            builder.BuildXor(builder.BuildLoad2(LLVMTypeRef.Int64, randomVariables.S3),
-                builder.BuildLoad2(LLVMTypeRef.Int64, randomVariables.S1)), randomVariables.S3);
+            builder.BuildXor(
+                builder.BuildLoad2(LLVMTypeRef.Int64, randomVariables.S3),
+                builder.BuildLoad2(LLVMTypeRef.Int64, randomVariables.S1)
+            ),
+            randomVariables.S3
+        );
         // s1 ^= s2
         builder.BuildStore(
-            builder.BuildXor(builder.BuildLoad2(LLVMTypeRef.Int64, randomVariables.S1),
-                builder.BuildLoad2(LLVMTypeRef.Int64, randomVariables.S2)), randomVariables.S1);
+            builder.BuildXor(
+                builder.BuildLoad2(LLVMTypeRef.Int64, randomVariables.S1),
+                builder.BuildLoad2(LLVMTypeRef.Int64, randomVariables.S2)
+            ),
+            randomVariables.S1
+        );
         // s0 ^= s3
         builder.BuildStore(
-            builder.BuildXor(builder.BuildLoad2(LLVMTypeRef.Int64, randomVariables.S0),
-                builder.BuildLoad2(LLVMTypeRef.Int64, randomVariables.S3)), randomVariables.S0);
+            builder.BuildXor(
+                builder.BuildLoad2(LLVMTypeRef.Int64, randomVariables.S0),
+                builder.BuildLoad2(LLVMTypeRef.Int64, randomVariables.S3)
+            ),
+            randomVariables.S0
+        );
         // s2 ^= t
-        builder.BuildStore(builder.BuildXor(builder.BuildLoad2(LLVMTypeRef.Int64, randomVariables.S2), t),
-            randomVariables.S2);
+        builder.BuildStore(
+            builder.BuildXor(builder.BuildLoad2(LLVMTypeRef.Int64, randomVariables.S2), t),
+            randomVariables.S2
+        );
         // rotl(s3, 45)
-        var rotl1 = rotl(builder.BuildLoad2(LLVMTypeRef.Int64, randomVariables.S3), CreateConstInt(45));
+        var rotl1 = rotl(
+            builder.BuildLoad2(LLVMTypeRef.Int64, randomVariables.S3),
+            CreateConstInt(45)
+        );
         // s3 = rotl
         builder.BuildStore(rotl1, randomVariables.S3);
         // return result
         builder.BuildStore(result, function.Function.FirstParam);
         builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
-
 
         LLVMValueRef CreateConstInt(ulong n)
         {
@@ -1281,11 +1305,12 @@ public class Compiler(
         // rotl(x, k) = (x << k) | (x >> (64 - k))
         LLVMValueRef rotl(LLVMValueRef x, LLVMValueRef k)
         {
-            return builder.BuildOr(builder.BuildShl(x, k),
-                builder.BuildAShr(x, builder.BuildSub(CreateConstInt(64), k)));
+            return builder.BuildOr(
+                builder.BuildShl(x, k),
+                builder.BuildAShr(x, builder.BuildSub(CreateConstInt(64), k))
+            );
         }
     }
-
 
     private void CompileBuiltinRead(LLVMShankFunction function)
     {
@@ -1511,12 +1536,12 @@ public class Compiler(
             .Zip(function.Function.Params)
             .Select(
                 p =>
-                (
-                    p.First,
-                    p.First is LLVMArrayType or LLVMStructType
-                        ? builder.BuildLoad2(p.First.TypeRef, p.Second)
-                        : p.Second
-                )
+                    (
+                        p.First,
+                        p.First is LLVMArrayType or LLVMStructType
+                            ? builder.BuildLoad2(p.First.TypeRef, p.Second)
+                            : p.Second
+                    )
             )
             .SelectMany(GetValues)
             .Prepend(builder.BuildGlobalStringPtr(format, "printf-format"));

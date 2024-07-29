@@ -243,13 +243,24 @@ public class Context(MonomorphizedProgramNode moduleNode, CFuntions cFuntions)
         name is TypedModuleIndex m ? Functions[m] : BuiltinFunctions[(TypedBuiltinIndex)name];
 }
 
-public record struct RandomInformation(LLVMValueRef S0, LLVMValueRef S1, LLVMValueRef S2, LLVMValueRef S3)
+public record struct RandomInformation(
+    LLVMValueRef S0,
+    LLVMValueRef S1,
+    LLVMValueRef S2,
+    LLVMValueRef S3
+)
 {
-    public RandomInformation(LLVMModuleRef module) :this(module.AddGlobal(LLVMTypeRef.Int64, "s0"), module.AddGlobal(LLVMTypeRef.Int64, "s1"), module.AddGlobal(LLVMTypeRef.Int64, "s2"), module.AddGlobal(LLVMTypeRef.Int64, "s3"))
+    public RandomInformation(LLVMModuleRef module)
+        : this(
+            module.AddGlobal(LLVMTypeRef.Int64, "s0"),
+            module.AddGlobal(LLVMTypeRef.Int64, "s1"),
+            module.AddGlobal(LLVMTypeRef.Int64, "s2"),
+            module.AddGlobal(LLVMTypeRef.Int64, "s3")
+        )
     {
-        S0 = S0 with { Initializer = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, 0) };        
-        S1 = S1 with { Initializer = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, 0) };        
-        S2 = S2 with { Initializer = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, 0) };        
-        S3 = S3 with { Initializer = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, 0) };        
+        S0 = S0 with { Initializer = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, 0) };
+        S1 = S1 with { Initializer = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, 0) };
+        S2 = S2 with { Initializer = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, 0) };
+        S3 = S3 with { Initializer = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, 0) };
     }
 }
