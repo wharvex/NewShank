@@ -1,6 +1,4 @@
-using LLVMSharp.Interop;
 using Shank.ExprVisitors;
-using Shank.IRGenerator;
 
 namespace Shank.ASTNodes;
 
@@ -18,17 +16,6 @@ public class IntNode : ExpressionNode
     {
         return $"{Value}";
     }
-
-    // public override LLVMValueRef Visit(
-    //     LLVMVisitor visitor,
-    //     Context context,
-    //     LLVMBuilderRef builder,
-    //     LLVMModuleRef module
-    // )
-    // {
-    //     // value requires a ulong cast, because that is what CreateConstInt requires
-    //     return visitor.Visit(this);
-    // }
 
     public override void Accept(Visitor v) => v.Visit(this);
 

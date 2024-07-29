@@ -73,27 +73,6 @@ public class ProgramNode : ASTNode
             throw new SemanticErrorException("start functon cannot have generics", startFunction);
         }
     }
-
-    // public void VisitProgram(
-    //     LLVMVisitor visitor,
-    //     Context context,
-    //     LLVMBuilderRef builder,
-    //     LLVMModuleRef module
-    // )
-    // {
-    //     // add all modules to the context
-    //     context.setModules(Modules.Keys);
-    //     foreach (var keyValuePair in Modules)
-    //     {
-    //         keyValuePair.Value.VisitPrototype(context, module);
-    //     }
-    //
-    //     foreach (var keyValuePair in Modules)
-    //     {
-    //         keyValuePair.Value.VisitStatement(visitor, context, builder, module);
-    //     }
-    // }
-
     public override void Accept(Visitor v) => v.Visit(this);
 
     public override ASTNode Walk(WalkCompliantVisitor v)

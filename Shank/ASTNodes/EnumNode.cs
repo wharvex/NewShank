@@ -25,20 +25,6 @@ public class EnumNode : ExpressionNode
             )
             .ToList();
     }
-
-    // public override LLVMValueRef Visit(
-    //     LLVMVisitor visitor,
-    //     Context context,
-    //     LLVMBuilderRef builder,
-    //     LLVMModuleRef module
-    // )
-    // {
-    //     visitor.Visit(this);
-    //     throw new Exception("not implemented uet");
-    //     // return b
-    // }
-
-
     public override void Accept(Visitor v) => v.Visit(this);
 
     public override ASTNode Walk(WalkCompliantVisitor v)

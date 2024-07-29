@@ -1,5 +1,3 @@
-using Shank.ASTNodes;
-
 namespace Shank.ASTNodes;
 
 public class TestNode : FunctionNode
@@ -13,7 +11,7 @@ public class TestNode : FunctionNode
         Name = name;
         targetFunctionName = targetFnName;
         IsPublic = false;
-        Execute = (List<InterpreterDataType> paramList) =>
+        Execute = paramList =>
             Interpreter.InterpretFunction(this, paramList);
     }
 

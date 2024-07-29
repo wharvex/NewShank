@@ -28,17 +28,6 @@ public class BuiltInFunctionNode : CallableNode
 
     public List<string> GenericTypeParameterNames { get; set; } = [];
 
-    // public override LLVMValueRef Visit(
-    //     LLVMVisitor visitor,
-    //     Context context,
-    //     LLVMBuilderRef builder,
-    //     LLVMModuleRef module
-    // )
-    // {
-    //     throw new NotImplementedException();
-    // }
-
-
     // Copy constructor for monomorphization
     public BuiltInFunctionNode(
         BuiltInFunctionNode function,

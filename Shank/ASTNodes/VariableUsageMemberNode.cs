@@ -1,7 +1,4 @@
-﻿using Shank.AstVisitorsTim;
-using Shank.ExprVisitors;
-
-namespace Shank.ASTNodes;
+﻿namespace Shank.ASTNodes;
 
 ///<summary>
 ///     Represents a node for member access within a variable usage in the abstract syntax tree (AST).
