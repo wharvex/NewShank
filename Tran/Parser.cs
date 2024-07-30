@@ -8,7 +8,7 @@ namespace Shank.Tran;
 public class Parser
 {
     private List<List<Token>> files = new List<List<Token>>();
-    private TokenHandler? handler;
+    private TokenHandler handler;
     private static ProgramNode program;
     public ModuleNode thisClass;
     private LinkedList<string> sharedNames;
@@ -327,8 +327,10 @@ public class Parser
     public List<ExpressionNode> ParseArguments()
     {
         var arguments = new List<ExpressionNode>();
-        ExpressionNode? expression;
-        do
+        ExpressionNode? expression = ParseExpression();
+        if (expression == null) return arguments;
+        arguments.Add(expression);
+        while (handler.MatchAndRemove(TokenType.COMMA) != null)
         {
             AcceptSeparators();
             if ((expression = ParseExpression()) != null)
@@ -336,8 +338,8 @@ public class Parser
                 arguments.Add(expression);
                 continue;
             }
-            throw new Exception("No name provided for variable in parameters");
-        } while (handler.MatchAndRemove(TokenType.COMMA) != null);
+            throw new Exception("No expression provided in function call arguments");
+        }
         return arguments;
     }
 
@@ -379,10 +381,39 @@ public class Parser
                 var expression = ParseExpression();
                 if (expression != null)
                 {
-                    //TODO: check if newTarget is something we need to worry about
                     return new AssignmentNode(variable, expression);
                 }
+                else throw new Exception("Missing expression on right side of assignment");
             }
+            else if (handler.MatchAndRemove(TokenType.COMMA) != null)
+            {
+                variable.IsVariableFunctionCall = true;
+                List<VariableUsagePlainNode> variables = [variable];
+                do
+                {
+                    AcceptSeparators();
+                    variable = ParseVariableReference();
+                    if (variable != null)
+                    {
+                        variable.IsVariableFunctionCall = true;
+                        variables.Add(variable);
+                    }
+                    else throw new Exception("Missing variable reference after comma in multi-assignment statement");
+                } while (handler.MatchAndRemove(TokenType.COMMA) != null);
+
+                if (handler.MatchAndRemove(TokenType.EQUAL) != null)
+                {
+                    var functionCall = (FunctionCallNode?)ParseFunctionCall();
+                    if (functionCall != null)
+                    {
+                        functionCall.Arguments.AddRange(variables);
+                        return functionCall;
+                    }
+                    else throw new Exception("Multi-assignment requires a function call as the target");
+                }
+                else throw new Exception("Missing equal sign after multi-assignment");
+            }
+            else throw new Exception("Missing either comma or equal sign after variable reference for assignment");
         }
 
         return null;

@@ -134,6 +134,42 @@ class start
         }
 
         [TestMethod]
+        public void InterpreterTestMultiAssignment()
+        {
+            InitializeInterpreter(
+                @"
+class start
+    start()
+        number x
+        number y
+        x, y = getValues()
+        console.print(x)
+        console.print(y)
+    
+    getValues() : number a, number b  { becomes in Shank addStuff ( x,y,var retval) }
+        a = 20
+        b = 30".Replace("    ", "\t")
+            );
+            RunInterpreter();
+        }
+
+        [TestMethod]
+        public void InterpreterTestFunctionCallExpression()
+        {
+            InitializeInterpreter(
+                @"
+class start
+    start()
+        number x
+        x = getValue() + getValue()
+    
+    getValue() : number a  { becomes in Shank addStuff ( x,y,var retval) }
+        a = 100".Replace("    ", "\t")
+            );
+            RunInterpreter();
+        }
+
+        [TestMethod]
         public void InterpreterTestPrint()
         {
             InitializeInterpreter(
