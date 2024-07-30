@@ -3,18 +3,36 @@ using Shank.AstVisitorsTim;
 
 namespace Shank.ASTNodes;
 
-///<summary>
-///     Represents an abstract base class for various types of variable usage nodes.
-///</summary>
+/// <summary>
+/// Abstract base class for the three types of variable usage (plain, member, and index).
+/// </summary>
 public abstract class VariableUsageNodeTemp : ExpressionNode
 {
-    ///<summary>
-    ///     Gets the plain variable usage node from the hierarchy.
-    ///</summary>
-    ///<returns>
-    ///     The plain variable usage node of type <see cref="VariableUsagePlainNode"/>.
-    ///     Throws an <see cref="UnreachableException"/> if the variable usage node class hierarchy is altered.
-    ///</returns>
+    public bool NewReferencesGlobalVariable { get; set; }
+
+    /// <summary>
+    /// Returns the monomorphized name of the variable, considering whether it references a global variable.
+    /// </summary>
+    /// <returns>
+    /// An <see cref="Index"/> representing the monomorphized name of the variable.
+    /// </returns>
+    public Index NewMonomorphizedName()
+    {
+        var plain = GetPlain();
+        return NewReferencesGlobalVariable
+            ? new ModuleIndex(new NamedIndex(plain.Name), plain.ModuleName)
+            : new NamedIndex(plain.Name);
+    }
+
+    /// <summary>
+    /// Gets the <see cref="VariableUsagePlainNode" /> (i.e. the left-most identifier or "root")
+    /// from the potentially nested structure of this <see cref="VariableUsageNodeTemp" />.
+    /// </summary>
+    /// <returns>
+    /// The <see cref="VariableUsagePlainNode"/> of this <see cref="VariableUsageNodeTemp" />.
+    /// Throws <see cref="UnreachableException"/> if an unknown child of
+    /// <see cref="VariableUsageNodeTemp" /> is found during the traversal.
+    /// </returns>
     public VariableUsagePlainNode GetPlain()
     {
         var ret = this;
@@ -34,13 +52,16 @@ public abstract class VariableUsageNodeTemp : ExpressionNode
         return (VariableUsagePlainNode)ret;
     }
 
-    ///<summary>
-    ///     Gets the depth of the variable usage node in the hierarchy.
-    ///</summary>
-    ///<returns>
-    ///     An integer representing the depth of the variable usage node.
-    ///     Throws an <see cref="UnreachableException"/> if the variable usage node class hierarchy is altered.
-    ///</returns>
+    /// <summary>
+    /// Gets the depth of this <see cref="VariableUsageNodeTemp" />'s potentially nested structure.
+    /// A depth of <c>0</c> indicates this <see cref="VariableUsageNodeTemp" /> is a
+    /// <see cref="VariableUsagePlainNode" />.
+    /// </summary>
+    /// <returns>
+    /// The depth of this <see cref="VariableUsageNodeTemp" /> as an integer.
+    /// Throws <see cref="UnreachableException"/> if an unknown child of
+    /// <see cref="VariableUsageNodeTemp" /> is found during the traversal.
+    /// </returns>
     public int GetDepth()
     {
         var vc = this;
