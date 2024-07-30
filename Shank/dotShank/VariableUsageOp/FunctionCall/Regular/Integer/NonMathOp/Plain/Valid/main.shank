@@ -1,5 +1,8 @@
+define func(myA : integer)
+    write "myA from func: ", myA
+
 define start()
-variables a, b : integer
-    a := 33
-    b := a
-    write "hello from Vuop Assignment RhsIsVuop Integer NonMathOp Plain Valid"
+variables a : integer
+    a := 44
+    func a
+    write "hello from Vuop FunctionCall Regular Integer NonMathOp Plain Valid"

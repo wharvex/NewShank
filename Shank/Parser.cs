@@ -1100,49 +1100,54 @@ public class Parser
 
     private FunctionCallNode? NewFunctionCall(string moduleName)
     {
-        //parse the identifier
+        // Get the function name.
         var name = MatchAndRemove(Token.TokenType.Identifier);
-        if (name == null)
+        if (name is null)
             return null;
 
-        //parse the arguments
+        // Get the arguments
         var arguments = new List<ExpressionNode>();
-
-        int lineNum = name.LineNumber;
-
-        while (ExpectsEndOfLine() == false)
+        var lineNum = name.LineNumber;
+        while (!ExpectsEndOfLine())
         {
-            //check to see if it is a variable
-            var isVariable = MatchAndRemove(Token.TokenType.Var) != null;
+            // Check for the `var` keyword.
+            var isVariable = MatchAndRemove(Token.TokenType.Var) is not null;
 
             if (!isVariable)
             {
-                //add the constant or expression to the list if not a variable
-                var e = Expression(moduleName);
-                if (e == null)
-                    throw new SyntaxErrorException(
-                        $"Expected a constant or a variable instead of {_tokens[0]}",
-                        Peek(0)
-                    );
-                if (e is VariableUsagePlainNode variableUsagePlainNode)
-                    variableUsagePlainNode.IsInFuncCallWithVar = false;
+                // Require an expression.
+                var e =
+                    Expression(moduleName)
+                    ?? throw new SyntaxErrorException("Expected a constant or a variable", Peek(0));
+
+                // Record the `var` status.
+                if (e is VariableUsageNodeTemp variableUsagePlainNode)
+                    variableUsagePlainNode.NewIsInFuncCallWithVar = false;
+
                 arguments.Add(e);
             }
             else
             {
-                //add the variable to list if is a variable
-                var variable = GetVariableUsagePlainNode(moduleName);
-                variable.IsInFuncCallWithVar = true;
+                // Require a variable.
+                var variable =
+                    GetVariableUsageNode(moduleName)
+                    ?? throw new SyntaxErrorException(
+                        "Cannot apply `var' keyword to a function argument that is not a single variable",
+                        Peek(0)
+                    );
+
+                // Record the `var` status.
+                variable.NewIsInFuncCallWithVar = true;
+
                 arguments.Add(variable);
             }
 
             MatchAndRemove(Token.TokenType.Comma);
         }
 
-        //construct the function call
-        var retVal = new FunctionCallNode(name.Value != null ? name.Value : string.Empty);
+        // Build the function call.
+        var retVal = new FunctionCallNode(name.GetValueSafe()) { LineNum = lineNum };
         retVal.Arguments.AddRange(arguments);
-        retVal.LineNum = lineNum;
 
         return retVal;
     }
