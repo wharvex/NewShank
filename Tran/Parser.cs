@@ -16,6 +16,7 @@ public class Parser
     private int blockLevel;
     private FunctionNode currentFunction;
     private int tempVarNum;
+    private List<StatementNode> statements;
 
     public Parser(List<Token> tokens)
     {
@@ -27,6 +28,7 @@ public class Parser
         currentFunction = new FunctionNode("default");
         thisClass = new ModuleNode("default");
         tempVarNum = 0;
+        statements = new List<StatementNode>();
     }
 
     public Parser(List<List<Token>> tokens)
@@ -39,6 +41,7 @@ public class Parser
         currentFunction = new FunctionNode("default");
         thisClass = new ModuleNode("default");
         tempVarNum = 0;
+        statements = new List<StatementNode>();
     }
 
     public bool AcceptSeparators()
@@ -344,21 +347,16 @@ public class Parser
         var wordToken = handler.MatchAndRemove(TokenType.WORD);
         if (wordToken != null)
         {
-            //TODO: wat?
-            //if (handler.MatchAndRemove(TokenType.PERIOD) != null)
-            //{
-            //    VariableUsagePlainNode? variableReference = ParseVariableReference();
-
-            //    if (variableReference != null)
-            //    {
-            //        return new VariableUsagePlainNode(
-            //            wordToken.GetValue(),
-            //            variableReference,
-            //            VariableUsagePlainNode.VrnExtType.RecordMember
-            //        );
-            //    }
-            //}
-            return new VariableUsagePlainNode(wordToken.GetValue(), thisClass.Name);
+            var variableRef = new VariableUsagePlainNode(wordToken.GetValue(), thisClass.Name);
+            if (currentFunction.VariablesInScope.ContainsKey(wordToken.GetValue()))
+            {
+                var variable = currentFunction.VariablesInScope[wordToken.GetValue()];
+                if (variable.IsConstant)
+                {
+                    variableRef.IsVariableFunctionCall = true;
+                }
+            }
+            return variableRef;
         }
         return null;
     }
@@ -529,7 +527,7 @@ public class Parser
     {
         blockLevel++;
         int currentLevel;
-        var statements = new List<StatementNode>();
+        statements.Clear();
         while (handler.MatchAndRemove(TokenType.NEWLINE) != null)
         {
             AcceptNewlines();
@@ -820,8 +818,9 @@ public class Parser
 
             //Insert statement to call the function
             var varRef = new VariableUsagePlainNode(tempVar.Name, thisClass.Name);
+            varRef.IsVariableFunctionCall = true;
             functionCall.Arguments.Add(varRef);
-            currentFunction.Statements.Insert(currentFunction.Statements.Count, functionCall);
+            statements.Add(functionCall);
 
             return varRef;
         }
