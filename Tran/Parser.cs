@@ -216,6 +216,9 @@ public class Parser
     //Interfaces: contain an enum inside the interface for subtype of class, each class has a type - do later
     public bool ParseClass()
     {
+        var isPublic = handler.MatchAndRemove(TokenType.PRIVATE) == null;
+        var isShared = (isPublic && handler.MatchAndRemove(TokenType.SHARED) != null);
+        
         if (handler.MatchAndRemove(TokenType.CLASS) != null)
         {
             Token? name;
