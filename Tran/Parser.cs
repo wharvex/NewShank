@@ -8,7 +8,7 @@ namespace Shank.Tran;
 public class Parser
 {
     private List<List<Token>> files = new List<List<Token>>();
-    private TokenHandler? handler;
+    private TokenHandler handler;
     private static ProgramNode program;
     public ModuleNode thisClass;
     private LinkedList<string> sharedNames;
@@ -16,6 +16,7 @@ public class Parser
     private int blockLevel;
     private FunctionNode currentFunction;
     private int tempVarNum;
+    private List<StatementNode> statements;
 
     public Parser(List<Token> tokens)
     {
@@ -27,6 +28,7 @@ public class Parser
         currentFunction = new FunctionNode("default");
         thisClass = new ModuleNode("default");
         tempVarNum = 0;
+        statements = new List<StatementNode>();
     }
 
     public Parser(List<List<Token>> tokens)
@@ -39,6 +41,7 @@ public class Parser
         currentFunction = new FunctionNode("default");
         thisClass = new ModuleNode("default");
         tempVarNum = 0;
+        statements = new List<StatementNode>();
     }
 
     public bool AcceptSeparators()
@@ -324,8 +327,11 @@ public class Parser
     public List<ExpressionNode> ParseArguments()
     {
         var arguments = new List<ExpressionNode>();
-        ExpressionNode? expression;
-        do
+        ExpressionNode? expression = ParseExpression();
+        if (expression == null)
+            return arguments;
+        arguments.Add(expression);
+        while (handler.MatchAndRemove(TokenType.COMMA) != null)
         {
             AcceptSeparators();
             if ((expression = ParseExpression()) != null)
@@ -333,8 +339,8 @@ public class Parser
                 arguments.Add(expression);
                 continue;
             }
-            throw new Exception("No name provided for variable in parameters");
-        } while (handler.MatchAndRemove(TokenType.COMMA) != null);
+            throw new Exception("No expression provided in function call arguments");
+        }
         return arguments;
     }
 
@@ -344,21 +350,16 @@ public class Parser
         var wordToken = handler.MatchAndRemove(TokenType.WORD);
         if (wordToken != null)
         {
-            //TODO: wat?
-            //if (handler.MatchAndRemove(TokenType.PERIOD) != null)
-            //{
-            //    VariableUsagePlainNode? variableReference = ParseVariableReference();
-
-            //    if (variableReference != null)
-            //    {
-            //        return new VariableUsagePlainNode(
-            //            wordToken.GetValue(),
-            //            variableReference,
-            //            VariableUsagePlainNode.VrnExtType.RecordMember
-            //        );
-            //    }
-            //}
-            return new VariableUsagePlainNode(wordToken.GetValue(), thisClass.Name);
+            var variableRef = new VariableUsagePlainNode(wordToken.GetValue(), thisClass.Name);
+            if (currentFunction.VariablesInScope.ContainsKey(wordToken.GetValue()))
+            {
+                var variable = currentFunction.VariablesInScope[wordToken.GetValue()];
+                if (variable.IsConstant)
+                {
+                    variableRef.IsVariableFunctionCall = true;
+                }
+            }
+            return variableRef;
         }
         return null;
     }
@@ -381,10 +382,50 @@ public class Parser
                 var expression = ParseExpression();
                 if (expression != null)
                 {
-                    //TODO: check if newTarget is something we need to worry about
                     return new AssignmentNode(variable, expression);
                 }
+                else
+                    throw new Exception("Missing expression on right side of assignment");
             }
+            else if (handler.MatchAndRemove(TokenType.COMMA) != null)
+            {
+                variable.IsVariableFunctionCall = true;
+                List<VariableUsagePlainNode> variables = [variable];
+                do
+                {
+                    AcceptSeparators();
+                    variable = ParseVariableReference();
+                    if (variable != null)
+                    {
+                        variable.IsVariableFunctionCall = true;
+                        variables.Add(variable);
+                    }
+                    else
+                        throw new Exception(
+                            "Missing variable reference after comma in multi-assignment statement"
+                        );
+                } while (handler.MatchAndRemove(TokenType.COMMA) != null);
+
+                if (handler.MatchAndRemove(TokenType.EQUAL) != null)
+                {
+                    var functionCall = (FunctionCallNode?)ParseFunctionCall();
+                    if (functionCall != null)
+                    {
+                        functionCall.Arguments.AddRange(variables);
+                        return functionCall;
+                    }
+                    else
+                        throw new Exception(
+                            "Multi-assignment requires a function call as the target"
+                        );
+                }
+                else
+                    throw new Exception("Missing equal sign after multi-assignment");
+            }
+            else
+                throw new Exception(
+                    "Missing either comma or equal sign after variable reference for assignment"
+                );
         }
 
         return null;
@@ -529,7 +570,7 @@ public class Parser
     {
         blockLevel++;
         int currentLevel;
-        var statements = new List<StatementNode>();
+        statements = [];
         while (handler.MatchAndRemove(TokenType.NEWLINE) != null)
         {
             AcceptNewlines();
@@ -807,10 +848,9 @@ public class Parser
         if (functionCall != null)
         {
             //Declare the temp variable to hold the return value
-            var returnType = GetReturnType(functionCall);
             var tempVar = new VariableDeclarationNode(
                 false,
-                returnType,
+                new UnknownType(),
                 "_temp_" + tempVarNum,
                 thisClass.Name,
                 false
@@ -820,9 +860,12 @@ public class Parser
 
             //Insert statement to call the function
             var varRef = new VariableUsagePlainNode(tempVar.Name, thisClass.Name);
+            varRef.IsVariableFunctionCall = true;
+            varRef.Type = new UnknownType();
             functionCall.Arguments.Add(varRef);
-            currentFunction.Statements.Insert(currentFunction.Statements.Count, functionCall);
+            statements.Add(functionCall);
 
+            tempVarNum++;
             return varRef;
         }
 
@@ -835,22 +878,6 @@ public class Parser
         if (token == null)
             return null;
         return new FloatNode(float.Parse(token.GetValue()));
-    }
-
-    private Type GetReturnType(FunctionCallNode functionCall)
-    {
-        foreach (var argument in functionCall.Arguments)
-        {
-            if (argument is VariableUsagePlainNode reference)
-            {
-                VariableDeclarationNode variable = currentFunction.VariablesInScope[reference.Name];
-                if (variable != null && !variable.IsConstant)
-                {
-                    return variable.Type;
-                }
-            }
-        }
-        throw new NotImplementedException();
     }
 
     public static Type GetDataTypeFromConstantNodeType(ASTNode constantNode) =>

@@ -884,7 +884,7 @@ public class Interpreter
             )
             {
                 // if this parameter is a "var", then copy the new value back to the parameter holder
-                if (variableUsagePlainNode.IsVariableFunctionCall)
+                if (variableUsagePlainNode.IsInFuncCallWithVar)
                     variables[variableUsagePlainNode.Name] = passed[i];
             }
         }
