@@ -40,7 +40,7 @@ public class Settings
     }
 }
 
-[Verb("Compile", isDefault: false, HelpText = "Runs the shank compiler")]
+[Verb("Compile", isDefault: false, HelpText = "invokes the shank LLVM compiler ")]
 public class CompileOptions
 {
     [Option(
@@ -131,7 +131,7 @@ public class CompileOptions
     public bool VuOpTest { get; set; }
 }
 
-[Verb("Interpret", isDefault: false, HelpText = "runs the shank interpreter")]
+[Verb("Interpret", isDefault: false, HelpText = "invokes the shank interpreter")]
 public class InterpretOptions
 {
     [Value(index: 0, MetaName = "inputFile", HelpText = "The Shank source file", Required = true)]
@@ -164,12 +164,8 @@ public class CompilePracticeOptions
 
 public class CommandLineArgsParser
 {
-    private string[] _args { get; }
-
-    public CommandLineArgsParser(string[] args)
+    public static void InvokeShank(string[] args)
     {
-        _args = args;
-        // new Options().InputFiles = "a";
         ProgramNode program = new ProgramNode();
         CommandLine
             .Parser.Default.ParseArguments<
@@ -182,10 +178,16 @@ public class CommandLineArgsParser
             .WithParsed<CompileOptions>(options => RunCompiler(options, program))
             .WithParsed<InterpretOptions>(options => RunInterpreter(options, program))
             .WithParsed<CompilePracticeOptions>(options => RunCompilePractice(options, program))
-            .WithNotParsed(errors => Console.WriteLine($"error with running Shank"));
+            .WithNotParsed(
+                errors =>
+                    Console.WriteLine(
+                        $"error bad input, consult the documentation or run"
+                            + $"shank --help if you want a list of Commands"
+                    )
+            );
     }
 
-    public void SealizeSettings(Settings settings)
+    private static void SealizeSettings(Settings settings)
     {
         var path = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
@@ -234,7 +236,7 @@ public class CommandLineArgsParser
         Console.WriteLine("settings saved");
     }
 
-    public void RunCompiler(CompileOptions options, ProgramNode program)
+    private static void RunCompiler(CompileOptions options, ProgramNode program)
     {
         if (options.DefaultSettings)
         {
@@ -302,7 +304,7 @@ public class CommandLineArgsParser
         a.CodeGen(options, monomorphizedProgram);
     }
 
-    public void RunInterpreter(InterpretOptions options, ProgramNode program)
+    private static void RunInterpreter(InterpretOptions options, ProgramNode program)
     {
         options
             .InputFiles.ToList()
@@ -401,7 +403,7 @@ public class CommandLineArgsParser
         NewSemanticAnalysis.Run(program);
     }
 
-    public void RunCompilePractice(CompilePracticeOptions options, ProgramNode program)
+    private static void RunCompilePractice(CompilePracticeOptions options, ProgramNode program)
     {
         GetFiles(options.File).ForEach(ip => ScanAndParse(ip, program));
         program.SetStartModule();
@@ -441,7 +443,7 @@ public class CommandLineArgsParser
             InterpretProgramWithTests();
     }
 
-    private int InterpretProgram(ProgramNode program)
+    private static int InterpretProgram(ProgramNode program)
     {
         Interpreter.InterpretFunction(
             program.GetStartModuleSafe().GetStartFunctionSafe(),
@@ -451,7 +453,11 @@ public class CommandLineArgsParser
         return 1;
     }
 
-    private void ScanAndParse(string inPath, ProgramNode program, InterpretOptions? options = null)
+    private static void ScanAndParse(
+        string inPath,
+        ProgramNode program,
+        InterpretOptions? options = null
+    )
     {
         List<Token> tokens = [];
         var lexer = new Lexer();
@@ -493,7 +499,7 @@ public class CommandLineArgsParser
             });
     }
 
-    private List<string> GetFiles(string dir)
+    private static List<string> GetFiles(string dir)
     {
         if (Directory.Exists(dir))
         {

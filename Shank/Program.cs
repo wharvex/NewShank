@@ -10,6 +10,7 @@ public class Program
     {
         //hopefully i didn't break it up i removed all the useless code here
         //consult the docs to see the different arguments
-        new CommandLineArgsParser(args);
+
+        CommandLineArgsParser.InvokeShank(args);
     }
 }
