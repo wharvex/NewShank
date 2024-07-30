@@ -356,7 +356,7 @@ public class Parser
                 var variable = currentFunction.VariablesInScope[wordToken.GetValue()];
                 if (variable.IsConstant)
                 {
-                    variableRef.IsVariableFunctionCall = true;
+                    variableRef.IsInFuncCallWithVar = true;
                 }
             }
             return variableRef;
@@ -389,7 +389,7 @@ public class Parser
             }
             else if (handler.MatchAndRemove(TokenType.COMMA) != null)
             {
-                variable.IsVariableFunctionCall = true;
+                variable.IsInFuncCallWithVar = true;
                 List<VariableUsagePlainNode> variables = [variable];
                 do
                 {
@@ -397,7 +397,7 @@ public class Parser
                     variable = ParseVariableReference();
                     if (variable != null)
                     {
-                        variable.IsVariableFunctionCall = true;
+                        variable.IsInFuncCallWithVar = true;
                         variables.Add(variable);
                     }
                     else
@@ -860,7 +860,7 @@ public class Parser
 
             //Insert statement to call the function
             var varRef = new VariableUsagePlainNode(tempVar.Name, thisClass.Name);
-            varRef.IsVariableFunctionCall = true;
+            varRef.IsInFuncCallWithVar = true;
             varRef.Type = new UnknownType();
             functionCall.Arguments.Add(varRef);
             statements.Add(functionCall);
