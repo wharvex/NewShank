@@ -205,7 +205,7 @@ public class SemanticAnalysis
                                 fn.Arguments.Find(
                                     node =>
                                         node is not VariableUsageNodeTemp temp
-                                        || !temp.GetPlain().IsVariableFunctionCall
+                                        || !temp.GetPlain().IsInFuncCallWithVar
                                 ) is
                                 { } badArgument
                             )

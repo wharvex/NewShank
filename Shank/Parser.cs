@@ -52,6 +52,8 @@ public class Parser
     public static int Line { get; set; }
     public static string FileName { get; set; }
 
+    public delegate StatementNode? StatementGetter(string moduleName);
+
     /// <summary>
     ///    Method <c>MatchAndRemove</c> removes I token if the TokenType matches
     ///    the parameter's type
@@ -692,12 +694,14 @@ public class Parser
     /// <returns><see cref="AssignmentNode"/> or <see cref="StringNode"/> or <see cref="RepeatNode"/> or <see cref="ForNode"/> or <see cref="IfNode"/> or <see cref="FunctionCallNode"/> containg the contents of the statement</returns>
     private StatementNode? Statement(string moduleName)
     {
-        return (GetVuopTestFlag() ? NewAssignment(moduleName) : Assignment(moduleName))
+        StatementGetter assignment = GetVuopTestFlag() ? NewAssignment : Assignment;
+        StatementGetter functionCall = GetVuopTestFlag() ? NewFunctionCall : FunctionCall;
+        return assignment(moduleName)
             ?? While(moduleName)
             ?? Repeat(moduleName)
             ?? For(moduleName)
             ?? If(moduleName)
-            ?? FunctionCall(moduleName);
+            ?? functionCall(moduleName);
     }
 
     /// <summary>
@@ -1072,14 +1076,63 @@ public class Parser
                         Peek(0)
                     );
                 if (e is VariableUsagePlainNode variableUsagePlainNode)
-                    variableUsagePlainNode.IsVariableFunctionCall = false;
+                    variableUsagePlainNode.IsInFuncCallWithVar = false;
                 arguments.Add(e);
             }
             else
             {
                 //add the variable to list if is a variable
                 var variable = GetVariableUsagePlainNode(moduleName);
-                variable.IsVariableFunctionCall = true;
+                variable.IsInFuncCallWithVar = true;
+                arguments.Add(variable);
+            }
+
+            MatchAndRemove(Token.TokenType.Comma);
+        }
+
+        //construct the function call
+        var retVal = new FunctionCallNode(name.Value != null ? name.Value : string.Empty);
+        retVal.Arguments.AddRange(arguments);
+        retVal.LineNum = lineNum;
+
+        return retVal;
+    }
+
+    private FunctionCallNode? NewFunctionCall(string moduleName)
+    {
+        //parse the identifier
+        var name = MatchAndRemove(Token.TokenType.Identifier);
+        if (name == null)
+            return null;
+
+        //parse the arguments
+        var arguments = new List<ExpressionNode>();
+
+        int lineNum = name.LineNumber;
+
+        while (ExpectsEndOfLine() == false)
+        {
+            //check to see if it is a variable
+            var isVariable = MatchAndRemove(Token.TokenType.Var) != null;
+
+            if (!isVariable)
+            {
+                //add the constant or expression to the list if not a variable
+                var e = Expression(moduleName);
+                if (e == null)
+                    throw new SyntaxErrorException(
+                        $"Expected a constant or a variable instead of {_tokens[0]}",
+                        Peek(0)
+                    );
+                if (e is VariableUsagePlainNode variableUsagePlainNode)
+                    variableUsagePlainNode.IsInFuncCallWithVar = false;
+                arguments.Add(e);
+            }
+            else
+            {
+                //add the variable to list if is a variable
+                var variable = GetVariableUsagePlainNode(moduleName);
+                variable.IsInFuncCallWithVar = true;
                 arguments.Add(variable);
             }
 

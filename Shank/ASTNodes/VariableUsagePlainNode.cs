@@ -77,10 +77,9 @@ public class VariableUsagePlainNode : VariableUsageNodeTemp
     public string? EnclosingVrnName { get; set; }
 
     ///<summary>
-    ///     Gets or sets a value indicating whether the variable usage represents a function call.
+    ///     Indicates whether the variable usage is in a function call and preceded by `var`.
     ///</summary>
-
-    public bool IsVariableFunctionCall { get; set; }
+    public bool IsInFuncCallWithVar { get; set; }
 
     ///<summary>
     ///     Gets or sets a value indicating whether the variable usage references a global variable.
