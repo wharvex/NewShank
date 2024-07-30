@@ -517,7 +517,7 @@ public class SemanticAnalysis
                 // same as ReferenceType but for arrays
                 (ArrayType param, ArrayType arg) => MatchTypes(param.Inner, arg.Inner),
                 ({ } a, { } b)
-                    => Option.Some(Enumerable.Empty<(string, Type)>()).Where(_ => !a.Equals(b))
+                    => Option.Some(Enumerable.Empty<(string, Type)>()).Filter(a.Equals(b))
             };
 
         Option<IEnumerable<(string, Type)>> MatchTypesGeneric(GenericType g, Type type)
