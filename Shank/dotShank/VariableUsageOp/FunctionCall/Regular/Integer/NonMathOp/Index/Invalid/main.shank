@@ -1,0 +1,6 @@
+define start()
+variables a : string
+variables b : array from 1 to 10 of integer
+    b[1] := 33
+    a := b[1]
+    write "hello from Vuop Assignment RhsIsVuop Integer NonMathOp Index Invalid"

@@ -1,0 +1,9 @@
+record Student
+    courseLoad : integer
+
+define start()
+variables student : Student
+variables courseLoadTemp : string
+    student.courseLoad := 5
+    courseLoadTemp := student.courseLoad
+    write "hello from Vuop Assignment RhsIsVuop Integer NonMathOp Member NonGenericNonReference SimpleMember Invalid"

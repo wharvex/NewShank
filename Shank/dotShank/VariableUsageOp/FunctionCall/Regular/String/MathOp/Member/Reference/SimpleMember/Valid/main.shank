@@ -1,0 +1,7 @@
+record Student
+    courseLoad : integer
+
+define start()
+variables student : Student
+    student.courseLoad := 5
+    write "hello from Vuop Assignment LhsIsVuop Integer NonMathOp Member Valid"

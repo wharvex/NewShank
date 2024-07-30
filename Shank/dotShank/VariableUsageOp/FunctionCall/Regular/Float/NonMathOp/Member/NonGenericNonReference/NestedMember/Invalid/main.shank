@@ -1,0 +1,13 @@
+record Student
+    name : string
+    gpa : real
+
+record Advisor
+    advisee : Student
+
+define start()
+variables advisor : Advisor
+variables gpaTemp : string
+    advisor.advisee.gpa := 3.87
+    gpaTemp := advisor.advisee.gpa
+    write "hello from Vuop Assignment RhsIsVuop Float NonMathOp Member NonGenericNonReference NestedMember Invalid"

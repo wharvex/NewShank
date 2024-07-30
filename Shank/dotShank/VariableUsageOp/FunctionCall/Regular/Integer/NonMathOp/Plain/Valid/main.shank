@@ -1,0 +1,5 @@
+define start()
+variables a, b : integer
+    a := 33
+    b := a
+    write "hello from Vuop Assignment RhsIsVuop Integer NonMathOp Plain Valid"

@@ -1,0 +1,6 @@
+define start()
+variables a : integer
+variables b : string
+    a := 33
+    b := a
+    write "hello from Vuop Assignment RhsIsVuop Integer NonMathOp Plain Invalid"

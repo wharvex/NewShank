@@ -1,0 +1,13 @@
+record Student
+    name : string
+    gpa : real
+
+record Advisor
+    advisees : array from 1 to 10 of Student
+
+define start()
+variables advisors : array from 1 to 5 of Advisor
+variables gpaTemp : real
+    advisors[1].advisees[2].gpa := 3.87
+    gpaTemp := advisors[1].advisees[2].gpa
+    write "hello from Vuop Assignment RhsIsVuop Float NonMathOp Member NonGenericNonReference NestedMemberAndIndex Valid"
