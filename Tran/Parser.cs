@@ -218,7 +218,7 @@ public class Parser
     {
         var isPublic = handler.MatchAndRemove(TokenType.PRIVATE) == null;
         var isShared = (isPublic && handler.MatchAndRemove(TokenType.SHARED) != null);
-        
+
         if (handler.MatchAndRemove(TokenType.CLASS) != null)
         {
             Token? name;
