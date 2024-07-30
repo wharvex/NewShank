@@ -1728,7 +1728,7 @@ public class Compiler(
             builder.BuildICmp(LLVMIntPredicate.LLVMIntSGT, length32, stringLength)
         );
         var toBigLengthBlock = module.Context.AppendBasicBlock(
-            context.CurrentFunction.Function,
+            context.CurrentFunction.Function, //
             "bad length"
         );
         var goodLengthBlock = module.Context.AppendBasicBlock(
