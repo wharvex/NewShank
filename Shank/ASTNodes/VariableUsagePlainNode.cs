@@ -60,26 +60,26 @@ public class VariableUsagePlainNode : VariableUsageNodeTemp
     public string ModuleName { get; init; }
 
     /// <summary>
-    /// Represents an extension of the base variable reference (e.g. an array subscript or a record member).
+    /// Warning: This property is going away.
     /// </summary>
     [Obsolete("Warning: This property is going away.")]
     public ExpressionNode? Extension { get; set; }
 
-    ///<summary>
-    ///     Gets or sets the type of the extension.
-    ///</summary>
+    /// <summary>
+    /// Warning: This property is going away.
+    /// </summary>
     [Obsolete("Warning: This property is going away.")]
     public VrnExtType ExtensionType { get; set; }
 
-    ///<summary>
-    ///     Gets or sets the name of the enclosing variable reference node if this node represents a record member.
-    ///</summary>
+    /// <summary>
+    /// Warning: This property is going away.
+    /// </summary>
     [Obsolete("Warning: This property is going away.")]
     public string? EnclosingVrnName { get; set; }
 
-    ///<summary>
-    ///     Indicates whether the variable usage is in a function call and preceded by `var`.
-    ///</summary>
+    /// <summary>
+    /// Warning: This property is moving. See: <see cref="VariableUsageNodeTemp.NewIsInFuncCallWithVar"/>
+    /// </summary>
     [Obsolete(
         "Warning: This property is moving. See: VariableUsageNodeTemp#NewIsInFuncCallWithVar"
     )]
@@ -102,24 +102,16 @@ public class VariableUsagePlainNode : VariableUsageNodeTemp
             ? new ModuleIndex(new NamedIndex(Name), ModuleName)
             : new NamedIndex(Name);
 
-    ///<summary>
-    ///     Safely gets the extension node.
-    ///</summary>
-    ///<returns>
-    ///     The <see cref="ASTNode"/> representing the extension.
-    ///     Throws an <see cref="InvalidOperationException"/> if the extension is <c>null</c>.
-    ///</returns>
+    /// <summary>
+    /// Warning: This method is going away.
+    /// </summary>
     [Obsolete("Warning: This method is going away.")]
     public ASTNode GetExtensionSafe() =>
         Extension ?? throw new InvalidOperationException("Expected Extension to not be null.");
 
-    ///<summary>
-    ///     Safely gets the extension node as a <see cref="VariableUsagePlainNode"/>.
-    ///</summary>
-    ///<returns>
-    ///     The <see cref="VariableUsagePlainNode"/> representing the extension.
-    ///     Throws an <see cref="InvalidOperationException"/> if the extension is not a <see cref="VariableUsagePlainNode"/>.
-    ///</returns>
+    /// <summary>
+    /// Warning: This method is going away.
+    /// </summary>
     [Obsolete("Warning: This method is going away.")]
     public VariableUsagePlainNode GetRecordMemberReferenceSafe() =>
         GetExtensionSafe() as VariableUsagePlainNode

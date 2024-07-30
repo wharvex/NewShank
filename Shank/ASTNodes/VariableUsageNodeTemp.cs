@@ -8,7 +8,16 @@ namespace Shank.ASTNodes;
 /// </summary>
 public abstract class VariableUsageNodeTemp : ExpressionNode
 {
+    /// <summary>
+    /// Indicates whether this <see cref="VariableUsageNodeTemp"/> references a global variable.
+    /// </summary>
     public bool NewReferencesGlobalVariable { get; set; }
+
+    /// <summary>
+    /// Indicates whether this <see cref="VariableUsageNodeTemp"/> is in a function call and
+    /// preceded by `var`.
+    /// </summary>
+    public bool NewIsInFuncCallWithVar { get; set; }
 
     /// <summary>
     /// Returns the monomorphized name of the variable, considering whether it references a global variable.
