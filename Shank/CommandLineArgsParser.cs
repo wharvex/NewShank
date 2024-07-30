@@ -289,7 +289,7 @@ public class CommandLineArgsParser
             Interpreter.ActiveInterpretOptions = fakeInterpretOptions;
             Interpreter.Modules = program.Modules;
             Interpreter.StartModule = program.GetStartModuleSafe();
-            It2();
+            InterpretProgramWithTests();
         }
 
         // GetFiles(options.InputFile).ForEach(ip => ScanAndParse(ip, program));
@@ -353,9 +353,9 @@ public class CommandLineArgsParser
         Interpreter.Modules = program.Modules;
         Interpreter.StartModule = program.GetStartModuleSafe();
         if (!options.UnitTest)
-            It1(program);
+            InterpretProgram(program);
         else
-            It2();
+            InterpretProgramWithTests();
     }
 
     // extract semantic analysis into one function so that both compiler and interpreter do the same thing
@@ -436,12 +436,12 @@ public class CommandLineArgsParser
         Interpreter.Modules = program.Modules;
         Interpreter.StartModule = program.GetStartModuleSafe();
         if (!options.UnitTest)
-            It1(program);
+            InterpretProgram(program);
         else
-            It2();
+            InterpretProgramWithTests();
     }
 
-    private int It1(ProgramNode program)
+    private int InterpretProgram(ProgramNode program)
     {
         Interpreter.InterpretFunction(
             program.GetStartModuleSafe().GetStartFunctionSafe(),
@@ -470,7 +470,7 @@ public class CommandLineArgsParser
         }
     }
 
-    private static void It2()
+    private static void InterpretProgramWithTests()
     {
         LinkedList<TestResult> UnitTestResults = new LinkedList<TestResult>();
         Interpreter
