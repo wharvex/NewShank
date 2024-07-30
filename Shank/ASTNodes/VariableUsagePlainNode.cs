@@ -1,6 +1,4 @@
-using LLVMSharp.Interop;
 using Shank.ExprVisitors;
-using Shank.IRGenerator;
 
 namespace Shank.ASTNodes;
 
@@ -204,17 +202,6 @@ public class VariableUsagePlainNode : VariableUsageNodeTemp
     {
         return $"{Name + (Extension != null ? (", Index: " + Extension) : string.Empty)}";
     }
-
-    // public override LLVMValueRef Visit(
-    //     LLVMVisitor visitor,
-    //     Context context,
-    //     LLVMBuilderRef builder,
-    //     LLVMModuleRef module
-    // )
-    // {
-    //     return visitor.Visit(this);
-    // }
-
 
     public enum VrnExtType
     {

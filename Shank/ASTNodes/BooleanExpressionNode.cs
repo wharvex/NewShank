@@ -1,6 +1,4 @@
-using LLVMSharp.Interop;
 using Shank.ExprVisitors;
-using Shank.IRGenerator;
 
 namespace Shank.ASTNodes;
 
@@ -20,18 +18,6 @@ public class BooleanExpressionNode : ExpressionNode
     public BooleanExpressionOpType Op { get; init; }
     public ExpressionNode Left { get; set; }
     public ExpressionNode Right { get; set; }
-
-    // public override LLVMValueRef Visit(
-    //     LLVMVisitor visitor,
-    //     Context context,
-    //     LLVMBuilderRef builder,
-    //     LLVMModuleRef module
-    // )
-    // {
-    //     return visitor.Visit(this);
-    // }
-
-
 
     public override string ToString()
     {
