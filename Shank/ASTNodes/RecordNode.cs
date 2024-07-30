@@ -43,22 +43,7 @@ public class RecordNode(
         return ParentModuleName ?? throw new Exception("Parent module name of RecordNode is null.");
     }
 
-    public void VisitProto(VisitPrototype v)
-    {
-        v.Accept(this);
-    }
-
-    public void Visit(StatementVisitor visit)
-    {
-        visit.Accept(this);
-    }
-
     public override string ToString() => Name;
-
-    public override void Accept<T>(StatementVisitor v)
-    {
-        throw new NotImplementedException();
-    }
 
     public override void Accept(Visitor v) => v.Visit(this);
 

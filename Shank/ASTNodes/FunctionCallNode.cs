@@ -1,7 +1,5 @@
 using System.Text;
-using LLVMSharp.Interop;
 using Shank.ExprVisitors;
-using Shank.IRGenerator;
 
 namespace Shank.ASTNodes;
 
@@ -10,7 +8,7 @@ public class FunctionCallNode : StatementNode
     public string Name { get; set; }
 
     // the value you need to lookup a function after monomophization
-    public Index MonomphorizedFunctionLocater { get; }
+    public Index MonomphorizedFunctionLocater { get; init; }
 
     // If its null then we have a call to a builtin
     public string? FunctionDefinitionModule { get; set; }
@@ -107,30 +105,6 @@ public class FunctionCallNode : StatementNode
         return arr;
     }
 
-    // public override void VisitStatement(
-    //     LLVMVisitor visitor,
-    //     Context context,
-    //     LLVMBuilderRef builder,
-    //     LLVMModuleRef module
-    // )
-    // {
-    //     visitor.Visit(this);
-    //     // var function =
-    //     //     context.GetFunction(Name) ?? throw new Exception($"function {Name} not found");
-    //     // // if any arguement is not mutable, but is required to be mutable
-    //     // if (
-    //     //     function
-    //     //         .ArguementMutability.Zip(Parameters.Select(p => p.IsVariable))
-    //     //         .Any(a => a is { First: true, Second: false })
-    //     // )
-    //     // {
-    //     //     throw new Exception($"call to {Name} has a mismatch of mutability");
-    //     // }
-    //     //
-    //     // var parameters = Parameters.Select(p => p.Visit(visitor, context, builder, module));
-    //     // builder.BuildCall2(function.TypeOf, function.Function, parameters.ToArray());
-    // }
-
     public string GetNameForLlvm() =>
         Name switch
         {
@@ -153,11 +127,6 @@ public class FunctionCallNode : StatementNode
         b.Append(']');
 
         return b.ToString();
-    }
-
-    public override void Visit(StatementVisitor visit)
-    {
-        visit.Accept(this);
     }
 
     public override void Accept(Visitor v) => v.Visit(this);

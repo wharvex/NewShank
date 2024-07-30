@@ -1,6 +1,4 @@
-using LLVMSharp.Interop;
 using Shank.ExprVisitors;
-using Shank.IRGenerator;
 
 namespace Shank.ASTNodes;
 
@@ -79,10 +77,9 @@ public class VariableUsagePlainNode : VariableUsageNodeTemp
     public string? EnclosingVrnName { get; set; }
 
     ///<summary>
-    ///     Gets or sets a value indicating whether the variable usage represents a function call.
+    ///     Indicates whether the variable usage is in a function call and preceded by `var`.
     ///</summary>
-
-    public bool IsVariableFunctionCall { get; set; }
+    public bool IsInFuncCallWithVar { get; set; }
 
     ///<summary>
     ///     Gets or sets a value indicating whether the variable usage references a global variable.
@@ -205,17 +202,6 @@ public class VariableUsagePlainNode : VariableUsageNodeTemp
         return $"{Name + (Extension != null ? (", Index: " + Extension) : string.Empty)}";
     }
 
-    // public override LLVMValueRef Visit(
-    //     LLVMVisitor visitor,
-    //     Context context,
-    //     LLVMBuilderRef builder,
-    //     LLVMModuleRef module
-    // )
-    // {
-    //     return visitor.Visit(this);
-    // }
-
-
     public enum VrnExtType
     {
         RecordMember,
@@ -223,15 +209,6 @@ public class VariableUsagePlainNode : VariableUsageNodeTemp
         Enum,
         None
     }
-
-    ///<summary>
-    ///     Gets the nested names as a list of strings.
-    ///</summary>
-    ///<returns>
-    ///     A list of strings representing the nested names.
-    ///     Throws an <see cref="InvalidOperationException"/> if the extension type is not <see cref="VrnExtType.RecordMember"/> or if the variable reference node is enclosed.
-    ///</returns>
-    public override T Accept<T>(ExpressionVisitor<T> visit) => visit.Visit(this);
 
     ///<summary>
     ///     Accepts a generic visitor for processing this node.

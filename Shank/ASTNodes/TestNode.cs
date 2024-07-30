@@ -1,5 +1,3 @@
-using Shank.ASTNodes;
-
 namespace Shank.ASTNodes;
 
 public class TestNode : FunctionNode
@@ -7,14 +5,13 @@ public class TestNode : FunctionNode
     public string targetFunctionName;
     public List<VariableDeclarationNode> testingFunctionParameters = new();
 
-    public TestNode(string name, string targetFnName)
-        : base(name)
+    public TestNode(string name, string moduleName, string targetFnName)
+        : base(name, moduleName)
     {
         Name = name;
         targetFunctionName = targetFnName;
         IsPublic = false;
-        Execute = (List<InterpreterDataType> paramList) =>
-            Interpreter.InterpretFunction(this, paramList);
+        Execute = paramList => Interpreter.InterpretFunction(this, paramList);
     }
 
     public override ASTNode? Walk(SAVisitor v)

@@ -205,7 +205,7 @@ public class SemanticAnalysis
                                 fn.Arguments.Find(
                                     node =>
                                         node is not VariableUsageNodeTemp temp
-                                        || !temp.GetPlain().IsVariableFunctionCall
+                                        || !temp.GetPlain().IsInFuncCallWithVar
                                 ) is
                                 { } badArgument
                             )
@@ -517,7 +517,7 @@ public class SemanticAnalysis
                 // same as ReferenceType but for arrays
                 (ArrayType param, ArrayType arg) => MatchTypes(param.Inner, arg.Inner),
                 ({ } a, { } b)
-                    => Option.Some(Enumerable.Empty<(string, Type)>()).Where(_ => !a.Equals(b))
+                    => Option.Some(Enumerable.Empty<(string, Type)>()).Filter(a.Equals(b))
             };
 
         Option<IEnumerable<(string, Type)>> MatchTypesGeneric(GenericType g, Type type)
@@ -1167,6 +1167,10 @@ public class SemanticAnalysis
             }
 
             CheckFunctions(module.Value.getFunctions(), module.Value);
+            CheckFunctions(
+                module.Value.getTests().Select(u => (u.Key, (CallableNode)u.Value)).ToDictionary(),
+                module.Value
+            );
         }
     }
 

@@ -9,6 +9,9 @@ public class LLVMCodeGen
 {
     public LLVMModuleRef ModuleRef;
 
+    // TODO: https://upload.wikimedia.org/wikipedia/commons/1/1b/Portable_Executable_32_bit_Structure_in_SVG_fixed.svg
+    // this shows the format of a DOS PE. its good not to rely on CLANG forever with this if anyone is brave enough
+    // to follow this.
     public void CodeGen(CompileOptions compileOptions, MonomorphizedProgramNode programNode)
     {
         LLVM.InitializeAllTargetInfos();
@@ -24,7 +27,11 @@ public class LLVMCodeGen
 
         // string? directory = Path.GetDirectoryName(compileOptions.OutFile);
 
-        var context = new Context(programNode, new CFuntions(module));
+        var context = new Context(
+            programNode,
+            new CFuntions(module),
+            new RandomInformation(module)
+        );
         var compiler = new Compiler(context, builder, module, compileOptions);
         compiler.Compile(programNode);
 

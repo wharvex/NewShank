@@ -1,9 +1,5 @@
 using System.Diagnostics;
-using System.Net.Http.Headers;
-using System.Net.Sockets;
-using LLVMSharp.Interop;
 using Shank.ExprVisitors;
-using Shank.IRGenerator;
 using Shank.MathOppable;
 
 namespace Shank.ASTNodes;
@@ -19,18 +15,6 @@ public class MathOpNode(ExpressionNode left, MathOpNode.MathOpType op, Expressio
     {
         return $"{Left} {Op} {Right}";
     }
-
-    // public override LLVMValueRef Visit(
-    //     LLVMVisitor visitor,
-    //     Context context,
-    //     LLVMBuilderRef builder,
-    //     LLVMModuleRef module
-    // )
-    // {
-    //     return visitor.Visit(this);
-    // }
-
-    public override T Accept<T>(ExpressionVisitor<T> visit) => visit.Visit(this);
 
     public enum MathOpType
     {

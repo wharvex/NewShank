@@ -1,8 +1,3 @@
-using System.Text.Json.Serialization;
-using LLVMSharp.Interop;
-using Shank.ExprVisitors;
-using Shank.IRGenerator;
-
 namespace Shank.ASTNodes;
 
 public abstract class CallableNode : ASTNode
@@ -57,27 +52,8 @@ public abstract class CallableNode : ASTNode
     public bool IsValidOverloadOf(CallableNode cn) =>
         ParameterVariables.Where((pv, i) => !cn.ParameterVariables[i].EqualsForOverload(pv)).Any();
 
-    // public abstract override LLVMValueRef Visit(
-    //     LLVMVisitor visitor,
-    //     Context context,
-    //     LLVMBuilderRef builder,
-    //     LLVMModuleRef module
-    // );
-
-    public T Visit<T>(ExpressionVisitor<T> visit)
-    {
-        throw new NotImplementedException();
-    }
-
-    public virtual void Visit(StatementVisitor visit) { }
-
     public override string ToString()
     {
         return Name;
-    }
-
-    public override void Accept<T>(StatementVisitor v)
-    {
-        throw new NotImplementedException();
     }
 }

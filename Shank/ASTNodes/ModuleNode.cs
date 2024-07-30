@@ -1,7 +1,4 @@
-using LLVMSharp.Interop;
-using Shank.ASTNodes;
 using Shank.ExprVisitors;
-using Shank.IRGenerator;
 using Shank.WalkCompliantVisitors;
 
 namespace Shank.ASTNodes;
@@ -420,58 +417,6 @@ public class ModuleNode : ASTNode
     public Dictionary<string, TestNode> getTests()
     {
         return Tests;
-    }
-
-    // public void VisitStatement(
-    //     LLVMVisitor visitor,
-    //     Context context,
-    //     LLVMBuilderRef builder,
-    //     LLVMModuleRef module
-    // )
-    // {
-    //     // this happens after visiting the prototypes
-    //     // TODO: compile types
-    //
-    //
-    //     // first we tell the context that were the current module
-    //     context.SetCurrentModule(Name);
-    //     // then we add to our scope all our imports
-    //     foreach (var (moduleName, imports) in ImportTargetNames)
-    //     {
-    //         var shankModule = context.Modules[moduleName];
-    //         foreach (var import in imports)
-    //         {
-    //             // TODO: type imports
-    //             if (shankModule.Functions.TryGetValue(import, out var function))
-    //             {
-    //                 context.AddFunction(import, function);
-    //             }
-    //         }
-    //     }
-    //     GetFunctionsAsList().ForEach(f => f.Visit(visitor, context, builder, module));
-    // }
-
-    // public void VisitPrototype(Context context, LLVMModuleRef module)
-    // {
-    //     // TODO: compile types
-    //     // generate function prototypes
-    //     context.SetCurrentModule(Name);
-    //     GetFunctionsAsList().ForEach(f => f.VisitPrototype(context, module));
-    // }
-
-    public void VisitProto(VisitPrototype visitPrototype)
-    {
-        visitPrototype.Accept(this);
-    }
-
-    public void Visit(StatementVisitor visit)
-    {
-        visit.Accept(this);
-    }
-
-    public override void Accept<T>(StatementVisitor v)
-    {
-        throw new NotImplementedException();
     }
 
     public override void Accept(Visitor v) => v.Visit(this);

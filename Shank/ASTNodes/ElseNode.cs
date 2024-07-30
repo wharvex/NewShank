@@ -4,7 +4,6 @@ namespace Shank.ASTNodes;
 
 public class ElseNode : IfNode
 {
-    // code for generating llvm ir is done currently within IfNode
     public ElseNode(List<StatementNode> children)
         : base(children) { }
 

@@ -1,6 +1,4 @@
-using LLVMSharp.Interop;
 using Shank.ExprVisitors;
-using Shank.IRGenerator;
 
 namespace Shank.ASTNodes;
 
@@ -20,17 +18,6 @@ public class BoolNode : ExpressionNode
         return $"{Value}";
     }
 
-    // public override LLVMValueRef Visit(
-    //     LLVMVisitor visitor,
-    //     Context context,
-    //     LLVMBuilderRef builder,
-    //     LLVMModuleRef module
-    // )
-    // {
-    //     return visitor.Visit(this);
-    // }
-
-
     public override void Accept(Visitor v) => v.Visit(this);
 
     public override ASTNode? Walk(SAVisitor v)
@@ -41,6 +28,4 @@ public class BoolNode : ExpressionNode
 
         return v.PostWalk(this);
     }
-
-    public override T Accept<T>(ExpressionVisitor<T> visit) => visit.Visit(this);
 }

@@ -1,7 +1,4 @@
-using CommandLine.Text;
-using LLVMSharp.Interop;
 using Shank.ExprVisitors;
-using Shank.IRGenerator;
 
 namespace Shank.ASTNodes;
 
@@ -19,7 +16,9 @@ public enum BuiltInFunction
     IsSet,
     Left,
     Right,
-    Size
+    Size,
+    AssertIsEqual,
+    GetRandom,
 }
 
 public class BuiltInFunctionNode : CallableNode
@@ -28,17 +27,6 @@ public class BuiltInFunctionNode : CallableNode
         : base(name, execute) { }
 
     public List<string> GenericTypeParameterNames { get; set; } = [];
-
-    // public override LLVMValueRef Visit(
-    //     LLVMVisitor visitor,
-    //     Context context,
-    //     LLVMBuilderRef builder,
-    //     LLVMModuleRef module
-    // )
-    // {
-    //     throw new NotImplementedException();
-    // }
-
 
     // Copy constructor for monomorphization
     public BuiltInFunctionNode(
@@ -90,7 +78,9 @@ public class BuiltInFunctionNode : CallableNode
                 ["right"] = BuiltInFunction.Right,
                 ["realToInteger"] = BuiltInFunction.RealToInt,
                 ["integerToReal"] = BuiltInFunction.IntToReal,
-                ["substring"] = BuiltInFunction.Substring
+                ["substring"] = BuiltInFunction.Substring,
+                ["assertIsEqual"] = BuiltInFunction.AssertIsEqual,
+                ["getRandom"] = BuiltInFunction.GetRandom
             };
         return dict[Name];
     }

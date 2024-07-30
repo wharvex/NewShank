@@ -1,10 +1,6 @@
-using System.Diagnostics;
 using System.Text;
-using LLVMSharp.Interop;
 using Shank.ExprVisitors;
-using Shank.IRGenerator;
 using Shank.WalkCompliantVisitors;
-using Exception = System.Exception;
 
 namespace Shank.ASTNodes;
 
@@ -65,10 +61,6 @@ public class VariableDeclarationNode : ASTNode
         ModuleName = moduleName;
         IsGlobal = isGlobal;
     }
-
-    // public LLVMTypeRef GetLLVMType(Context context, Type type) =>
-    //     context.GetLLVMTypeFromShankType(type, false)
-    //     ?? throw new Exception($"Type {type} doesnt exist");
 
     public bool IsConstant { get; set; }
     public ExpressionNode? InitialValue { get; set; }
@@ -141,41 +133,6 @@ public class VariableDeclarationNode : ASTNode
     }
 
     // public ASTNode GetDefault() => Type.
-
-    // public override LLVMValueRef Visit(
-    //     LLVMVisitor visitor,
-    //     Context context,
-    //     LLVMBuilderRef builder,
-    //     LLVMModuleRef module
-    // )
-    // {
-    //     var name = GetNameSafe();
-    //     // TODO: only alloca when !isConstant
-    //
-    //     LLVMValueRef v = builder.BuildAlloca(
-    //         // isVar is false, because we are already creating it using alloca which makes it var
-    //         context.GetLLVMTypeFromShankType(Type) ?? throw new Exception("null type"),
-    //         name
-    //     );
-    //     var variable = context.NewVariable(Type);
-    //     context.AddVariable(name, variable(v, !IsConstant), false);
-    //     return v;
-    // }
-
-    public void VisitProto(VisitPrototype visitPrototype)
-    {
-        visitPrototype.Accept(this);
-    }
-
-    public void Visit(StatementVisitor visit)
-    {
-        visit.Accept(this);
-    }
-
-    public override void Accept<T>(StatementVisitor v)
-    {
-        throw new NotImplementedException();
-    }
 
     public override void Accept(Visitor v) => v.Visit(this);
 

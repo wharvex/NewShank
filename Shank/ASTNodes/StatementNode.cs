@@ -1,8 +1,5 @@
 using System.Text;
-using LLVMSharp.Interop;
 using Shank.ExprVisitors;
-using Shank.IRGenerator;
-using Shank.WalkCompliantVisitors;
 
 namespace Shank.ASTNodes;
 
@@ -21,24 +18,12 @@ public class StatementNode : ASTNode
         return arr;
     }
 
-    public T Visit<T>(ExpressionVisitor<T> visit)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override void Accept<T>(StatementVisitor v)
-    {
-        throw new NotImplementedException();
-    }
-
     public override void Accept(Visitor v) => throw new NotImplementedException();
 
     public override ASTNode? Walk(SAVisitor v)
     {
         throw new NotImplementedException();
     }
-
-    public virtual void Visit(StatementVisitor visit) { }
 
     //public override ASTNode Walk(WalkCompliantVisitor v)
     //{

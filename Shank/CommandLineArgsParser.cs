@@ -61,7 +61,13 @@ public class CompileOptions
 
     public OptPasses OptLevel { get; set; }
 
-    [Option('O', "optimize", Default = "0", Required = false, HelpText = "Set optimization level.")]
+    [Option(
+        'O',
+        "optimize",
+        Default = "0",
+        Required = false,
+        HelpText = "Set optimization level.(0 being least 3 being most)"
+    )]
     public string? OptimizationLevels
     {
         set
@@ -134,11 +140,13 @@ public class InterpretOptions
     [Option('u', "unit-test", HelpText = "Unit test options", Default = false)]
     public bool UnitTest { get; set; }
 
-    [Option('v', "vuop-test", HelpText = "Variable Usage Operation Test", Default = false)]
+    [Option(
+        'v',
+        "vuop-test",
+        HelpText = "Variable Usage Operation Test (doesnt work with enums)",
+        Default = false
+    )]
     public bool VuOpTest { get; set; }
-
-    [Option('b', "bench-mark", HelpText = "an option to bench mark shank", Default = false)]
-    public bool BenchMark { get; set; }
 }
 
 [Verb("CompilePractice", isDefault: false, HelpText = "dev use only")]
@@ -281,13 +289,13 @@ public class CommandLineArgsParser
             Interpreter.ActiveInterpretOptions = fakeInterpretOptions;
             Interpreter.Modules = program.Modules;
             Interpreter.StartModule = program.GetStartModuleSafe();
-            It2();
+            InterpretProgramWithTests();
         }
 
         // GetFiles(options.InputFile).ForEach(ip => ScanAndParse(ip, program));
         // if (options.UnitTest)
         //     It2();
-        var monomorphization = new MonomorphizationVisitor();
+        var monomorphization = new MonomorphizationVisitor(options.UnitTest);
         program.Accept(monomorphization);
         var monomorphizedProgram = monomorphization.ProgramNode;
 
@@ -345,9 +353,9 @@ public class CommandLineArgsParser
         Interpreter.Modules = program.Modules;
         Interpreter.StartModule = program.GetStartModuleSafe();
         if (!options.UnitTest)
-            It1(program);
+            InterpretProgram(program);
         else
-            It2();
+            InterpretProgramWithTests();
     }
 
     // extract semantic analysis into one function so that both compiler and interpreter do the same thing
@@ -428,12 +436,12 @@ public class CommandLineArgsParser
         Interpreter.Modules = program.Modules;
         Interpreter.StartModule = program.GetStartModuleSafe();
         if (!options.UnitTest)
-            It1(program);
+            InterpretProgram(program);
         else
-            It2();
+            InterpretProgramWithTests();
     }
 
-    private int It1(ProgramNode program)
+    private int InterpretProgram(ProgramNode program)
     {
         Interpreter.InterpretFunction(
             program.GetStartModuleSafe().GetStartFunctionSafe(),
@@ -462,7 +470,7 @@ public class CommandLineArgsParser
         }
     }
 
-    private static void It2()
+    private static void InterpretProgramWithTests()
     {
         LinkedList<TestResult> UnitTestResults = new LinkedList<TestResult>();
         Interpreter

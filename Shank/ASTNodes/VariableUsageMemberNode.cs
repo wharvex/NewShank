@@ -1,7 +1,4 @@
-﻿using Shank.AstVisitorsTim;
-using Shank.ExprVisitors;
-
-namespace Shank.ASTNodes;
+﻿namespace Shank.ASTNodes;
 
 ///<summary>
 ///     Represents a node for member access within a variable usage in the abstract syntax tree (AST).
@@ -52,25 +49,6 @@ public class VariableUsageMemberNode(VariableUsageNodeTemp left, MemberAccessNod
                     "VariableUsageNode class hierarchy changed, please update this switch accordingly."
                 )
         };
-
-    ///<summary>
-    ///     Accepts a generic expression visitor for processing this node.
-    ///</summary>
-    ///<typeparam name="T">The type of the result returned by the visitor.</typeparam>
-    ///<param name="visit">The expression visitor to accept.</param>
-    ///<returns>
-    ///     The result of the visit operation.
-    ///</returns>
-    ///<exception cref="NotImplementedException">
-    ///     Thrown because this method is not implemented.
-    ///</exception>
-    ///<remarks>
-    ///     This method is part of the visitor pattern implementation and should be overridden in derived classes.
-    ///</remarks>
-    public override T Accept<T>(ExpressionVisitor<T> visit)
-    {
-        throw new NotImplementedException();
-    }
 
     ///<summary>
     ///     Walks the node with a semantic analysis visitor, allowing the visitor to process the node.

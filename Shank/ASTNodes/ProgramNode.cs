@@ -74,36 +74,6 @@ public class ProgramNode : ASTNode
         }
     }
 
-    // public void VisitProgram(
-    //     LLVMVisitor visitor,
-    //     Context context,
-    //     LLVMBuilderRef builder,
-    //     LLVMModuleRef module
-    // )
-    // {
-    //     // add all modules to the context
-    //     context.setModules(Modules.Keys);
-    //     foreach (var keyValuePair in Modules)
-    //     {
-    //         keyValuePair.Value.VisitPrototype(context, module);
-    //     }
-    //
-    //     foreach (var keyValuePair in Modules)
-    //     {
-    //         keyValuePair.Value.VisitStatement(visitor, context, builder, module);
-    //     }
-    // }
-
-    // public override void Visit(StatementVisitor visit)
-    // {
-    //     visit.Accept(this);
-    // }
-
-    public override void Accept<T>(StatementVisitor v)
-    {
-        throw new NotImplementedException();
-    }
-
     public override void Accept(Visitor v) => v.Visit(this);
 
     public override ASTNode Walk(WalkCompliantVisitor v)

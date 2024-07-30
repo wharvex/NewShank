@@ -256,6 +256,11 @@ public class Compiler(
 
     private LLVMValue CompileVariableUsageNew(VariableUsageNodeTemp node)
     {
+        // TODO:
+        //this doesnt work for enums
+        // how enums wokr with out this is by constant folding
+        // store the Value of the enum which is an integer in the Extension type
+
         return node switch
         {
             VariableUsageIndexNode variableUsageIndexNode
@@ -299,6 +304,7 @@ public class Compiler(
         {
             value = GetReferenceInner(r);
         }
+
         var newValue = (LLVMArray)value;
         var arrayType = (LLVMArrayType)newValue.TypeRef;
         var length = newValue.TypeRef.TypeRef.ArrayLength;
@@ -423,6 +429,7 @@ public class Compiler(
         {
             value = GetReferenceInner(r);
         }
+
         var varType = (LLVMStruct)value;
         var varField = (VariableUsagePlainNode)node.GetExtensionSafe();
         var dataType = varType.GetTypeOf(varField.Name);
@@ -448,6 +455,7 @@ public class Compiler(
         {
             value = GetReferenceInner(r);
         }
+
         var newValue = (LLVMArray)value;
         var arrayInnerType = ((LLVMArray)value).Inner();
         var elementType = arrayInnerType.TypeRef;
@@ -553,6 +561,15 @@ public class Compiler(
     {
         var left = CompileExpression(node.Left);
         var right = CompileExpression(node.Right);
+        return CompileBooleanExpression(node.Op, left, right);
+    }
+
+    private LLVMValueRef CompileBooleanExpression(
+        BooleanExpressionNode.BooleanExpressionOpType op,
+        LLVMValueRef left,
+        LLVMValueRef right
+    )
+    {
         // TODO: enum equality (should arrays, structs, and references have equality defined for them)
         // for enums if we want more general comparison we cannot use pointers
         // TODO: don't use _types, once we add types to ExpressionNode
@@ -562,7 +579,7 @@ public class Compiler(
             Types.Integer
                 => HandleIntBoolOp(
                     left,
-                    node.Op switch
+                    op switch
                     {
                         BooleanExpressionNode.BooleanExpressionOpType.eq
                             => LLVMIntPredicate.LLVMIntEQ,
@@ -582,7 +599,7 @@ public class Compiler(
             Types.Float
                 => HandleFloatBoolOp(
                     left,
-                    node.Op switch
+                    op switch
                     {
                         BooleanExpressionNode.BooleanExpressionOpType.eq
                             => LLVMRealPredicate.LLVMRealOEQ,
@@ -602,13 +619,13 @@ public class Compiler(
             // booleans can only be compared using equality
             Types.Boolean
                 => builder.BuildICmp(
-                    node.Op is BooleanExpressionNode.BooleanExpressionOpType.eq
+                    op is BooleanExpressionNode.BooleanExpressionOpType.eq
                         ? LLVMIntPredicate.LLVMIntEQ
                         : LLVMIntPredicate.LLVMIntNE,
                     left,
                     right
                 ),
-            Types.String => HandleStringComparison(left, node.Op, right),
+            Types.String => HandleStringComparison(left, op, right),
             _ => throw new NotImplementedException()
         };
     }
@@ -742,6 +759,19 @@ public class Compiler(
         function.Linkage = LLVMLinkage.LLVMExternalLinkage;
 
         node.LocalVariables.ForEach(CompileVariableDeclaration);
+        if (function.Name == "main")
+        {
+            var seed = builder.BuildCall2(
+                context.CFuntions.time.TypeOf,
+                context.CFuntions.time.Function,
+                [LLVMValueRef.CreateConstNull(LLVMTypeRef.CreatePointer(LLVMTypeRef.Int64, 0))]
+            );
+            builder.BuildStore(
+                builder.BuildIntCast(seed, LLVMTypeRef.Int64),
+                context.RandomVariables.S1
+            );
+        }
+
         node.Statements.ForEach(CompileStatement);
         builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
         context.ResetLocal();
@@ -1203,8 +1233,87 @@ public class Compiler(
             case BuiltInFunction.Size:
                 CompileBuiltinSize(function);
                 break;
+            case BuiltInFunction.AssertIsEqual:
+                CompileBuiltinAssertIsEqual(function);
+                break;
+            case BuiltInFunction.GetRandom:
+                CompileBuiltinGetRandom(function);
+                break;
             default:
                 throw new ArgumentOutOfRangeException();
+        }
+    }
+
+    private void CompileBuiltinGetRandom(LLVMShankFunction function)
+    {
+        var randomVariables = context.RandomVariables;
+        var s1 = builder.BuildLoad2(LLVMTypeRef.Int64, randomVariables.S1);
+        // rotl(s1 * 5, 7)
+        var rotl0 = rotl(builder.BuildMul(s1, CreateConstInt(5)), CreateConstInt(7));
+        // result = rotl * 9
+        var result = builder.BuildMul(rotl0, CreateConstInt(9));
+        // t = s1 << 17
+        var t = builder.BuildShl(s1, CreateConstInt(17));
+        // s2 ^= s0 (s2 = s2 ^ s0)
+        builder.BuildStore(
+            builder.BuildXor(
+                builder.BuildLoad2(LLVMTypeRef.Int64, randomVariables.S2),
+                builder.BuildLoad2(LLVMTypeRef.Int64, randomVariables.S0)
+            ),
+            randomVariables.S2
+        );
+        // s3 ^= s1
+        builder.BuildStore(
+            builder.BuildXor(
+                builder.BuildLoad2(LLVMTypeRef.Int64, randomVariables.S3),
+                builder.BuildLoad2(LLVMTypeRef.Int64, randomVariables.S1)
+            ),
+            randomVariables.S3
+        );
+        // s1 ^= s2
+        builder.BuildStore(
+            builder.BuildXor(
+                builder.BuildLoad2(LLVMTypeRef.Int64, randomVariables.S1),
+                builder.BuildLoad2(LLVMTypeRef.Int64, randomVariables.S2)
+            ),
+            randomVariables.S1
+        );
+        // s0 ^= s3
+        builder.BuildStore(
+            builder.BuildXor(
+                builder.BuildLoad2(LLVMTypeRef.Int64, randomVariables.S0),
+                builder.BuildLoad2(LLVMTypeRef.Int64, randomVariables.S3)
+            ),
+            randomVariables.S0
+        );
+        // s2 ^= t
+        builder.BuildStore(
+            builder.BuildXor(builder.BuildLoad2(LLVMTypeRef.Int64, randomVariables.S2), t),
+            randomVariables.S2
+        );
+        // rotl(s3, 45)
+        var rotl1 = rotl(
+            builder.BuildLoad2(LLVMTypeRef.Int64, randomVariables.S3),
+            CreateConstInt(45)
+        );
+        // s3 = rotl
+        builder.BuildStore(rotl1, randomVariables.S3);
+        // return result
+        builder.BuildStore(result, function.Function.FirstParam);
+        builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
+
+        LLVMValueRef CreateConstInt(ulong n)
+        {
+            return LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, n);
+        }
+
+        // rotl(x, k) = (x << k) | (x >> (64 - k))
+        LLVMValueRef rotl(LLVMValueRef x, LLVMValueRef k)
+        {
+            return builder.BuildOr(
+                builder.BuildShl(x, k),
+                builder.BuildAShr(x, builder.BuildSub(CreateConstInt(64), k))
+            );
         }
     }
 
@@ -1447,78 +1556,65 @@ public class Compiler(
             paramList.ToArray()
         );
         builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
-
-        static string GetFormatCode(LLVMType type) =>
-            type switch
-            {
-                LLVMBooleanType => "%s",
-                LLVMCharacterType => "%c",
-                LLVMIntegerType => "%d",
-                LLVMEnumType => "%s",
-                LLVMRealType => "%.2f",
-                LLVMStringType => "%.*s",
-                LLVMArrayType Array
-                    => $"[ {string.Join(", ", Enumerable.Repeat(GetFormatCode(Array.Inner), (int)Array.Range.Length).Take(15))} ] ",
-                LLVMStructType record
-                    => $"{record.Name}: {{ {string.Join(", ", record
-                        .Members.Select(member => $"{member.Key} = {GetFormatCode(member.Value)}"))} }}",
-                // TODO: print only one level
-                LLVMReferenceType reference => reference.ToString(),
-                _ => throw new CompilerException($"type is undefinedv {type} in function write", 0)
-            };
-
-        //prints an enum
-        IEnumerable<LLVMValueRef> GetValues((LLVMType First, LLVMValueRef Second) varValue)
-        {
-            {
-                return varValue.First switch
-                {
-                    LLVMEnumType Enum => [HandleEnum(varValue.Second, Enum.Variants)],
-                    LLVMIntegerType or LLVMRealType or LLVMCharacterType => [varValue.Second],
-                    LLVMBooleanType
-                        =>
-                        [
-                            builder.BuildSelect(
-                                varValue.Second,
-                                builder.BuildGlobalStringPtr("true"),
-                                builder.BuildGlobalStringPtr("false")
-                            )
-                        ],
-                    LLVMStringType
-                        =>
-                        [
-                            builder.BuildExtractValue(varValue.Second, 1),
-                            builder.BuildExtractValue(varValue.Second, 0)
-                        ],
-                    LLVMStructType record
-                        => record.Members.Values.SelectMany(
-                            (member, index) =>
-                                GetValues(
-                                    (
-                                        member,
-                                        builder.BuildExtractValue(varValue.Second, (uint)index)
-                                    )
-                                )
-                        ),
-                    LLVMReferenceType => [],
-                    LLVMArrayType array
-                        => Enumerable
-                            .Range(0, (int)array.Range.Length)
-                            .Take(15)
-                            .SelectMany(
-                                i =>
-                                    GetValues(
-                                        (
-                                            array.Inner,
-                                            builder.BuildExtractValue(varValue.Second, (uint)i)
-                                        )
-                                    )
-                            ),
-                    _ => throw new NotImplementedException(varValue.First.ToString())
-                };
-            }
-        }
     }
+
+    private IEnumerable<LLVMValueRef> GetValues((LLVMType First, LLVMValueRef Second) varValue) =>
+        varValue.First switch
+        {
+            LLVMEnumType Enum => [HandleEnum(varValue.Second, Enum.Variants)],
+            LLVMIntegerType or LLVMRealType or LLVMCharacterType => [varValue.Second],
+            LLVMBooleanType
+                =>
+                [
+                    builder.BuildSelect(
+                        varValue.Second,
+                        builder.BuildGlobalStringPtr("true"),
+                        builder.BuildGlobalStringPtr("false")
+                    )
+                ],
+            LLVMStringType
+                =>
+                [
+                    builder.BuildExtractValue(varValue.Second, 1),
+                    builder.BuildExtractValue(varValue.Second, 0)
+                ],
+            LLVMStructType record
+                => record.Members.Values.SelectMany(
+                    (member, index) =>
+                        GetValues((member, builder.BuildExtractValue(varValue.Second, (uint)index)))
+                ),
+            LLVMReferenceType => [],
+            LLVMArrayType array
+                => Enumerable
+                    .Range(0, (int)array.Range.Length)
+                    .Take(15)
+                    .SelectMany(
+                        i =>
+                            GetValues(
+                                (array.Inner, builder.BuildExtractValue(varValue.Second, (uint)i))
+                            )
+                    ),
+            _ => throw new NotImplementedException(varValue.First.ToString())
+        };
+
+    private static string GetFormatCode(LLVMType type) =>
+        type switch
+        {
+            LLVMBooleanType => "%s",
+            LLVMCharacterType => "%c",
+            LLVMIntegerType => "%d",
+            LLVMEnumType => "%s",
+            LLVMRealType => "%.2f",
+            LLVMStringType => "%.*s",
+            LLVMArrayType Array
+                => $"[ {string.Join(", ", Enumerable.Repeat(GetFormatCode(Array.Inner), (int)Array.Range.Length).Take(15))} ] ",
+            LLVMStructType record
+                => $"{record.Name}: {{ {string.Join(", ", record
+                    .Members.Select(member => $"{member.Key} = {GetFormatCode(member.Value)}"))} }}",
+            // TODO: print only one level
+            LLVMReferenceType reference => reference.ToString(),
+            _ => throw new CompilerException($"type is undefinedv {type} in function write", 0)
+        };
 
     private void CompileBuiltinSubString(LLVMShankFunction function)
     {
@@ -1632,7 +1728,7 @@ public class Compiler(
             builder.BuildICmp(LLVMIntPredicate.LLVMIntSGT, length32, stringLength)
         );
         var toBigLengthBlock = module.Context.AppendBasicBlock(
-            context.CurrentFunction.Function,
+            context.CurrentFunction.Function, //
             "bad length"
         );
         var goodLengthBlock = module.Context.AppendBasicBlock(
@@ -1696,6 +1792,35 @@ public class Compiler(
         var converted = builder.BuildFPToSI(value, LLVMTypeRef.Int64);
         builder.BuildStore(converted, result);
         builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
+    }
+
+    private void CompileBuiltinAssertIsEqual(LLVMShankFunction function)
+    {
+        var expected = function.Function.GetParam(0);
+        var actual = function.Function.GetParam(1);
+        var comparison = CompileBooleanExpression(
+            BooleanExpressionNode.BooleanExpressionOpType.eq,
+            expected,
+            actual
+        );
+        var sameBlock = function.AppendBasicBlock("same");
+        var notEqual = function.AppendBasicBlock("different");
+        builder.BuildCondBr(comparison, sameBlock, notEqual);
+        builder.PositionAtEnd(sameBlock);
+        builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0));
+        builder.PositionAtEnd(notEqual);
+        builder.BuildCall2(
+            context.CFuntions.printf.TypeOf,
+            context.CFuntions.printf.Function,
+            [
+                builder.BuildGlobalStringPtr(
+                    $"expected {GetFormatCode(function.Parameters.First().Type)}, found {GetFormatCode(function.Parameters[1].Type)}\n"
+                ),
+                ..GetValues((function.Parameters.First().Type, expected)),
+                ..GetValues((function.Parameters[1].Type, actual))
+            ]
+        );
+        builder.BuildRet(LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 1));
     }
 
     private void CompileBuiltinIntegerToReal(LLVMShankFunction function)

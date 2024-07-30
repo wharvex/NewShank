@@ -10,6 +10,7 @@ public struct CFuntions
     {
         var sizeT = LLVMTypeRef.Int32;
         var charStar = LLVMTypeRef.CreatePointer(LLVMTypeRef.Int8, 0);
+        var timeT = LLVMTypeRef.Int64;
         printf = llvmModule.addFunction(
             "printf",
             LLVMTypeRef.CreateFunction(sizeT, [charStar], true)
@@ -50,6 +51,11 @@ public struct CFuntions
             LLVMTypeRef.CreateFunction(voidStar, [voidStar, LLVMTypeRef.Int32, sizeT])
         );
         memset.Linkage = LLVMLinkage.LLVMExternalLinkage;
+        time = llvmModule.addFunction(
+            "time",
+            LLVMTypeRef.CreateFunction(timeT, [LLVMTypeRef.CreatePointer(timeT, 0)])
+        );
+        time.Linkage = LLVMLinkage.LLVMExternalLinkage;
     }
 
     //  int printf(const char *restrict format, ...);
@@ -77,12 +83,20 @@ public struct CFuntions
 
     // void *memset( void *dest, int ch, size_t count );
     public LLVMFunction memset { get; }
+
+    // time_t time( time_t *arg );
+    public LLVMFunction time { get; }
 }
 
-public class Context(MonomorphizedProgramNode moduleNode, CFuntions cFuntions)
+public class Context(
+    MonomorphizedProgramNode moduleNode,
+    CFuntions cFuntions,
+    RandomInformation randomInformation
+)
 {
     private readonly MonomorphizedProgramNode moduleNode = moduleNode;
 
+    public RandomInformation RandomVariables = randomInformation;
     public CFuntions CFuntions { get; } = cFuntions;
     public LLVMFunction CurrentFunction { get; set; }
 
@@ -231,4 +245,26 @@ public class Context(MonomorphizedProgramNode moduleNode, CFuntions cFuntions)
 
     public LLVMShankFunction GetFunction(Index name) =>
         name is TypedModuleIndex m ? Functions[m] : BuiltinFunctions[(TypedBuiltinIndex)name];
+}
+
+public record struct RandomInformation(
+    LLVMValueRef S0,
+    LLVMValueRef S1,
+    LLVMValueRef S2,
+    LLVMValueRef S3
+)
+{
+    public RandomInformation(LLVMModuleRef module)
+        : this(
+            module.AddGlobal(LLVMTypeRef.Int64, "s0"),
+            module.AddGlobal(LLVMTypeRef.Int64, "s1"),
+            module.AddGlobal(LLVMTypeRef.Int64, "s2"),
+            module.AddGlobal(LLVMTypeRef.Int64, "s3")
+        )
+    {
+        S0 = S0 with { Initializer = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, 0) };
+        S1 = S1 with { Initializer = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, 0) };
+        S2 = S2 with { Initializer = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, 0) };
+        S3 = S3 with { Initializer = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int64, 0) };
+    }
 }

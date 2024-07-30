@@ -884,7 +884,7 @@ public class Interpreter
             )
             {
                 // if this parameter is a "var", then copy the new value back to the parameter holder
-                if (variableUsagePlainNode.IsVariableFunctionCall)
+                if (variableUsagePlainNode.IsInFuncCallWithVar)
                     variables[variableUsagePlainNode.Name] = passed[i];
             }
         }
@@ -934,7 +934,8 @@ public class Interpreter
         ArrayDataType adt,
         VariableUsageIndexNode vi,
         List<InterpreterDataType> paramsList,
-        Dictionary<string, InterpreterDataType> variables
+        Dictionary<string, InterpreterDataType> variables,
+        FunctionNode callingFunction
     )
     {
         paramsList.Add(GetIdtFromVun(variables, vi));
