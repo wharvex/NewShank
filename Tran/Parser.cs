@@ -328,7 +328,8 @@ public class Parser
     {
         var arguments = new List<ExpressionNode>();
         ExpressionNode? expression = ParseExpression();
-        if (expression == null) return arguments;
+        if (expression == null)
+            return arguments;
         arguments.Add(expression);
         while (handler.MatchAndRemove(TokenType.COMMA) != null)
         {
@@ -383,7 +384,8 @@ public class Parser
                 {
                     return new AssignmentNode(variable, expression);
                 }
-                else throw new Exception("Missing expression on right side of assignment");
+                else
+                    throw new Exception("Missing expression on right side of assignment");
             }
             else if (handler.MatchAndRemove(TokenType.COMMA) != null)
             {
@@ -398,7 +400,10 @@ public class Parser
                         variable.IsVariableFunctionCall = true;
                         variables.Add(variable);
                     }
-                    else throw new Exception("Missing variable reference after comma in multi-assignment statement");
+                    else
+                        throw new Exception(
+                            "Missing variable reference after comma in multi-assignment statement"
+                        );
                 } while (handler.MatchAndRemove(TokenType.COMMA) != null);
 
                 if (handler.MatchAndRemove(TokenType.EQUAL) != null)
@@ -409,11 +414,18 @@ public class Parser
                         functionCall.Arguments.AddRange(variables);
                         return functionCall;
                     }
-                    else throw new Exception("Multi-assignment requires a function call as the target");
+                    else
+                        throw new Exception(
+                            "Multi-assignment requires a function call as the target"
+                        );
                 }
-                else throw new Exception("Missing equal sign after multi-assignment");
+                else
+                    throw new Exception("Missing equal sign after multi-assignment");
             }
-            else throw new Exception("Missing either comma or equal sign after variable reference for assignment");
+            else
+                throw new Exception(
+                    "Missing either comma or equal sign after variable reference for assignment"
+                );
         }
 
         return null;

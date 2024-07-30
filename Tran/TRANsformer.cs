@@ -50,14 +50,22 @@ namespace Tran
                             {
                                 var argument = (VariableUsagePlainNode)call.Arguments[0];
                                 var function = module.Functions[call.Name];
-                                if(function != null)
+                                if (function != null)
                                 {
                                     Shank.Type type = function.ParameterVariables[0].Type;
                                     functionNode.VariablesInScope[argument.Name].Type = type;
-                                    functionNode.LocalVariables.Find(functionNode => functionNode.Name == argument.Name).Type = type;
+                                    functionNode
+                                        .LocalVariables.Find(
+                                            functionNode => functionNode.Name == argument.Name
+                                        )
+                                        .Type = type;
                                     call.Arguments[0].Type = type;
                                 }
-                                else throw new Exception("Call to unknown function found in function " + functionNode.Name);
+                                else
+                                    throw new Exception(
+                                        "Call to unknown function found in function "
+                                            + functionNode.Name
+                                    );
                             }
                             for (int j = 0; j < call.Arguments.Count; j++)
                             {
