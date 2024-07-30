@@ -146,7 +146,7 @@ class start
         console.print(x)
         console.print(y)
     
-    getValues() : number a, number b  { becomes in Shank addStuff ( x,y,var retval) }
+    getValues() : number a, number b
         a = 20
         b = 30".Replace("    ", "\t")
             );
@@ -154,17 +154,42 @@ class start
         }
 
         [TestMethod]
-        public void InterpreterTestFunctionCallExpression()
+        public void InterpreterTestFunctionCallTransformation1()
         {
             InitializeInterpreter(
                 @"
 class start
     start()
         number x
-        x = getValue() + getValue()
+        x = getValue() + getValue() + getValue()
+        console.print(x)
     
-    getValue() : number a  { becomes in Shank addStuff ( x,y,var retval) }
+    getValue() : number a 
         a = 100".Replace("    ", "\t")
+            );
+            RunInterpreter();
+        }
+
+        [TestMethod]
+        public void InterpreterTestFunctionCallTransformation2()
+        {
+            InitializeInterpreter(
+                @"
+class start
+    number y
+        accessor:
+            value = 100
+
+    start()
+        number x
+        x = getValue1() + getValue2() + y
+        console.print(x)
+    
+    getValue1() : number a
+        a = 1
+
+    getValue2() : number a
+        a = 10".Replace("    ", "\t")
             );
             RunInterpreter();
         }

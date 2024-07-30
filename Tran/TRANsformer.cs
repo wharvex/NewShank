@@ -46,6 +46,19 @@ namespace Tran
                         else if (statement.GetType() == typeof(FunctionCallNode))
                         {
                             var call = (FunctionCallNode)statement;
+                            if (call.Arguments[0].Type is UnknownType)
+                            {
+                                var argument = (VariableUsagePlainNode)call.Arguments[0];
+                                var function = module.Functions[call.Name];
+                                if(function != null)
+                                {
+                                    Shank.Type type = function.ParameterVariables[0].Type;
+                                    functionNode.VariablesInScope[argument.Name].Type = type;
+                                    functionNode.LocalVariables.Find(functionNode => functionNode.Name == argument.Name).Type = type;
+                                    call.Arguments[0].Type = type;
+                                }
+                                else throw new Exception("Call to unknown function found in function " + functionNode.Name);
+                            }
                             for (int j = 0; j < call.Arguments.Count; j++)
                             {
                                 call.Arguments[j] =
@@ -87,10 +100,6 @@ namespace Tran
                 && !function.VariablesInScope.ContainsKey("_temp_" + variableRef.Name)
             )
             {
-                function.Statements[index] = statement;
-                var accessor = new FunctionCallNode("_" + variableRef.Name + "_accessor");
-                accessor.Arguments.Add(variableRef);
-                function.Statements.Insert(index, accessor);
                 var tempVar = new VariableDeclarationNode(
                     false,
                     variableRef.Type,
@@ -100,6 +109,11 @@ namespace Tran
                 );
                 function.VariablesInScope.Add(tempVar.Name, tempVar);
                 function.LocalVariables.Add(tempVar);
+                var accessor = new FunctionCallNode("_" + variableRef.Name + "_accessor");
+                var tempArg = new VariableUsagePlainNode("_temp_" + variableRef.Name, module.Name);
+                tempArg.IsVariableFunctionCall = true;
+                accessor.Arguments.Add(tempArg);
+                function.Statements.Insert(index, accessor);
                 index++;
             }
         }
@@ -158,7 +172,7 @@ namespace Tran
                     retVal = WalkExpression(mathOp.Right, module, ref variableRef);
                     if (retVal == null)
                     {
-                        return mathOp;
+                        return null;
                     }
                     mathOp.Right = retVal;
                 }

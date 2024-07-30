@@ -558,7 +558,7 @@ public class Parser
     {
         blockLevel++;
         int currentLevel;
-        statements.Clear();
+        statements = [];
         while (handler.MatchAndRemove(TokenType.NEWLINE) != null)
         {
             AcceptNewlines();
@@ -836,10 +836,9 @@ public class Parser
         if (functionCall != null)
         {
             //Declare the temp variable to hold the return value
-            var returnType = GetReturnType(functionCall);
             var tempVar = new VariableDeclarationNode(
                 false,
-                returnType,
+                new UnknownType(),
                 "_temp_" + tempVarNum,
                 thisClass.Name,
                 false
@@ -850,9 +849,11 @@ public class Parser
             //Insert statement to call the function
             var varRef = new VariableUsagePlainNode(tempVar.Name, thisClass.Name);
             varRef.IsVariableFunctionCall = true;
+            varRef.Type = new UnknownType();
             functionCall.Arguments.Add(varRef);
             statements.Add(functionCall);
 
+            tempVarNum++;
             return varRef;
         }
 
@@ -865,22 +866,6 @@ public class Parser
         if (token == null)
             return null;
         return new FloatNode(float.Parse(token.GetValue()));
-    }
-
-    private Type GetReturnType(FunctionCallNode functionCall)
-    {
-        foreach (var argument in functionCall.Arguments)
-        {
-            if (argument is VariableUsagePlainNode reference)
-            {
-                VariableDeclarationNode variable = currentFunction.VariablesInScope[reference.Name];
-                if (variable != null && !variable.IsConstant)
-                {
-                    return variable.Type;
-                }
-            }
-        }
-        throw new NotImplementedException();
     }
 
     public static Type GetDataTypeFromConstantNodeType(ASTNode constantNode) =>
