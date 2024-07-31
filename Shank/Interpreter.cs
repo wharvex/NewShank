@@ -825,7 +825,10 @@ public class Interpreter
         //            variables[variableUsagePlainNode.Name] = passed[i];
         //    }
         //}
-        UpdatePassedParamsPostCall(passed, (CallableNode)calledFunction, fc, variables);
+        if (GetVuopTestFlag())
+            NewUpdatePassedParamsPostCall(passed, (CallableNode)calledFunction, fc, variables);
+        else
+            UpdatePassedParamsPostCall(passed, (CallableNode)calledFunction, fc, variables);
     }
 
     private static void UpdatePassedParamsPostCall(
@@ -837,7 +840,12 @@ public class Interpreter
     {
         for (var i = 0; i < passed.Count; i++)
         {
-            // TODO: It's hard to follow what the logic is here.
+            // IF ((our called function is a variadic builtin) OR (this param on the called function
+            // is declared with `var`)) AND (this arg on the call itself is a variable)
+            // With this logic, we're allowing variadic builtins to bypass the requirement that in
+            // order to have its params updated after the call, a callable must have those params
+            // declared with their IsConstant properties set to false.
+            // We're (probably) doing this because variadic builtins don't have declared parameters.
             if (
                 (
                     (calledFunc is BuiltInVariadicFunctionNode)
@@ -861,17 +869,23 @@ public class Interpreter
     {
         for (var i = 0; i < passed.Count; i++)
         {
-            // TODO: It's hard to follow what the logic is here.
+            // IF ((our called function is a variadic builtin) OR (this param on the called function
+            // is declared with `var`)) AND (this arg on the call itself is a variable)
+            // With this logic, we're allowing variadic builtins to bypass the requirement that in
+            // order to have its params updated after the call, a callable must have those params
+            // declared with their IsConstant properties set to false.
+            // We're (probably) doing this because variadic builtins don't have declared parameters.
             if (
                 (
-                    (calledFunc is BuiltInVariadicFunctionNode)
+                    calledFunc is BuiltInVariadicFunctionNode
                     || !calledFunc.ParameterVariables[i].IsConstant
-                ) && theCallItself.Arguments[i] is VariableUsagePlainNode variableUsagePlainNode
+                ) && theCallItself.Arguments[i] is VariableUsageNodeTemp vun
             )
             {
-                // if this parameter is a "var", then copy the new value back to the parameter holder
-                if (variableUsagePlainNode.IsInFuncCallWithVar)
-                    iDTs[variableUsagePlainNode.Name] = passed[i];
+                // TODO: We need a way to update only part of an IDT if this passed param is only
+                // part of a VUN.
+                if (vun.NewIsInFuncCallWithVar)
+                    iDTs[vun.GetPlain().Name] = passed[i];
             }
         }
     }
