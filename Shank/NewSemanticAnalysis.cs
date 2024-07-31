@@ -29,7 +29,4 @@ public class NewSemanticAnalysis
 
         program.Walk(new MathOpNodeOptimizer());
     }
-    
 }
-
-

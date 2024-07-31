@@ -336,11 +336,20 @@ public abstract class SAVisitor
                     case MathOpNode:
                         return GetTypeOfExpression(mathVal.Left, variables);
                     case BoolNode:
-                        throw new SemanticErrorException("Could not find a valid type expression", mathVal);
+                        throw new SemanticErrorException(
+                            "Could not find a valid type expression",
+                            mathVal
+                        );
                     case BooleanExpressionNode:
-                        throw new SemanticErrorException("Could not find a valid type expression", mathVal);
+                        throw new SemanticErrorException(
+                            "Could not find a valid type expression",
+                            mathVal
+                        );
                     default:
-                        throw new SemanticErrorException("Could not find a valid type expression", mathVal);
+                        throw new SemanticErrorException(
+                            "Could not find a valid type expression",
+                            mathVal
+                        );
                 }
                 break;
             default:
@@ -721,9 +730,15 @@ public class MathOpNodeVisitor : SAVisitor
 
     public override ASTNode? PostWalk(MathOpNode node)
     {
-        if (GetTypeOfExpression(node.Left, Variables).GetType() != GetTypeOfExpression(node.Right, Variables).GetType())
+        if (
+            GetTypeOfExpression(node.Left, Variables).GetType()
+            != GetTypeOfExpression(node.Right, Variables).GetType()
+        )
         {
-            throw new SemanticErrorException("Math expressions require the same types on both sides.", node);
+            throw new SemanticErrorException(
+                "Math expressions require the same types on both sides.",
+                node
+            );
         }
         return null;
     }
@@ -929,17 +944,17 @@ public class AssignmentVisitor : SAVisitor
         Dictionary<string, VariableDeclarationNode> variablesLookup
     )
     {
-                if (targetType is RangeType i) // all other i range type are bounded by integers
-                {
-                    var from = i.Range.From;
-                    var to = i.Range.To;
-                    int upper = (int)GetMaxRange(expression, variablesLookup);
-                    int lower = (int)GetMinRange(expression, variablesLookup);
+        if (targetType is RangeType i) // all other i range type are bounded by integers
+        {
+            var from = i.Range.From;
+            var to = i.Range.To;
+            int upper = (int)GetMaxRange(expression, variablesLookup);
+            int lower = (int)GetMinRange(expression, variablesLookup);
 
-                    if (lower < from || upper > to)
-                        throw new Exception(
-                            $"The variable {variable!} can only be assigned expressions that wont overstep its range ({from}..{to}), but attempted to assign to expression {expression} with range ({lower}..{upper}."
-                        );
+            if (lower < from || upper > to)
+                throw new Exception(
+                    $"The variable {variable!} can only be assigned expressions that wont overstep its range ({from}..{to}), but attempted to assign to expression {expression} with range ({lower}..{upper}."
+                );
         }
     }
 
@@ -1294,8 +1309,6 @@ public class FunctionCallVisitor : SAVisitor
         Variables = node.VariablesInScope;
         return null;
     }
-    
-    
 }
 
 public class FunctionCallExistsVisitor : FunctionCallVisitor
@@ -1331,16 +1344,22 @@ public class FunctionCallTypeVisitor : FunctionCallVisitor
                             node
                         );
                     }
-                    
+
                     if (
                         function.ParameterVariables[index].Type is EnumType enumType
                         && node.Arguments[index] is VariableUsagePlainNode variableUsagePlainNode
                         && enumType.Variants.Contains(variableUsagePlainNode.Name)
                     )
                     {
-                        if (variableUsagePlainNode.ExtensionType != VariableUsagePlainNode.VrnExtType.None)
+                        if (
+                            variableUsagePlainNode.ExtensionType
+                            != VariableUsagePlainNode.VrnExtType.None
+                        )
                         {
-                            throw new SemanticErrorException($"ambiguous variable name {variableUsagePlainNode.Name}", node.Arguments[index]);
+                            throw new SemanticErrorException(
+                                $"ambiguous variable name {variableUsagePlainNode.Name}",
+                                node.Arguments[index]
+                            );
                         }
                     }
                 }
@@ -1466,8 +1485,8 @@ public class FunctionCallGenericsVariadicsVisitor : FunctionCallVisitor
             if (function is BuiltInVariadicFunctionNode builtInVariadicFunctionNode)
             {
                 node.InstantiatedVariadics = node.Arguments.Select(
-                        arg => GetTypeOfExpression(arg, Variables)
-                    )
+                    arg => GetTypeOfExpression(arg, Variables)
+                )
                     .ToList();
                 node.FunctionDefinitionModule = builtInVariadicFunctionNode.parentModuleName!;
             }
@@ -1484,14 +1503,18 @@ public class FunctionCallGenericsVariadicsVisitor : FunctionCallVisitor
         return null;
     }
 
-    private Dictionary<string, Type> GetInstantiatedGenerics(CallableNode function, FunctionCallNode functionCall)
+    private Dictionary<string, Type> GetInstantiatedGenerics(
+        CallableNode function,
+        FunctionCallNode functionCall
+    )
     {
-        var selectMany = function.ParameterVariables.Zip(functionCall.Arguments)
+        var selectMany = function
+            .ParameterVariables.Zip(functionCall.Arguments)
             .SelectMany(paramAndArg =>
             {
                 var param = paramAndArg.First;
                 var argument = paramAndArg.Second;
-                var argumentType = GetTypeOfExpression(paramAndArg.Second,Variables);
+                var argumentType = GetTypeOfExpression(paramAndArg.Second, Variables);
                 IEnumerable<(string, Type)> typeCheckAndInstiateGenericParameter =
                     !param.Type.Equals(argumentType)
                         ?
@@ -1511,48 +1534,47 @@ public class FunctionCallGenericsVariadicsVisitor : FunctionCallVisitor
         return
             selectMany.GroupBy(pair => pair.Item1).FirstOrDefault(group => group.Count() > 1)
                 is { } bad
-                ? throw new SemanticErrorException(
-                    $"generic {bad.Key} cannot match {string.Join(" and ", bad.Select(ty => ty.Item2))}",
-                    functionCall
-                )
-                : selectMany.ToDictionary();
+            ? throw new SemanticErrorException(
+                $"generic {bad.Key} cannot match {string.Join(" and ", bad.Select(ty => ty.Item2))}",
+                functionCall
+            )
+            : selectMany.ToDictionary();
     }
-    
+
     // match types given two types (the is first the parameter type, the second is the argument type) attempts to find a substitution for the generics in the parameter type to new types given the fact that the parameter type is a more specific version of the arugment type
-        Option<IEnumerable<(string, Type)>> MatchTypes(Type paramType, Type type) =>
-            (paramType, type) switch
-            {
-                // if we have some generic type we create a substitution that maps to the generic type to the type (base case)
-                (GenericType g, _) => MatchTypesGeneric(g, type),
-                // you cannot pass as a parameter a more general type that corresponds to an argument with a more specific type
-                // we know this is a more general argument because the case above catches all generic parameters (even ones with a generic argument)
-                (_, GenericType) => Option.None<IEnumerable<(string, Type)>>(),
-                // if we have a reference type and a another reference type we just unify their inner types
-                (ReferenceType param, ReferenceType arg) => MatchTypes(param.Inner, arg.Inner),
-                // // an instantiated type holds two things the actual types and the actual types for any generics in the actual type
-                // to find the substitution for tow instantiated types we first verify that they are the same underlying type the `where ... Equals ...`
-                (InstantiatedType param, InstantiatedType arg) when arg.Inner.Equals(param.Inner)
-                    => MatchTypesInstantiated(param, arg),
-                // TODO: validate ranges
-                // same as ReferenceType but for arrays
-                (ArrayType param, ArrayType arg) => MatchTypes(param.Inner, arg.Inner),
-                ({ } a, { } b)
-                    => Option.Some(Enumerable.Empty<(string, Type)>()).Filter(a.Equals(b))
-            };
-
-        Option<IEnumerable<(string, Type)>> MatchTypesGeneric(GenericType g, Type type)
+    Option<IEnumerable<(string, Type)>> MatchTypes(Type paramType, Type type) =>
+        (paramType, type) switch
         {
-            return Option.Some(Enumerable.Repeat((g.Name, type), 1));
-        }
+            // if we have some generic type we create a substitution that maps to the generic type to the type (base case)
+            (GenericType g, _) => MatchTypesGeneric(g, type),
+            // you cannot pass as a parameter a more general type that corresponds to an argument with a more specific type
+            // we know this is a more general argument because the case above catches all generic parameters (even ones with a generic argument)
+            (_, GenericType) => Option.None<IEnumerable<(string, Type)>>(),
+            // if we have a reference type and a another reference type we just unify their inner types
+            (ReferenceType param, ReferenceType arg) => MatchTypes(param.Inner, arg.Inner),
+            // // an instantiated type holds two things the actual types and the actual types for any generics in the actual type
+            // to find the substitution for tow instantiated types we first verify that they are the same underlying type the `where ... Equals ...`
+            (InstantiatedType param, InstantiatedType arg) when arg.Inner.Equals(param.Inner)
+                => MatchTypesInstantiated(param, arg),
+            // TODO: validate ranges
+            // same as ReferenceType but for arrays
+            (ArrayType param, ArrayType arg) => MatchTypes(param.Inner, arg.Inner),
+            ({ } a, { } b) => Option.Some(Enumerable.Empty<(string, Type)>()).Filter(a.Equals(b))
+        };
 
-        Option<IEnumerable<(string, Type)>> MatchTypesInstantiated(
-            InstantiatedType paramType,
-            InstantiatedType type
-        ) =>
-            paramType
-                .InstantiatedGenerics.Values.Zip(type.InstantiatedGenerics.Values)
-                .Select((pair) => MatchTypes(pair.Item1, pair.Item2))
-                .Aggregate((first, second) => first.FlatMap(f => second.Map(f.Union)));
+    Option<IEnumerable<(string, Type)>> MatchTypesGeneric(GenericType g, Type type)
+    {
+        return Option.Some(Enumerable.Repeat((g.Name, type), 1));
+    }
+
+    Option<IEnumerable<(string, Type)>> MatchTypesInstantiated(
+        InstantiatedType paramType,
+        InstantiatedType type
+    ) =>
+        paramType
+            .InstantiatedGenerics.Values.Zip(type.InstantiatedGenerics.Values)
+            .Select((pair) => MatchTypes(pair.Item1, pair.Item2))
+            .Aggregate((first, second) => first.FlatMap(f => second.Map(f.Union)));
 }
 
 public class MathOpNodeOptimizer : SAVisitor
