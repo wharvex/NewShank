@@ -13,37 +13,78 @@ namespace TranUnitTests
         public void Words()
         {
             string file = "Test String";
-            Lexer lexer = new Lexer(file);
+            List<string> fileList = new List<string>();
+            fileList.Add(file);
+            Lexer lexer = new Lexer(fileList);
             List<List<Token>> tokens = lexer.Lex();
 
             // Collect the values of the tokens to create the expected string
-            string actualTokensString = string.Join("\n", tokens) + "\n";
+
+            string actualTokensString = "";
+            foreach (List<Token> projectFile in tokens)
+            {
+                actualTokensString += string.Join("\n", projectFile) + "\n";
+            }
+
             Assert.AreEqual(
                 "WORD(Test)\n" + " WORD(String)\n" + " SEPARATOR\n",
                 actualTokensString
             );
 
             file = "word.reference";
-            lexer = new Lexer(file);
+            fileList = new List<string>();
+            fileList.Add(file);
+            lexer = new Lexer(fileList);
             tokens = lexer.Lex();
 
-            actualTokensString = string.Join("\n", tokens) + "\n";
-            // Assert.AreEqual(
-            //   "WORD(word)\n" + "PERIOD\n" + " WORD(reference)\n" + " SEPARATOR\n",
-            //    actualTokensString
-            //  );
+            actualTokensString = "";
+            foreach (List<Token> projectFile in tokens)
+            {
+                actualTokensString += string.Join("\n", projectFile) + "\n";
+            }
+
+            Assert.AreEqual(
+               "WORD(word)\n" + " PERIOD\n" + " WORD(reference)\n" + " SEPARATOR\n",
+                actualTokensString
+              );
+
+            file = "Test String";
+            string file2 = "word.reference";
+            fileList = new List<string>();
+            fileList.Add(file);
+            fileList.Add(file2);
+            lexer = new Lexer(fileList);
+            tokens = lexer.Lex();
+
+            actualTokensString = "";
+            foreach (List<Token> projectFile in tokens)
+            {
+                actualTokensString += string.Join("\n", projectFile) + "\n";
+            }
+
+            Assert.AreEqual(
+                "WORD(Test)\n" + " WORD(String)\n" + " SEPARATOR\n" + "WORD(word)\n" + " PERIOD\n" + " WORD(reference)\n" + " SEPARATOR\n",
+                actualTokensString
+            );
         }
 
         [TestMethod]
         public void Digits()
         {
             string file = "2.22 444 888";
-            Lexer lexer = new Lexer(file);
+            List<string> fileList = new List<string>();
+            fileList.Add(file);
+            Lexer lexer = new Lexer(fileList);
             List<List<Token>> tokens = lexer.Lex();
+
+            string actualTokensString = "";
+            foreach (List<Token> projectFile in tokens)
+            {
+                actualTokensString += string.Join("\n", projectFile) + "\n";
+            }
 
             string expectedTokensString =
                 "NUMERAL(2.22)\n" + " NUMERAL(444)\n" + " NUMERAL(888)\n" + " SEPARATOR\n";
-            string actualTokensString = string.Join("\n", tokens) + "\n";
 
             Assert.AreEqual(expectedTokensString, actualTokensString);
         }
@@ -52,9 +93,17 @@ namespace TranUnitTests
         public void Comments()
         {
             string file = "{ Exercise??, I thought you said extra fries` }";
-            Lexer lexer = new Lexer(file);
+            List<string> fileList = new List<string>();
+            fileList.Add(file);
+            Lexer lexer = new Lexer(fileList);
             List<List<Token>> tokens = lexer.Lex();
-            string actualTokensString = string.Join("\n", tokens) + "\n";
+            
+            string actualTokensString = "";
+            foreach (List<Token> projectFile in tokens)
+            {
+                actualTokensString += string.Join("\n", projectFile) + "\n";
+            }
+
             Assert.AreEqual(" SEPARATOR\n", actualTokensString);
         }
 
@@ -62,11 +111,19 @@ namespace TranUnitTests
         public void Functions()
         {
             string file = "tyler(";
-            Lexer lexer = new Lexer(file);
+            List<string> fileList = new List<string>();
+            fileList.Add(file);
+            Lexer lexer = new Lexer(fileList);
             List<List<Token>> tokens = lexer.Lex();
             string expectedTokensString =
                 "FUNCTION(tyler)\n" + " OPENPARENTHESIS\n" + " SEPARATOR\n";
-            string actualTokensString = string.Join("\n", tokens) + "\n";
+
+            string actualTokensString = "";
+            foreach (List<Token> projectFile in tokens)
+            {
+                actualTokensString += string.Join("\n", projectFile) + "\n";
+            }
+
             Assert.AreEqual(expectedTokensString, actualTokensString);
         }
 
@@ -74,9 +131,17 @@ namespace TranUnitTests
         public void OneSymbols()
         {
             string file = "} ( ) = > < + ^ + - : * / % , ! \" \n \t";
-            Lexer lexer = new Lexer(file);
+            List<string> fileList = new List<string>();
+            fileList.Add(file);
+            Lexer lexer = new Lexer(fileList);
             List<List<Token>> tokens = lexer.Lex();
-            string actualTokensString = string.Join("\n", tokens) + "\n";
+
+            string actualTokensString = "";
+            foreach (List<Token> projectFile in tokens)
+            {
+                actualTokensString += string.Join("\n", projectFile) + "\n";
+            }
+
             string expectedTokensString =
                 " CLOSEDANGLEBRACKET\n"
                 + " OPENPARENTHESIS\n"
@@ -106,9 +171,17 @@ namespace TranUnitTests
         public void TwoCharacterHashmap()
         {
             string file = ">= ++ -- <= == != ^= %= *= /= += -= && || \n\t";
-            Lexer lexer = new Lexer(file);
+            List<string> fileList = new List<string>();
+            fileList.Add(file);
+            Lexer lexer = new Lexer(fileList);
             List<List<Token>> tokens = lexer.Lex();
-            string actualTokensString = string.Join("\n", tokens) + "\n";
+
+            string actualTokensString = "";
+            foreach (List<Token> projectFile in tokens)
+            {
+                actualTokensString += string.Join("\n", projectFile) + "\n";
+            }
+
             string expectedTokensString =
                 " GREATEREQUAL\n"
                 + " DOUBLEPLUS\n"
@@ -136,9 +209,16 @@ namespace TranUnitTests
             string file =
                 "if print getline nextfile function interface class string implements accessor "
                 + "loop mutator console datetime construct boolean true false shared \t \n return";
-            Lexer lexer = new Lexer(file);
+            List<string> fileList = new List<string>();
+            fileList.Add(file);
+            Lexer lexer = new Lexer(fileList);
             List<List<Token>> tokens = lexer.Lex();
-            string actualTokensString = string.Join("\n", tokens) + "\n";
+
+            string actualTokensString = "";
+            foreach (List<Token> projectFile in tokens)
+            {
+                actualTokensString += string.Join("\n", projectFile) + "\n";
+            }
 
             string expectedTokensString =
                 " IF\n"
@@ -171,7 +251,9 @@ namespace TranUnitTests
         public void Wrong()
         {
             string file = "#";
-            Lexer lexer = new Lexer(file);
+            List<string> fileList = new List<string>();
+            fileList.Add(file);
+            Lexer lexer = new Lexer(fileList);
 
             Assert.ThrowsException<ArgumentException>(
                 () => lexer.Lex(),
