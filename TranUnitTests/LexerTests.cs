@@ -44,9 +44,9 @@ namespace TranUnitTests
             }
 
             Assert.AreEqual(
-               "WORD(word)\n" + " PERIOD\n" + " WORD(reference)\n" + " SEPARATOR\n",
+                "WORD(word)\n" + " PERIOD\n" + " WORD(reference)\n" + " SEPARATOR\n",
                 actualTokensString
-              );
+            );
 
             file = "Test String";
             string file2 = "word.reference";
@@ -63,7 +63,13 @@ namespace TranUnitTests
             }
 
             Assert.AreEqual(
-                "WORD(Test)\n" + " WORD(String)\n" + " SEPARATOR\n" + "WORD(word)\n" + " PERIOD\n" + " WORD(reference)\n" + " SEPARATOR\n",
+                "WORD(Test)\n"
+                    + " WORD(String)\n"
+                    + " SEPARATOR\n"
+                    + "WORD(word)\n"
+                    + " PERIOD\n"
+                    + " WORD(reference)\n"
+                    + " SEPARATOR\n",
                 actualTokensString
             );
         }
@@ -97,7 +103,7 @@ namespace TranUnitTests
             fileList.Add(file);
             Lexer lexer = new Lexer(fileList);
             List<List<Token>> tokens = lexer.Lex();
-            
+
             string actualTokensString = "";
             foreach (List<Token> projectFile in tokens)
             {

@@ -185,7 +185,7 @@ namespace TranUnitTests
 class Tran
     helloWorld()
         x = 1 + 1".Replace("    ", "\t")
-                );
+            );
             CreateParser(programList);
             /*
             CreateParser(
@@ -214,7 +214,7 @@ class Tran
 class Tran
     helloWorld() : number retVal1, string retVal2
         x = 1 + 1".Replace("    ", "\t")
-                );
+            );
             CreateParser(programList);
             /*
             CreateParser(
@@ -254,7 +254,7 @@ class Tran
     string x
     boolean y
     character z".Replace("    ", "\t")
-                );
+            );
             CreateParser(programList);
             /*
             CreateParser(
@@ -282,7 +282,7 @@ class Tran
 class Tran
     doStuff(number param1, boolean param2)
         x = 1+1".Replace("    ", "\t")
-                );
+            );
             CreateParser(programList);
             /*
             CreateParser(
@@ -384,7 +384,7 @@ class Tran
         string y
             accessor: value = y
             mutator: y = value".Replace("    ", "\t")
-                );
+            );
             CreateParser(programList);
             /*
             CreateParser(
