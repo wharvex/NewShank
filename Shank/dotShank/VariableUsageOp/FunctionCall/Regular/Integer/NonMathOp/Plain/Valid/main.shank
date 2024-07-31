@@ -1,8 +1,19 @@
-define func(myA : integer)
-    write "myA from func: ", myA
+record Student
+    name : string
+	age : integer
+	gpa : real
+
+define studentGpaSetter(var s : Student; g : real)
+    s.gpa := g
+
+define simpleSetter(var x : integer)
+	x := 5
 
 define start()
-variables a : integer
-    a := 44
-    func a
-    write "hello from Vuop FunctionCall Regular Integer NonMathOp Plain Valid"
+variables student : Student
+variables x : integer
+    studentGpaSetter var student, 3.5
+    write "student.gpa =", student.gpa
+    x := 3
+    simpleSetter var x
+    write "x =", x

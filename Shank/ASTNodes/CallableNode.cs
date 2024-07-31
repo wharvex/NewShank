@@ -42,6 +42,8 @@ public abstract class CallableNode : ASTNode
 
     public delegate void BuiltInCall(List<InterpreterDataType> parameters);
 
+    // It is a little confusing that the type of this field is called "BuiltInCall", because this
+    // field is also used to execute non-builtin functions.
     public BuiltInCall? Execute;
 
     public bool ShouldSerializeExecute()

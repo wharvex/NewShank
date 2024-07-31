@@ -1111,9 +1111,9 @@ public class Parser
         while (!ExpectsEndOfLine())
         {
             // Check for the `var` keyword.
-            var isVariable = MatchAndRemove(Token.TokenType.Var) is not null;
+            var hasVar = MatchAndRemove(Token.TokenType.Var) is not null;
 
-            if (!isVariable)
+            if (!hasVar)
             {
                 // Require an expression.
                 var e =
@@ -1132,7 +1132,7 @@ public class Parser
                 var variable =
                     GetVariableUsageNode(moduleName)
                     ?? throw new SyntaxErrorException(
-                        "Cannot apply `var' keyword to a function argument that is not a single variable",
+                        "Cannot apply `var' keyword to a function argument that is not a single variable.",
                         Peek(0)
                     );
 

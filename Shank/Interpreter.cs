@@ -715,70 +715,6 @@ public class Interpreter
         var passed = new List<InterpreterDataType>();
         foreach (var fcp in fc.Arguments)
         {
-            //if (fcp is VariableUsagePlainNode variableUsagePlainNode)
-            //{
-            //    var name = variableUsagePlainNode.Name;
-            //    var value = variables[name];
-            //    switch (value)
-            //    {
-            //        case IntDataType intVal:
-            //            passed.Add(new IntDataType(intVal.Value));
-            //            break;
-            //        case FloatDataType floatVal:
-            //            passed.Add(new FloatDataType(floatVal.Value));
-            //            break;
-            //        case StringDataType stringVal:
-            //            passed.Add(new StringDataType(stringVal.Value));
-            //            break;
-            //        case CharDataType charVal:
-            //            passed.Add(new CharDataType(charVal.Value));
-            //            break;
-            //        case BooleanDataType boolVal:
-            //            passed.Add(new BooleanDataType(boolVal.Value));
-            //            break;
-            //        case ArrayDataType arrayVal:
-            //            AddToParamsArray(arrayVal, variableUsagePlainNode, passed, variables);
-            //            break;
-            //        case RecordDataType recordVal:
-            //            AddToParamsRecord(recordVal, variableUsagePlainNode, passed);
-            //            break;
-            //        case EnumDataType enumVal:
-            //            passed.Add(new EnumDataType(enumVal.Type, enumVal.Value));
-            //            break;
-            //        case ReferenceDataType referenceVal:
-            //            if (variableUsagePlainNode.Extension != null)
-            //            {
-            //                var vrn = ((VariableUsagePlainNode)variableUsagePlainNode.Extension);
-            //                if (referenceVal.Record is null)
-            //                    throw new Exception(
-            //                        $"{variableUsagePlainNode.Name} was never allocated."
-            //                    );
-            //                if (referenceVal.Record.Value[vrn.Name] is int)
-            //                    passed.Add(
-            //                        new IntDataType((int)referenceVal.Record.Value[vrn.Name])
-            //                    );
-            //                else if (referenceVal.Record.Value[vrn.Name] is float)
-            //                    passed.Add(
-            //                        new FloatDataType((float)referenceVal.Record.Value[vrn.Name])
-            //                    );
-            //                else if (referenceVal.Record.Value[vrn.Name] is char)
-            //                    passed.Add(
-            //                        new CharDataType((char)referenceVal.Record.Value[vrn.Name])
-            //                    );
-            //                else if (referenceVal.Record.Value[vrn.Name] is string)
-            //                    passed.Add(
-            //                        new StringDataType((string)referenceVal.Record.Value[vrn.Name])
-            //                    );
-            //                else if (referenceVal.Record.Value[vrn.Name] is float)
-            //                    passed.Add(
-            //                        new BooleanDataType((bool)referenceVal.Record.Value[vrn.Name])
-            //                    );
-            //            }
-            //            else
-            //                passed.Add(new ReferenceDataType(referenceVal));
-            //            break;
-            //    }
-            //}
             AddVunToPassedTrier addVunToPassedTrier = GetVuopTestFlag()
                 ? NewTryAddVunToPassed
                 : TryAddVunToPassed;
@@ -807,9 +743,6 @@ public class Interpreter
                         passed.Add(
                             new BooleanDataType(ResolveBool(booleanExpressionVal, variables))
                         );
-                        break;
-                    case EnumNode enumVal:
-                        // passed.Add(new EnumDataType(enumVal.Type, enumVal.Value));
                         break;
                     case MathOpNode mathVal:
                         switch (mathVal.Left)
@@ -872,25 +805,77 @@ public class Interpreter
                 .Asserts.Last()
                 .lineNum = fc.LineNum;
         }
+
+        // Execute the callee if its `Execute` field is not null.
         ((CallableNode)calledFunction).Execute?.Invoke(passed);
-        // update the variable parameters and return
+
+        //// update the variable parameters and return
+        //for (var i = 0; i < passed.Count; i++)
+        //{
+        //    // TODO: It's hard to follow what the logic is here.
+        //    if (
+        //        (
+        //            (calledFunction is BuiltInVariadicFunctionNode)
+        //            || !((CallableNode)calledFunction).ParameterVariables[i].IsConstant
+        //        ) && fc.Arguments[i] is VariableUsagePlainNode variableUsagePlainNode
+        //    )
+        //    {
+        //        // if this parameter is a "var", then copy the new value back to the parameter holder
+        //        if (variableUsagePlainNode.IsInFuncCallWithVar)
+        //            variables[variableUsagePlainNode.Name] = passed[i];
+        //    }
+        //}
+        UpdatePassedParamsPostCall(passed, (CallableNode)calledFunction, fc, variables);
+    }
+
+    private static void UpdatePassedParamsPostCall(
+        List<InterpreterDataType> passed,
+        CallableNode calledFunc,
+        FunctionCallNode theCallItself,
+        Dictionary<string, InterpreterDataType> iDTs
+    )
+    {
         for (var i = 0; i < passed.Count; i++)
         {
+            // TODO: It's hard to follow what the logic is here.
             if (
                 (
-                    (calledFunction is BuiltInVariadicFunctionNode)
-                    || !((CallableNode)calledFunction).ParameterVariables[i].IsConstant
-                ) && fc.Arguments[i] is VariableUsagePlainNode variableUsagePlainNode
+                    (calledFunc is BuiltInVariadicFunctionNode)
+                    || !calledFunc.ParameterVariables[i].IsConstant
+                ) && theCallItself.Arguments[i] is VariableUsagePlainNode variableUsagePlainNode
             )
             {
                 // if this parameter is a "var", then copy the new value back to the parameter holder
                 if (variableUsagePlainNode.IsInFuncCallWithVar)
-                    variables[variableUsagePlainNode.Name] = passed[i];
+                    iDTs[variableUsagePlainNode.Name] = passed[i];
             }
         }
     }
 
-    // TODO
+    private static void NewUpdatePassedParamsPostCall(
+        List<InterpreterDataType> passed,
+        CallableNode calledFunc,
+        FunctionCallNode theCallItself,
+        Dictionary<string, InterpreterDataType> iDTs
+    )
+    {
+        for (var i = 0; i < passed.Count; i++)
+        {
+            // TODO: It's hard to follow what the logic is here.
+            if (
+                (
+                    (calledFunc is BuiltInVariadicFunctionNode)
+                    || !calledFunc.ParameterVariables[i].IsConstant
+                ) && theCallItself.Arguments[i] is VariableUsagePlainNode variableUsagePlainNode
+            )
+            {
+                // if this parameter is a "var", then copy the new value back to the parameter holder
+                if (variableUsagePlainNode.IsInFuncCallWithVar)
+                    iDTs[variableUsagePlainNode.Name] = passed[i];
+            }
+        }
+    }
+
     private static void AddToParamsArray(
         ArrayDataType adt,
         VariableUsagePlainNode args,
