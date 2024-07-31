@@ -12,6 +12,7 @@ public class NewSemanticAnalysis
         // program.Walk(new TestVisitor());
 
         program.Walk(new InvalidRecursiveTypeChecker());
+        program.Walk(new MathOpNodeVisitor());
         program.Walk(new VariableDeclarationVisitor());
         // program.Walk(new AssignmentVisitor());
         program.Walk(new BooleanExpressionNodeVisitor());
@@ -20,9 +21,15 @@ public class NewSemanticAnalysis
         program.Walk(new FunctionCallCountVisitor());
         program.Walk(new FunctionCallTypeVisitor());
         program.Walk(new FunctionCallDefaultVisitor());
+        program.Walk(new FunctionCallDefaultVisitor());
+        program.Walk(new BuiltInFunctionCallVisitor());
         program.Walk(new ForNodeVisitor());
+        // program.Walk(new FunctionCallGenericsVariadicsVisitor());
         // program.Walk(new InfiniteLoopVisitor());
 
         program.Walk(new MathOpNodeOptimizer());
     }
+    
 }
+
+

@@ -284,7 +284,10 @@ public class CommandLineArgsParser
                     GetFiles(n) //multiple files
                         .ForEach(ip => ScanAndParse(ip, program, fakeInterpretOptions))
             );
+        
+        // TODO: ANY NEW THINGS YOU WANT TO ADD TO SEMANTIC ANALYSIS PLEASE ADD TO NEWRUNSEMANTICANALYSIS SO THAT WE CAN SWITCH OVER
         RunSemanticAnalysis(fakeInterpretOptions, program);
+        // NewRunSemanticAnalysis(options, program);
 
         if (options.UnitTest)
         {
@@ -313,43 +316,9 @@ public class CommandLineArgsParser
                     GetFiles(n) //multiple files
                         .ForEach(ip => ScanAndParse(ip, program, options))
             );
-        program.SetStartModule();
-        SemanticAnalysis.ActiveInterpretOptions = options;
-        BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
-
-        SAVisitor.ActiveInterpretOptions = options;
-        program.Walk(new ImportVisitor());
-        SemanticAnalysis.AreExportsDone = true;
-        SemanticAnalysis.AreImportsDone = true;
-
-        // This resolves unknown types.
-        //program.Walk(new RecordVisitor());
-
-        program.Walk(new UnknownTypesVisitor());
-        SemanticAnalysis.AreSimpleUnknownTypesDone = true;
-
-        // program.Walk(new TestVisitor());
-
-        // Create WalkCompliantVisitors.
-        var nuVis = new NestedUnknownTypesResolvingVisitor(SemanticAnalysis.ResolveType);
-        var vgVis = new VariablesGettingVisitor();
-        var etVis = new ExpressionTypingVisitor(SemanticAnalysis.GetTypeOfExpression)
-        {
-            ActiveInterpretOptions = options
-        };
-
-        // Apply WalkCompliantVisitors.
-        program.Walk(nuVis);
-        SemanticAnalysis.AreNestedUnknownTypesDone = true;
-        program.Walk(vgVis);
-        program.Walk(etVis);
-
-        //Run old SA.
-        OutputHelper.DebugPrintJson(program, "pre_old_sa");
-        SemanticAnalysis.CheckModules(program);
-        OutputHelper.DebugPrintJson(program, "post_old_sa");
-
-        NewSemanticAnalysis.Run(program);
+        // TODO: ANY NEW THINGS YOU WANT TO ADD TO SEMANTIC ANALYSIS PLEASE ADD TO NEWRUNSEMANTICANALYSIS SO THAT WE CAN SWITCH OVER
+        RunSemanticAnalysis(options, program);
+        // NewRunSemanticAnalysis(options, program);
 
         Interpreter.ActiveInterpretOptions = options;
         Interpreter.Modules = program.Modules;
@@ -362,25 +331,26 @@ public class CommandLineArgsParser
 
     // extract semantic analysis into one function so that both compiler and interpreter do the same thing
     // this is copied from interpreter as it seems to have had the most up to date semantic analysis at the time of doing this
+    // TODO: ANY NEW THINGS YOU WANT TO ADD TO SEMANTIC ANALYSIS PLEASE ADD TO NEWRUNSEMANTICANALYSIS SO THAT WE CAN SWITCH OVER
     private static void RunSemanticAnalysis(InterpretOptions options, ProgramNode program)
     {
         program.SetStartModule();
         SemanticAnalysis.ActiveInterpretOptions = options;
         BuiltInFunctions.Register(program.GetStartModuleSafe().Functions);
-
+        
         SAVisitor.ActiveInterpretOptions = options;
         program.Walk(new ImportVisitor());
         SemanticAnalysis.AreExportsDone = true;
         SemanticAnalysis.AreImportsDone = true;
-
+        
         // This resolves unknown types.
         //program.Walk(new RecordVisitor());
-
+        
         program.Walk(new UnknownTypesVisitor());
         SemanticAnalysis.AreSimpleUnknownTypesDone = true;
-
+        
         // program.Walk(new TestVisitor());
-
+        
         // Create WalkCompliantVisitors.
         var nuVis = new NestedUnknownTypesResolvingVisitor(SemanticAnalysis.ResolveType);
         var vgVis = new VariablesGettingVisitor();
@@ -388,19 +358,66 @@ public class CommandLineArgsParser
         {
             ActiveInterpretOptions = options
         };
-
+        
         // Apply WalkCompliantVisitors.
         program.Walk(nuVis);
         SemanticAnalysis.AreNestedUnknownTypesDone = true;
         program.Walk(vgVis);
         program.Walk(etVis);
-
+        
         //Run old SA.
         OutputHelper.DebugPrintJson(program, "pre_old_sa");
         SemanticAnalysis.CheckModules(program);
         OutputHelper.DebugPrintJson(program, "post_old_sa");
-
+        
         NewSemanticAnalysis.Run(program);
+    }
+
+    private static void NewRunSemanticAnalysis(InterpretOptions options, ProgramNode program)
+    {
+        program.SetStartModule();
+        SemanticAnalysis.ActiveInterpretOptions = options;
+        
+        SAVisitor.ActiveInterpretOptions = options;
+        
+        // Handles imports.
+        program.Walk(new ImportVisitor());
+        // This resolves unknown types.
+        program.Walk(new RecordVisitor());
+        // This resolves simple unkown types.
+        program.Walk(new UnknownTypesVisitor());
+        
+        program.Walk(new TestVisitor());
+        
+        // Create WalkCompliantVisitors.
+        var nuVis = new NestedUnknownTypesResolvingVisitor(SemanticAnalysis.ResolveType);
+        var vgVis = new VariablesGettingVisitor();
+        var etVis = new ExpressionTypingVisitor(SemanticAnalysis.GetTypeOfExpression)
+        {
+            ActiveInterpretOptions = options
+        };
+        
+        // Apply WalkCompliantVisitors.
+        program.Walk(nuVis);
+        program.Walk(vgVis);
+        program.Walk(etVis);
+        
+        // Run SAVisitors
+        program.Walk(new InvalidRecursiveTypeChecker());
+        program.Walk(new MathOpNodeVisitor()); // Comes before anything that uses it
+        program.Walk(new VariableDeclarationVisitor());// Comes before function calls
+        program.Walk(new AssignmentVisitor());
+        program.Walk(new BooleanExpressionNodeVisitor());
+        program.Walk(new BooleanExpectedVisitor());
+        program.Walk(new FunctionCallExistsVisitor()); // Has to be first function call check
+        program.Walk(new FunctionCallCountVisitor());
+        program.Walk(new FunctionCallTypeVisitor()); 
+        program.Walk(new FunctionCallDefaultVisitor()); // Comes before mutability check
+        program.Walk(new FunctionCallMutabilityVisitor());
+        program.Walk(new BuiltInFunctionCallVisitor());
+        program.Walk(new FunctionCallGenericsVariadicsVisitor());
+        program.Walk(new ForNodeVisitor());
+        program.Walk(new MathOpNodeOptimizer());
     }
 
     private static void RunCompilePractice(CompilePracticeOptions options, ProgramNode program)
