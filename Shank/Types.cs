@@ -335,13 +335,24 @@ public readonly record struct UnknownType(string TypeName, List<Type> TypeParame
 
 // Only used in semantic analysis and later
 // represents a generic type, since we don't use UnknownType is semantic analysis
-// also generics cannot have type parameters
+// also generics cannot have type parameters (no HKTs)
+// currently no generic can be the same (see comment near Equals for a reason)
 public readonly record struct GenericType(string Name) : Type
 {
     public T Accept<T>(ITypeVisitor<T> v) => v.Visit(this);
 
     public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) =>
         instantiatedGenerics.GetValueOrDefault(Name, this);
+
+    // just because a generic has the same as another generic it does not mean they are the same generic
+    // one could be from a record and on from a function ...
+    // to fix this we could add information about where the generic came from (function/record, function/record name, module name, and function overload)
+    public bool Equals(GenericType other) => false;
+
+    public override int GetHashCode()
+    {
+        return new Guid().GetHashCode();
+    }
 
     public override string ToString() => Name;
 }
@@ -399,8 +410,7 @@ public readonly record struct ReferenceType(Type Inner) : Type
                 ? instantiate
                 : throw new SemanticErrorException(
                     $"tried to use refersTo (dynamic memory management) on a non record type "
-                        + instantiate.GetType(),
-                    null
+                        + instantiate.GetType()
                 )
         );
     }
