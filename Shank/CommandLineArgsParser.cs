@@ -83,17 +83,20 @@ public class CompileOptions
         }
     }
 
-    [Option("emit-ir", HelpText = "writes IR to file")]
+    [Option(
+        "emit-llvm",
+        HelpText = "writes LLVM IR to a file you provide with -o dir it saves to is /Shank-IR/ doesnt"
+    )]
     public bool emitIR { get; set; }
 
     [Option(
         'a',
         "assembly",
-        HelpText = "option to generate a assembly file appears in /Shank-assembly/ directory"
+        HelpText = "option to generate an assembly file. appears in /Shank-Assembly/ directory -target is how you add a specific one"
     )]
     public bool Assembly { get; set; }
 
-    [Option("print-ir", HelpText = "prints IR code gen in console appears in /Shank-IR/ directory")]
+    [Option("print-llvm", HelpText = "prints LLVM IR to the console")]
     public bool printIR { get; set; }
 
     [Option(
@@ -106,7 +109,7 @@ public class CompileOptions
 
     [Option(
         "linker",
-        HelpText = "add whatever linker you feel if non specified it defaults to the GNU linker (ld)",
+        HelpText = "add whatever linker you feel if non specified it defaults to clang",
         Default = "clang"
     )]
     public string LinkerOption { get; set; }
