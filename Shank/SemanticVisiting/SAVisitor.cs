@@ -577,7 +577,7 @@ public class RecordVisitor : SAVisitor
     public override ASTNode? Visit(RecordNode node)
     {
         List<string> usedGenerics = [];
-                var genericContext = new RecordGenericContext(node.Name, node.GetParentModuleSafe());
+        var genericContext = new RecordGenericContext(node.Name, node.GetParentModuleSafe());
         node.Type.Fields = node.Type.Fields.Select(field =>
         {
             return KeyValuePair.Create(
@@ -586,11 +586,11 @@ public class RecordVisitor : SAVisitor
                     field.Value,
                     module,
                     node.GenericTypeParameterNames,
-                                generic =>
-                                {
-                                    usedGenerics.Add(generic);
-                                    return new GenericType(generic, genericContext);
-                                }
+                    generic =>
+                    {
+                        usedGenerics.Add(generic);
+                        return new GenericType(generic, genericContext);
+                    }
                 )
             );
         })
@@ -614,16 +614,28 @@ public class UnknownTypesVisitor : SAVisitor
     public override ASTNode? Visit(ModuleNode node)
     {
         currentModule = node;
-        CheckVariables(currentModule.GlobalVariables.Values.ToList(), currentModule, [], new DummyGenericContext());
+        CheckVariables(
+            currentModule.GlobalVariables.Values.ToList(),
+            currentModule,
+            [],
+            new DummyGenericContext()
+        );
         return null;
     }
 
     public override ASTNode? Visit(FunctionNode node)
     {
-
-        var genericContext = new FunctionGenericContext(node.Name, currentModule.Name, 
-                    node.Overload);
-        CheckVariables(node.LocalVariables, currentModule, node.GenericTypeParameterNames, genericContext);
+        var genericContext = new FunctionGenericContext(
+            node.Name,
+            currentModule.Name,
+            node.Overload
+        );
+        CheckVariables(
+            node.LocalVariables,
+            currentModule,
+            node.GenericTypeParameterNames,
+            genericContext
+        );
         node.LocalVariables.ForEach(vdn => OutputHelper.DebugPrintJson(vdn, vdn.Name ?? "null"));
         var generics = node.GenericTypeParameterNames;
         List<string> usedGenerics = [];
@@ -634,10 +646,10 @@ public class UnknownTypesVisitor : SAVisitor
                 variable.Type,
                 currentModule,
                 generics,
-                 generic =>
+                generic =>
                 {
-                            usedGenerics.Add(generic);
-                            return  new GenericType(generic, genericContext);
+                    usedGenerics.Add(generic);
+                    return new GenericType(generic, genericContext);
                 }
             );
         }
@@ -698,7 +710,12 @@ public class UnknownTypesVisitor : SAVisitor
             }
             else
             {
-                variable.Type = ResolveType(variable.Type, currentModule, generics, generic => new GenericType(generic, genericInfo));
+                variable.Type = ResolveType(
+                    variable.Type,
+                    currentModule,
+                    generics,
+                    generic => new GenericType(generic, genericInfo)
+                );
             }
         }
     }
@@ -1294,21 +1311,20 @@ public class BooleanExpressionNodeVisitor : SAVisitor
     }
 }
 
-
 public class NewFunctionCallVisitor : FunctionCallVisitor
 {
-        public override ASTNode? Visit(FunctionCallNode node)
-        {
-            // look up the function
-            var function = Functions.GetValueOrDefault(node.Name) ??
-                          BuiltIns.GetValueOrDefault(node.Name) ?? throw new SemanticErrorException($"Function {node.Name} not found", node);
-                    CheckFunctionCall(node, function);
-            return null;
-        }
-    private  void CheckFunctionCall(
-        FunctionCallNode functionCallNode,
-        CallableNode function
-    )
+    public override ASTNode? Visit(FunctionCallNode node)
+    {
+        // look up the function
+        var function =
+            Functions.GetValueOrDefault(node.Name)
+            ?? BuiltIns.GetValueOrDefault(node.Name)
+            ?? throw new SemanticErrorException($"Function {node.Name} not found", node);
+        CheckFunctionCall(node, function);
+        return null;
+    }
+
+    private void CheckFunctionCall(FunctionCallNode functionCallNode, CallableNode function)
     {
         functionCallNode.FunctionDefinitionModule = function.parentModuleName;
         switch (function)
@@ -1354,7 +1370,8 @@ public class NewFunctionCallVisitor : FunctionCallVisitor
                             functionCallNode
                         ),
                     // if there is only a single overload, then great we found the correct overload
-                    [var validOverload] => validOverload,
+                    [var validOverload]
+                        => validOverload,
                     // if there are many overloads that are correct, then we cannot determine which one is the most correct, so we spit out the list of all the valid overloads
                     var validOverloads
                         => throw new SemanticErrorException(
@@ -1378,11 +1395,7 @@ public class NewFunctionCallVisitor : FunctionCallVisitor
                     if (
                         functionCallNode.Arguments.Find(
                             node =>
-                                node
-                                    is not VariableUsageNodeTemp
-                                    {
-                                        NewIsInFuncCallWithVar: true
-                                    }
+                                node is not VariableUsageNodeTemp { NewIsInFuncCallWithVar: true }
                         ) is
                         { } badArgument
                     )
@@ -1407,7 +1420,8 @@ public class NewFunctionCallVisitor : FunctionCallVisitor
                 break;
         }
     }
-    private  Dictionary<string, Type> CheckIndividualFunctionCall(
+
+    private Dictionary<string, Type> CheckIndividualFunctionCall(
         FunctionCallNode functionCallNode,
         CallableNode fn
     )
@@ -1420,9 +1434,8 @@ public class NewFunctionCallVisitor : FunctionCallVisitor
         if (
             args.Count
             != fn.ParameterVariables.Count
-                - fn.ParameterVariables
-                .Take(args.Count)
-                .Count(parameter => parameter.IsDefaultValue)
+                - fn.ParameterVariables.Take(args.Count)
+                    .Count(parameter => parameter.IsDefaultValue)
         )
             throw new SemanticErrorException(
                 "For function "
@@ -1440,7 +1453,7 @@ public class NewFunctionCallVisitor : FunctionCallVisitor
                 var param = paramAndArg.First;
                 var argument = paramAndArg.Second;
                 CheckParameterMutability(param, argument, functionCallNode);
-                return TypeCheckAndInstantiateGenericParameter(param, argument , fn);
+                return TypeCheckAndInstantiateGenericParameter(param, argument, fn);
             })
             .Distinct();
 
@@ -1456,122 +1469,127 @@ public class NewFunctionCallVisitor : FunctionCallVisitor
 
         return dictionary;
     }
-    private  IEnumerable<(string, Type)> TypeCheckAndInstantiateGenericParameter(
-            VariableDeclarationNode param,
-            ExpressionNode argument,
-            CallableNode fn
+
+    private IEnumerable<(string, Type)> TypeCheckAndInstantiateGenericParameter(
+        VariableDeclarationNode param,
+        ExpressionNode argument,
+        CallableNode fn
+    )
+    {
+        // check that the argument passed in has the right type for its parameter
+        // and also if the parameter has any generics try to instate them
+        SemanticAnalysis.CheckRange(param.Name!, param.Type, argument, Variables);
+
+        if (
+            param.Type is EnumType e
+            && argument is VariableUsagePlainNode v
+            && e.Variants.Contains(v.Name)
         )
         {
-            // check that the argument passed in has the right type for its parameter
-            // and also if the parameter has any generics try to instate them
-            SemanticAnalysis.CheckRange(param.Name!, param.Type, argument, Variables);
-    
-            if (
-                param.Type is EnumType e
-                && argument is VariableUsagePlainNode v
-                && e.Variants.Contains(v.Name)
-            )
+            if (v.ExtensionType != VariableUsagePlainNode.VrnExtType.None)
             {
-                if (v.ExtensionType != VariableUsagePlainNode.VrnExtType.None)
-                {
-                    throw new SemanticErrorException($"ambiguous variable name {v.Name}", argument);
-                }
-    
-                argument.Type = param.Type;
-                return [];
+                throw new SemanticErrorException($"ambiguous variable name {v.Name}", argument);
             }
-    
-            var expressionType = GetTypeOfExpression(argument, Variables);
-            argument.Type = argument.Type is DefaultType ? expressionType : argument.Type;
-            return !param.Type.Equals(expressionType)
-                ?
-                // infer instantiated type
-                MatchTypes(param.Type, expressionType)
-                    .ValueOr(
-                        () =>
-                            throw new SemanticErrorException(
-                                $"Type mismatch cannot pass to {param.Name!}: {param.Type} {argument}: {expressionType}",
-                                argument
-                            )
-                    )
-                : [];
-    
-            // match types given two types (the is first the parameter type, the second is the argument type) attempts to find a substitution for the generics in the parameter type to new types given the fact that the parameter type is a more specific version of the arugment type
-            Option<IEnumerable<(string, Type)>> MatchTypes(Type paramType, Type type) =>
-                (paramType, type) switch
-                {
-                    // if we have some generic type we create a substitution that maps to the generic type to the type (base case)
-                    (GenericType g, _) => MatchTypesGeneric(g, type),
-                    // you cannot pass as a parameter a more general type that corresponds to an argument with a more specific type
-                    // we know this is a more general argument because the case above catches all generic parameters (even ones with a generic argument)
-                    (_, GenericType) => Option.None<IEnumerable<(string, Type)>>(),
-                    // if we have a reference type and a another reference type we just unify their inner types
-                    (ReferenceType param, ReferenceType arg) => MatchTypes(param.Inner, arg.Inner),
-                    // // an instantiated type holds two things the actual types and the actual types for any generics in the actual type
-                    // to find the substitution for tow instantiated types we first verify that they are the same underlying type the `where ... Equals ...`
-                    (InstantiatedType param, InstantiatedType arg) when arg.Inner.Equals(param.Inner)
-                        => MatchTypesInstantiated(param, arg),
-                    // TODO: validate ranges
-                    // same as ReferenceType but for arrays
-                    (ArrayType param, ArrayType arg) => MatchTypes(param.Inner, arg.Inner),
-                    ({ } a, { } b)
-                        => Option.Some(Enumerable.Empty<(string, Type)>()).Filter(a.Equals(b))
-                };
-    
-            Option<IEnumerable<(string, Type)>> MatchTypesGeneric(GenericType g, Type type) =>
-                Option.Some(Enumerable.Repeat((g.Name, type), 1));
-    
-            Option<IEnumerable<(string, Type)>> MatchTypesInstantiated(
-                InstantiatedType paramType,
-                InstantiatedType type
-            ) =>
-                paramType
-                    .InstantiatedGenerics.Values.Zip(type.InstantiatedGenerics.Values)
-                    .Select(pair => MatchTypes(pair.Item1, pair.Item2))
-                    .Aggregate((first, second) => first.FlatMap(f => second.Map(f.Union)));
+
+            argument.Type = param.Type;
+            return [];
         }
-    // assumptions if the arguement is a variable it assumed to be there already from previous check in check function call
-        private void CheckParameterMutability(
-            VariableDeclarationNode param,
-            ExpressionNode argument,
-            FunctionCallNode fn
-        )
-        {
-            // check that the argument passed in has the right type of mutability for its parameter
-            if (argument is  VariableUsageNodeTemp variableUsageNodeTemp)
+
+        var expressionType = GetTypeOfExpression(argument, Variables);
+        argument.Type = argument.Type is DefaultType ? expressionType : argument.Type;
+        return !param.Type.Equals(expressionType)
+            ?
+            // infer instantiated type
+            MatchTypes(param.Type, expressionType)
+                .ValueOr(
+                    () =>
+                        throw new SemanticErrorException(
+                            $"Type mismatch cannot pass to {param.Name!}: {param.Type} {argument}: {expressionType}",
+                            argument
+                        )
+                )
+            : [];
+
+        // match types given two types (the is first the parameter type, the second is the argument type) attempts to find a substitution for the generics in the parameter type to new types given the fact that the parameter type is a more specific version of the arugment type
+        Option<IEnumerable<(string, Type)>> MatchTypes(Type paramType, Type type) =>
+            (paramType, type) switch
             {
-                var lookedUpArgument = Variables[variableUsageNodeTemp.GetPlain().Name];
-                if (!variableUsageNodeTemp.NewIsInFuncCallWithVar && !param.IsConstant)
-                {
-                    throw new SemanticErrorException(
-                        $"cannot pass non var argument when you annotate an argument var",
-                        fn
-                    );
-                }
-                else if (param.IsConstant && variableUsageNodeTemp.NewIsInFuncCallWithVar)
-                {
-                    throw new SemanticErrorException(
-                        $"unused var annotation: argument marked as var, but parameter is not marked as var",
-                        fn
-                    );
-                }
-                else if (!param.IsConstant && variableUsageNodeTemp.NewIsInFuncCallWithVar && lookedUpArgument.IsConstant)
-                {
-                    
-                    throw new SemanticErrorException(
-                        $"you tried to annotate an argument var, even though the variable referenced was not mutable",
-                        fn
-                    );
-                }
-            }
-            else if (!param.IsConstant)
+                // if we have some generic type we create a substitution that maps to the generic type to the type (base case)
+                (GenericType g, _) => MatchTypesGeneric(g, type),
+                // you cannot pass as a parameter a more general type that corresponds to an argument with a more specific type
+                // we know this is a more general argument because the case above catches all generic parameters (even ones with a generic argument)
+                (_, GenericType) => Option.None<IEnumerable<(string, Type)>>(),
+                // if we have a reference type and a another reference type we just unify their inner types
+                (ReferenceType param, ReferenceType arg) => MatchTypes(param.Inner, arg.Inner),
+                // // an instantiated type holds two things the actual types and the actual types for any generics in the actual type
+                // to find the substitution for tow instantiated types we first verify that they are the same underlying type the `where ... Equals ...`
+                (InstantiatedType param, InstantiatedType arg) when arg.Inner.Equals(param.Inner)
+                    => MatchTypesInstantiated(param, arg),
+                // TODO: validate ranges
+                // same as ReferenceType but for arrays
+                (ArrayType param, ArrayType arg) => MatchTypes(param.Inner, arg.Inner),
+                ({ } a, { } b)
+                    => Option.Some(Enumerable.Empty<(string, Type)>()).Filter(a.Equals(b))
+            };
+
+        Option<IEnumerable<(string, Type)>> MatchTypesGeneric(GenericType g, Type type) =>
+            Option.Some(Enumerable.Repeat((g.Name, type), 1));
+
+        Option<IEnumerable<(string, Type)>> MatchTypesInstantiated(
+            InstantiatedType paramType,
+            InstantiatedType type
+        ) =>
+            paramType
+                .InstantiatedGenerics.Values.Zip(type.InstantiatedGenerics.Values)
+                .Select(pair => MatchTypes(pair.Item1, pair.Item2))
+                .Aggregate((first, second) => first.FlatMap(f => second.Map(f.Union)));
+    }
+
+    // assumptions if the arguement is a variable it assumed to be there already from previous check in check function call
+    private void CheckParameterMutability(
+        VariableDeclarationNode param,
+        ExpressionNode argument,
+        FunctionCallNode fn
+    )
+    {
+        // check that the argument passed in has the right type of mutability for its parameter
+        if (argument is VariableUsageNodeTemp variableUsageNodeTemp)
+        {
+            var lookedUpArgument = Variables[variableUsageNodeTemp.GetPlain().Name];
+            if (!variableUsageNodeTemp.NewIsInFuncCallWithVar && !param.IsConstant)
             {
                 throw new SemanticErrorException(
-                    $"cannot pass non var argument when function is expecting it to be var",
+                    $"cannot pass non var argument when you annotate an argument var",
+                    fn
+                );
+            }
+            else if (param.IsConstant && variableUsageNodeTemp.NewIsInFuncCallWithVar)
+            {
+                throw new SemanticErrorException(
+                    $"unused var annotation: argument marked as var, but parameter is not marked as var",
+                    fn
+                );
+            }
+            else if (
+                !param.IsConstant
+                && variableUsageNodeTemp.NewIsInFuncCallWithVar
+                && lookedUpArgument.IsConstant
+            )
+            {
+                throw new SemanticErrorException(
+                    $"you tried to annotate an argument var, even though the variable referenced was not mutable",
                     fn
                 );
             }
         }
+        else if (!param.IsConstant)
+        {
+            throw new SemanticErrorException(
+                $"cannot pass non var argument when function is expecting it to be var",
+                fn
+            );
+        }
+    }
 }
 
 public class FunctionCallVisitor : SAVisitor
@@ -1697,22 +1715,24 @@ public class FunctionCallDefaultVisitor : FunctionCallVisitor
 {
     public override ASTNode? Visit(FunctionCallNode node)
     {
-            // Adds the default values to the funciton call to help with the compiler
-            var function = Functions.GetValueOrDefault(node.Name) ??
-                          BuiltIns.GetValueOrDefault(node.Name) ?? throw new SemanticErrorException($"Function {node.Name} not found", node);
-            if (function is OverloadedFunctionNode overloads)
+        // Adds the default values to the funciton call to help with the compiler
+        var function =
+            Functions.GetValueOrDefault(node.Name)
+            ?? BuiltIns.GetValueOrDefault(node.Name)
+            ?? throw new SemanticErrorException($"Function {node.Name} not found", node);
+        if (function is OverloadedFunctionNode overloads)
+        {
+            function = overloads.Overloads[node.Overload];
+        }
+        if (function.ParameterVariables.Count - node.Arguments.Count > 0)
+        {
+            for (int i = node.Arguments.Count; i < function.ParameterVariables.Count; i++)
             {
-                function = overloads.Overloads[node.Overload];
+                node.Arguments.Add((ExpressionNode)function.ParameterVariables[i].InitialValue);
             }
-            if (function.ParameterVariables.Count - node.Arguments.Count > 0)
-            {
-                for (int i = node.Arguments.Count; i < function.ParameterVariables.Count; i++)
-                {
-                    node.Arguments.Add((ExpressionNode)function.ParameterVariables[i].InitialValue);
-                }
-            }
+        }
 
-            return null;
+        return null;
     }
 }
 

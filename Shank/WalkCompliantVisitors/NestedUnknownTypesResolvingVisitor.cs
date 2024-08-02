@@ -43,7 +43,7 @@ public class NestedUnknownTypesResolvingVisitor : WalkCompliantVisitor
     {
         shortCircuit = false;
 
-                var genericContext = new RecordGenericContext(n.Name, n.GetParentModuleSafe());
+        var genericContext = new RecordGenericContext(n.Name, n.GetParentModuleSafe());
         // This is adapted from SemanticAnalysis.AssignNestedTypes
         List<string> usedGenerics = [];
         n.Type.Fields = n.Type.Fields.Select(
@@ -54,13 +54,11 @@ public class NestedUnknownTypesResolvingVisitor : WalkCompliantVisitor
                         fieldKvp.Value,
                         CurrentModule,
                         n.GenericTypeParameterNames,
-
-                                generic =>
-                                {
-                                    usedGenerics.Add(generic);
-                                    return new GenericType(generic, genericContext);
-                                }
-
+                        generic =>
+                        {
+                            usedGenerics.Add(generic);
+                            return new GenericType(generic, genericContext);
+                        }
                     )
                 )
         )

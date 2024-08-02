@@ -183,7 +183,8 @@ public class VunVsTypeCheckingVisitor(Type t, Dictionary<string, VariableDeclara
         switch (vun)
         {
             case VariableUsageIndexNode i:
-                var at =  CheckingType switch {
+                var at = CheckingType switch
+                {
                     ArrayType arrRet => arrRet,
                     ReferenceType(Inner: ArrayType arrRet) => arrRet,
                     _

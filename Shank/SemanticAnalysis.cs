@@ -449,9 +449,8 @@ public class SemanticAnalysis
         if (
             args.Count
             != fn.ParameterVariables.Count
-                - fn.ParameterVariables
-                .Take(args.Count)
-                .Count(parameter => parameter.IsDefaultValue)
+                - fn.ParameterVariables.Take(args.Count)
+                    .Count(parameter => parameter.IsDefaultValue)
         )
             throw new SemanticErrorException(
                 "For function "
@@ -473,10 +472,9 @@ public class SemanticAnalysis
             })
             .Distinct();
 
-        return selectMany
-                .GroupBy(pair => pair.Item1)
-                .FirstOrDefault(group => group.Count() > 1)
-            is { } bad
+        return
+            selectMany.GroupBy(pair => pair.Item1).FirstOrDefault(group => group.Count() > 1)
+                is { } bad
             ? throw new SemanticErrorException(
                 $"generic {bad.Key} cannot match {string.Join(" and ", bad.Select(ty => ty.Item2))}",
                 functionCallNode
@@ -569,7 +567,7 @@ public class SemanticAnalysis
     )
     {
         // check that the argument passed in has the right type of mutability for its parameter
-        if (argument is  VariableUsageNodeTemp variableUsageNodeTemp)
+        if (argument is VariableUsageNodeTemp variableUsageNodeTemp)
         {
             var lookedUpArgument = variables[variableUsageNodeTemp.GetPlain().Name];
             if (!variableUsageNodeTemp.NewIsInFuncCallWithVar && !param.IsConstant)
@@ -588,9 +586,12 @@ public class SemanticAnalysis
                 );
             }
 
-            if (!param.IsConstant && variableUsageNodeTemp.NewIsInFuncCallWithVar && lookedUpArgument.IsConstant)
+            if (
+                !param.IsConstant
+                && variableUsageNodeTemp.NewIsInFuncCallWithVar
+                && lookedUpArgument.IsConstant
+            )
             {
-                
                 throw new SemanticErrorException(
                     $"you tried to annotate an argument var, even though the variable referenced was not mutable",
                     fn
@@ -1332,9 +1333,7 @@ public class SemanticAnalysis
     {
         foreach (var currentModule in Modules.Values)
         {
-            foreach (
-                var function in currentModule.getFunctions().Values
-            )
+            foreach (var function in currentModule.getFunctions().Values)
             {
                 CheckVariables(
                     currentModule.GlobalVariables.Values.ToList(),
@@ -1346,7 +1345,6 @@ public class SemanticAnalysis
                 {
                     foreach (var overload in overloads.Overloads.Values)
                     {
-                                        
                         GetUnknownTypesForFunction(overload, currentModule);
                     }
                 }
@@ -1366,8 +1364,11 @@ public class SemanticAnalysis
         }
 
         var currentFunction = (FunctionNode)function;
-        var genericContext = new FunctionGenericContext(currentFunction.Name, currentModule.Name, 
-            currentFunction.Overload);
+        var genericContext = new FunctionGenericContext(
+            currentFunction.Name,
+            currentModule.Name,
+            currentFunction.Overload
+        );
         CheckVariables(
             currentFunction.LocalVariables,
             currentModule,
@@ -1389,7 +1390,7 @@ public class SemanticAnalysis
                 generic =>
                 {
                     usedGenerics.Add(generic);
-                    return  new GenericType(generic, genericContext);
+                    return new GenericType(generic, genericContext);
                 }
             );
         }
@@ -1449,7 +1450,12 @@ public class SemanticAnalysis
             }
             else
             {
-                variable.Type = ResolveType(variable.Type, currentModule, generics, generic => new GenericType(generic, genericInfo));
+                variable.Type = ResolveType(
+                    variable.Type,
+                    currentModule,
+                    generics,
+                    generic => new GenericType(generic, genericInfo)
+                );
             }
         }
     }
@@ -1467,7 +1473,10 @@ public class SemanticAnalysis
             foreach (var record in module.Records.Values)
             {
                 List<string> usedGenerics = [];
-                var genericContext = new RecordGenericContext(record.Name, record.GetParentModuleSafe());
+                var genericContext = new RecordGenericContext(
+                    record.Name,
+                    record.GetParentModuleSafe()
+                );
                 record.Type.Fields = record
                     .Type.Fields.Select(field =>
                     {

@@ -58,17 +58,23 @@ public class VariablesGettingVisitor : WalkCompliantVisitor
         shortCircuit = false;
         return n;
     }
+
     public override ASTNode? Visit(VariableDeclarationNode n)
     {
         if (
-            VariableDeclarations.TryGetValue((CurrentModuleName, CurrentFunctionName, CurrentFunctionOverload), out var vDex)
+            VariableDeclarations.TryGetValue(
+                (CurrentModuleName, CurrentFunctionName, CurrentFunctionOverload),
+                out var vDex
+            )
         )
         {
             vDex.Add(n);
         }
         else
         {
-            VariableDeclarations[(CurrentModuleName, CurrentFunctionName, CurrentFunctionOverload)] = [n];
+            VariableDeclarations[
+                (CurrentModuleName, CurrentFunctionName, CurrentFunctionOverload)
+            ] = [n];
         }
 
         return n;
@@ -77,14 +83,19 @@ public class VariablesGettingVisitor : WalkCompliantVisitor
     public override ASTNode Visit(VariableDeclarationNode n, out bool shortCircuit)
     {
         if (
-            VariableDeclarations.TryGetValue((CurrentModuleName, CurrentFunctionName, CurrentFunctionOverload), out var vDex)
+            VariableDeclarations.TryGetValue(
+                (CurrentModuleName, CurrentFunctionName, CurrentFunctionOverload),
+                out var vDex
+            )
         )
         {
             vDex.Add(n);
         }
         else
         {
-            VariableDeclarations[(CurrentModuleName, CurrentFunctionName, CurrentFunctionOverload)] = [n];
+            VariableDeclarations[
+                (CurrentModuleName, CurrentFunctionName, CurrentFunctionOverload)
+            ] = [n];
         }
 
         shortCircuit = true;

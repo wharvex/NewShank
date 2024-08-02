@@ -33,6 +33,7 @@ public class WalkCompliantVisitor
     }
 
     public virtual ASTNode Final(OverloadedFunctionNode n) => n;
+
     public virtual ASTNode? Visit(BuiltInFunctionNode n) => null;
 
     public virtual ASTNode Visit(BuiltInFunctionNode n, out bool shortCircuit)

@@ -31,7 +31,6 @@ public class OverloadedFunctionNode(
 
     public override ASTNode Walk(WalkCompliantVisitor v)
     {
-        
         var ret = v.Visit(this, out var shortCircuit);
         if (shortCircuit)
         {
@@ -39,7 +38,6 @@ public class OverloadedFunctionNode(
         }
 
         Overloads = Overloads.WalkDictionary(v);
-
 
         return v.Final(this);
     }

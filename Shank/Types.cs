@@ -339,10 +339,14 @@ public readonly record struct UnknownType(string TypeName, List<Type> TypeParame
 #pragma warning disable IDE1006 // Naming Styles
 public interface GenericContext;
 #pragma warning restore IDE1006 // Naming Styles
-public record FunctionGenericContext(string Function, string Module, TypeIndex Overload) : GenericContext;
+public record FunctionGenericContext(string Function, string Module, TypeIndex Overload)
+    : GenericContext;
+
 public record RecordGenericContext(string Record, string Module) : GenericContext;
+
 // dummy context is needed for having context for global variables, which do not have generics so this just needed as placeholder and never actually gets used, but some functions require a generic context
 public record DummyGenericContext : GenericContext;
+
 // Only used in semantic analysis and later
 // represents a generic type, since we don't use UnknownType is semantic analysis
 // also generics cannot have type parameters (no HKTs)
@@ -355,7 +359,6 @@ public readonly record struct GenericType(string Name, GenericContext Context) :
 
     public override string ToString() => Name;
 }
-
 
 // Only used in semantic analysis and later
 // what is this and why do we need it?

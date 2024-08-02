@@ -757,7 +757,10 @@ public class SemanticAnalysisVisitor : Visitor
         {
             foreach (var record in module.Records.Values)
             {
-                var genericContext = new RecordGenericContext(record.Name, record.GetParentModuleSafe());
+                var genericContext = new RecordGenericContext(
+                    record.Name,
+                    record.GetParentModuleSafe()
+                );
                 List<string> usedGenerics = [];
                 record.Type.Fields = record
                     .Type.Fields.Select(field =>
@@ -877,33 +880,33 @@ public class SemanticAnalysisVisitor : Visitor
     {
         foreach (KeyValuePair<string, ModuleNode> currentModule in Modules)
         {
-                CheckVariables(
-                    currentModule.Value.GlobalVariables.Values.ToList(),
-                    currentModule.Value,
-                    [], new DummyGenericContext()
-                );
-            foreach (
-                var function in currentModule.Value.getFunctions()
-            )
+            CheckVariables(
+                currentModule.Value.GlobalVariables.Values.ToList(),
+                currentModule.Value,
+                [],
+                new DummyGenericContext()
+            );
+            foreach (var function in currentModule.Value.getFunctions())
             {
                 if (function.Value is OverloadedFunctionNode overloads)
                 {
                     foreach (var overload in overloads.Overloads.Values)
                     {
-                        
-                    HandleUnknownTypesOfFunction(overload, currentModule.Value);
+                        HandleUnknownTypesOfFunction(overload, currentModule.Value);
                     }
                 }
                 else
                 {
                     HandleUnknownTypesOfFunction(function.Value, currentModule.Value);
                 }
-
             }
         }
     }
 
-    private static void HandleUnknownTypesOfFunction(CallableNode function, ModuleNode currentModule)
+    private static void HandleUnknownTypesOfFunction(
+        CallableNode function,
+        ModuleNode currentModule
+    )
     {
         if (function is BuiltInFunctionNode)
         {
@@ -911,8 +914,11 @@ public class SemanticAnalysisVisitor : Visitor
         }
 
         var currentFunction = (FunctionNode)function;
-        var genericContext = new FunctionGenericContext(currentFunction.Name,  currentFunction.parentModuleName, 
-            currentFunction.Overload);
+        var genericContext = new FunctionGenericContext(
+            currentFunction.Name,
+            currentFunction.parentModuleName,
+            currentFunction.Overload
+        );
         CheckVariables(
             currentFunction.LocalVariables,
             currentModule,
@@ -934,9 +940,8 @@ public class SemanticAnalysisVisitor : Visitor
                 generic =>
                 {
                     usedGenerics.Add(generic);
-                    return  new GenericType(generic, genericContext);
+                    return new GenericType(generic, genericContext);
                 }
-
             );
         }
 
@@ -995,7 +1000,12 @@ public class SemanticAnalysisVisitor : Visitor
             }
             else
             {
-                variable.Type = ResolveType(variable.Type, currentModule, generics, generic => new GenericType(generic, genericInfo));
+                variable.Type = ResolveType(
+                    variable.Type,
+                    currentModule,
+                    generics,
+                    generic => new GenericType(generic, genericInfo)
+                );
             }
         }
     }
