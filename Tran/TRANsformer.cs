@@ -46,7 +46,7 @@ namespace Tran
                         else if (statement.GetType() == typeof(FunctionCallNode))
                         {
                             var call = (FunctionCallNode)statement;
-                            for(int i = 0; i < call.Arguments.Count; i++)
+                            for (int i = 0; i < call.Arguments.Count; i++)
                             {
                                 if (call.Arguments[i].Type is UnknownType)
                                 {

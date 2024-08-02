@@ -171,7 +171,13 @@ public class Parser
             {
                 property.LocalVariables.Add(value);
                 property.VariablesInScope.Add(value.Name!, value);
-                var retVal = new VariableDeclarationNode(false, variable.Type, "retVal", thisClass.Name, false);
+                var retVal = new VariableDeclarationNode(
+                    false,
+                    variable.Type,
+                    "retVal",
+                    thisClass.Name,
+                    false
+                );
                 property.ParameterVariables.Add(retVal);
             }
             else
