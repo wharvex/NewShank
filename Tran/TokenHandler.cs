@@ -9,7 +9,6 @@ public class TokenHandler
     private List<Token> tokens;
     private int currentIndex;
 
-
     public TokenHandler(List<Token> tokens)
     {
         this.tokens = tokens;
@@ -77,6 +76,7 @@ public class TokenHandler
         }
         return tokens[currentIndex++];
     }
+
     //to debug
     public void PrintToken(Token token)
     {

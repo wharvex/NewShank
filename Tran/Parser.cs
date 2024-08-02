@@ -77,60 +77,56 @@ public class Parser
 
         handler = new TokenHandler(allTokens);
         AcceptSeparators();
-            if (!ParseInterface() && !ParseClass())
-            {
-                throw new Exception("No class or interface declaration found in file");
-            }
+        if (!ParseInterface() && !ParseClass())
+        {
+            throw new Exception("No class or interface declaration found in file");
+        }
 
+        AcceptSeparators();
+        while (handler.MoreTokens())
+        {
             AcceptSeparators();
-            while (handler.MoreTokens())
+
+            if (ParseField() || ParseFunction())
             {
                 AcceptSeparators();
-                if (ParseClass() || ParseInterface())
-                {
-                    AcceptSeparators();
-                    blockLevel++;
-                }
-                if (ParseField() || ParseFunction())
-                {
-                    AcceptSeparators();
-                    continue;
-                }
-                throw new Exception("Statement is not a function or field");
+                continue;
             }
-            thisClass.ExportTargetNames = sharedNames;
-            thisClass.UpdateExports();
+            throw new Exception("Statement is not a function or field");
+        }
+        thisClass.ExportTargetNames = sharedNames;
+        thisClass.UpdateExports();
 
-            RecordNode? record = new RecordNode(thisClass.Name, thisClass.Name, members, null);
-            thisClass.AddRecord(record);
-            program.AddToModules(thisClass);
+        RecordNode? record = new RecordNode(thisClass.Name, thisClass.Name, members, null);
+        thisClass.AddRecord(record);
+        program.AddToModules(thisClass);
 
-            foreach (FunctionNode function in thisClass.Functions.Values)
+        foreach (FunctionNode function in thisClass.Functions.Values)
+        {
+            foreach (var member in record.Members)
             {
-                foreach (var member in record.Members)
-                {
-                    function.LocalVariables.Add(
-                        new VariableDeclarationNode(
-                            false,
-                            member.Type,
-                            member.Name,
-                            thisClass.Name,
-                            false
-                        )
-                    );
-                    function.VariablesInScope.Add(
+                function.LocalVariables.Add(
+                    new VariableDeclarationNode(
+                        false,
+                        member.Type,
                         member.Name,
-                        new VariableDeclarationNode(
-                            false,
-                            member.Type,
-                            member.Name,
-                            thisClass.Name,
-                            false
-                        )
-                    );
-                }
+                        thisClass.Name,
+                        false
+                    )
+                );
+                function.VariablesInScope.Add(
+                    member.Name,
+                    new VariableDeclarationNode(
+                        false,
+                        member.Type,
+                        member.Name,
+                        thisClass.Name,
+                        false
+                    )
+                );
             }
-            blockLevel--;
+        }
+        blockLevel--;
 
         return program;
     }
@@ -520,7 +516,7 @@ public class Parser
                     // Return the 'IF' node with 'ELSE IF' or 'ELSE'
                     return new IfNode(
                         condition
-                        ?? throw new InvalidOperationException("In ParseIf, condition is null"),
+                            ?? throw new InvalidOperationException("In ParseIf, condition is null"),
                         block,
                         nextIf
                     );
@@ -531,7 +527,7 @@ public class Parser
                 // return new IfNode(condition, block, new IfNode(elseBlock));
                 return new IfNode(
                     condition
-                    ?? throw new InvalidOperationException("In ParseIf, condition is null"),
+                        ?? throw new InvalidOperationException("In ParseIf, condition is null"),
                     block,
                     new ElseNode(elseBlock)
                 );
@@ -677,9 +673,7 @@ public class Parser
         {
             functionName = functionToken.GetValue();
         }
-        else if (functionName != null)
-        {
-        }
+        else if (functionName != null) { }
         else
         {
             return null;
