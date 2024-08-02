@@ -7,10 +7,13 @@ namespace Shank.Tran;
 public class TokenHandler
 {
     private List<Token> tokens;
+    private int currentIndex;
+
 
     public TokenHandler(List<Token> tokens)
     {
         this.tokens = tokens;
+        this.currentIndex = 0;
     }
 
     // Peeks at the next token if it is within the bounds of the list
@@ -22,7 +25,7 @@ public class TokenHandler
     // Returns true if there are more tokens in the list
     public bool MoreTokens()
     {
-        return tokens.Count > 0;
+        return currentIndex < tokens.Count;
     }
 
     // Removes the token if the type matches with the first one in the list,
@@ -50,6 +53,30 @@ public class TokenHandler
         }
     }
 
+    /*public List<Token> CombineTokenFiles(List<string> files)
+    {
+        List<Token> allTokens = new List<Token>();
+        foreach (var file in files)
+        {
+            List<Token> fileTokens = ReadTokensFromFile(file);
+            
+            allTokens.AddRange(fileTokens);
+        }
+
+        return allTokens;
+    }
+    private static List<Token> ReadTokensFromFile(string file)
+    {
+        return new List<Token>();
+    }*/
+    public Token GetNextToken()
+    {
+        if (!MoreTokens())
+        {
+            throw new InvalidOperationException("No more tokens available.");
+        }
+        return tokens[currentIndex++];
+    }
     //to debug
     public void PrintToken(Token token)
     {

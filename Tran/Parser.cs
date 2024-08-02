@@ -25,7 +25,7 @@ public class Parser
         sharedNames = new LinkedList<string>();
         members = [];
         blockLevel = 0;
-        currentFunction = new FunctionNode("default");
+        currentFunction = new FunctionNode("default", "default", false);
         thisClass = new ModuleNode("default");
         tempVarNum = 0;
         statements = new List<StatementNode>();
@@ -38,7 +38,7 @@ public class Parser
         sharedNames = new LinkedList<string>();
         members = [];
         blockLevel = 0;
-        currentFunction = new FunctionNode("default");
+        currentFunction = new FunctionNode("default", "default", false);
         thisClass = new ModuleNode("default");
         tempVarNum = 0;
         statements = new List<StatementNode>();
@@ -57,23 +57,36 @@ public class Parser
         {
             retVal = true;
         }
+
         return retVal;
     }
 
     public ProgramNode Parse()
     {
-        for (int i = 0; i < files.Count; i++)
+        List<Token> allTokens = new List<Token>();
+        foreach (var file in files)
         {
-            handler = new TokenHandler(files[i]);
+            handler = new TokenHandler(file);
             AcceptSeparators();
+            while (handler.MoreTokens())
+            {
+                Token token = handler.GetNextToken();
+                allTokens.Add(token);
+            }
+        }
+
+        handler = new TokenHandler(allTokens);
+        AcceptSeparators();
             if (!ParseInterface() && !ParseClass())
             {
-                throw new Exception("No class declaration found in file");
+                throw new Exception("No class or interface declaration found in file");
             }
 
+            AcceptSeparators();
             while (handler.MoreTokens())
             {
                 AcceptSeparators();
+
                 if (ParseField() || ParseFunction())
                 {
                     AcceptSeparators();
@@ -114,7 +127,7 @@ public class Parser
                 }
             }
             blockLevel--;
-        }
+
         return program;
     }
 
@@ -130,14 +143,17 @@ public class Parser
             {
                 thisClass.addFunction(property);
             }
+
             AcceptSeparators();
             property = ParseProperty(TokenType.MUTATOR, variable);
             if (property != null)
             {
                 thisClass.addFunction(property);
             }
+
             return true;
         }
+
         return false;
     }
 
@@ -186,6 +202,7 @@ public class Parser
                 property.ParameterVariables.Add(value);
                 property.VariablesInScope.Add(value.Name!, value);
             }
+
             return property;
         }
 
@@ -207,10 +224,13 @@ public class Parser
                 {
                     throw new Exception("Nothing enclosed within the interface");
                 }
+
                 return true;
             }
+
             throw new Exception("No name provided for interface");
         }
+
         return false;
     }
 
@@ -248,6 +268,7 @@ public class Parser
                                 return true;
                             }
                         }
+
                         throw new Exception(
                             "Could not find class of name: " + otherName.GetValue()
                         );
@@ -300,14 +321,17 @@ public class Parser
             {
                 parameters.AddRange(ParseParameters(false));
             }
+
             currentFunction.ParameterVariables = parameters;
             foreach (var parameter in currentFunction.ParameterVariables)
             {
                 currentFunction.VariablesInScope.Add(parameter.Name, parameter);
             }
+
             currentFunction.Statements.AddRange(ParseBlock());
             return true;
         }
+
         return false;
     }
 
@@ -319,6 +343,7 @@ public class Parser
         {
             return [];
         }
+
         variable.IsConstant = isConstant;
         parameters.Add(variable);
         while (handler.MatchAndRemove(TokenType.COMMA) != null)
@@ -330,8 +355,10 @@ public class Parser
                 parameters.Add(variable);
                 continue;
             }
+
             throw new Exception("No name provided for variable in parameters");
         }
+
         return parameters;
     }
 
@@ -350,8 +377,10 @@ public class Parser
                 arguments.Add(expression);
                 continue;
             }
+
             throw new Exception("No expression provided in function call arguments");
         }
+
         return arguments;
     }
 
@@ -370,8 +399,10 @@ public class Parser
                     variableRef.IsInFuncCallWithVar = true;
                 }
             }
+
             return variableRef;
         }
+
         return null;
     }
 
@@ -459,11 +490,13 @@ public class Parser
             {
                 throw new Exception("In ParseLoop method, the LoopBody is null");
             }
+
             if (conditionLoop != null)
             {
                 return new WhileNode(conditionLoop, LoopBody);
             }
         }
+
         return null;
     }
 
@@ -483,21 +516,23 @@ public class Parser
                     // Return the 'IF' node with 'ELSE IF' or 'ELSE'
                     return new IfNode(
                         condition
-                            ?? throw new InvalidOperationException("In ParseIf, condition is null"),
+                        ?? throw new InvalidOperationException("In ParseIf, condition is null"),
                         block,
                         nextIf
                     );
                 }
+
                 // Return the 'IF' node with 'ELSE'
                 var elseBlock = ParseBlock();
                 // return new IfNode(condition, block, new IfNode(elseBlock));
                 return new IfNode(
                     condition
-                        ?? throw new InvalidOperationException("In ParseIf, condition is null"),
+                    ?? throw new InvalidOperationException("In ParseIf, condition is null"),
                     block,
                     new ElseNode(elseBlock)
                 );
             }
+
             // Return just the 'IF' branch without an 'ELSE'
             return new IfNode(
                 condition ?? throw new InvalidOperationException("In ParseIf, condition is null"),
@@ -505,6 +540,7 @@ public class Parser
                 null
             );
         }
+
         return null;
     }
 
@@ -525,6 +561,7 @@ public class Parser
                 }
             }
         }
+
         if (handler.MatchAndRemove(TokenType.PERIOD) != null)
         {
             if (handler.MatchAndRemove(TokenType.CLONE) != null)
@@ -538,6 +575,7 @@ public class Parser
                 }
             }
         }
+
         if (handler.MatchAndRemove(TokenType.PERIOD) != null)
         {
             if (handler.MatchAndRemove(TokenType.GETDATE) != null)
@@ -574,6 +612,7 @@ public class Parser
                 );
             }
         }
+
         return null;
     }
 
@@ -595,6 +634,7 @@ public class Parser
             {
                 break;
             }
+
             var statement = ParseStatement();
 
             if (statement != null)
@@ -633,7 +673,9 @@ public class Parser
         {
             functionName = functionToken.GetValue();
         }
-        else if (functionName != null) { }
+        else if (functionName != null)
+        {
+        }
         else
         {
             return null;
@@ -678,6 +720,7 @@ public class Parser
             {
                 throw new Exception("Term expected after.");
             }
+
             lt = new MathOpNode(lt, MathOpNode.MathOpType.Plus, rt);
             return ParseExpressionRhs(lt);
         }
@@ -699,6 +742,7 @@ public class Parser
             {
                 throw new Exception("Term expected after.");
             }
+
             return new BooleanExpressionNode(
                 lt,
                 BooleanExpressionNode.BooleanExpressionOpType.le,
@@ -712,6 +756,7 @@ public class Parser
             {
                 throw new Exception("Term expected after.");
             }
+
             return new BooleanExpressionNode(
                 lt,
                 BooleanExpressionNode.BooleanExpressionOpType.lt,
@@ -725,6 +770,7 @@ public class Parser
             {
                 throw new Exception("Term expected after.");
             }
+
             return new BooleanExpressionNode(
                 lt,
                 BooleanExpressionNode.BooleanExpressionOpType.ge,
@@ -738,6 +784,7 @@ public class Parser
             {
                 throw new Exception("Term expected after.");
             }
+
             return new BooleanExpressionNode(
                 lt,
                 BooleanExpressionNode.BooleanExpressionOpType.gt,
@@ -751,6 +798,7 @@ public class Parser
             {
                 throw new Exception("Term expected after.");
             }
+
             return new BooleanExpressionNode(
                 lt,
                 BooleanExpressionNode.BooleanExpressionOpType.eq,
@@ -764,6 +812,7 @@ public class Parser
             {
                 throw new Exception("Term expected after.");
             }
+
             return new BooleanExpressionNode(
                 lt,
                 BooleanExpressionNode.BooleanExpressionOpType.ne,
@@ -815,6 +864,7 @@ public class Parser
             {
                 throw new Exception("Factor expected after.");
             }
+
             lt = new MathOpNode(lt, MathOpNode.MathOpType.Modulo, rt);
             return ParseTermRhs(lt);
         }
@@ -842,10 +892,12 @@ public class Parser
             {
                 value += word.GetValue();
             }
+
             if (handler.MatchAndRemove(TokenType.QUOTE) != null)
             {
                 return new StringNode(value);
             }
+
             throw new Exception("String literal missing end quotes");
         }
 
@@ -949,11 +1001,13 @@ public class Parser
         {
             return null;
         }
+
         Token? nameToken = handler.MatchAndRemove(TokenType.WORD);
         if (nameToken == null)
         {
             throw new Exception("Variable declaration missing a name");
         }
+
         VariableDeclarationNode variableNode = new VariableDeclarationNode(
             false,
             variableType,
@@ -999,6 +1053,7 @@ public class Parser
                     break;
                 }
             }
+
             FunctionNode functionNode;
             Token? function;
             List<VariableDeclarationNode> parameters;
@@ -1046,6 +1101,7 @@ public class Parser
                 return false;
             }
         }
+
         blockLevel--;
         return false;
     }
