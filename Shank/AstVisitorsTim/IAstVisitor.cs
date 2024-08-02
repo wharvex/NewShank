@@ -183,11 +183,16 @@ public class VunVsTypeCheckingVisitor(Type t, Dictionary<string, VariableDeclara
         switch (vun)
         {
             case VariableUsageIndexNode i:
-                if (CheckingType is not ArrayType at)
-                {
-                    throw new SemanticErrorException("Cannot index into " + CheckingType, i);
-                }
-                CheckRange(i, at.Range);
+                var at =  CheckingType switch {
+                    ArrayType arrRet => arrRet,
+                    ReferenceType(Inner: ArrayType arrRet) => arrRet,
+                    _
+                        => throw new SemanticErrorException(
+                            "Only arrays can be indexed into. Found: " + CheckingType.GetType(),
+                            i.Left
+                        )
+                };
+                // CheckRange(i, at.Range);
 
                 break;
             case VariableUsageMemberNode m:

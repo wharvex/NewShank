@@ -528,7 +528,7 @@ public class Parser
 
         RequiresToken(Token.TokenType.RightParen);
 
-        funcNode.GenericTypeParameterNames = ParseGenericKeywordAndTypeParams();
+        funcNode.GenericTypeParameterNames = ParseGenericKeywordAndTypeParams() ?? [];
 
         RequiresEndOfLine();
 

@@ -21,26 +21,23 @@ public enum BuiltInFunction
     GetRandom,
 }
 
-public class BuiltInFunctionNode : CallableNode
+public class BuiltInFunctionNode(string name, CallableNode.BuiltInCall execute)
+    : CallableNode(name, BuiltinModuleName, execute)
 {
-    public BuiltInFunctionNode(string name, BuiltInCall execute)
-        : base(name, execute) { }
-
-    public List<string> GenericTypeParameterNames { get; set; } = [];
+    // The module name used for builtin functions
+    public static string BuiltinModuleName { get; } = Guid.NewGuid().ToString();
 
     // Copy constructor for monomorphization
     public BuiltInFunctionNode(
         BuiltInFunctionNode function,
         List<VariableDeclarationNode> parameters
     )
-        : base(function.Name)
+        : this(function.Name, function.Execute)
     {
-        parentModuleName = function.parentModuleName;
         LineNum = function.LineNum;
         FileName = function.FileName;
         Line = function.Line;
-        Execute = function.Execute;
-        ParameterVariables.AddRange(parameters);
+        ParameterVariables = parameters;
         GenericTypeParameterNames = function.GenericTypeParameterNames;
     }
 

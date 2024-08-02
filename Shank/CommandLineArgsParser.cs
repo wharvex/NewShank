@@ -349,13 +349,13 @@ public class CommandLineArgsParser
         // This resolves unknown types.
         //program.Walk(new RecordVisitor());
 
-        program.Walk(new UnknownTypesVisitor());
-        SemanticAnalysis.AreSimpleUnknownTypesDone = true;
 
         // program.Walk(new TestVisitor());
 
         // Create WalkCompliantVisitors.
         var nuVis = new NestedUnknownTypesResolvingVisitor(SemanticAnalysis.ResolveType);
+        program.Walk(new UnknownTypesVisitor());
+        SemanticAnalysis.AreSimpleUnknownTypesDone = true;
         var vgVis = new VariablesGettingVisitor();
         var etVis = new ExpressionTypingVisitor(SemanticAnalysis.GetTypeOfExpression)
         {
@@ -387,13 +387,13 @@ public class CommandLineArgsParser
         program.Walk(new ImportVisitor());
         // This resolves unknown types.
         program.Walk(new RecordVisitor());
-        // This resolves simple unkown types.
-        program.Walk(new UnknownTypesVisitor());
 
         program.Walk(new TestVisitor());
 
         // Create WalkCompliantVisitors.
         var nuVis = new NestedUnknownTypesResolvingVisitor(SemanticAnalysis.ResolveType);
+        // This resolves simple unkown types.
+        program.Walk(new UnknownTypesVisitor());
         var vgVis = new VariablesGettingVisitor();
         var etVis = new ExpressionTypingVisitor(SemanticAnalysis.GetTypeOfExpression)
         {
@@ -412,13 +412,15 @@ public class CommandLineArgsParser
         program.Walk(new AssignmentVisitor());
         program.Walk(new BooleanExpressionNodeVisitor());
         program.Walk(new BooleanExpectedVisitor());
-        program.Walk(new FunctionCallExistsVisitor()); // Has to be first function call check
-        program.Walk(new FunctionCallCountVisitor());
-        program.Walk(new FunctionCallTypeVisitor());
-        program.Walk(new FunctionCallDefaultVisitor()); // Comes before mutability check
-        program.Walk(new FunctionCallMutabilityVisitor());
-        program.Walk(new BuiltInFunctionCallVisitor());
-        program.Walk(new FunctionCallGenericsVariadicsVisitor());
+        // program.Walk(new FunctionCallExistsVisitor()); // Has to be first function call check
+        // program.Walk(new FunctionCallCountVisitor());
+        // program.Walk(new FunctionCallTypeVisitor());
+        // program.Walk(new FunctionCallDefaultVisitor()); // Comes before mutability check
+        // program.Walk(new FunctionCallMutabilityVisitor());
+        // program.Walk(new BuiltInFunctionCallVisitor());
+        // program.Walk(new FunctionCallGenericsVariadicsVisitor());
+        program.Walk(new NewFunctionCallVisitor());
+        program.Walk(new FunctionCallDefaultVisitor());
         program.Walk(new ForNodeVisitor());
         program.Walk(new MathOpNodeOptimizer());
     }

@@ -4,7 +4,7 @@ using Shank.ExprVisitors;
 namespace Shank;
 
 /// <summary>
-/// does monopmorphism
+/// does monomorphization
 /// </summary>
 public interface Index;
 
@@ -18,33 +18,36 @@ public readonly record struct ModuleIndex(NamedIndex Name, string Module) : Inde
     }
 };
 
-public record struct TypeIndex(List<Type> InstantiatedTypes)
+// TODO: should also keep track of mutability of each type because different overloads could have different mutability for same parameter?
+public record struct TypeIndex(List<Type> Types)
 {
-    private int? hashCode = null;
+    private int? _hashCode = null;
 
     public readonly bool Equals(TypeIndex other)
     {
-        return other.InstantiatedTypes.SequenceEqual(InstantiatedTypes);
+        return other.Types.SequenceEqual(Types);
     }
 
     public override int GetHashCode()
     {
-        if (hashCode != null)
-            return (int)hashCode!;
-        var hash = InstantiatedTypes
+        if (_hashCode != null)
+            return (int)_hashCode!;
+        var hash = Types
             .Select(element => EqualityComparer<Type>.Default.GetHashCode(element))
             .Where(h => h != 0)
             .Aggregate(17, (current, h) => unchecked(current * h));
-        hashCode = hash;
-        return (int)hashCode!;
+        _hashCode = hash;
+        return (int)_hashCode!;
     }
+
+    public override readonly string ToString() => $"Types: {{{string.Join(",", Types)}}}";
 }
 
 public readonly record struct TypedModuleIndex(ModuleIndex Index, TypeIndex Types) : Index
 {
     public override string ToString()
     {
-        return $"{Index}({string.Join(", ", Types.InstantiatedTypes.Select(type => $"{type}"))})";
+        return $"{Index}({string.Join(", ", Types.Types.Select(type => $"{type}"))})";
     }
 }
 
@@ -52,7 +55,7 @@ public readonly record struct TypedBuiltinIndex(string Name, TypeIndex Types) : 
 {
     public override string ToString()
     {
-        return $"{Name}({string.Join(", ", Types.InstantiatedTypes.Select(type => $"{type}"))})";
+        return $"{Name}({string.Join(", ", Types.Types.Select(type => $"{type}"))})";
     }
 }
 
@@ -123,7 +126,7 @@ public class MonomorphizationVisitor(
                 new TypeIndex(instantiatedVariadics)
             );
             Push(typedBuiltinIndex);
-            if (programNode.BuiltinFunctions.ContainsKey(typedBuiltinIndex))
+            if (ProgramNode.BuiltinFunctions.ContainsKey(typedBuiltinIndex))
             {
                 return;
             }
@@ -144,8 +147,10 @@ public class MonomorphizationVisitor(
             {
                 MonomorphizedName = typedBuiltinIndex
             };
-            // TODO: maybe specialize this further by turning it into multiple individual function calls for each arguement (might be annoying for write, because "write "Foo"" would probably become "writeString "Foo"; writeString "\n"", we would also probalb have a lot of "writeString " "" when we have mutliple arguements)
-            programNode.BuiltinFunctions[typedBuiltinIndex] = function;
+            // TODO: maybe specialize this further by turning it into multiple individual function calls for each argument
+            // (might be annoying for write, because "write "Foo"" would probably become "writeString "Foo"; writeString "\n"",
+            // we would also probably have a lot of "writeString " "" when we have multiple arguments)
+            ProgramNode.BuiltinFunctions[typedBuiltinIndex] = function;
         }
         else
         {
@@ -164,21 +169,6 @@ public class MonomorphizationVisitor(
                         )
                 )
                 .ToDictionary();
-            var typedBuiltinIndex = new TypedBuiltinIndex(
-                node.Name,
-                new TypeIndex(
-                    instantiatedGenerics
-                        .OrderBy(pair => pair.Key)
-                        .Select(pair => pair.Value)
-                        .ToList()
-                )
-            );
-            if (programNode.BuiltinFunctions.ContainsKey(typedBuiltinIndex))
-            {
-                Push(typedBuiltinIndex);
-                return;
-            }
-
             var parameters = node.ParameterVariables.Select(declarationNode =>
             {
                 declarationNode.Accept(
@@ -186,7 +176,7 @@ public class MonomorphizationVisitor(
                         instantiatedGenerics,
                         nonMonomorphizedProgramNode,
                         start,
-                        programNode
+                        ProgramNode
                     )
                     {
                         expr = expr
@@ -195,11 +185,21 @@ public class MonomorphizationVisitor(
                 return (VariableDeclarationNode)Pop();
             })
                 .ToList();
+            var typedBuiltinIndex = new TypedBuiltinIndex(
+                node.Name,
+                new TypeIndex(parameters.Select(parameter => parameter.Type).ToList())
+            );
+            if (ProgramNode.BuiltinFunctions.ContainsKey(typedBuiltinIndex))
+            {
+                Push(typedBuiltinIndex);
+                return;
+            }
+
             var function = new BuiltInFunctionNode(node, parameters)
             {
                 MonomorphizedName = typedBuiltinIndex
             };
-            programNode.BuiltinFunctions[typedBuiltinIndex] = function;
+            ProgramNode.BuiltinFunctions[typedBuiltinIndex] = function;
             Push(typedBuiltinIndex);
         }
     }
@@ -207,13 +207,13 @@ public class MonomorphizationVisitor(
     public override void Visit(FunctionCallNode node)
     {
         // no module means it is a builtin see FunctionCallNode.FunctionDefinitionModule
-        if (node.FunctionDefinitionModule is null)
+        if (node.FunctionDefinitionModule == BuiltInFunctionNode.BuiltinModuleName)
         {
-            BuiltInFunctionNode builtInFunctionNode = (
+            var builtInFunctionNode = (
                 nonMonomorphizedProgramNode.GetStartModuleSafe().getFunction(node.Name)
                 as BuiltInFunctionNode
             )!;
-            Visit(builtInFunctionNode!, node);
+            Visit(builtInFunctionNode, node);
             Push(new FunctionCallNode(node, (TypedBuiltinIndex)Pop()));
         }
         else
@@ -231,24 +231,32 @@ public class MonomorphizationVisitor(
                     )
             )
                 .ToDictionary();
-            module
-                .Functions[node.Name]
-                .Accept(
-                    new MonomorphizationVisitor(
-                        instantiatedGenerics,
-                        nonMonomorphizedProgramNode,
-                        module,
-                        ProgramNode
-                    )
-                    {
-                        expr = expr
-                    }
-                );
-            // TODO: less hacky solution to demodulize global variables, maybe only add them when they are used
-            foreach (var (key, value) in module.GlobalVariables)
+
+            var moduleFunction = module.Functions[node.Name];
+
+            (
+                moduleFunction switch
+                {
+                    FunctionNode f => f,
+                    OverloadedFunctionNode overload => overload.Overloads[node.Overload],
+                    _ => null
+                }
+            )!.Accept(
+                new MonomorphizationVisitor(
+                    instantiatedGenerics,
+                    nonMonomorphizedProgramNode,
+                    module,
+                    ProgramNode
+                )
+                {
+                    expr = expr
+                }
+            );
+            // TODO: less hacky solution to demodularize global variables, maybe only add them when they are used
+            foreach (var (_, value) in module.GlobalVariables)
             {
                 value.Accept(this);
-                programNode.GlobalVariables[(ModuleIndex)value.MonomorphizedName()] =
+                ProgramNode.GlobalVariables[(ModuleIndex)value.MonomorphizedName()] =
                     (VariableDeclarationNode)Pop();
             }
 
@@ -258,24 +266,21 @@ public class MonomorphizationVisitor(
 
     public override void Visit(FunctionNode node)
     {
-        var typedModuleIndex = new TypedModuleIndex(
-            new ModuleIndex(new NamedIndex(node.Name), node.parentModuleName!),
-            new TypeIndex(
-                instantiatedTypes.OrderBy(pair => pair.Key).Select(pair => pair.Value).ToList()
-            )
-        );
-        if (ProgramNode.Functions.TryGetValue(typedModuleIndex, out _))
-        {
-            Push(typedModuleIndex);
-            return;
-        }
-
         var parameters = node.ParameterVariables.Select(declarationNode =>
         {
             declarationNode.Accept(this);
             return (VariableDeclarationNode)Pop();
         })
             .ToList();
+        var typedModuleIndex = new TypedModuleIndex(
+            new ModuleIndex(new NamedIndex(node.Name), node.parentModuleName),
+            new TypeIndex(parameters.Select(p => p.Type).ToList())
+        );
+        if (ProgramNode.Functions.TryGetValue(typedModuleIndex, out _))
+        {
+            Push(typedModuleIndex);
+            return;
+        }
         var variables = node.LocalVariables.Select(declarationNode =>
         {
             declarationNode.Accept(this);
@@ -318,11 +323,11 @@ public class MonomorphizationVisitor(
     public override void Visit(ModuleNode node)
     {
         start = node;
-        // TODO: less hacky solution to demodulize global variables, maybe only add them when they are used
-        foreach (var (key, value) in node.GlobalVariables)
+        // TODO: less hacky solution to demodularize global variables, maybe only add them when they are used
+        foreach (var (_, value) in node.GlobalVariables)
         {
             value.Accept(this);
-            programNode.GlobalVariables[(ModuleIndex)value.MonomorphizedName()] =
+            ProgramNode.GlobalVariables[(ModuleIndex)value.MonomorphizedName()] =
                 (VariableDeclarationNode)Pop();
         }
 
@@ -424,6 +429,11 @@ public class MonomorphizationVisitor(
     }
 
     public override void Visit(BuiltInFunctionNode node)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void Visit(OverloadedFunctionNode node)
     {
         throw new NotImplementedException();
     }

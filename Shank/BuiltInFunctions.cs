@@ -199,7 +199,7 @@ public class BuiltInFunctions
                     new VariableDeclarationNode()
                     {
                         Name = "someArray",
-                        Type = new ArrayType(new GenericType("T"), ArrayType.DefaultRange),
+                        Type = new ArrayType(new GenericType("T", new FunctionGenericContext("low", BuiltInFunctionNode.BuiltinModuleName, new TypeIndex([]))), ArrayType.DefaultRange),
                         IsConstant = true
                     },
                     new VariableDeclarationNode()
@@ -220,7 +220,7 @@ public class BuiltInFunctions
                     new VariableDeclarationNode()
                     {
                         Name = "someArray",
-                        Type = new ArrayType(new GenericType("T"), ArrayType.DefaultRange),
+                        Type = new ArrayType(new GenericType("T", new FunctionGenericContext("high", BuiltInFunctionNode.BuiltinModuleName, new TypeIndex([]))), ArrayType.DefaultRange),
                         IsConstant = true
                     },
                     new VariableDeclarationNode()
@@ -241,7 +241,7 @@ public class BuiltInFunctions
                     new VariableDeclarationNode()
                     {
                         Name = "refersTo",
-                        Type = new ReferenceType(new GenericType("R")),
+                        Type = new ReferenceType(new GenericType("R", new FunctionGenericContext("allocateMemory", BuiltInFunctionNode.BuiltinModuleName, new TypeIndex([])))),
                         IsConstant = false
                     }
                 ],
@@ -256,7 +256,7 @@ public class BuiltInFunctions
                     new VariableDeclarationNode()
                     {
                         Name = "refersTo",
-                        Type = new ReferenceType(new GenericType("R")),
+                        Type = new ReferenceType(new GenericType("R", new FunctionGenericContext("freeMemory", BuiltInFunctionNode.BuiltinModuleName, new TypeIndex([])))),
                         IsConstant = false
                     }
                 ],
@@ -271,7 +271,7 @@ public class BuiltInFunctions
                     new VariableDeclarationNode()
                     {
                         Name = "refersTo",
-                        Type = new ReferenceType(new GenericType("R")),
+                        Type = new ReferenceType(new GenericType("R",new FunctionGenericContext("isSet", BuiltInFunctionNode.BuiltinModuleName, new TypeIndex([])) )),
                         IsConstant = true
                     },
                     new VariableDeclarationNode()
@@ -292,7 +292,7 @@ public class BuiltInFunctions
                     new VariableDeclarationNode()
                     {
                         Name = "refersTo",
-                        Type = new ReferenceType(new GenericType("R")),
+                        Type = new ReferenceType(new GenericType("R", new FunctionGenericContext("size", BuiltInFunctionNode.BuiltinModuleName, new TypeIndex([])))),
                         IsConstant = true
                     },
                     new VariableDeclarationNode()

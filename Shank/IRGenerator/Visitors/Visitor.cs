@@ -36,4 +36,5 @@ public abstract class Visitor
     public abstract void Visit(ForNode node); //
 
     public abstract void Visit(BuiltInFunctionNode node);
+    public abstract void Visit(OverloadedFunctionNode node);
 }

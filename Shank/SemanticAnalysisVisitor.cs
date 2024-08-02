@@ -757,6 +757,7 @@ public class SemanticAnalysisVisitor : Visitor
         {
             foreach (var record in module.Records.Values)
             {
+                var genericContext = new RecordGenericContext(record.Name, record.GetParentModuleSafe());
                 List<string> usedGenerics = [];
                 record.Type.Fields = record
                     .Type.Fields.Select(field =>
@@ -767,10 +768,10 @@ public class SemanticAnalysisVisitor : Visitor
                                 field.Value,
                                 module,
                                 record.GenericTypeParameterNames,
-                                (GenericType generic) =>
+                                generic =>
                                 {
-                                    usedGenerics.Add(generic.Name);
-                                    return generic;
+                                    usedGenerics.Add(generic);
+                                    return new GenericType(generic, genericContext);
                                 }
                             )
                         );
@@ -792,7 +793,7 @@ public class SemanticAnalysisVisitor : Visitor
         Type member,
         ModuleNode module,
         List<string> generics,
-        Func<GenericType, GenericType> genericCollector
+        Func<string, GenericType> genericCollector
     )
     {
         return member switch
@@ -828,7 +829,7 @@ public class SemanticAnalysisVisitor : Visitor
         UnknownType member,
         ModuleNode module,
         List<string> generics,
-        Func<GenericType, GenericType> genericCollector
+        Func<string, GenericType> genericCollector
     )
     {
         var resolveType =
@@ -842,7 +843,7 @@ public class SemanticAnalysisVisitor : Visitor
                             $"generics type cannot have generics on it",
                             module
                         )
-                        : genericCollector(new GenericType(member.TypeName))
+                        : genericCollector(member.TypeName)
                     : throw new SemanticErrorException($"Unbound type {member}", module)
             );
         if (resolveType is EnumType && member.TypeParameters.Count != 0)
@@ -876,76 +877,84 @@ public class SemanticAnalysisVisitor : Visitor
     {
         foreach (KeyValuePair<string, ModuleNode> currentModule in Modules)
         {
-            foreach (
-                KeyValuePair<string, CallableNode> function in currentModule.Value.getFunctions()
-            )
-            {
                 CheckVariables(
                     currentModule.Value.GlobalVariables.Values.ToList(),
                     currentModule.Value,
-                    []
+                    [], new DummyGenericContext()
                 );
-                if (function.Value is BuiltInFunctionNode)
+            foreach (
+                var function in currentModule.Value.getFunctions()
+            )
+            {
+                if (function.Value is OverloadedFunctionNode overloads)
                 {
-                    continue;
-                }
-
-                FunctionNode currentFunction = (FunctionNode)function.Value;
-                CheckVariables(
-                    currentFunction.LocalVariables,
-                    currentModule.Value,
-                    currentFunction.GenericTypeParameterNames ?? []
-                );
-                currentFunction.LocalVariables.ForEach(
-                    vdn => OutputHelper.DebugPrintJson(vdn, vdn.Name ?? "null")
-                );
-                var generics = currentFunction.GenericTypeParameterNames ?? [];
-                List<string> usedGenerics = [];
-                foreach (var variable in currentFunction.ParameterVariables)
-                {
-                    // find the type of each parameter, and also see what generics each parameter uses
-                    variable.Type = ResolveType(
-                        variable.Type,
-                        currentModule.Value,
-                        generics,
-                        (GenericType generic) =>
-                        {
-                            usedGenerics.Add(generic.Name);
-                            return generic;
-                        }
-                    );
-                }
-
-                // if not all generics are used in the parameters that means those generics cannot be infered, but they could be used for variables which is bad
-                if (!usedGenerics.Distinct().SequenceEqual(generics))
-                {
-                    throw new SemanticErrorException(
-                        $"Generic Type parameter(s) {string.Join(", ", generics.Except(usedGenerics.Distinct()))}  cannot be infered for function {currentFunction.Name}",
-                        currentFunction
-                    );
-                }
-
-                // foreach (var statement in currentFunction.Statements)
-                /*{
-                    if (statement is AssignmentNode assignment)
+                    foreach (var overload in overloads.Overloads.Values)
                     {
-
-                        if (currentFunction.LocalVariables.Concat(currentFunction.ParameterVariables).FirstOrDefault(node =>
-                               GetTypeRecursive(node.NewType, assignment.Target) is EnumType e && assignment.Target.Name == node.Name) is not null)
-                        {
-                            // how do we know all types in all modules that the current module we are using depends on are resolved
-                            assignment.Target.ExtensionType = ASTNode.VrnExtType.Enum;
-                        }
+                        
+                    HandleUnknownTypesOfFunction(overload, currentModule.Value);
                     }
-                }*/
+                }
+                else
+                {
+                    HandleUnknownTypesOfFunction(function.Value, currentModule.Value);
+                }
+
             }
+        }
+    }
+
+    private static void HandleUnknownTypesOfFunction(CallableNode function, ModuleNode currentModule)
+    {
+        if (function is BuiltInFunctionNode)
+        {
+            return;
+        }
+
+        var currentFunction = (FunctionNode)function;
+        var genericContext = new FunctionGenericContext(currentFunction.Name,  currentFunction.parentModuleName, 
+            currentFunction.Overload);
+        CheckVariables(
+            currentFunction.LocalVariables,
+            currentModule,
+            currentFunction.GenericTypeParameterNames,
+            genericContext
+        );
+        currentFunction.LocalVariables.ForEach(
+            vdn => OutputHelper.DebugPrintJson(vdn, vdn.Name ?? "null")
+        );
+        var generics = currentFunction.GenericTypeParameterNames;
+        List<string> usedGenerics = [];
+        foreach (var variable in currentFunction.ParameterVariables)
+        {
+            // find the type of each parameter, and also see what generics each parameter uses
+            variable.Type = ResolveType(
+                variable.Type,
+                currentModule,
+                generics,
+                generic =>
+                {
+                    usedGenerics.Add(generic);
+                    return  new GenericType(generic, genericContext);
+                }
+
+            );
+        }
+
+        // if not all generics are used in the parameters that means those generics cannot be infered, but they could be used for variables which is bad
+        if (!usedGenerics.Distinct().SequenceEqual(generics))
+        {
+            throw new SemanticErrorException(
+                $"Generic Type parameter(s) {string.Join(", ", generics.Except(usedGenerics.Distinct()))}  cannot be infered for function {currentFunction.Name}",
+                currentFunction
+            );
         }
     }
 
     private static void CheckVariables(
         List<VariableDeclarationNode> variables,
         ModuleNode currentModule,
-        List<String> generics
+        List<String> generics,
+        GenericContext genericInfo
     )
     {
         foreach (var variable in variables)
@@ -986,7 +995,7 @@ public class SemanticAnalysisVisitor : Visitor
             }
             else
             {
-                variable.Type = ResolveType(variable.Type, currentModule, generics, x => x);
+                variable.Type = ResolveType(variable.Type, currentModule, generics, generic => new GenericType(generic, genericInfo));
             }
         }
     }
@@ -1023,6 +1032,8 @@ public class SemanticAnalysisVisitor : Visitor
         Console.WriteLine("BuiltInFunctionNode visited");
         //throw new NotImplementedException();
     }
+
+    public override void Visit(OverloadedFunctionNode node) { }
 
     private static Type GetTypeOfExpression(
         ExpressionNode expression //,

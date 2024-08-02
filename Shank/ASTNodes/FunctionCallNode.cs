@@ -10,18 +10,19 @@ public class FunctionCallNode : StatementNode
     // the value you need to lookup a function after monomophization
     public Index MonomphorizedFunctionLocater { get; init; }
 
-    // If its null then we have a call to a builtin
-    public string? FunctionDefinitionModule { get; set; }
+    // Use BuiltinFuctionNode.BuiltinModuleName to get module name for builtin functions
+    public string FunctionDefinitionModule { get; set; }
     public int LineNum { get; set; }
     public List<ExpressionNode> Arguments { get; } = [];
     public string OverloadNameExt { get; set; } = "";
+    public TypeIndex Overload { get; set; }
 
     // generics of the called function that this call site instantiated to specific types
     // useful/needed for monomorphization
     public Dictionary<string, Type> InstantiatedGenerics { get; set; } = [];
 
     // if this is not null this must be calling variadic function
-    public List<Type>? InstantiatedVariadics { get; set; } = null;
+    public List<Type>? InstantiatedVariadics { get; set; }
 
     public FunctionCallNode(string name)
     {
