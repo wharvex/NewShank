@@ -86,7 +86,11 @@ public class Parser
             while (handler.MoreTokens())
             {
                 AcceptSeparators();
-
+                if (ParseClass() || ParseInterface())
+                {
+                    AcceptSeparators();
+                    blockLevel++;
+                }
                 if (ParseField() || ParseFunction())
                 {
                     AcceptSeparators();
