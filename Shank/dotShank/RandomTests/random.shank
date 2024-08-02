@@ -1,0 +1,18 @@
+define start()
+variables a: integer
+    getRandom var a
+    write a
+    getRandom var a
+    write a
+    getRandom var a
+    write a
+    getRandom var a
+    write a
+    getRandom var a
+    write a
+    getRandom var a
+    write a
+    getRandom var a
+    write a
+    getRandom var a
+    write a

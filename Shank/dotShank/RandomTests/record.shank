@@ -1,0 +1,21 @@
+record student
+    person: refersTo person
+    id: integer
+
+record person
+    name: string
+    age: integer
+
+define start()
+variables me: student
+variables mePerson: refersTo person
+variables foo: string
+    allocateMemory var me.person
+    mePerson := me.person 
+    mePerson.name := "mmeee"
+    foo:="444"
+    mePerson.age := -40
+    writeAPerson me.person
+
+define writeAPerson(person: refersTo person)
+    write person.name, "is", person.age, "years old"

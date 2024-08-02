@@ -1,0 +1,4 @@
+define start()
+variables foo: array from 1 to 10 of integer
+    foo[2] := 5
+    write foo[2]

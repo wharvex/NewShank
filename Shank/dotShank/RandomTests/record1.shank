@@ -1,0 +1,25 @@
+record student
+    person:  person
+    id: integer
+
+record person
+    name: string
+    age: integer
+
+define start()
+variables me: student
+variables a1, a2: array from 0 to 10 of integer 
+variables mePerson:  person
+variables foo: string
+    write foo
+    a1 := a2
+    initPerson var me.person
+    writeAPerson me.person
+
+define initPerson(var person: person)
+    person.name := "mmeee"
+    person.age := -40
+
+
+define writeAPerson(person:  person)
+    write person.name, "is", person.age, "years old"

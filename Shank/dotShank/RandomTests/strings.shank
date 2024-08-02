@@ -1,0 +1,11 @@
+constants foo = 5
+constants bar = "ff"
+define start()
+variables string1 , string2: string 
+variables s1, s2, s3: string
+    string1 := "trer5"
+    string2 := "leref"
+    left string2, 3, var s1
+    right string2, 4, var s2
+    substring string1, 1, 2, var s3
+    write  "fff", s1, "x", s2, "t" s3, 5, bar

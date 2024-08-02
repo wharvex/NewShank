@@ -1,0 +1,15 @@
+record person
+    name: string
+    birthday: integer
+    age: integer
+
+define start()
+variables p1, p2: person
+    p1.age := 5
+    p1.birthday := 6
+    p1.name := "jane"
+    p2 := p1
+    p2.age := 7
+    p2.name := "john"
+    write p1.age, p1.birthday, p1.name
+    write p2.age, p2.birthday, p2.name
