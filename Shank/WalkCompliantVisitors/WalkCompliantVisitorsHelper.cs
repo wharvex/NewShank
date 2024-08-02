@@ -19,18 +19,18 @@ public static class WalkCompliantVisitorsHelper
         //return [..l.Select(e => (T)e.Walk(this))];
     }
 
-    public static Dictionary<string, T> WalkDictionary<T>(
-        this Dictionary<string, T> d,
+    public static Dictionary<K, V> WalkDictionary<K, V>(
+        this Dictionary<K, V> d,
         WalkCompliantVisitor v
     )
-        where T : ASTNode
+        where V : ASTNode
     {
         // This method could be a one-liner (see commented-out return statement below), but then for
         // some reason that syntax won't let us step into the "Walk" method in the debugger.
-        var ret = new Dictionary<string, T>();
+        var ret = new Dictionary<K, V>();
         foreach (var p in d)
         {
-            ret[p.Key] = (T)p.Value.Walk(v);
+            ret[p.Key] = (V)p.Value.Walk(v);
         }
 
         return ret;

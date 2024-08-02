@@ -1,0 +1,19 @@
+enum foo =  [gar, far]
+enum foos =  [gar, ear]
+record gg
+    t: string
+define start()
+variables fffffa: string
+variables ssr: foos
+variables b: foo
+    fffffa := "ff" + "55"
+    b := far
+    bar fffffa, ssr
+    
+
+define bar(f: string; sd : foos) generic T
+variables s: string
+variables ggg: gg
+    s := "f"+ f
+    write f
+    ggg.t := "f"

@@ -1,0 +1,16 @@
+define start()
+    overload 1
+    overload "", "ff:"
+    {overload false}
+
+define overload(a : string; b: A) generic A
+    write a
+    overload false, b
+define overload(a : integer)
+    write a
+
+
+{define overload(b: B) generic B
+    write b}
+define overload(a: boolean; b: B) generic B
+    write a

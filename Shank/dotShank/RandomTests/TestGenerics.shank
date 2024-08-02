@@ -1,0 +1,10 @@
+define swap(var x: A; var y: A) generic A
+variables temp : A
+    temp := x
+    x := y
+    y := temp
+    
+define start()
+variables x : integer
+variables y : integer
+    swap var x, var y

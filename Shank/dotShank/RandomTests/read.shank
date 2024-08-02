@@ -1,0 +1,7 @@
+define start()
+variables foo: string
+variables f: array from 0 to 10 of integer
+    write f[11]
+    read var foo
+    write "read", foo
+

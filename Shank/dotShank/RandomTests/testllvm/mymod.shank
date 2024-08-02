@@ -1,0 +1,6 @@
+module parade
+
+export fooors
+
+define fooors(var f: integer)
+    f := 5

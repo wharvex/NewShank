@@ -9,7 +9,7 @@ public class NestedUnknownTypesResolvingVisitor : WalkCompliantVisitor
         Type member,
         ModuleNode module,
         List<string> generics,
-        Func<GenericType, GenericType> genericCollector
+        Func<string, GenericType> genericCollector
     );
 
     public TypeResolver ActiveTypeResolver { get; set; }
@@ -43,6 +43,7 @@ public class NestedUnknownTypesResolvingVisitor : WalkCompliantVisitor
     {
         shortCircuit = false;
 
+        var genericContext = new RecordGenericContext(n.Name, n.GetParentModuleSafe());
         // This is adapted from SemanticAnalysis.AssignNestedTypes
         List<string> usedGenerics = [];
         n.Type.Fields = n.Type.Fields.Select(
@@ -53,10 +54,10 @@ public class NestedUnknownTypesResolvingVisitor : WalkCompliantVisitor
                         fieldKvp.Value,
                         CurrentModule,
                         n.GenericTypeParameterNames,
-                        g =>
+                        generic =>
                         {
-                            usedGenerics.Add(g.Name);
-                            return g;
+                            usedGenerics.Add(generic);
+                            return new GenericType(generic, genericContext);
                         }
                     )
                 )

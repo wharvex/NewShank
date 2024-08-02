@@ -1,0 +1,8 @@
+define start()
+    write ""
+
+
+define a(var b: refersTo A) generic A
+    allocateMemory var b
+define b(var b: refersTo A) generic A
+    a var b

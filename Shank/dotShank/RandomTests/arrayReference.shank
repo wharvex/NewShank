@@ -1,0 +1,17 @@
+record foo
+    bar: integer
+define writeARefersToArray(a: refersTo array from 0 to 10 of integer)
+variables i: integer
+    for i from 0 to 10
+        write i, a[i]
+define fakeAllocate(var a: refersTo A) generic A
+    allocateMemory var a
+define start()
+variables arrayRef: refersTo array from 0 to 10 of integer
+variables f: refersTo foo
+    fakeAllocate var arrayRef
+    fakeAllocate var f
+    arrayRef[0] := 5
+    writeARefersToArray arrayRef
+    freeMemory var arrayRef
+    freeMemory var f

@@ -1,0 +1,10 @@
+record foo
+    flags: array from 0 to 1000000 of integer
+define start()
+variables foo : array from 0 to 4 of foo
+variables foo1 : array from 1 to 7 of foo
+    write foo
+    write foo[0].flags[1]
+    foo[0].flags[1] := 1
+    write foo
+    write foo1

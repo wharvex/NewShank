@@ -12,7 +12,7 @@ namespace TranUnitTests
     {
         private Parser parser = null!;
         private Lexer lexer = null!;
-        private List<List<Token>> tokens = null!;
+        private List<List<Token>> tokens = new List<List<Token>>();
 
         [TestInitialize]
         public void Setup()
@@ -20,7 +20,7 @@ namespace TranUnitTests
             tokens = new List<List<Token>>();
         }
 
-        private void CreateParser(string program)
+        private void CreateParser(List<string> program)
         {
             lexer = new Lexer(program);
             tokens = lexer.Lex();
@@ -30,98 +30,126 @@ namespace TranUnitTests
         [TestMethod]
         public void ParseExpressionTestPlus()
         {
-            CreateParser("1 + 2");
+            List<string> programList = new List<string>();
+            programList.Add("1 + 2");
+            CreateParser(programList);
             Assert.AreEqual("1 Plus 2", parser.ParseExpression()!.ToString());
         }
 
         [TestMethod]
         public void ParseExpressionTestTimes()
         {
-            CreateParser("x * y");
+            List<string> programList = new List<string>();
+            programList.Add("x * y");
+            CreateParser(programList);
             Assert.AreEqual("x Times y", parser.ParseExpression()!.ToString());
         }
 
         [TestMethod]
         public void ParseExpressionTestGreaterEq()
         {
-            CreateParser("300 >= 46.56");
+            List<string> programList = new List<string>();
+            programList.Add("300 >= 46.56");
+            CreateParser(programList);
             Assert.AreEqual("300 ge 46.56", parser.ParseExpression()!.ToString());
         }
 
         [TestMethod]
         public void ParseExpressionTestLessThan()
         {
-            CreateParser("46.56 < 75");
+            List<string> programList = new List<string>();
+            programList.Add("46.56 < 75");
+            CreateParser(programList);
             Assert.AreEqual("46.56 lt 75", parser.ParseExpression()!.ToString());
         }
 
         [TestMethod]
         public void ParseExpressionTestNotEqual()
         {
-            CreateParser("1!=2");
+            List<string> programList = new List<string>();
+            programList.Add("1!=2");
+            CreateParser(programList);
             Assert.AreEqual("1 ne 2", parser.ParseExpression()!.ToString());
         }
 
         [TestMethod]
         public void ParseExpressionTestEquals()
         {
-            CreateParser("8==8");
+            List<string> programList = new List<string>();
+            programList.Add("8==8");
+            CreateParser(programList);
             Assert.AreEqual("8 eq 8", parser.ParseExpression()!.ToString());
         }
 
         [TestMethod]
         public void ParseExpressionTestMinus()
         {
-            CreateParser("3 - 2");
+            List<string> programList = new List<string>();
+            programList.Add("3 - 2");
+            CreateParser(programList);
             Assert.AreEqual("3 Minus 2", parser.ParseExpression()!.ToString());
         }
 
         [TestMethod]
         public void ParseExpressionTestDivide()
         {
-            CreateParser("x/y");
+            List<string> programList = new List<string>();
+            programList.Add("x/y");
+            CreateParser(programList);
             Assert.AreEqual("x Divide y", parser.ParseExpression()!.ToString());
         }
 
         [TestMethod]
         public void ParseExpressionTestLessEquals()
         {
-            CreateParser("557 <= 4656");
+            List<string> programList = new List<string>();
+            programList.Add("557 <= 4656");
+            CreateParser(programList);
             Assert.AreEqual("557 le 4656", parser.ParseExpression()!.ToString());
         }
 
         [TestMethod]
         public void ParseExpressionTestModulo()
         {
-            CreateParser("4656%40");
+            List<string> programList = new List<string>();
+            programList.Add("4656%40");
+            CreateParser(programList);
             Assert.AreEqual("4656 Modulo 40", parser.ParseExpression()!.ToString());
         }
 
         [TestMethod]
         public void ParseExpressionTestTrue()
         {
-            CreateParser("true");
+            List<string> programList = new List<string>();
+            programList.Add("true");
+            CreateParser(programList);
             Assert.AreEqual("True", parser.ParseExpression()!.ToString());
         }
 
         [TestMethod]
         public void ParseExpressionTestFalse()
         {
-            CreateParser("false");
+            List<string> programList = new List<string>();
+            programList.Add("false");
+            CreateParser(programList);
             Assert.AreEqual("False", parser.ParseExpression()!.ToString());
         }
 
         [TestMethod]
         public void ParseExpressionTestGreaterThan()
         {
-            CreateParser("46.56>2.29");
+            List<string> programList = new List<string>();
+            programList.Add("46.56>2.29");
+            CreateParser(programList);
             Assert.AreEqual("46.56 gt 2.29", parser.ParseExpression()!.ToString());
         }
 
         [TestMethod]
         public void ParseClassTest()
         {
-            CreateParser("class Tran");
+            List<string> programList = new List<string>();
+            programList.Add("class Tran");
+            CreateParser(programList);
             parser.ParseClass();
             Assert.AreEqual("Tran", parser.thisClass.Name);
         }
@@ -130,7 +158,9 @@ namespace TranUnitTests
         public void ParseInterfaceTest()
         {
             // CreateParser("interface Tran");
-            CreateParser("interface someName\r\n\tupdateClock()\r\n\tsquare() : number s");
+            List<string> programList = new List<string>();
+            programList.Add("interface someName\r\n\tupdateClock()\r\n\tsquare() : number s");
+            CreateParser(programList);
             parser.ParseInterface();
             Assert.AreEqual("someName", parser.thisClass.Name);
         }
@@ -138,7 +168,9 @@ namespace TranUnitTests
         [TestMethod]
         public void ParseFieldTest()
         {
-            CreateParser("number x");
+            List<string> programList = new List<string>();
+            programList.Add("number x");
+            CreateParser(programList);
             parser.ParseField();
             Assert.AreEqual("x", parser.members.First().Name);
             Assert.AreEqual("real", parser.members.First().Type.ToString());
@@ -147,12 +179,22 @@ namespace TranUnitTests
         [TestMethod]
         public void ParseFunctionTest()
         {
+            List<string> programList = new List<string>();
+            programList.Add(
+                @"
+class Tran
+    helloWorld()
+        x = 1 + 1".Replace("    ", "\t")
+            );
+            CreateParser(programList);
+            /*
             CreateParser(
                 @"
 class Tran
     helloWorld()
         x = 1 + 1".Replace("    ", "\t")
             );
+            */
             parser.Parse();
             Assert.AreEqual("helloWorld", parser.thisClass.Functions.First().Key);
             Assert.AreEqual(
@@ -166,12 +208,22 @@ class Tran
         [TestMethod]
         public void ParseReturnTest()
         {
+            List<string> programList = new List<string>();
+            programList.Add(
+                @"
+class Tran
+    helloWorld() : number retVal1, string retVal2
+        x = 1 + 1".Replace("    ", "\t")
+            );
+            CreateParser(programList);
+            /*
             CreateParser(
                 @"
 class Tran
     helloWorld() : number retVal1, string retVal2
         x = 1 + 1".Replace("    ", "\t")
             );
+            */
             parser.Parse();
             Assert.AreEqual(
                 "real",
@@ -194,6 +246,17 @@ class Tran
         [TestMethod]
         public void ParseMembersTest()
         {
+            List<string> programList = new List<string>();
+            programList.Add(
+                @"
+class Tran
+    number w
+    string x
+    boolean y
+    character z".Replace("    ", "\t")
+            );
+            CreateParser(programList);
+            /*
             CreateParser(
                 @"
 class Tran
@@ -202,6 +265,7 @@ class Tran
     boolean y
     character z".Replace("    ", "\t")
             );
+            */
             parser.Parse();
             Assert.AreEqual("w", parser.thisClass.Records.First().Value.Members[0].Name);
             Assert.AreEqual("x", parser.thisClass.Records.First().Value.Members[1].Name);
@@ -212,12 +276,22 @@ class Tran
         [TestMethod]
         public void ParseParametersTest()
         {
+            List<string> programList = new List<string>();
+            programList.Add(
+                @"
+class Tran
+    doStuff(number param1, boolean param2)
+        x = 1+1".Replace("    ", "\t")
+            );
+            CreateParser(programList);
+            /*
             CreateParser(
                 @"
 class Tran
     doStuff(number param1, boolean param2)
         x = 1+1".Replace("    ", "\t")
             );
+            */
             parser.Parse();
 
             Console.WriteLine(parser.thisClass.Functions.First().Value.ParameterVariables[1].Type);
@@ -249,7 +323,9 @@ class Tran
         //ask about this test
         public void ParseLoopTest()
         {
-            CreateParser("temp = loop x.times() \r\n" + "\tconsole.print (temp)");
+            List<string> programList = new List<string>();
+            programList.Add("temp = loop x.times() \r\n" + "\tconsole.print (temp)");
+            CreateParser(programList);
             var expression = parser.ParseLoop();
             Console.Write(expression);
         }
@@ -257,7 +333,9 @@ class Tran
         [TestMethod]
         public void ParseIfTest()
         {
-            CreateParser("if n > 100\r\n" + "\tkeepGoing = false");
+            List<string> programList = new List<string>();
+            programList.Add("if n > 100\r\n" + "\tkeepGoing = false");
+            CreateParser(programList);
             var expression = parser.ParseIf();
             var expected =
                 "if, line 0, n gt 100, begin\r\n"
@@ -274,8 +352,9 @@ class Tran
         [TestMethod]
         public void ParseBuiltInFunctionNodeTestTimes()
         {
-            var testString = ".times()";
-            Lexer newLexer = new Lexer(testString);
+            List<string> programList = new List<string>();
+            programList.Add(".times()");
+            Lexer newLexer = new Lexer(programList);
             List<List<Token>> tokens = newLexer.Lex();
             Parser newParser = new Parser(tokens);
             var expression = newParser.ParseBuiltInFunctionNode();
@@ -285,8 +364,9 @@ class Tran
         [TestMethod]
         public void ParseBuiltInFunctionNodeTestGetDate()
         {
-            var testString = "clock.getDate()";
-            Lexer newLexer = new Lexer(testString);
+            List<string> programList = new List<string>();
+            programList.Add("clock.getDate()");
+            Lexer newLexer = new Lexer(programList);
             List<List<Token>> tokens = newLexer.Lex();
             Parser newParser = new Parser(tokens);
             var expression = newParser.ParseBuiltInFunctionNode();
@@ -296,6 +376,17 @@ class Tran
         [TestMethod]
         public void ParseAccessorAndMutatorTest()
         {
+            List<string> programList = new List<string>();
+            programList.Add(
+                @"
+class Tran
+    helloWorld()
+        string y
+            accessor: value = y
+            mutator: y = value".Replace("    ", "\t")
+            );
+            CreateParser(programList);
+            /*
             CreateParser(
                 @"
 class Tran
@@ -304,6 +395,7 @@ class Tran
             accessor: value = y
             mutator: y = value".Replace("    ", "\t")
             );
+            */
             parser.Parse();
             Assert.AreEqual("J", parser.thisClass.Functions.Skip(1).ToString());
         }

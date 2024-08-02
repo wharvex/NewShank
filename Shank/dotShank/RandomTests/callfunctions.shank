@@ -1,0 +1,3 @@
+define start()
+variables f: real
+    integerToReal 4, var f

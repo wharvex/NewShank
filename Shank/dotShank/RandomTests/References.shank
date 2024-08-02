@@ -1,0 +1,22 @@
+record foo
+    age:integer
+    data: refersTo foo
+record bar
+    age:integer
+define start()
+variables b: refersTo foo
+variables v:  bar
+variables set:boolean
+    isSet b, var set 
+    write set
+    allocateMemory var b
+    b.age:=5
+    v.age:=5
+    isSet b, var set 
+    write set, b.age, v.age
+    freeMemory var b
+    isSet b, var set 
+    write set
+define tester(var a : integer)
+    a:=5
+

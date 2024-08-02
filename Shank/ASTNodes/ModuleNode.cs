@@ -287,11 +287,32 @@ public class ModuleNode : ASTNode
     ///     </para>
     /// </summary>
     /// <param name="function">The function passed in</param>
-    public void addFunction(CallableNode? function)
+    public void addFunction(FunctionNode function)
     {
-        if (function != null)
+        var originalFunction = Functions.GetValueOrDefault(function.Name);
+        switch (originalFunction)
         {
-            Functions.Add(function.Name, function);
+            case FunctionNode f:
+                f.SetOverload();
+                function.SetOverload();
+                var dictionary = new Dictionary<TypeIndex, CallableNode>
+                {
+                    [f.Overload] = f,
+                    [function.Overload] = function,
+                };
+                Functions.Remove(f.Name);
+                Functions.Add(
+                    function.Name,
+                    new OverloadedFunctionNode(function.Name, function.parentModuleName, dictionary)
+                );
+                break;
+            case OverloadedFunctionNode f:
+                function.SetOverload();
+                f.Overloads[function.Overload] = function;
+                break;
+            case null:
+                Functions.Add(function.Name, function);
+                break;
         }
     }
 

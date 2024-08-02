@@ -1,48 +1,34 @@
 namespace Shank.ASTNodes;
 
-public abstract class CallableNode : ASTNode
+public abstract class CallableNode(
+    string name,
+    string moduleName,
+    CallableNode.BuiltInCall? execute = null,
+    bool isPublicIn = false
+) : ASTNode
 {
-    public string Name { get; set; }
+    public string Name { get; set; } = name;
 
-    public string? parentModuleName { get; set; }
+    public string parentModuleName { get; set; } = moduleName;
     public Index MonomorphizedName { get; set; }
 
-    public bool IsPublic { get; set; }
+    public TypeIndex Overload { get; private set; } = new([]);
+    public List<string> GenericTypeParameterNames { get; set; } = [];
+
+    public void SetOverload() =>
+        Overload = new TypeIndex(ParameterVariables.Select(p => p.Type).ToList());
+
+    public bool IsPublic { get; set; } = isPublicIn;
 
     public int LineNum { get; set; }
 
     public List<VariableDeclarationNode> ParameterVariables { get; set; } = [];
 
-    protected CallableNode(string name)
-    {
-        Name = name;
-        IsPublic = false;
-    }
-
-    protected CallableNode(string name, string moduleName)
-    {
-        Name = name;
-        parentModuleName = moduleName;
-        IsPublic = false;
-    }
-
-    protected CallableNode(string name, BuiltInCall execute)
-    {
-        Name = name;
-        Execute = execute;
-        IsPublic = false;
-    }
-
-    protected CallableNode(string name, string moduleName, bool isPublicIn)
-    {
-        Name = name;
-        parentModuleName = moduleName;
-        IsPublic = isPublicIn;
-    }
-
     public delegate void BuiltInCall(List<InterpreterDataType> parameters);
 
-    public BuiltInCall? Execute;
+    // It is a little confusing that the type of this field is called "BuiltInCall", because this
+    // field is also used to execute non-builtin functions.
+    public BuiltInCall? Execute = execute;
 
     public bool ShouldSerializeExecute()
     {

@@ -1,0 +1,7 @@
+define start()
+variables foo, bar: string
+    foo := "foo"
+    bar := foo
+    bar := "bar"
+    write foo, bar
+

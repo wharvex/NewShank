@@ -1,10 +1,6 @@
-﻿using System.Diagnostics;
-using System.Linq.Expressions;
-using System.Text;
+﻿using System.Text;
 using Optional;
-using Optional.Linq;
 using Shank.ASTNodes;
-using Shank.AstVisitorsTim;
 
 namespace Shank;
 
@@ -54,8 +50,15 @@ public class SemanticAnalysis
     )
     {
         functions
-            .Where(kvp => kvp.Value is FunctionNode)
-            .Select(kvp => (FunctionNode)kvp.Value)
+            .Where(kvp => kvp.Value is FunctionNode or OverloadedFunctionNode)
+            .SelectMany(
+                kvp =>
+                    kvp.Value is FunctionNode f
+                        ? [f]
+                        : ((OverloadedFunctionNode)kvp.Value).Overloads.Values.Select(
+                            overload => (FunctionNode)overload
+                        )
+            )
             .ToList()
             .ForEach(fn =>
             {
@@ -93,11 +96,10 @@ public class SemanticAnalysis
     {
         foreach (var s in statements)
         {
-            var foundFunction = false;
-            if (s is AssignmentNode an)
+            switch (s)
             {
                 // Control flow reroute for vuop testing.
-                if (GetVuopTestFlag())
+                case AssignmentNode an when GetVuopTestFlag():
                 {
                     if (
                         variables.TryGetValue(
@@ -116,6 +118,7 @@ public class SemanticAnalysis
 
                         an.NewTarget.GetPlain().ReferencesGlobalVariable =
                             targetDeclaration.IsGlobal;
+                        an.Target.NewReferencesGlobalVariable = targetDeclaration.IsGlobal;
                     }
 
                     var targetType = variables[an.NewTarget.GetPlain().Name].Type;
@@ -126,8 +129,9 @@ public class SemanticAnalysis
                         variables,
                         an.NewTarget
                     );
+                    break;
                 }
-                else
+                case AssignmentNode an:
                 {
                     if (variables.TryGetValue(an.Target.Name, out var targetDeclaration))
                     {
@@ -140,192 +144,127 @@ public class SemanticAnalysis
                         }
 
                         an.Target.ReferencesGlobalVariable = targetDeclaration.IsGlobal;
+                        an.Target.NewReferencesGlobalVariable = targetDeclaration.IsGlobal;
                     }
 
                     var targetType = GetTypeOfExpression(an.Target, variables);
                     CheckAssignment(an.Target.Name, targetType, an.Expression, variables);
+                    break;
                 }
-            }
-            else if (s is FunctionCallNode fn)
-            {
-                var overloadNameExt = "";
-                //fn.Parameters.ForEach(
-                //    pn =>
-                //        overloadNameExt += pn.ToStringForOverload(
-                //            parentModule.GetImportedSafe(),
-                //            parentModule.Records,
-                //            dict
-                //        )
-                //);
-                fn.OverloadNameExt = overloadNameExt;
-
-                if (parentModule.getFunctions().ContainsKey(fn.Name))
-                {
-                    foundFunction = true;
-                    if (parentModule.getFunctions()[fn.Name] is not BuiltInFunctionNode)
-                        fn.InstantiatedGenerics = CheckFunctionCall(
-                            fn.Arguments,
-                            variables,
-                            parentModule.getFunctions()[fn.Name],
-                            fn
-                        );
-                }
-                else
-                {
-                    foreach (var import in parentModule.getImportNames())
-                    {
-                        if (Modules[import.Key].getExportNames().Contains(fn.Name))
-                        {
-                            foundFunction = true;
-                            fn.InstantiatedGenerics = CheckFunctionCall(
-                                fn.Arguments,
-                                variables,
-                                (FunctionNode)parentModule.Imported[fn.Name],
-                                fn
-                            );
-                        }
-                    }
-                }
-
-                if (
-                    GetStartModuleSafe().getFunctions().ContainsKey((string)fn.Name)
-                    && GetStartModuleSafe().getFunctions()[(string)fn.Name]
-                        is BuiltInFunctionNode builtInFunctionNode
-                )
-                {
-                    foundFunction = true;
-                    if (
-                        builtInFunctionNode
-                        is BuiltInVariadicFunctionNode builtInVariadicFunctionNode
-                    )
-                    {
-                        if (!builtInVariadicFunctionNode.AreParametersConstant) // hack to verify that all parameters are passed in as var
-                        {
-                            if (
-                                fn.Arguments.Find(
-                                    node =>
-                                        node is not VariableUsageNodeTemp temp
-                                        || !temp.GetPlain().IsInFuncCallWithVar
-                                ) is
-                                { } badArgument
-                            )
-                            {
-                                throw new SemanticErrorException(
-                                    $"cannot call builtin variadic {builtInVariadicFunctionNode.Name} with non var argument {badArgument}",
-                                    fn
-                                );
-                            }
-                        }
-
-                        fn.InstantiatedVariadics = fn.Arguments.Select(
-                            arg => GetTypeOfExpression(arg, variables)
+                case FunctionCallNode fn
+                    when parentModule.getFunctions().GetValueOrDefault(fn.Name) is { } function:
+                    CheckFunctionCall(fn, function, variables);
+                    break;
+                case FunctionCallNode fn
+                    when parentModule
+                        .getImportNames()
+                        .Select(
+                            module =>
+                                Modules[module.Key].getExportNames().Contains(fn.Name)
+                                    ? (CallableNode)parentModule.Imported[fn.Name]
+                                    : null
                         )
-                            .ToList();
-                        fn.FunctionDefinitionModule = builtInVariadicFunctionNode.parentModuleName!;
-                        // Console.WriteLine(builtInFunctionNode.parentModuleName);
-                    }
-                    else
-                    {
-                        fn.InstantiatedGenerics = CheckFunctionCall(
-                            fn.Arguments,
-                            variables,
-                            builtInFunctionNode,
-                            fn
-                        );
-                    }
-                }
-
-                if (!foundFunction)
-                {
+                        .SingleOrDefault(function1 => function1 is not null)
+                        is { } function:
+                    CheckFunctionCall(fn, function, variables);
+                    break;
+                case FunctionCallNode fn
+                    when GetStartModuleSafe().getFunctions().GetValueOrDefault(fn.Name)
+                        is BuiltInFunctionNode builtInFunctionNode:
+                    CheckFunctionCall(fn, builtInFunctionNode, variables);
+                    break;
+                case FunctionCallNode fn:
                     throw new Exception(
                         $"Could not find a definition for the function {fn.Name}."
                             + $" Make sure it was defined and properly exported if it was imported."
                     );
-                }
-            }
-            else if (s is ForNode forNode)
-            {
-                var iterationVariable = GetVuopTestFlag() ? forNode.NewVariable : forNode.Variable;
-                var typeOfIterationVariable = GetVuopTestFlag()
-                    ? GetTypeOfExpression(forNode.NewVariable, variables)
-                    : GetTypeOfExpression(forNode.Variable, variables);
-                if (variables[iterationVariable.GetPlain().Name].IsConstant)
+                case ForNode forNode:
                 {
-                    throw new SemanticErrorException(
-                        $"cannot iterate in a for loop with variable {iterationVariable} as it is not declared mutable",
-                        iterationVariable
-                    );
-                }
-
-                switch (typeOfIterationVariable)
-                {
-                    case RealType:
+                    var iterationVariable = GetVuopTestFlag()
+                        ? forNode.NewVariable
+                        : forNode.Variable;
+                    var typeOfIterationVariable = GetVuopTestFlag()
+                        ? GetTypeOfExpression(forNode.NewVariable, variables)
+                        : GetTypeOfExpression(forNode.Variable, variables);
+                    if (variables[iterationVariable.GetPlain().Name].IsConstant)
                     {
-                        var from = GetTypeOfExpression(forNode.From, variables);
-                        var to = GetTypeOfExpression(forNode.To, variables);
-                        if (
-                            to is not IntegerType or RealType
-                            || from is not IntegerType or RealType
-                        )
-                        {
-                            throw new SemanticErrorException(
-                                $"For loop with iteration variable {iterationVariable} which is an real, must have ranges to and from being integers, or reals, but found ranges \"from {from} to {to}\"",
-                                iterationVariable
-                            );
-                        }
-
-                        break;
-                    }
-                    case IntegerType:
-                    {
-                        var from = GetTypeOfExpression(forNode.From, variables);
-                        var to = GetTypeOfExpression(forNode.To, variables);
-                        if (to is not IntegerType || from is not IntegerType)
-                        {
-                            throw new SemanticErrorException(
-                                $"For loop with iteration variable {iterationVariable} which is an integer, must have ranges to and from being integers, but found ranges \"from {from} to {to}\"",
-                                iterationVariable
-                            );
-                        }
-
-                        break;
-                    }
-                    default:
                         throw new SemanticErrorException(
-                            // what about char?
-                            $"for loop iteration variable {iterationVariable} is not a real or integer, but rather a {typeOfIterationVariable}, shank cannot auto increment this type",
+                            $"cannot iterate in a for loop with variable {iterationVariable} as it is not declared mutable",
                             iterationVariable
                         );
-                }
+                    }
 
-                CheckBlock(forNode.Children, variables, parentModule);
-            }
-            // for the rest of the cases of statements doing: GetTypeOfExpression(Node.Expression, variables);, is sufficient (no need to check that the type returned is a boolean), because Expression is already known to be BooleanExpressionNode
-            // the reason we do it to make sure the underlying types of the boolean expression are fine (to disallow 1 > "5")
-            // but I think boolean expression is not sufficient for these statements, because they do not allow plain variable access (foo, foo.bar ...)
-            else if (s is RepeatNode repNode)
-            {
-                GetTypeOfExpression(repNode.Expression, variables);
-                CheckBlock(repNode.Children, variables, parentModule);
-            }
-            else if (s is WhileNode whileNode)
-            {
-                GetTypeOfExpression(whileNode.Expression, variables);
-                CheckBlock(whileNode.Children, variables, parentModule);
-            }
-            else if (s is IfNode ifNode)
-            {
-                var nextNode = ifNode;
-                while (nextNode is not null and not ElseNode)
-                {
-                    GetTypeOfExpression(nextNode.Expression, variables);
-                    CheckBlock(nextNode.Children, variables, parentModule);
-                    nextNode = nextNode.NextIfNode;
-                }
+                    switch (typeOfIterationVariable)
+                    {
+                        case RealType:
+                        {
+                            var from = GetTypeOfExpression(forNode.From, variables);
+                            var to = GetTypeOfExpression(forNode.To, variables);
+                            if (
+                                to is not IntegerType or RealType
+                                || from is not IntegerType or RealType
+                            )
+                            {
+                                throw new SemanticErrorException(
+                                    $"For loop with iteration variable {iterationVariable} which is an real, must have ranges to and from being integers, or reals, but found ranges \"from {from} to {to}\"",
+                                    iterationVariable
+                                );
+                            }
 
-                if (nextNode is ElseNode)
+                            break;
+                        }
+                        case IntegerType:
+                        {
+                            var from = GetTypeOfExpression(forNode.From, variables);
+                            var to = GetTypeOfExpression(forNode.To, variables);
+                            if (to is not IntegerType || from is not IntegerType)
+                            {
+                                throw new SemanticErrorException(
+                                    $"For loop with iteration variable {iterationVariable} which is an integer, must have ranges to and from being integers, but found ranges \"from {from} to {to}\"",
+                                    iterationVariable
+                                );
+                            }
+
+                            break;
+                        }
+                        default:
+                            throw new SemanticErrorException(
+                                // what about char?
+                                $"for loop iteration variable {iterationVariable} is not a real or integer, but rather a {typeOfIterationVariable}, shank cannot auto increment this type",
+                                iterationVariable
+                            );
+                    }
+
+                    CheckBlock(forNode.Children, variables, parentModule);
+                    break;
+                }
+                // for the rest of the cases of statements doing: GetTypeOfExpression(Node.Expression, variables);, is sufficient (no need to check that the type returned is a boolean), because Expression is already known to be BooleanExpressionNode
+                // the reason we do it to make sure the underlying types of the boolean expression are fine (to disallow 1 > "5")
+                // but I think boolean expression is not sufficient for these statements, because they do not allow plain variable access (foo, foo.bar ...)
+                case RepeatNode repNode:
+                    GetTypeOfExpression(repNode.Expression, variables);
+                    CheckBlock(repNode.Children, variables, parentModule);
+                    break;
+                case WhileNode whileNode:
+                    GetTypeOfExpression(whileNode.Expression, variables);
+                    CheckBlock(whileNode.Children, variables, parentModule);
+                    break;
+                case IfNode ifNode:
                 {
-                    CheckBlock(nextNode.Children, variables, parentModule);
+                    var nextNode = ifNode;
+                    while (nextNode is not null and not ElseNode)
+                    {
+                        GetTypeOfExpression(nextNode.Expression, variables);
+                        CheckBlock(nextNode.Children, variables, parentModule);
+                        nextNode = nextNode.NextIfNode;
+                    }
+
+                    if (nextNode is ElseNode)
+                    {
+                        CheckBlock(nextNode.Children, variables, parentModule);
+                    }
+
+                    break;
                 }
             }
         }
@@ -355,6 +294,7 @@ public class SemanticAnalysis
             v.ExtensionType = VariableUsagePlainNode.VrnExtType.Enum;
             v.Extension = new IntNode(e.Variants.IndexOf(v.Name));
             v.ReferencesGlobalVariable = true;
+            v.NewReferencesGlobalVariable = true;
         }
         else
         {
@@ -396,31 +336,122 @@ public class SemanticAnalysis
         }
     }
 
+    private static void CheckFunctionCall(
+        FunctionCallNode functionCallNode,
+        CallableNode function,
+        Dictionary<string, VariableDeclarationNode> variables
+    )
+    {
+        functionCallNode.FunctionDefinitionModule = function.parentModuleName;
+        switch (function)
+        {
+            case OverloadedFunctionNode overloads:
+            {
+                var possibleOverloads = overloads.Overloads.Values.Aggregate(
+                    (
+                        Valid: (IEnumerable<(CallableNode, Dictionary<string, Type>)>)[],
+                        Invalid: (IEnumerable<(CallableNode, string)>)[]
+                    ),
+                    (results, overload) =>
+                    {
+                        try
+                        {
+                            (CallableNode Overload, Dictionary<string, Type>) value = (
+                                overload,
+                                CheckFunctionCallInner(functionCallNode, overload, variables)
+                            );
+                            return results with { Valid = [value, ..results.Valid] };
+                        }
+                        catch (SemanticErrorException e)
+                        {
+                            return results with
+                            {
+                                Invalid = [(overload, e.Message), ..results.Invalid]
+                            };
+                        }
+                    }
+                );
+                var overload = possibleOverloads.Valid.ToList() switch
+                {
+                    []
+                        => throw new SemanticErrorException(
+                            $"""
+                             no overload found for call to {functionCallNode.Name}, with arguments {string.Join(",", functionCallNode.Arguments.Select(arg => arg.Type))}
+                             {string.Join("\n", possibleOverloads.Invalid.Select(badOverload => $"Overload with parameters {string.Join(", ", badOverload.Item1.ParameterVariables.Select(parameter => parameter.Type))} mismatched because: {badOverload.Item2} "))}
+                             """,
+                            functionCallNode
+                        ),
+                    [var validOverload] => validOverload,
+                    var validOverloads
+                        => throw new SemanticErrorException(
+                            $"""
+                                                                            ambiguous overloads for call to {functionCallNode.Name}, with arguments {string.Join(",", functionCallNode.Arguments.Select(arg => arg.Type))}
+                                                                            Possible valid overloads included:
+                                                                            {string.Join("\n", validOverloads.Select(overload => $"Overload with parameters {string.Join(", ", overload.Item1.ParameterVariables.Select(parameter => parameter.Type))}"))}
+                                                                            """,
+                            functionCallNode
+                        )
+                };
+                functionCallNode.InstantiatedGenerics = overload.Item2;
+                functionCallNode.Overload = overload.Item1.Overload;
+                break;
+            }
+            case BuiltInVariadicFunctionNode variadicFunction:
+            {
+                if (!variadicFunction.AreParametersConstant) // hack to verify that all parameters are passed in as var
+                {
+                    if (
+                        functionCallNode.Arguments.Find(
+                            node =>
+                                node
+                                    is not VariableUsageNodeTemp
+                                    {
+                                        NewReferencesGlobalVariable: true
+                                    }
+                        ) is
+                        { } badArgument
+                    )
+                    {
+                        throw new SemanticErrorException(
+                            $"cannot call builtin variadic {variadicFunction.Name} with non var argument {badArgument}",
+                            functionCallNode
+                        );
+                    }
+                }
+
+                functionCallNode.InstantiatedVariadics = functionCallNode
+                    .Arguments.Select(arg => GetTypeOfExpression(arg, variables))
+                    .ToList();
+                break;
+            }
+            default:
+                functionCallNode.InstantiatedGenerics = CheckFunctionCallInner(
+                    functionCallNode,
+                    function,
+                    variables
+                );
+                break;
+        }
+    }
+
     // This is why something like type usage/IType is useful, because when we just return the datatype
     // for instiation we do lose type information, such as what type of record, or enum, what is the inner type of the array?
     // and IType is the best because it only stores whats neccesary for a givern type
-    private static Dictionary<string, Type> CheckFunctionCall(
-        List<ExpressionNode> args,
-        Dictionary<string, VariableDeclarationNode> variables,
+    private static Dictionary<string, Type> CheckFunctionCallInner(
+        FunctionCallNode functionCallNode,
         CallableNode fn,
-        FunctionCallNode functionCallNode
+        Dictionary<string, VariableDeclarationNode> variables
     )
     {
+        var args = functionCallNode.Arguments;
         functionCallNode.FunctionDefinitionModule = fn.parentModuleName!;
 
-        foreach (
-            var (
-                param,
-                index
-            ) in fn.ParameterVariables //pull params
-            .Select((param, index) => (param, index)) //pulls params
+        if (
+            args.Count
+            != fn.ParameterVariables.Count
+                - fn.ParameterVariables.Take(args.Count)
+                    .Count(parameter => parameter.IsDefaultValue)
         )
-        {
-            if (param.IsDefaultValue && index > args.Count - 1)
-                args.Add((ExpressionNode)param.InitialValue);
-        }
-
-        if (args.Count != fn.ParameterVariables.Count)
             throw new SemanticErrorException(
                 "For function "
                     + fn.Name
@@ -430,24 +461,17 @@ public class SemanticAnalysis
                     + fn.ParameterVariables.Count
                     + " are required."
             );
-        // TODO: overloads and default parameters might have different arrity
-        // TODO: works for Default. overloads still a WIP
-        var selectMany = fn.ParameterVariables.Zip(args)
+        var selectMany = fn.ParameterVariables.Take(args.Count)
+            .Zip(args)
             .SelectMany(paramAndArg =>
             {
                 var param = paramAndArg.First;
-                var arguement = paramAndArg.Second;
-                //
-                // var actualArguement =
-                //     arguement.Variable == null
-                //         ? arguement.Constant
-                //         : variables[arguement.Variable.Name];
-                CheckParameterMutability(param, arguement, variables, functionCallNode);
-                IEnumerable<(string, Type)> typeCheckAndInstiateGenericParameter =
-                    TypeCheckAndInstiateGenericParameter(param, arguement, variables, fn);
-                return typeCheckAndInstiateGenericParameter;
+                var argument = paramAndArg.Second;
+                CheckParameterMutability(param, argument, variables, functionCallNode);
+                return TypeCheckAndInstantiateGenericParameter(param, argument, variables, fn);
             })
             .Distinct();
+
         return
             selectMany.GroupBy(pair => pair.Item1).FirstOrDefault(group => group.Count() > 1)
                 is { } bad
@@ -458,33 +482,34 @@ public class SemanticAnalysis
             : selectMany.ToDictionary();
     }
 
-    public static IEnumerable<(string, Type)> TypeCheckAndInstiateGenericParameter(
+    private static IEnumerable<(string, Type)> TypeCheckAndInstantiateGenericParameter(
         VariableDeclarationNode param,
         ExpressionNode argument,
         Dictionary<string, VariableDeclarationNode> variables,
         CallableNode fn
     )
     {
-        // check that the arguement passed in has the right type for its parameter
-        // and also if the parameter has any generics try to instiate them
-        ExpressionNode expression = argument;
-        CheckRange(param.Name!, param.Type, expression, variables);
+        // check that the argument passed in has the right type for its parameter
+        // and also if the parameter has any generics try to instate them
+        CheckRange(param.Name!, param.Type, argument, variables);
 
         if (
             param.Type is EnumType e
-            && expression is VariableUsagePlainNode v
+            && argument is VariableUsagePlainNode v
             && e.Variants.Contains(v.Name)
         )
         {
             if (v.ExtensionType != VariableUsagePlainNode.VrnExtType.None)
             {
-                throw new SemanticErrorException($"ambiguous variable name {v.Name}", expression);
+                throw new SemanticErrorException($"ambiguous variable name {v.Name}", argument);
             }
 
+            argument.Type = param.Type;
             return [];
         }
 
-        var expressionType = GetTypeOfExpression(expression, variables);
+        var expressionType = GetTypeOfExpression(argument, variables);
+        argument.Type = argument.Type is DefaultType ? expressionType : argument.Type;
         return !param.Type.Equals(expressionType)
             ?
             // infer instantiated type
@@ -492,8 +517,8 @@ public class SemanticAnalysis
                 .ValueOr(
                     () =>
                         throw new SemanticErrorException(
-                            $"Type mismatch cannot pass to {param.Name!}: {param.Type} {expression}: {expressionType}",
-                            expression
+                            $"Type mismatch cannot pass to {param.Name!}: {param.Type} {argument}: {expressionType}",
+                            argument
                         )
                 )
             : [];
@@ -520,10 +545,8 @@ public class SemanticAnalysis
                     => Option.Some(Enumerable.Empty<(string, Type)>()).Filter(a.Equals(b))
             };
 
-        Option<IEnumerable<(string, Type)>> MatchTypesGeneric(GenericType g, Type type)
-        {
-            return Option.Some(Enumerable.Repeat((g.Name, type), 1));
-        }
+        Option<IEnumerable<(string, Type)>> MatchTypesGeneric(GenericType g, Type type) =>
+            Option.Some(Enumerable.Repeat((g.Name, type), 1));
 
         Option<IEnumerable<(string, Type)>> MatchTypesInstantiated(
             InstantiatedType paramType,
@@ -531,11 +554,11 @@ public class SemanticAnalysis
         ) =>
             paramType
                 .InstantiatedGenerics.Values.Zip(type.InstantiatedGenerics.Values)
-                .Select((pair) => MatchTypes(pair.Item1, pair.Item2))
+                .Select(pair => MatchTypes(pair.Item1, pair.Item2))
                 .Aggregate((first, second) => first.FlatMap(f => second.Map(f.Union)));
     }
 
-    // assumptions if the arguement is a variable it assumed to be there already from previous check in check function call
+    // assumptions if the argument is a variable it assumed to be there already from previous check in check function call
     private static void CheckParameterMutability(
         VariableDeclarationNode param,
         ExpressionNode argument,
@@ -543,11 +566,11 @@ public class SemanticAnalysis
         FunctionCallNode fn
     )
     {
-        // check that the arguement passed in has the right type of mutablility for its parameter
-        if (argument is VariableUsagePlainNode variableUsagePlainNode)
+        // check that the argument passed in has the right type of mutability for its parameter
+        if (argument is VariableUsageNodeTemp variableUsageNodeTemp)
         {
-            VariableDeclarationNode? lookedUpArguement = variables[variableUsagePlainNode.Name];
-            if (lookedUpArguement.IsConstant && !param.IsConstant)
+            var lookedUpArgument = variables[variableUsageNodeTemp.GetPlain().Name];
+            if (!variableUsageNodeTemp.NewIsInFuncCallWithVar && !param.IsConstant)
             {
                 throw new SemanticErrorException(
                     $"cannot pass non var argument when you annotate an argument var",
@@ -555,9 +578,24 @@ public class SemanticAnalysis
                 );
             }
 
-            if (param.IsConstant)
+            if (param.IsConstant && variableUsageNodeTemp.NewIsInFuncCallWithVar)
             {
-                // TODO: warning of unused var annotation
+                throw new SemanticErrorException(
+                    $"unused var annotation: argument marked as var, but parameter is not marked as var",
+                    fn
+                );
+            }
+
+            if (
+                !param.IsConstant
+                && variableUsageNodeTemp.NewIsInFuncCallWithVar
+                && lookedUpArgument.IsConstant
+            )
+            {
+                throw new SemanticErrorException(
+                    $"you tried to annotate an argument var, even though the variable referenced was not mutable",
+                    fn
+                );
             }
         }
         else if (!param.IsConstant)
@@ -569,7 +607,7 @@ public class SemanticAnalysis
         }
     }
 
-    private static void CheckRange(
+    public static void CheckRange(
         String? variable,
         Type targetType,
         ASTNode expression,
@@ -701,10 +739,11 @@ public class SemanticAnalysis
             throw new Exception("Ranged variables can only be assigned variables with a range.");
         }
 
-        throw new Exception(
-            "Unrecognized node type on line "
+        throw new SemanticErrorException(
+            $"Unrecognized node type {node} on line"
                 + node.Line
-                + " in math expression while checking range"
+                + " in math expression while checking range",
+            node
         );
     }
 
@@ -1109,8 +1148,8 @@ public class SemanticAnalysis
         StartModule = pn.GetStartModuleSafe();
         DoIfNotDoneAndSetAreDone(HandleExports, ref AreExportsDone);
         DoIfNotDoneAndSetAreDone(HandleImports, ref AreImportsDone);
-        DoIfNotDoneAndSetAreDone(HandleUnknownTypes, ref AreSimpleUnknownTypesDone);
         DoIfNotDoneAndSetAreDone(AssignNestedTypes, ref AreNestedUnknownTypesDone);
+        DoIfNotDoneAndSetAreDone(HandleUnknownTypes, ref AreSimpleUnknownTypesDone);
         DoIfNotDoneAndSetAreDone(handleTests, ref AreTestsDone);
         foreach (KeyValuePair<string, ModuleNode> module in Modules)
         {
@@ -1165,7 +1204,6 @@ public class SemanticAnalysis
                     }
                 }
             }
-
             CheckFunctions(module.Value.getFunctions(), module.Value);
             CheckFunctions(
                 module.Value.getTests().Select(u => (u.Key, (CallableNode)u.Value)).ToDictionary(),
@@ -1293,78 +1331,85 @@ public class SemanticAnalysis
 
     public static void HandleUnknownTypes()
     {
-        foreach (KeyValuePair<string, ModuleNode> currentModule in Modules)
+        foreach (var currentModule in Modules.Values)
         {
-            foreach (
-                KeyValuePair<string, CallableNode> function in currentModule.Value.getFunctions()
-            )
+            foreach (var function in currentModule.getFunctions().Values)
             {
                 CheckVariables(
-                    currentModule.Value.GlobalVariables.Values.ToList(),
-                    currentModule.Value,
-                    []
+                    currentModule.GlobalVariables.Values.ToList(),
+                    currentModule,
+                    [],
+                    new DummyGenericContext()
                 );
-                if (function.Value is BuiltInFunctionNode)
+                if (function is OverloadedFunctionNode overloads)
                 {
-                    continue;
-                }
-
-                FunctionNode currentFunction = (FunctionNode)function.Value;
-                CheckVariables(
-                    currentFunction.LocalVariables,
-                    currentModule.Value,
-                    currentFunction.GenericTypeParameterNames ?? []
-                );
-                currentFunction.LocalVariables.ForEach(
-                    vdn => OutputHelper.DebugPrintJson(vdn, vdn.Name ?? "null")
-                );
-                var generics = currentFunction.GenericTypeParameterNames ?? [];
-                List<string> usedGenerics = [];
-                foreach (var variable in currentFunction.ParameterVariables)
-                {
-                    // find the type of each parameter, and also see what generics each parameter uses
-                    variable.Type = ResolveType(
-                        variable.Type,
-                        currentModule.Value,
-                        generics,
-                        (GenericType generic) =>
-                        {
-                            usedGenerics.Add(generic.Name);
-                            return generic;
-                        }
-                    );
-                }
-
-                // if not all generics are used in the parameters that means those generics cannot be infered, but they could be used for variables which is bad
-                if (!usedGenerics.Distinct().SequenceEqual(generics))
-                {
-                    throw new SemanticErrorException(
-                        $"Generic Type parameter(s) {string.Join(", ", generics.Except(usedGenerics.Distinct()))}  cannot be infered for function {currentFunction.Name}",
-                        currentFunction
-                    );
-                }
-
-                // foreach (var statement in currentFunction.Statements)
-                /*{
-                    if (statement is AssignmentNode assignment)
+                    foreach (var overload in overloads.Overloads.Values)
                     {
-
-                        if (currentFunction.LocalVariables.Concat(currentFunction.ParameterVariables).FirstOrDefault(node =>
-                               GetTypeRecursive(node.NewType, assignment.Target) is EnumType e && assignment.Target.Name == node.Name) is not null)
-                        {
-                            // how do we know all types in all modules that the current module we are using depends on are resolved
-                            assignment.Target.ExtensionType = ASTNode.VrnExtType.Enum;
-                        }
+                        GetUnknownTypesForFunction(overload, currentModule);
                     }
-                }*/
+                }
+                else
+                {
+                    GetUnknownTypesForFunction(function, currentModule);
+                }
             }
+        }
+    }
+
+    private static void GetUnknownTypesForFunction(CallableNode function, ModuleNode currentModule)
+    {
+        if (function is BuiltInFunctionNode)
+        {
+            return;
+        }
+
+        var currentFunction = (FunctionNode)function;
+        var genericContext = new FunctionGenericContext(
+            currentFunction.Name,
+            currentModule.Name,
+            currentFunction.Overload
+        );
+        CheckVariables(
+            currentFunction.LocalVariables,
+            currentModule,
+            currentFunction.GenericTypeParameterNames,
+            genericContext
+        );
+        currentFunction.LocalVariables.ForEach(
+            vdn => OutputHelper.DebugPrintJson(vdn, vdn.Name ?? "null")
+        );
+        var generics = currentFunction.GenericTypeParameterNames;
+        List<string> usedGenerics = [];
+        foreach (var variable in currentFunction.ParameterVariables)
+        {
+            // find the type of each parameter, and also see what generics each parameter uses
+            variable.Type = ResolveType(
+                variable.Type,
+                currentModule,
+                generics,
+                generic =>
+                {
+                    usedGenerics.Add(generic);
+                    return new GenericType(generic, genericContext);
+                }
+            );
+        }
+
+        // if not all generics are used in the parameters that means those generics cannot be infered, but they could be used for variables which is bad
+        if (!usedGenerics.Distinct().SequenceEqual(generics))
+        {
+            throw new SemanticErrorException(
+                $"Generic Type parameter(s) {string.Join(", ", generics.Except(usedGenerics.Distinct()))}  cannot be infered for function {currentFunction.Name}",
+                currentFunction
+            );
         }
     }
 
     private static void CheckVariables(
         List<VariableDeclarationNode> variables,
         ModuleNode currentModule,
-        List<String> generics
+        List<string> generics,
+        GenericContext genericInfo
     )
     {
         foreach (var variable in variables)
@@ -1405,7 +1450,12 @@ public class SemanticAnalysis
             }
             else
             {
-                variable.Type = ResolveType(variable.Type, currentModule, generics, x => x);
+                variable.Type = ResolveType(
+                    variable.Type,
+                    currentModule,
+                    generics,
+                    generic => new GenericType(generic, genericInfo)
+                );
             }
         }
     }
@@ -1423,6 +1473,10 @@ public class SemanticAnalysis
             foreach (var record in module.Records.Values)
             {
                 List<string> usedGenerics = [];
+                var genericContext = new RecordGenericContext(
+                    record.Name,
+                    record.GetParentModuleSafe()
+                );
                 record.Type.Fields = record
                     .Type.Fields.Select(field =>
                     {
@@ -1432,10 +1486,10 @@ public class SemanticAnalysis
                                 field.Value,
                                 module,
                                 record.GenericTypeParameterNames,
-                                (GenericType generic) =>
+                                generic =>
                                 {
-                                    usedGenerics.Add(generic.Name);
-                                    return generic;
+                                    usedGenerics.Add(generic);
+                                    return new GenericType(generic, genericContext);
                                 }
                             )
                         );
@@ -1457,7 +1511,7 @@ public class SemanticAnalysis
         Type member,
         ModuleNode module,
         List<string> generics,
-        Func<GenericType, GenericType> genericCollector
+        Func<string, GenericType> genericCollector
     )
     {
         return member switch
@@ -1493,7 +1547,7 @@ public class SemanticAnalysis
         UnknownType member,
         ModuleNode module,
         List<string> generics,
-        Func<GenericType, GenericType> genericCollector
+        Func<string, GenericType> genericCollector
     )
     {
         var resolveType =
@@ -1507,7 +1561,7 @@ public class SemanticAnalysis
                             $"generics type cannot have generics on it",
                             module
                         )
-                        : genericCollector(new GenericType(member.TypeName))
+                        : genericCollector(member.TypeName)
                     : throw new SemanticErrorException($"Unbound type {member}", module)
             );
         if (resolveType is EnumType && member.TypeParameters.Count != 0)

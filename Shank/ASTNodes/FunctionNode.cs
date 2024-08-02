@@ -6,15 +6,8 @@ namespace Shank.ASTNodes;
 
 public class FunctionNode : CallableNode
 {
-    public FunctionNode(string name, string moduleName, bool isPublic)
-        : base(name, moduleName, isPublic)
-    {
-        Execute = paramList => Interpreter.InterpretFunction(this, paramList);
-        Name = name;
-    }
-
-    public FunctionNode(string name, string moduleName)
-        : base(name, moduleName)
+    public FunctionNode(string name, string moduleName, bool isPublic = false)
+        : base(name, moduleName, isPublicIn: isPublic)
     {
         Execute = paramList => Interpreter.InterpretFunction(this, paramList);
         Name = name;
@@ -27,9 +20,8 @@ public class FunctionNode : CallableNode
         List<VariableDeclarationNode> variables,
         List<StatementNode> statements
     )
-        : base(function.Name)
+        : base(function.Name, function.parentModuleName)
     {
-        parentModuleName = function.parentModuleName;
         LineNum = function.LineNum;
         FileName = function.FileName;
         Line = function.Line;
@@ -39,19 +31,10 @@ public class FunctionNode : CallableNode
         Statements = statements;
     }
 
-    public FunctionNode(string name)
-        : base(name)
-    {
-        Execute = paramList => Interpreter.InterpretFunction(this, paramList);
-        Name = name;
-    }
-
     public List<VariableDeclarationNode> LocalVariables { get; set; } = [];
     public List<StatementNode> Statements { get; set; } = [];
 
     public Dictionary<string, TestNode> Tests { get; set; } = [];
-
-    public List<string>? GenericTypeParameterNames { get; set; }
 
     public Dictionary<string, VariableDeclarationNode> VariablesInScope { get; set; } = [];
     public Dictionary<string, List<VariableDeclarationNode>> EnumsInScope { get; set; } = [];

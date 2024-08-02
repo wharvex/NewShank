@@ -11,10 +11,12 @@ public class VariablesGettingVisitor : WalkCompliantVisitor
         set => _currentModuleName = value;
     }
     private string? CurrentFunctionName { get; set; }
+    private TypeIndex? CurrentFunctionOverload { get; set; }
     private string? CurrentEnumName { get; set; }
 
+    // not enough information for overloads
     public Dictionary<
-        (string, string?),
+        (string, string?, TypeIndex?),
         List<VariableDeclarationNode>
     > VariableDeclarations { get; set; } = [];
 
@@ -46,6 +48,13 @@ public class VariablesGettingVisitor : WalkCompliantVisitor
     public override ASTNode Visit(FunctionNode n, out bool shortCircuit)
     {
         CurrentFunctionName = n.Name;
+        CurrentFunctionOverload = n.Overload;
+        shortCircuit = false;
+        return n;
+    }
+
+    public override ASTNode Visit(OverloadedFunctionNode n, out bool shortCircuit)
+    {
         shortCircuit = false;
         return n;
     }
@@ -53,14 +62,19 @@ public class VariablesGettingVisitor : WalkCompliantVisitor
     public override ASTNode? Visit(VariableDeclarationNode n)
     {
         if (
-            VariableDeclarations.TryGetValue((CurrentModuleName, CurrentFunctionName), out var vDex)
+            VariableDeclarations.TryGetValue(
+                (CurrentModuleName, CurrentFunctionName, CurrentFunctionOverload),
+                out var vDex
+            )
         )
         {
             vDex.Add(n);
         }
         else
         {
-            VariableDeclarations[(CurrentModuleName, CurrentFunctionName)] = [n];
+            VariableDeclarations[
+                (CurrentModuleName, CurrentFunctionName, CurrentFunctionOverload)
+            ] = [n];
         }
 
         return n;
@@ -69,14 +83,19 @@ public class VariablesGettingVisitor : WalkCompliantVisitor
     public override ASTNode Visit(VariableDeclarationNode n, out bool shortCircuit)
     {
         if (
-            VariableDeclarations.TryGetValue((CurrentModuleName, CurrentFunctionName), out var vDex)
+            VariableDeclarations.TryGetValue(
+                (CurrentModuleName, CurrentFunctionName, CurrentFunctionOverload),
+                out var vDex
+            )
         )
         {
             vDex.Add(n);
         }
         else
         {
-            VariableDeclarations[(CurrentModuleName, CurrentFunctionName)] = [n];
+            VariableDeclarations[
+                (CurrentModuleName, CurrentFunctionName, CurrentFunctionOverload)
+            ] = [n];
         }
 
         shortCircuit = true;
@@ -87,12 +106,12 @@ public class VariablesGettingVisitor : WalkCompliantVisitor
     public override ASTNode Final(FunctionNode n)
     {
         List<VariableDeclarationNode> varsInScopeList = [];
-        if (VariableDeclarations.TryGetValue((CurrentModuleName, n.Name), out var vDex))
+        if (VariableDeclarations.TryGetValue((CurrentModuleName, n.Name, n.Overload), out var vDex))
         {
             varsInScopeList.AddRange(vDex);
         }
 
-        if (VariableDeclarations.TryGetValue((CurrentModuleName, null), out var globalVDex))
+        if (VariableDeclarations.TryGetValue((CurrentModuleName, null, null), out var globalVDex))
         {
             varsInScopeList.AddRange(globalVDex);
         }

@@ -1,0 +1,6 @@
+define start()
+variables a,b:string
+    a := "hi"
+    b := a
+    b := "dd"
+    write a, b

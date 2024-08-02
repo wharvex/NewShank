@@ -1,0 +1,16 @@
+record house
+    windowCount: integer
+    doorCount: integer
+    owner: string
+    nextBlock: block
+
+record block
+    houses:  refersTo house
+
+define start()
+variables h1: house
+    h1.windowCount := 5
+    h1.doorCount := 5
+    h1.owner := "vor"
+    write "bye", h1, "hi"
+

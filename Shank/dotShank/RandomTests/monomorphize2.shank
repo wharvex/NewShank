@@ -1,0 +1,9 @@
+define start()
+    overload "", "ff:"
+
+define overload(a : string; b: A) generic A
+    write a
+    overload1 false, b
+
+define overload1(a: boolean; b: A) generic A
+    write a

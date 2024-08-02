@@ -30,7 +30,7 @@ git clone https://github.com/mphipps1/ShankCompiler.git
 cd ShankCompiler/Shank
 
 # runs compiler
-dotnet run -- Compile ./ShankTestFiles/HelloWorld.shank --print-ir -o HelloWorld.exe 
+dotnet run -- Compile ./ShankTestFiles/HelloWorld.shank --print-llvm -o HelloWorld.exe 
 
 # runs Interpreter
 dotnet run -- Interpret ./ShankTestFiles/HelloWorld.shank
