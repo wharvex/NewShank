@@ -88,11 +88,11 @@ public class Parser
             thisClass.AddRecord(record);
             program.AddToModules(thisClass);
 
-            foreach (var function in thisClass.Functions)
+            foreach (FunctionNode function in thisClass.Functions.Values)
             {
                 foreach (var member in record.Members)
                 {
-                    ((FunctionNode)function.Value).LocalVariables.Add(
+                    function.LocalVariables.Add(
                         new VariableDeclarationNode(
                             false,
                             member.Type,
@@ -101,7 +101,7 @@ public class Parser
                             false
                         )
                     );
-                    ((FunctionNode)function.Value).VariablesInScope.Add(
+                    function.VariablesInScope.Add(
                         member.Name,
                         new VariableDeclarationNode(
                             false,
@@ -169,8 +169,10 @@ public class Parser
             );
             if (propertyType == TokenType.ACCESSOR)
             {
-                property.ParameterVariables.Add(value);
+                property.LocalVariables.Add(value);
                 property.VariablesInScope.Add(value.Name!, value);
+                var retVal = new VariableDeclarationNode(false, variable.Type, "retVal", thisClass.Name, false);
+                property.ParameterVariables.Add(retVal);
             }
             else
             {

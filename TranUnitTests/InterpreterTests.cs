@@ -239,6 +239,7 @@ class start
     start()
         number a
         a = x + 10
+        console.print(a)
         a = a + x + 100 + (x*2)
         a = (x+(x+x)+x)".Replace("    ", "\t")
             );
@@ -317,11 +318,14 @@ class start
                 @"
 class start
     number x
+        accessor:
+            value = x
         mutator:
             x = value
 
     start()
-        x = 999".Replace("    ", "\t")
+        x = 999
+        console.print(x)".Replace("    ", "\t")
             );
             RunInterpreter();
         }
@@ -335,7 +339,7 @@ class start
 class start
     number x
         mutator:
-            x = value
+            x = 100
     string y
         mutator:
             y = value
@@ -352,6 +356,76 @@ class test
         a = 9000 * 1000".Replace("    ", "\t")
             );
             InitializeInterpreter(files);
+            RunInterpreter();
+        }
+
+        [TestMethod]
+        public void InterpreterTestObjects()
+        {
+            List<string> files = new List<string>();
+            files.Add(
+                @"
+class start
+    start()
+        Student s = new()
+        s.addGrade(100)
+        console.print(s.grade)".Replace("    ", "\t")
+            );
+            files.Add(
+                @"
+class Student
+    number grade
+        accessor:
+            value = grade
+        mutator:
+            grade = value
+
+    construct()
+        grade = 0
+
+    addGrade(number score)
+        grade = grade + score".Replace("    ", "\t")
+            );
+            InitializeInterpreter(files);
+            RunInterpreter();
+        }
+
+        [TestMethod]
+        public void InterpreterTestComplexExpressions()
+        {
+            InitializeInterpreter(
+                @"
+class tran
+    number x
+        accessor:
+            value = x
+        mutator:
+            x = value
+
+    start()
+        number a
+        a = 50
+        x = 100
+        a = x/a
+        console.print(a)
+        console.print(x)
+        {a = ((x/a) + (a*2))/2
+        console.print(a)
+        a = getNumber()/2 + x+100 * (getNumber()*getNumber())
+        console.print(a)
+        number b
+        a, b = getNumbers()
+        console.print(a)
+        console.print(b)}
+        
+
+    getNumber() : number retVal
+        retVal = (x*5)/2
+
+    getNumbers() : number ret1, number ret2
+        ret1 = 100/2
+        ret2 = 777+777".Replace("    ", "\t")
+            );
             RunInterpreter();
         }
 
