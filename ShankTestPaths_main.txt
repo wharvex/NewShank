@@ -7,4 +7,4 @@ Interpret Shank/dotShank/Globals
 Interpret Shank/dotShank/UnitTestTests1 -u
 Interpret Shank/dotShank/Builtins/Write
 Interpret Shank/dotShank/Enums
-Compile Shank/dotShank/TestLlvmTheoAndMendel -S --print-ir
+Compile Shank/dotShank/TestLlvmTheoAndMendel -S --print-llvm

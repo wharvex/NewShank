@@ -872,8 +872,8 @@ public class Interpreter
             // IF ((our called function is a variadic builtin) OR (this param on the called function
             // is declared with `var`)) AND (this arg on the call itself is a variable)
             // With this logic, we're allowing variadic builtins to bypass the requirement that in
-            // order to have its params updated after the call, a callable must have those params
-            // declared with their IsConstant properties set to false.
+            // order to have its params updated after the call, a called function must declare those
+            // params with their IsConstant properties set to false.
             // We're (probably) doing this because variadic builtins don't have declared parameters.
             if (
                 (
