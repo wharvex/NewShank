@@ -81,7 +81,7 @@ public class Parser
         {
             throw new Exception("No class or interface declaration found in file");
         }
-        
+
         AcceptSeparators();
         while (handler.MoreTokens())
         {
