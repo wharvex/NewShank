@@ -122,7 +122,7 @@ namespace Tran
                 function.LocalVariables.Add(tempVar);
                 var accessor = new FunctionCallNode("_" + variableRef.Name + "_accessor");
                 var tempArg = new VariableUsagePlainNode("_temp_" + variableRef.Name, module.Name);
-                tempArg.IsInFuncCallWithVar = true;
+                tempArg.NewIsInFuncCallWithVar = true;
                 accessor.Arguments.Add(tempArg);
                 function.Statements.Insert(index, accessor);
                 index++;

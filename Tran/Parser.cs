@@ -81,12 +81,15 @@ public class Parser
         {
             throw new Exception("No class or interface declaration found in file");
         }
-
+        
         AcceptSeparators();
         while (handler.MoreTokens())
         {
-            AcceptSeparators();
-
+            if (ParseClass() || ParseInterface())
+            {
+                AcceptSeparators();
+                blockLevel++;
+            }
             if (ParseField() || ParseFunction())
             {
                 AcceptSeparators();
@@ -396,7 +399,7 @@ public class Parser
                 var variable = currentFunction.VariablesInScope[wordToken.GetValue()];
                 if (variable.IsConstant)
                 {
-                    variableRef.IsInFuncCallWithVar = true;
+                    variableRef.NewIsInFuncCallWithVar = true;
                 }
             }
 
@@ -431,7 +434,7 @@ public class Parser
             }
             else if (handler.MatchAndRemove(TokenType.COMMA) != null)
             {
-                variable.IsInFuncCallWithVar = true;
+                variable.NewIsInFuncCallWithVar = true;
                 List<VariableUsagePlainNode> variables = [variable];
                 do
                 {
@@ -439,7 +442,7 @@ public class Parser
                     variable = ParseVariableReference();
                     if (variable != null)
                     {
-                        variable.IsInFuncCallWithVar = true;
+                        variable.NewIsInFuncCallWithVar = true;
                         variables.Add(variable);
                     }
                     else
@@ -921,7 +924,7 @@ public class Parser
 
             //Insert statement to call the function
             var varRef = new VariableUsagePlainNode(tempVar.Name, thisClass.Name);
-            varRef.IsInFuncCallWithVar = true;
+            varRef.NewIsInFuncCallWithVar = true;
             varRef.Type = new UnknownType();
             functionCall.Arguments.Add(varRef);
             statements.Add(functionCall);

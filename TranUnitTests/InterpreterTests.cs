@@ -450,7 +450,8 @@ class test implements someName
         console.print(y)
 
     square(number x) : number s
-        s = x*x".Replace("    ", "\t")
+        number a
+        a = 1".Replace("    ", "\t")
             );
             InitializeInterpreter(files);
             RunInterpreter();
