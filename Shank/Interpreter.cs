@@ -33,83 +33,9 @@ public class Interpreter
     public static List<ModuleNode> GetModulesAsList() =>
         GetModulesSafe().Select(kvp => kvp.Value).ToList();
 
-    [Obsolete("Please use GetVariablesDictionary")]
-    private static Dictionary<string, InterpreterDataType> OldOldGetVariablesDictionary(
-        FunctionNode fn,
-        List<InterpreterDataType> parameters,
-        ModuleNode? maybeModule = null
-    ) =>
-        // Return dictionary with the names of the VDNs in fn.ParameterVariables, fn.LocalVariables,
-        // and maybeModule.GlobalVariables as the keys, and with the IDTs from `parameters' and from
-        // converting the VDNs in fn.LocalVariables and maybeModule.GlobalVariables as the values.
-        fn.LocalVariables.Select(
-            lv =>
-                new KeyValuePair<string, InterpreterDataType>(
-                    lv.GetNameSafe(),
-                    VariableNodeToActivationRecord(lv)
-                )
-        )
-            .Concat(
-                fn.ParameterVariables.Zip(
-                    parameters,
-                    (vdn, idt) =>
-                        new KeyValuePair<string, InterpreterDataType>(vdn.GetNameSafe(), idt)
-                )
-            )
-            .Concat(
-                maybeModule
-                    ?.GlobalVariables
-                    .Select(
-                        kvp =>
-                            new KeyValuePair<string, InterpreterDataType>(
-                                kvp.Key,
-                                VariableNodeToActivationRecord(kvp.Value)
-                            )
-                    ) ?? []
-            )
-            .ToDictionary();
-
-    [Obsolete("Please use GetVariablesDictionary")]
-    private static Dictionary<string, InterpreterDataType> OldGetVariablesDictionary(
-        FunctionNode fn,
-        List<InterpreterDataType> parameters,
-        ModuleNode? maybeModule = null
-    ) =>
-        // Return dictionary with the names of the VDNs in fn.ParameterVariables, fn.LocalVariables,
-        // and maybeModule.GlobalVariables as the keys, and with the IDTs from `parameters' and from
-        // converting the VDNs in fn.LocalVariables and maybeModule.GlobalVariables as the values.
-        fn.LocalVariables.Select(lv =>
-        {
-            // Convert the VDN `lv' in fn.LocalVariables to an IDT.
-            var ttiVis = new TypeToInterpreterDataTypeConvertingVisitor(lv.InitialValue);
-            lv.Type.Accept(ttiVis);
-
-            // Create a KVP for looking up this IDT.
-            return new KeyValuePair<string, InterpreterDataType>(lv.GetNameSafe(), ttiVis.Idt);
-        })
-            .Concat(
-                fn.ParameterVariables.Zip(
-                    parameters,
-                    (vdn, idt) =>
-                        new KeyValuePair<string, InterpreterDataType>(vdn.GetNameSafe(), idt)
-                )
-            )
-            .Concat(
-                maybeModule
-                    ?.GlobalVariables
-                    .Select(
-                        kvp =>
-                            new KeyValuePair<string, InterpreterDataType>(
-                                kvp.Key,
-                                VariableNodeToActivationRecord(kvp.Value)
-                            )
-                    ) ?? []
-            )
-            .ToDictionary();
-
     private static Dictionary<string, InterpreterDataType> GetVariablesDictionary(
         FunctionNode fn,
-        List<InterpreterDataType> args
+        IReadOnlyList<InterpreterDataType> args
     )
     {
         return fn.VariablesInScope.Select(kvp =>

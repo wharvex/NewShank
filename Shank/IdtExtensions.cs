@@ -1,8 +1,5 @@
-﻿using LLVMSharp;
-using Newtonsoft.Json;
-using Shank.ASTNodes;
+﻿using Shank.ASTNodes;
 using Shank.MathOppable;
-using Shank.WalkCompliantVisitors;
 
 namespace Shank;
 
@@ -125,13 +122,6 @@ public static class IdtExtensions
         return true;
     }
 
-    public static T DeepCopyJsonDotNet<T>(this T input)
-        where T : class
-    {
-        return JsonConvert.DeserializeObject<T>(JsonConvert.SerializeObject(input))
-            ?? throw new InvalidOperationException("???");
-    }
-
     public static bool TryGetIdt(
         this List<InterpreterDataType> these,
         int idx,
@@ -146,30 +136,5 @@ public static class IdtExtensions
 
         idt = InterpreterDataType.Default;
         return false;
-    }
-}
-
-public class TypeConverter<T> : JsonConverter
-{
-    public override void WriteJson(JsonWriter writer, object? val, JsonSerializer serializer)
-    {
-        if (val is not null)
-            val = (T)val;
-        serializer.Serialize(writer, val);
-    }
-
-    public override object? ReadJson(
-        JsonReader reader,
-        System.Type objectType,
-        object? existingValue,
-        JsonSerializer serializer
-    )
-    {
-        return serializer.Deserialize<T>(reader);
-    }
-
-    public override bool CanConvert(System.Type objectType)
-    {
-        return objectType == typeof(Type);
     }
 }
