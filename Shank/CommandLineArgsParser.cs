@@ -335,7 +335,7 @@ public class CommandLineArgsParser
     // extract semantic analysis into one function so that both compiler and interpreter do the same thing
     // this is copied from interpreter as it seems to have had the most up to date semantic analysis at the time of doing this
     // TODO: ANY NEW THINGS YOU WANT TO ADD TO SEMANTIC ANALYSIS PLEASE ADD TO NEWRUNSEMANTICANALYSIS SO THAT WE CAN SWITCH OVER
-    private static void RunSemanticAnalysis(InterpretOptions options, ProgramNode program)
+    public static void RunSemanticAnalysis(InterpretOptions options, ProgramNode program)
     {
         program.SetStartModule();
         SemanticAnalysis.ActiveInterpretOptions = options;
