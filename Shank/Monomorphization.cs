@@ -5,6 +5,69 @@ namespace Shank;
 
 /// <summary>
 /// does monomorphization
+/// what is monomorphization?
+/// lets say you have this code
+/// define swap(var a: A, var b: A) generic A
+/// variables temp: A
+///     temp := a
+///     b := a
+///     a := b
+/// define start()
+/// variables x, y: integer
+/// variables a, b: bool
+///     swap var x, var y
+///     swap var a, var b
+///
+/// Now LLVM (and most other low level representations of programs) do not have a concept of generics.
+/// So we use monomorphization to implement generics.
+/// The first step is during semantic analysis is to infer and mark what each generic in the function corresponds to (this is called a substitution).
+/// So you could imagine that after semantic analysis, the start function looks like:
+/// define start()
+/// variables x, y: integer
+/// variables a, b: boolean
+///     swap var x, var y [A=integer]
+///     swap var a, var b [A=boolean]
+///
+/// In the monomorophization stage what we do is we copy the generic function for each different type the generics are used with (you can think of as like turning each generic function into an overloaded function)
+/// We have to keep some more information, the information is instantiatedTypes which is like [A=integer] or [B=integer], this corresponds to any of the types we inferred for each generic, I will also be calling this a substitution (it is a mapping from generics to their actual type).
+/// This information starts out as empty (because the start function does not have any generics).
+/// We then traverse starting at the start function.
+/// When we traverse to a function we first apply the substitution to the parameters and variables, then we traverse through the body of the function.
+/// If its a builtin function then there is no body to traverse through.
+/// We then add it back to the program indexed by the name, module, and parameters.
+/// The only type of statement that we really care about when traversing is the function call (we have to traverse through all the other statements to find the function calls).
+/// When we see a function call, we lookup the function, and the traverse with the substitution given by applying the current monomorphization substitution to the function calls substitution (inferred during semantic analysis)
+///
+/// So for our example what would happen:
+/// instantiatedTypes = [], Visit(start)
+/// found call (swap var x, var y) with substitution [A=integer]
+///     instantiatedTypes = [A=integer], Visit(swap)
+///     substituting parameters and variables
+///     define swap(var a: integer, var b: integer) generic integer
+///     variables temp: integer
+///     adding function (swap, default, integer)
+/// found call (swap var x, var y) with substitution [A=boolean]
+///     instantiatedTypes = [A=boolean], Visit(swap)
+///     substituting parameters and variables
+///     define swap(var a: boolean, var b: boolean) generic boolean
+///     variables temp: boolean
+///     adding function (swap, default, boolean)
+/// Resulting in:
+/// define swap[default, integer](var a: integer, var b: integer)
+/// variables temp: integer
+///     temp := a
+///     b := a
+///     a := b
+/// define swap[default, boolean](var a: boolean, var b: boolean)
+/// variables temp: boolean
+///     temp := a
+///     b := a
+///     a := b
+/// define start()
+/// variables x, y: integer
+/// variables a, b: bool
+///     swap[default, integer] var x, var y
+///     swap[default, boolean] var a, var b
 /// </summary>
 public interface Index;
 
