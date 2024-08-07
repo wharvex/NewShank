@@ -63,64 +63,49 @@ public class Parser
 
     public ProgramNode Parse()
     {
-        List<Token> allTokens = new List<Token>();
-        foreach (var file in files)
+        for (int i = 0; i < files.Count; i++)
         {
-            handler = new TokenHandler(file);
+            handler = new TokenHandler(files[i]);
+            AcceptSeparators();
+            if (!ParseInterface() && !ParseClass())
+            {
+                throw new Exception("No class declaration found in file");
+            }
+
+            AcceptSeparators();
             while (handler.MoreTokens())
             {
-                Token token = handler.GetNextToken();
-                allTokens.Add(token);
-            }
-        }
-
-        handler = new TokenHandler(allTokens);
-        AcceptSeparators();
-        if (!ParseInterface() && !ParseClass())
-        {
-            throw new Exception("No class or interface declaration found in file");
-        }
-
-        AcceptSeparators();
-        while (handler.MoreTokens())
-        {
-            AcceptSeparators();
-            if (ParseClass() || ParseInterface())
-            {
                 AcceptSeparators();
-                blockLevel++;
-            }
 
-            if (ParseField() || ParseFunction())
-            {
-                AcceptSeparators();
-                continue;
+                if (ParseField() || ParseFunction())
+                {
+                    AcceptSeparators();
+                    continue;
+                }
+                throw new Exception("Statement is not a function or field");
             }
+            thisClass.ExportTargetNames = sharedNames;
+            thisClass.UpdateExports();
 
-            throw new Exception("Statement is not a function or field");
+            RecordNode record = new RecordNode("this", thisClass.Name, members, null);
+            thisClass.AddRecord(record);
+            program.AddToModules(thisClass);
+
+            var recordParam = new VariableDeclarationNode(
+                false,
+                new UnknownType("this"),
+                record.Name,
+                thisClass.Name,
+                false
+            );
+
+            //foreach (FunctionNode function in thisClass.Functions.Values)
+            //{
+            //    function.ParameterVariables.Add(recordParam);
+            //    //function.VariablesInScope.Add(recordParam.Name, recordParam);
+            //}
+            blockLevel--;
         }
-
-        thisClass.ExportTargetNames = sharedNames;
-        thisClass.UpdateExports();
-
-        RecordNode record = new RecordNode("this", thisClass.Name, members, null);
-        thisClass.AddRecord(record);
-        program.AddToModules(thisClass);
-
-        var recordParam = new VariableDeclarationNode(
-            false,
-            record.Type,
-            record.Name,
-            thisClass.Name,
-            false
-        );
-
-        //foreach(FunctionNode function in thisClass.Functions.Values)
-        //{
-        //    function.ParameterVariables.Add(recordParam);
-        //    //function.VariablesInScope.Add(recordParam.Name, recordParam);
-        //
-        blockLevel--;
         return program;
     }
 
