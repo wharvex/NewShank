@@ -272,8 +272,24 @@ namespace Tran
                     return member;
                 }
             }
-
             return null;
+        }
+
+        //Interfaces should use an enum inside the interface to determine which subtype to use, each implemented subclass should have enum
+        //Interfaces: contain an enum inside the interface for subtype of class, each class has a type - do later
+        public static List<EnumNode> InterfaceSomething(ModuleNode module) // todo: change return and method name
+        {
+            List<EnumNode> enums = new List<EnumNode>();
+
+            foreach (var member in module.Records)
+            {
+                foreach (char moduleName in member.Key)
+                {
+                    Console.WriteLine("---- in interface -- " + moduleName);
+                }
+            }
+
+            return enums;
         }
     }
 }

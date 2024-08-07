@@ -5,8 +5,77 @@ namespace Shank;
 
 /// <summary>
 /// does monomorphization
+/// what is monomorphization?
+/// lets say you have this code
+/// define swap(var a: A, var b: A) generic A
+/// variables temp: A
+///     temp := a
+///     b := a
+///     a := b
+/// define start()
+/// variables x, y: integer
+/// variables a, b: bool
+///     swap var x, var y
+///     swap var a, var b
+///
+/// Now LLVM (and most other low level representations of programs) do not have a concept of generics.
+/// So we use monomorphization to implement generics.
+/// The first step is during semantic analysis is to infer and mark what each generic in the function corresponds to (this is called a substitution).
+/// So you could imagine that after semantic analysis, the start function looks like:
+/// define start()
+/// variables x, y: integer
+/// variables a, b: boolean
+///     swap var x, var y [A=integer]
+///     swap var a, var b [A=boolean]
+///
+/// In the monomorophization stage what we do is we copy the generic function for each different type the generics are used with (you can think of as like turning each generic function into an overloaded function)
+/// We have to keep some more information, the information is instantiatedTypes which is like [A=integer] or [B=integer], this corresponds to any of the types we inferred for each generic, I will also be calling this a substitution (it is a mapping from generics to their actual type).
+/// This information starts out as empty (because the start function does not have any generics).
+/// We then traverse starting at the start function.
+/// When we traverse to a function we first apply the substitution to the parameters and variables, then we traverse through the body of the function.
+/// If its a builtin function then there is no body to traverse through.
+/// We then add it back to the program indexed by the name, module, and parameters.
+/// The only type of statement that we really care about when traversing is the function call (we have to traverse through all the other statements to find the function calls).
+/// When we see a function call, we lookup the function, and the traverse with the substitution given by applying the current monomorphization substitution to the function calls substitution (inferred during semantic analysis)
+///
+/// So for our example what would happen:
+/// instantiatedTypes = [], Visit(start)
+/// found call (swap var x, var y) with substitution [A=integer]
+///     instantiatedTypes = [A=integer], Visit(swap)
+///     substituting parameters and variables
+///     define swap(var a: integer, var b: integer) generic integer
+///     variables temp: integer
+///     adding function (swap, default, integer)
+/// found call (swap var x, var y) with substitution [A=boolean]
+///     instantiatedTypes = [A=boolean], Visit(swap)
+///     substituting parameters and variables
+///     define swap(var a: boolean, var b: boolean) generic boolean
+///     variables temp: boolean
+///     adding function (swap, default, boolean)
+/// Resulting in:
+/// define swap[default, integer](var a: integer, var b: integer)
+/// variables temp: integer
+///     temp := a
+///     b := a
+///     a := b
+/// define swap[default, boolean](var a: boolean, var b: boolean)
+/// variables temp: boolean
+///     temp := a
+///     b := a
+///     a := b
+/// define start()
+/// variables x, y: integer
+/// variables a, b: bool
+///     swap[default, integer] var x, var y
+///     swap[default, boolean] var a, var b
+///
+/// Another interesting fact is that after this is done all unused functions are gone (and maybe eventually all unused global variables).
 /// </summary>
+#pragma warning disable IDE1006 // Naming Styles
+// ReSharper disable once IdentifierTypo
+// ReSharper disable once InconsistentNaming
 public interface Index;
+#pragma warning restore IDE1006 // Naming Styles
 
 public record struct NamedIndex(string Name) : Index;
 
@@ -109,10 +178,17 @@ public class MonomorphizationVisitor(
 
     public override void Visit(RecordNode node) { }
 
+    // Although not explained before we have another special case for variadic function calls.
+    // Variadic functions do not have explicit parameters (because the amount of arguments is not known until the call site).
+    // Another difference is with variadic functions there is no generic to substitute with (so we get a list of the types of each argument FunctionCallNode.InstantiatedVariadics).
+    // What we do is we create new builtin function with exactly the number of arguments parameters.
+    // If it's not variadic then it's the same as a function except it has no statements or variables.
+    // We have to use also take the function call node because if it's a variadic besides for knowing any previous substitutions we also need to know the argument types (InstantiatedVariadics).
     private void Visit(BuiltInFunctionNode node, FunctionCallNode caller)
     {
         if (node is BuiltInVariadicFunctionNode variadicFunctionNode)
         {
+            // get the type of each "parameter" (argument).
             var instantiatedVariadics = caller
                 .InstantiatedVariadics.Select(
                     instantiatedType =>
@@ -126,11 +202,13 @@ public class MonomorphizationVisitor(
                 new TypeIndex(instantiatedVariadics)
             );
             Push(typedBuiltinIndex);
+            // if we already went over this builtin then just use that version
             if (ProgramNode.BuiltinFunctions.ContainsKey(typedBuiltinIndex))
             {
                 return;
             }
 
+            // create the actual "parameters" corresponding to each argument.
             var parameters = instantiatedVariadics
                 .Select(
                     (parameterType, index) =>
@@ -143,6 +221,7 @@ public class MonomorphizationVisitor(
                         }
                 )
                 .ToList();
+            // You'll see these calls to constructors a lot in this code these are copy constructors , because some of the data from the original AST is fine but for example all the parameters need to be new.
             var function = new BuiltInFunctionNode(variadicFunctionNode, parameters)
             {
                 MonomorphizedName = typedBuiltinIndex
@@ -152,8 +231,19 @@ public class MonomorphizationVisitor(
             // we would also probably have a lot of "writeString " "" when we have multiple arguments)
             ProgramNode.BuiltinFunctions[typedBuiltinIndex] = function;
         }
-        else
+        else // if its non variadic
         {
+            // Generate a new substitution based on the current substitution and the substitution we found for this function's generics based on the function call during semantic analysis.
+            // This is necessary (we can't just really on the function call's substitution), because let's say where in generic function, and we call another function that is generic:
+            // record Integer
+            //      inner: integer
+            // define foo(var a: refersTo A) generic A
+            //      allocateMemory var a
+            // define start()
+            // variables number: refersTo Integer
+            //      foo var number
+            // The call to allocateMemory (which has a generic R) will have a substitution [R=A], so if we just used it we would not have a proper substitution.
+            // If we go down the call stack start->foo we would know [A=Integer] and then use the function call substitution we know [B=A], which implies [B=Integer].
             var instantiatedGenerics = caller
                 .InstantiatedGenerics.Select(
                     instantiatedType =>
@@ -169,6 +259,7 @@ public class MonomorphizationVisitor(
                         )
                 )
                 .ToDictionary();
+            // now we apply the (new) substitution to each of the parameters.
             var parameters = node.ParameterVariables.Select(declarationNode =>
             {
                 declarationNode.Accept(
@@ -185,13 +276,16 @@ public class MonomorphizationVisitor(
                 return (VariableDeclarationNode)Pop();
             })
                 .ToList();
+            // Remember how we said that functions are indexed by the (name, module, parameters) in the program node, for builtins there is no module, so we have TypedBuiltinIndex (you'll see for normal functions we do include the module name).
+            // Another way to do this is to put the module as BuiltInFunctionNode.BuiltinModuleName.
             var typedBuiltinIndex = new TypedBuiltinIndex(
                 node.Name,
                 new TypeIndex(parameters.Select(parameter => parameter.Type).ToList())
             );
+            Push(typedBuiltinIndex);
+            // if we already went over this builtin then just use that version
             if (ProgramNode.BuiltinFunctions.ContainsKey(typedBuiltinIndex))
             {
-                Push(typedBuiltinIndex);
                 return;
             }
 
@@ -200,13 +294,12 @@ public class MonomorphizationVisitor(
                 MonomorphizedName = typedBuiltinIndex
             };
             ProgramNode.BuiltinFunctions[typedBuiltinIndex] = function;
-            Push(typedBuiltinIndex);
         }
     }
 
     public override void Visit(FunctionCallNode node)
     {
-        // no module means it is a builtin see FunctionCallNode.FunctionDefinitionModule
+        // we check if it's a builtin function (the module name is BuiltInFunctionNode.BuiltinModuleName)
         if (node.FunctionDefinitionModule == BuiltInFunctionNode.BuiltinModuleName)
         {
             var builtInFunctionNode = (
@@ -221,6 +314,7 @@ public class MonomorphizationVisitor(
             var module = nonMonomorphizedProgramNode.GetFromModulesSafe(
                 node.FunctionDefinitionModule
             );
+            // see the section under builtin functions for why we have to create a new substitution based on the current one and the one from the function call.
             var instantiatedGenerics = node.InstantiatedGenerics.Select(
                 instantiatedType =>
                     (
@@ -238,6 +332,7 @@ public class MonomorphizationVisitor(
                 moduleFunction switch
                 {
                     FunctionNode f => f,
+                    // if it's an overload then we only need to use the correct overloads as determined during semantic analysis
                     OverloadedFunctionNode overload => overload.Overloads[node.Overload],
                     _ => null
                 }
@@ -253,6 +348,9 @@ public class MonomorphizationVisitor(
                 }
             );
             // TODO: less hacky solution to demodularize global variables, maybe only add them when they are used
+            //
+            // since we go through the call stack starting at main, we don't actually go through all the modules, and a function may reference global variables in its module, so we have to go through and add the global variables of any used modules.
+            // A better approach might be to traverse down the expressions and if we find an expression that references a global variable we add that global variable.
             foreach (var (_, value) in module.GlobalVariables)
             {
                 value.Accept(this);
@@ -386,6 +484,7 @@ public class MonomorphizationVisitor(
         nonMonomorphizedProgramNode = node;
         if (OptionsUnitTest)
         {
+            // if we have unit testing enable besides for the traversing down the call stack starting at start, we also (and maybe only) need to monomorphize all the unit tests.
             var unitTests = node.Modules.Values.SelectMany(
                 module =>
                     module.Tests.Values.Select(p =>
@@ -394,7 +493,7 @@ public class MonomorphizationVisitor(
                         return (p, (TypedModuleIndex)Pop());
                     })
             );
-
+            // We currently are a bit lazy here and don't actually create new unit tests but just turn them into functions (which they partially are), but this means that the compiler can't report if unit test failed (it can report if an assert failed).
             var functionCallNodes = unitTests.Select(
                 u =>
                     new FunctionCallNode(u.Item2.Index.Name.Name)
@@ -439,6 +538,18 @@ public class MonomorphizationVisitor(
     }
 }
 
+// Monomorphization for types does the actual submission applications.
+// We still need to keep instantiatedTypes (it is actually the whole point of the instantiatedTypes because we do the actual substitution here).
+// We traverse each type.
+// There are two interesting cases generics and records.
+// For the generic case, we look up the generic name in the instantiatedTypes and return it.
+// In the record case we recurse down through the fields, then we add the (copied) record to the program indexed by the name, module, and the types that each generic of the record is substituted.
+// All the other cases are just recursing down the type or just returning the current type.
+//
+// Let's get back to our swap example:
+// We are instantiating the parameters (we have instantiatedTypes=[A=integer]), in swap(var a: A, var b: A) generic A.
+// So we traverse from monomorphization, and we have to instantiate the types (A, A).
+// So we go and traverse the type, and we find it's a generic, and we have a substitution [A=integer], so we return integer.
 public class MonomorphizationTypeVisitor(
     Dictionary<string, Type> instantiatedTypes,
     ModuleNode start,
@@ -454,7 +565,11 @@ public class MonomorphizationTypeVisitor(
         var typedModuleIndex = new TypedModuleIndex(
             new ModuleIndex(new NamedIndex(type.Name), type.ModuleName),
             new TypeIndex(
-                instantiatedTypes.OrderBy(pair => pair.Key).Select(pair => pair.Value).ToList()
+                instantiatedTypes
+                    .OrderBy(pair => pair.Key)
+                    .Where(pair => type.Generics.Contains(pair.Key))
+                    .Select(pair => pair.Value)
+                    .ToList()
             )
         );
         if (programNode.Records.TryGetValue(typedModuleIndex, out var recordNode))

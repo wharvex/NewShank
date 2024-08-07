@@ -336,6 +336,7 @@ public class SemanticAnalysis
         }
     }
 
+    // Check if a function call is valid (arguments match parameters, there is a correct overload, ...).
     private static void CheckFunctionCall(
         FunctionCallNode functionCallNode,
         CallableNode function,
@@ -345,8 +346,12 @@ public class SemanticAnalysis
         functionCallNode.FunctionDefinitionModule = function.parentModuleName;
         switch (function)
         {
+            // If it's a call to an overloaded function.
             case OverloadedFunctionNode overloads:
             {
+                // We try each overload.
+                // Using aggregate allows us to get a list of valid overloads and a list of invalid overloads (as opposed to a list of valid or invalid overloads).
+                // Aggregate takes our initial value (two empty lists, because we have no valid or invalid overloads until we check all the overloads).
                 var possibleOverloads = overloads.Overloads.Values.Aggregate(
                     (
                         Valid: (IEnumerable<(CallableNode, Dictionary<string, Type>)>)[],
@@ -360,19 +365,22 @@ public class SemanticAnalysis
                                 overload,
                                 CheckFunctionCallInner(functionCallNode, overload, variables)
                             );
-                            return results with { Valid = [value, ..results.Valid] };
+                            // If the overload is valid, we add it to the list of valid overloads.
+                            return results with { Valid = [value, .. results.Valid] };
                         }
                         catch (SemanticErrorException e)
                         {
+                            // Otherwise (if it's invalid), we add the overload and why its invalid to the list of invalid overloads.
                             return results with
                             {
-                                Invalid = [(overload, e.Message), ..results.Invalid]
+                                Invalid = [(overload, e.Message), .. results.Invalid]
                             };
                         }
                     }
                 );
                 var overload = possibleOverloads.Valid.ToList() switch
                 {
+                    // if there are no valid overloads then print all the bad overloads and why they were bad
                     []
                         => throw new SemanticErrorException(
                             $"""
@@ -381,7 +389,10 @@ public class SemanticAnalysis
                              """,
                             functionCallNode
                         ),
-                    [var validOverload] => validOverload,
+                    // if there is only a single overload, then great we found the correct overload
+                    [var validOverload]
+                        => validOverload,
+                    // if there are many overloads that are correct, then we cannot determine which one is the most correct, so we spit out the list of all the valid overloads
                     var validOverloads
                         => throw new SemanticErrorException(
                             $"""
@@ -398,6 +409,7 @@ public class SemanticAnalysis
             }
             case BuiltInVariadicFunctionNode variadicFunction:
             {
+                // if its a variadic function there are to cases: either all the arguments have to be var or not
                 if (!variadicFunction.AreParametersConstant) // hack to verify that all parameters are passed in as var
                 {
                     if (
@@ -419,6 +431,7 @@ public class SemanticAnalysis
                     }
                 }
 
+                // We mark the function call as being a call to this function with these arguement types.
                 functionCallNode.InstantiatedVariadics = functionCallNode
                     .Arguments.Select(arg => GetTypeOfExpression(arg, variables))
                     .ToList();
@@ -445,11 +458,17 @@ public class SemanticAnalysis
     {
         var args = functionCallNode.Arguments;
         functionCallNode.FunctionDefinitionModule = fn.parentModuleName!;
+        OutputHelper.DebugPrintTxt(
+            fn.ParameterVariables.Skip(args.Count).Count().ToString(),
+            "defaultValsInspection"
+        );
 
+        // we cannot just autofill all the default values yet, because what if it is a invalid overload
+        // so what we do is we trim any extra default parameters out of the parameter count
         if (
             args.Count
             != fn.ParameterVariables.Count
-                - fn.ParameterVariables.Take(args.Count)
+                - fn.ParameterVariables.Skip(args.Count)
                     .Count(parameter => parameter.IsDefaultValue)
         )
             throw new SemanticErrorException(
@@ -467,12 +486,18 @@ public class SemanticAnalysis
             {
                 var param = paramAndArg.First;
                 var argument = paramAndArg.Second;
+                // For each each parameter and argument we check that thier mutability matches (their varness).
                 CheckParameterMutability(param, argument, variables, functionCallNode);
+                // We then infer any generics while making sure that the types of the parameter and argument match.
+                // We return the mapping of any inferred generics to their actual type.
                 return TypeCheckAndInstantiateGenericParameter(param, argument, variables, fn);
             })
+            // We use distinct in case two (or more) parameters give us back the same generic subsition.
+            // Note: if two (or more) parameters give back different substitions they are not distinct.
             .Distinct();
 
         return
+            // We then group the substitions by the generic type they are substitiing for, and if any of thses substition groups has more than one substition it means that we have two different substitions for the same generic, so the generic cannot match both of them, so we give an error.
             selectMany.GroupBy(pair => pair.Item1).FirstOrDefault(group => group.Count() > 1)
                 is { } bad
             ? throw new SemanticErrorException(
@@ -499,6 +524,7 @@ public class SemanticAnalysis
             && e.Variants.Contains(v.Name)
         )
         {
+            // Enum special casing
             if (v.ExtensionType != VariableUsagePlainNode.VrnExtType.None)
             {
                 throw new SemanticErrorException($"ambiguous variable name {v.Name}", argument);
@@ -512,7 +538,7 @@ public class SemanticAnalysis
         argument.Type = argument.Type is DefaultType ? expressionType : argument.Type;
         return !param.Type.Equals(expressionType)
             ?
-            // infer instantiated type
+            // Infer generics.
             MatchTypes(param.Type, expressionType)
                 .ValueOr(
                     () =>
@@ -523,24 +549,36 @@ public class SemanticAnalysis
                 )
             : [];
 
-        // match types given two types (the is first the parameter type, the second is the argument type) attempts to find a substitution for the generics in the parameter type to new types given the fact that the parameter type is a more specific version of the arugment type
+        // Match types given two types (the first is the parameter type, the second is the argument type)
+        // Attempts to find a substitution for the generics in the parameter type to new types,
+        // given the fact that the parameter type is a more specific version of the argument type.
+        // You may wonder why we return Option as opposed to throwing an exception?
+        // It is because we don't want the error when we have a type error to be about some nested type, but rather about a whole parameter arguement type mismatch.
+        // Another approach would be to throw an exception and then catch it in TypeCheckAndInstantiateGenericParameter and throw a new error there that says the parameter and arguement type do not match, and use the origninal error as the reason.
         Option<IEnumerable<(string, Type)>> MatchTypes(Type paramType, Type type) =>
             (paramType, type) switch
             {
-                // if we have some generic type we create a substitution that maps to the generic type to the type (base case)
+                // If we have some generic type we create a substitution that maps the generic type to the type (base case).
                 (GenericType g, _) => MatchTypesGeneric(g, type),
-                // you cannot pass as a parameter a more general type that corresponds to an argument with a more specific type
-                // we know this is a more general argument because the case above catches all generic parameters (even ones with a generic argument)
+
+                // You cannot pass an argument of a more general type that corresponds to a parameter with a more specific type.
+                // We know this is a more general argument because the case above catches all generic parameters
+                // (even ones with a generic argument).
                 (_, GenericType) => Option.None<IEnumerable<(string, Type)>>(),
-                // if we have a reference type and a another reference type we just unify their inner types
+
+                // If we have a reference type and another reference type we just unify their inner types.
                 (ReferenceType param, ReferenceType arg) => MatchTypes(param.Inner, arg.Inner),
-                // // an instantiated type holds two things the actual types and the actual types for any generics in the actual type
-                // to find the substitution for tow instantiated types we first verify that they are the same underlying type the `where ... Equals ...`
+
+                // An instantiated type holds two things: the actual types and the actual types for any generics in the actual types.
+                // To find the substitution for two instantiated types, we first verify that they are the same underlying type.
+                // This verification is what the `when ... Equals ...` below is about.
                 (InstantiatedType param, InstantiatedType arg) when arg.Inner.Equals(param.Inner)
                     => MatchTypesInstantiated(param, arg),
+
                 // TODO: validate ranges
-                // same as ReferenceType but for arrays
+                // Same as ReferenceType but for arrays.
                 (ArrayType param, ArrayType arg) => MatchTypes(param.Inner, arg.Inner),
+
                 ({ } a, { } b)
                     => Option.Some(Enumerable.Empty<(string, Type)>()).Filter(a.Equals(b))
             };
@@ -548,13 +586,28 @@ public class SemanticAnalysis
         Option<IEnumerable<(string, Type)>> MatchTypesGeneric(GenericType g, Type type) =>
             Option.Some(Enumerable.Repeat((g.Name, type), 1));
 
+        // Infering generics and type checking records.
         Option<IEnumerable<(string, Type)>> MatchTypesInstantiated(
             InstantiatedType paramType,
             InstantiatedType type
         ) =>
+            // We do not care about the record fields, we only care about any generics that the record has (and the actual types the user put for each generic, called InstantiatedGenerics or the substitutions for the record).
+            // Another way to think about this is to look at a few types:
+            // record person
+            //      name: string
+            //      age: integer
+            // Two person types will always be equal. Compare this to this type:
+            // record LinkedList generic A
+            //      data: A
+            //      next: refersTo LinkedList A
+            // In this case two different LinkedList can be different if the generic type A is instantiated with a different type, for example LinkedList integer and LinkedList real.
+            // What stays the same is the fields, this is why we just check the InstantiatedGenerics.
+            // You may ask why don't we check that the two underlying records are the same, the answer is we do that in MatchTypes with the `when` clause under the InstantiatedType case.
             paramType
                 .InstantiatedGenerics.Values.Zip(type.InstantiatedGenerics.Values)
                 .Select(pair => MatchTypes(pair.Item1, pair.Item2))
+                // Joining the results together a bit complicated because of the Option.
+                // What happens is we see if the first result is ok (with the flatmap, and if so we check if the second result is ok if it is we join the first and the second result, in any other case we return none (meaning this part of the type failed to type check).
                 .Aggregate((first, second) => first.FlatMap(f => second.Map(f.Union)));
     }
 

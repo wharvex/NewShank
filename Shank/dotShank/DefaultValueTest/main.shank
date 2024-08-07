@@ -1,0 +1,5 @@
+define defaultTest(a : integer; b : integer = 1)
+    write "hello from test"
+
+define start()
+    defaultTest 4

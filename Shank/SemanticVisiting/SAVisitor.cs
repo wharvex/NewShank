@@ -1434,7 +1434,7 @@ public class NewFunctionCallVisitor : FunctionCallVisitor
         if (
             args.Count
             != fn.ParameterVariables.Count
-                - fn.ParameterVariables.Take(args.Count)
+                - fn.ParameterVariables.Skip(args.Count)
                     .Count(parameter => parameter.IsDefaultValue)
         )
             throw new SemanticErrorException(
