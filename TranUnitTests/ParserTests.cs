@@ -399,5 +399,33 @@ class Tran
             parser.Parse();
             Assert.AreEqual("J", parser.thisClass.Functions.Skip(1).ToString());
         }
+        
+        [TestMethod]
+        public void parsedumb()
+        {
+            List<string> files = new List<string>();
+            files.Add(
+                @"
+interface someName
+    square() : number s".Replace("    ", "\t")
+            );
+            files.Add(
+                @"
+class test implements someName
+    start()
+        number x 
+        x = 10
+        number y
+        y = square(x)
+        console.print(y)
+
+    square(number x) : number s
+        number a
+        a = 1".Replace("    ", "\t")
+            );
+            CreateParser(files);
+            parser.Parse();
+            TRANsformer.InterfaceSomething(parser.thisClass);
+        }
     }
 }

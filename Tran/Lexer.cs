@@ -135,6 +135,7 @@ public class Lexer
                     Token wordProcessor = ProcessWord();
                     tokens[i].Add((wordProcessor));
                 }
+                //Research this one, done for now but can be fixed.
                 else if (char.IsDigit(currentCharacter))
                 {
                     Token numberProcessor = ProcessNumber();
