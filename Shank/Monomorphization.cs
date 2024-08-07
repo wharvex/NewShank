@@ -529,7 +529,11 @@ public class MonomorphizationTypeVisitor(
         var typedModuleIndex = new TypedModuleIndex(
             new ModuleIndex(new NamedIndex(type.Name), type.ModuleName),
             new TypeIndex(
-                instantiatedTypes.OrderBy(pair => pair.Key).Where(pair => type.Generics.Contains(pair.Key)).Select(pair => pair.Value).ToList()
+                instantiatedTypes
+                    .OrderBy(pair => pair.Key)
+                    .Where(pair => type.Generics.Contains(pair.Key))
+                    .Select(pair => pair.Value)
+                    .ToList()
             )
         );
         if (programNode.Records.TryGetValue(typedModuleIndex, out var recordNode))
