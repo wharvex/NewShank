@@ -269,7 +269,7 @@ public class MonomorphizationVisitor(
 
     public override void Visit(FunctionCallNode node)
     {
-        // no module means it is a builtin see FunctionCallNode.FunctionDefinitionModule
+        // we check if its a builtin function (the module name is BuiltInFunctionNode.BuiltinModuleName)
         if (node.FunctionDefinitionModule == BuiltInFunctionNode.BuiltinModuleName)
         {
             var builtInFunctionNode = (
@@ -502,6 +502,18 @@ public class MonomorphizationVisitor(
     }
 }
 
+// Monomorphization for types does the actual subisiton applications.
+// We still need to keep instantiatedTypes (it is actually the whole point of the instantiatedTypes becasue we do the actual subsititons here).
+// We traverse each type.
+// There are two interesting cases generics and records.
+// For the generic case, we lookup the generic name in the instantiatedTypes and return it.
+// In the record case we recurse down through the fields, then we add the (copied) record to the program indexed by the name, module, and the types that each generic of the record is substituted.
+// All the other cases are just recursing down the type or just returning the current type.
+//
+// Lets get back to our swap example:
+// We are instanting the parameters (we have instantiatedTypes=[A=integer]), in swap(var a: A, var b: A) generic A.
+// So we traverse from monomorphization and we have to instantiate the types (A, A).
+// So we go and traverse the type and we find its a generic, and we have a subsition [A=integer], so we return integer.
 public class MonomorphizationTypeVisitor(
     Dictionary<string, Type> instantiatedTypes,
     ModuleNode start,
@@ -517,7 +529,7 @@ public class MonomorphizationTypeVisitor(
         var typedModuleIndex = new TypedModuleIndex(
             new ModuleIndex(new NamedIndex(type.Name), type.ModuleName),
             new TypeIndex(
-                instantiatedTypes.OrderBy(pair => pair.Key).Select(pair => pair.Value).ToList()
+                instantiatedTypes.OrderBy(pair => pair.Key).Where(pair => type.Generics.Contains(pair.Key)).Select(pair => pair.Value).ToList()
             )
         );
         if (programNode.Records.TryGetValue(typedModuleIndex, out var recordNode))
