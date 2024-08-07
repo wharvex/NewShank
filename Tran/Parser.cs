@@ -222,7 +222,12 @@ public class Parser
                 thisClass = new ModuleNode(name.GetValue());
                 program.AddToModules(thisClass);
                 //RecordNode? record = new RecordNode("interface"+thisClass.Name, thisClass.Name, members, null);
-                RecordNode? record = new RecordNode(thisClass.Name, "interface"+thisClass.Name, members, null);
+                RecordNode? record = new RecordNode(
+                    thisClass.Name,
+                    "interface" + thisClass.Name,
+                    members,
+                    null
+                );
                 //RecordNode? record = new RecordNode(thisClass.Name, thisClass.Name, members, null);
                 thisClass.AddRecord(record);
                 if (ParseInterfaceFunctions() == false)
@@ -1091,7 +1096,8 @@ public class Parser
                 functionNode.ParameterVariables = parameters;
                 foreach (var parameter in functionNode.ParameterVariables)
                 {
-                    if (parameter.Name != null) functionNode.VariablesInScope.Add(parameter.Name, parameter);
+                    if (parameter.Name != null)
+                        functionNode.VariablesInScope.Add(parameter.Name, parameter);
                 }
 
                 currentFunction = functionNode;

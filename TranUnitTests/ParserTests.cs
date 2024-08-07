@@ -399,7 +399,7 @@ class Tran
             parser.Parse();
             Assert.AreEqual("J", parser.thisClass.Functions.Skip(1).ToString());
         }
-        
+
         [TestMethod]
         public void parsedumb()
         {
