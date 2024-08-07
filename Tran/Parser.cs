@@ -75,7 +75,7 @@ public class Parser
             while (handler.MoreTokens())
             {
                 AcceptSeparators();
-                
+
                 if (ParseField() || ParseFunction())
                 {
                     AcceptSeparators();
@@ -602,6 +602,7 @@ public class Parser
 
         return null;
     }
+
     public List<StatementNode> ParseBlock()
     {
         blockLevel++;
