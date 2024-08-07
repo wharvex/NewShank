@@ -29,13 +29,13 @@ namespace Tran
                             if (statement is AssignmentNode assignment)
                             {
                                 //TODO: this is buggy
-                                if (function.ParameterVariables.Last().Type is RecordType record)
+                                if (function.ParameterVariables.Last().Type is UnknownType record)
                                 {
-                                    var member = record.Fields[assignment.Target.Name];
+                                    var member = module.Records[record.TypeName].Members[0];
                                     if (member != null)
                                     {
                                         assignment.Target = new VariableUsagePlainNode(
-                                            record.Name,
+                                            record.TypeName,
                                             assignment.Target,
                                             VariableUsagePlainNode.VrnExtType.RecordMember,
                                             module.Name
@@ -49,7 +49,7 @@ namespace Tran
                     }
                     //else if (function.Name.Equals("start"))
                     //{
-                    //    var thisVar = new VariableDeclarationNode(false, module.Records["this"].Type, "this", module.Name, false);
+                    //    var thisVar = new VariableDeclarationNode(false, new UnknownType("this"), "this", module.Name, false);
                     //    function.LocalVariables.Add(thisVar);
                     //    function.VariablesInScope.Add(thisVar.Name, thisVar);
                     //}

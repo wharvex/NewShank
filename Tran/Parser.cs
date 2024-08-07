@@ -93,13 +93,13 @@ public class Parser
 
             var recordParam = new VariableDeclarationNode(
                 false,
-                record.Type,
+                new UnknownType("this"),
                 record.Name,
                 thisClass.Name,
                 false
             );
 
-            //foreach(FunctionNode function in thisClass.Functions.Values)
+            //foreach (FunctionNode function in thisClass.Functions.Values)
             //{
             //    function.ParameterVariables.Add(recordParam);
             //    //function.VariablesInScope.Add(recordParam.Name, recordParam);
