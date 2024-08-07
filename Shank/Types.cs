@@ -17,6 +17,9 @@ public interface Type // our marker interface anything that implements is known 
     public static Type Default => new DefaultType();
 }
 
+// I (Tim) created this so I wouldn't need to make `Expression.Type` nullable.
+// It causes issues with Json.NET (i.e. serializing the AST) when `Expression.Type` is nullable
+// (more specifically when it actually is null sometimes).
 public readonly struct DefaultType : Type
 {
     public Type Instantiate(Dictionary<string, Type> instantiatedGenerics) => this;

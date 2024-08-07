@@ -76,6 +76,8 @@ public static class TypesHelper
         return new ArrayDataType([..adtArr], t);
     }
 
+    // ToIdtDangerous is dangerous because if you call it in the wrong place when pre-rendering IDTs
+    // for self-referential structures in the AST (e.g. linked lists), it stack-overflows.
     public static InterpreterDataType ToIdtDangerous(this Type t, ExpressionNode? e)
     {
         switch (t)

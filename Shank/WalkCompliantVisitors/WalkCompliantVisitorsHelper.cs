@@ -7,8 +7,9 @@ public static class WalkCompliantVisitorsHelper
     public static List<T> WalkList<T>(this List<T> l, WalkCompliantVisitor v)
         where T : ASTNode
     {
-        // This method could be a one-liner (see commented-out return statement below), but then for
-        // some reason that syntax won't let us step into the "Walk" method in the debugger.
+        // This could be written as a one-liner (see below), but then we can't step into `n.Walk' in
+        // the debugger, AND we can't use the "Step Into Specific" method described in
+        // WalkDictionary further below.
         var ret = new List<T>();
         foreach (var n in l)
         {
@@ -16,26 +17,32 @@ public static class WalkCompliantVisitorsHelper
         }
 
         return ret;
-        //return [..l.Select(e => (T)e.Walk(this))];
+
+        // One-liner version (debugger-unfriendly).
+        // return [.. l.Select(e => (T)e.Walk(v))];
     }
 
-    public static Dictionary<K, V> WalkDictionary<K, V>(
-        this Dictionary<K, V> d,
+    public static Dictionary<TK, TV> WalkDictionary<TK, TV>(
+        this Dictionary<TK, TV> d,
         WalkCompliantVisitor v
     )
-        where V : ASTNode
+        where TV : ASTNode
+        where TK : notnull
     {
-        // This method could be a one-liner (see commented-out return statement below), but then for
-        // some reason that syntax won't let us step into the "Walk" method in the debugger.
-        var ret = new Dictionary<K, V>();
-        foreach (var p in d)
-        {
-            ret[p.Key] = (V)p.Value.Walk(v);
-        }
+        // The one-liner below is the equivalent of this:
+        // var ret = new Dictionary<TK, TV>();
+        // foreach (var p in d)
+        // {
+        //     ret[p.Key] = (TV)p.Value.Walk(v);
+        // }
+        // return ret;
 
-        return ret;
-
-        //return d.Select(kvp => new KeyValuePair<string, T>(kvp.Key, (T)kvp.Value.Walk(this)))
-        //    .ToDictionary();
+        // One-liner version.
+        // If you want to step into kvp.Value.Walk from here in the debugger, do this in VS:
+        // Set a breakpoint on this line and Start Debugging (F5);
+        // Right-click anywhere in the editor window when the debugger hits this line, then:
+        // Step Into Specific -> Shank.ASTNodes.ASTNode.Walk
+        return d.Select(kvp => new KeyValuePair<TK, TV>(kvp.Key, (TV)kvp.Value.Walk(v)))
+            .ToDictionary();
     }
 }
