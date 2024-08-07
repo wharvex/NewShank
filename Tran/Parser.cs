@@ -63,33 +63,20 @@ public class Parser
 
     public ProgramNode Parse()
     {
-        List<Token> allTokens = new List<Token>();
-        foreach (var file in files)
+        for (int i = 0; i < files.Count; i++)
         {
-            handler = new TokenHandler(file);
+            handler = new TokenHandler(files[i]);
             AcceptSeparators();
-            while (handler.MoreTokens())
+            if (!ParseInterface() && !ParseClass())
             {
-                Token token = handler.GetNextToken();
-                allTokens.Add(token);
+                throw new Exception("No class declaration found in file");
             }
-        }
-
-        handler = new TokenHandler(allTokens);
-        AcceptSeparators();
-        if (!ParseInterface() && !ParseClass())
-        {
-            throw new Exception("No class or interface declaration found in file");
-        }
 
         AcceptSeparators();
         while (handler.MoreTokens())
         {
-            if (ParseClass() || ParseInterface())
-            {
-                AcceptSeparators();
-                blockLevel++;
-            }
+            AcceptSeparators();
+
             if (ParseField() || ParseFunction())
             {
                 AcceptSeparators();
@@ -100,37 +87,19 @@ public class Parser
         thisClass.ExportTargetNames = sharedNames;
         thisClass.UpdateExports();
 
-        RecordNode? record = new RecordNode(thisClass.Name, thisClass.Name, members, null);
-        thisClass.AddRecord(record);
-        program.AddToModules(thisClass);
+            RecordNode record = new RecordNode("this", thisClass.Name, members, null);
+            thisClass.AddRecord(record);
+            program.AddToModules(thisClass);
 
-        foreach (FunctionNode function in thisClass.Functions.Values)
-        {
-            foreach (var member in record.Members)
-            {
-                function.LocalVariables.Add(
-                    new VariableDeclarationNode(
-                        false,
-                        member.Type,
-                        member.Name,
-                        thisClass.Name,
-                        false
-                    )
-                );
-                function.VariablesInScope.Add(
-                    member.Name,
-                    new VariableDeclarationNode(
-                        false,
-                        member.Type,
-                        member.Name,
-                        thisClass.Name,
-                        false
-                    )
-                );
-            }
+            var recordParam = new VariableDeclarationNode(false, record.Type, record.Name, thisClass.Name, false);
+
+            //foreach(FunctionNode function in thisClass.Functions.Values)
+            //{
+            //    function.ParameterVariables.Add(recordParam);
+            //    //function.VariablesInScope.Add(recordParam.Name, recordParam);
+            //}
+            blockLevel--;
         }
-        blockLevel--;
-
         return program;
     }
 
@@ -203,7 +172,7 @@ public class Parser
             {
                 value.IsConstant = true;
                 property.ParameterVariables.Add(value);
-                property.VariablesInScope.Add(value.Name!, value);
+                //property.VariablesInScope.Add(value.Name!, value);
             }
 
             return property;
@@ -400,6 +369,7 @@ public class Parser
                 if (variable.IsConstant)
                 {
                     variableRef.NewIsInFuncCallWithVar = true;
+                    variableRef.IsInFuncCallWithVar = true;
                 }
             }
 
@@ -435,6 +405,7 @@ public class Parser
             else if (handler.MatchAndRemove(TokenType.COMMA) != null)
             {
                 variable.NewIsInFuncCallWithVar = true;
+                variable.IsInFuncCallWithVar = true;
                 List<VariableUsagePlainNode> variables = [variable];
                 do
                 {
@@ -443,6 +414,7 @@ public class Parser
                     if (variable != null)
                     {
                         variable.NewIsInFuncCallWithVar = true;
+                        variable.IsInFuncCallWithVar = true;
                         variables.Add(variable);
                     }
                     else
@@ -923,6 +895,7 @@ public class Parser
 
             //Insert statement to call the function
             var varRef = new VariableUsagePlainNode(tempVar.Name, thisClass.Name);
+            varRef.IsInFuncCallWithVar = true;
             varRef.NewIsInFuncCallWithVar = true;
             varRef.Type = new UnknownType();
             functionCall.Arguments.Add(varRef);

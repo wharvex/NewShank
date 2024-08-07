@@ -21,8 +21,40 @@ namespace Tran
                 foreach (FunctionNode functionNode in module.Functions.Values)
                 {
                     function = functionNode;
-                    if (function.Name[0] == '_')
+                    if (function.Name[0] == '_' && function.Name.Contains("mutator"))
+                    {
+                        for (index = 0; index < function.Statements.Count; index++)
+                        {
+                            var statement = function.Statements[index];
+                            if (statement is AssignmentNode assignment)
+                            {
+                                //TODO: this is buggy
+                                if (function.ParameterVariables.Last().Type is RecordType record)
+                                {
+                                    var member = record.Fields[assignment.Target.Name];
+                                    if (member != null)
+                                    {
+                                        assignment.Target = new VariableUsagePlainNode(record.Name, assignment.Target, VariableUsagePlainNode.VrnExtType.RecordMember, module.Name);
+                                        assignment.Target.Type = module.Records["this"].Type;
+                                    }
+                                }
+                            }
+                        }
                         continue;
+                    }
+
+                    //else if (function.Name.Equals("start"))
+                    //{
+                    //    var thisVar = new VariableDeclarationNode(false, module.Records["this"].Type, "this", module.Name, false);
+                    //    function.LocalVariables.Add(thisVar);
+                    //    function.VariablesInScope.Add(thisVar.Name, thisVar);
+                    //}
+
+                    else if (function.Name[0] == '_')
+                    {
+                        continue;
+                    }
+
                     for (index = 0; index < function.Statements.Count; index++)
                     {
                         var statement = function.Statements[index];
@@ -36,6 +68,10 @@ namespace Tran
                                     "_" + assignment.Target.Name + "_mutator"
                                 );
                                 call.Arguments.Add(assignment.Expression);
+                                var thisRef = new VariableUsagePlainNode("this", module.Name);
+                                thisRef.NewIsInFuncCallWithVar = true;
+                                thisRef.IsInFuncCallWithVar = true;
+                                call.Arguments.Add(thisRef);
                                 function.Statements[index] = call;
                             }
                             assignment.Expression =
@@ -46,6 +82,7 @@ namespace Tran
                         else if (statement.GetType() == typeof(FunctionCallNode))
                         {
                             var call = (FunctionCallNode)statement;
+
                             for (int i = 0; i < call.Arguments.Count; i++)
                             {
                                 if (call.Arguments[i].Type is UnknownType)
@@ -77,6 +114,12 @@ namespace Tran
                                     ?? call.Arguments[j];
                                 AddAccessor(variableRef, module, call);
                             }
+
+                            //TODO: Fix this later, assumes the function call is within the same class
+                            var thisRef = new VariableUsagePlainNode("this", module.Name);
+                            thisRef.NewIsInFuncCallWithVar = true;
+                            thisRef.IsInFuncCallWithVar = true;
+                            //call.Arguments.Add(thisRef);
                         }
                         else if (statement.GetType() == typeof(WhileNode))
                         {
@@ -123,7 +166,12 @@ namespace Tran
                 var accessor = new FunctionCallNode("_" + variableRef.Name + "_accessor");
                 var tempArg = new VariableUsagePlainNode("_temp_" + variableRef.Name, module.Name);
                 tempArg.NewIsInFuncCallWithVar = true;
+                tempArg.IsInFuncCallWithVar = true;
                 accessor.Arguments.Add(tempArg);
+                var thisRef = new VariableUsagePlainNode("this", module.Name);
+                thisRef.NewIsInFuncCallWithVar = true;
+                thisRef.IsInFuncCallWithVar = true;
+                accessor.Arguments.Add(thisRef);
                 function.Statements.Insert(index, accessor);
                 index++;
             }

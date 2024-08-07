@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestPlatform.TestHost;
 using Microsoft.VisualStudio.TestTools.UnitTesting.Logging;
+using Optional;
 using Shank;
 using Shank.ASTNodes;
 using Shank.Tran;
@@ -31,20 +32,26 @@ namespace TranUnitTests
             parser = new Shank.Tran.Parser(lexer.Lex());
         }
 
-        public void InitializeInterpreter(string file)
+        public void RunInterpreter(string file)
         {
-            Interpreter.Reset();
-            SemanticAnalysis.reset();
-            var programs = new List<string>();
-            programs.Add(file);
-            CreateParser(programs);
-            Dictionary<string, ModuleNode> modules = parser.Parse().Modules;
-            modules = TRANsformer.Walk(modules);
-            Interpreter.setModules(modules);
-            var startModule = Interpreter.setStartModule();
-            SemanticAnalysis.setStartModule();
-            if (startModule != null)
-                BuiltInFunctions.Register(startModule.getFunctions());
+            var files = new List<string>{file};
+            CreateParser(files);
+            InterpretOptions options = new InterpretOptions();
+            options.InputFiles = files;
+
+            var program = parser.Parse();
+
+            program.Modules = TRANsformer.Walk(program.Modules);
+            CommandLineArgsParser.RunSemanticAnalysis(options, program);
+
+            Interpreter.ActiveInterpretOptions = options;
+            Interpreter.Modules = program.Modules;
+            Interpreter.StartModule = program.GetStartModuleSafe();
+            Interpreter.InterpretFunction(
+            program.GetStartModuleSafe().GetStartFunctionSafe(),
+            [],
+            program.GetStartModuleSafe()
+            );
         }
 
         private Dictionary<string, ModuleNode> GetModules(List<string> programs)
@@ -59,22 +66,30 @@ namespace TranUnitTests
             return modules;
         }
 
-        public void InitializeInterpreter(List<string> files)
+        public void RunInterpreter(List<string> files)
         {
-            Interpreter.Reset();
-            SemanticAnalysis.reset();
             CreateParser(files);
-            Dictionary<string, ModuleNode> modules = parser.Parse().Modules;
-            modules = TRANsformer.Walk(modules);
-            Interpreter.setModules(modules);
-            var startModule = Interpreter.setStartModule();
-            SemanticAnalysis.setStartModule();
-            if (startModule != null)
-                BuiltInFunctions.Register(startModule.getFunctions());
+            InterpretOptions options = new InterpretOptions();
+            options.InputFiles = files;
+            
+            var program = parser.Parse();
+
+            program.Modules = TRANsformer.Walk(program.Modules);
+            CommandLineArgsParser.RunSemanticAnalysis(options, program);
+
+            Interpreter.ActiveInterpretOptions = options;
+            Interpreter.Modules = program.Modules;
+            Interpreter.StartModule = program.GetStartModuleSafe();
+            Interpreter.InterpretFunction(
+            program.GetStartModuleSafe().GetStartFunctionSafe(),
+            [],
+            program.GetStartModuleSafe()
+            );
         }
 
         public void RunInterpreter()
         {
+            
             foreach (KeyValuePair<string, ModuleNode> currentModulePair in Interpreter.Modules)
             {
                 var currentModule = currentModulePair.Value;
@@ -101,7 +116,7 @@ namespace TranUnitTests
         [TestMethod]
         public void InterpreterTestBasic()
         {
-            InitializeInterpreter(
+            RunInterpreter(
                 @"
 class start
     start()
@@ -109,13 +124,12 @@ class start
         x = 1+1
         console.print(x)".Replace("    ", "\t")
             );
-            RunInterpreter();
         }
 
         [TestMethod]
         public void InterpreterTestFunctionCall()
         {
-            InitializeInterpreter(
+            RunInterpreter(
                 @"
 class start
     start()
@@ -130,13 +144,12 @@ class start
     addStuff(number a, number b) : number retVal  { becomes in Shank addStuff ( x,y,var retval) }
         retVal = a+b".Replace("    ", "\t")
             );
-            RunInterpreter();
         }
 
         [TestMethod]
         public void InterpreterTestMultiAssignment()
         {
-            InitializeInterpreter(
+            RunInterpreter(
                 @"
 class start
     start()
@@ -150,13 +163,12 @@ class start
         a = 20
         b = 30".Replace("    ", "\t")
             );
-            RunInterpreter();
         }
 
         [TestMethod]
         public void InterpreterTestFunctionCallTransformation1()
         {
-            InitializeInterpreter(
+            RunInterpreter(
                 @"
 class start
     start()
@@ -167,13 +179,12 @@ class start
     getValue() : number a 
         a = 100".Replace("    ", "\t")
             );
-            RunInterpreter();
         }
 
         [TestMethod]
         public void InterpreterTestFunctionCallTransformation2()
         {
-            InitializeInterpreter(
+            RunInterpreter(
                 @"
 class start
     number y
@@ -191,25 +202,23 @@ class start
     getValue2() : number a
         a = 10".Replace("    ", "\t")
             );
-            RunInterpreter();
         }
 
         [TestMethod]
         public void InterpreterTestPrint()
         {
-            InitializeInterpreter(
+            RunInterpreter(
                 @"
 class start
     start()
         console.print(""tran"")".Replace("    ", "\t")
             );
-            RunInterpreter();
         }
 
         [TestMethod]
         public void InterpreterTestFields()
         {
-            InitializeInterpreter(
+            RunInterpreter(
                 @"
 class start
     number x
@@ -223,13 +232,12 @@ class start
         x = 100
         y = ""helloworld""".Replace("    ", "\t")
             );
-            RunInterpreter();
         }
 
         [TestMethod]
         public void InterpreterTestAccessorAssignment()
         {
-            InitializeInterpreter(
+            RunInterpreter(
                 @"
 class start
     number x
@@ -243,13 +251,12 @@ class start
         a = a + x + 100 + (x*2)
         a = (x+(x+x)+x)".Replace("    ", "\t")
             );
-            RunInterpreter();
         }
 
         [TestMethod]
         public void InterpreterTestAccessorFunctionCall()
         {
-            InitializeInterpreter(
+            RunInterpreter(
                 @"
 class start
     number x
@@ -266,13 +273,12 @@ class start
         number c
         c = a + b".Replace("    ", "\t")
             );
-            RunInterpreter();
         }
 
         [TestMethod]
         public void InterpreterTestAccessorLoop()
         {
-            InitializeInterpreter(
+            RunInterpreter(
                 @"
 class start
     number x
@@ -284,13 +290,12 @@ class start
         loop x.times()
             sum = sum + x".Replace("    ", "\t")
             );
-            RunInterpreter();
         }
 
         [TestMethod]
         public void InterpreterTestAccessorIf()
         {
-            InitializeInterpreter(
+            RunInterpreter(
                 @"
 class start
     number x
@@ -308,18 +313,17 @@ class start
             a = 10
         ".Replace("    ", "\t")
             );
-            RunInterpreter();
         }
 
         [TestMethod]
         public void InterpreterTestMutators()
         {
-            InitializeInterpreter(
+            RunInterpreter(
                 @"
 class start
     number x
         accessor:
-            value = x
+            value = 100
         mutator:
             x = value
 
@@ -327,7 +331,6 @@ class start
         x = 999
         console.print(x)".Replace("    ", "\t")
             );
-            RunInterpreter();
         }
 
         [TestMethod]
@@ -355,8 +358,7 @@ class test
         number a
         a = 9000 * 1000".Replace("    ", "\t")
             );
-            InitializeInterpreter(files);
-            RunInterpreter();
+            RunInterpreter(files);
         }
 
         [TestMethod]
@@ -386,14 +388,13 @@ class Student
     addGrade(number score)
         grade = grade + score".Replace("    ", "\t")
             );
-            InitializeInterpreter(files);
-            RunInterpreter();
+            RunInterpreter(files);
         }
 
         [TestMethod]
         public void InterpreterTestComplexExpressions()
         {
-            InitializeInterpreter(
+            RunInterpreter(
                 @"
 class tran
     number x
@@ -426,7 +427,6 @@ class tran
         ret1 = 100/2
         ret2 = 777+777".Replace("    ", "\t")
             );
-            RunInterpreter();
         }
 
         //TODO: we can worry about this at a later date
@@ -453,14 +453,13 @@ class test implements someName
         number a
         a = 1".Replace("    ", "\t")
             );
-            InitializeInterpreter(files);
-            RunInterpreter();
+            RunInterpreter(files);
         }
 
         [TestMethod]
         public void InterpreterTestIfsAndLoops()
         {
-            InitializeInterpreter(
+            RunInterpreter(
                 @"
 class start
     start()
@@ -474,13 +473,12 @@ class start
                 console.print(temp)
         console.print(n)".Replace("    ", "\t")
             );
-            RunInterpreter();
         }
 
         [TestMethod]
         public void InterpreterTestFibonacci()
         {
-            InitializeInterpreter(
+            RunInterpreter(
                 @"
 class start
     start()
@@ -499,7 +497,6 @@ class start
              x = y
              y = z".Replace("    ", "\t")
             );
-            RunInterpreter();
         }
     }
 }
