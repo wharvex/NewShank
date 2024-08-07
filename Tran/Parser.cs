@@ -71,12 +71,11 @@ public class Parser
             {
                 throw new Exception("No class declaration found in file");
             }
-
             AcceptSeparators();
             while (handler.MoreTokens())
             {
                 AcceptSeparators();
-
+                
                 if (ParseField() || ParseFunction())
                 {
                     AcceptSeparators();
@@ -104,7 +103,7 @@ public class Parser
             //    function.ParameterVariables.Add(recordParam);
             //    //function.VariablesInScope.Add(recordParam.Name, recordParam);
             //}
-            blockLevel--;
+            blockLevel++;
         }
         return program;
     }
@@ -195,7 +194,7 @@ public class Parser
             if ((name = handler.MatchAndRemove(TokenType.WORD)) != null)
             {
                 thisClass = new ModuleNode(name.GetValue());
-                program.AddToModules(thisClass);
+                //program.AddToModules(thisClass);
                 //RecordNode? record = new RecordNode("interface"+thisClass.Name, thisClass.Name, members, null);
                 RecordNode? record = new RecordNode(
                     thisClass.Name,
@@ -603,7 +602,6 @@ public class Parser
 
         return null;
     }
-
     public List<StatementNode> ParseBlock()
     {
         blockLevel++;
