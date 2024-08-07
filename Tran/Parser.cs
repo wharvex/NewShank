@@ -121,9 +121,8 @@ public class Parser
         //    //function.VariablesInScope.Add(recordParam.Name, recordParam);
         //
         blockLevel--;
-    return program;
+        return program;
     }
-
 
     public bool ParseField()
     {
@@ -235,14 +234,14 @@ public class Parser
         return false;
     }
 
-//When checking VarRef check if its within local scope, then check the record if it exists, then check global if shared
-//Class should have a reference to the record of itself containing only variables, use NewType
-//Interfaces should use an enum inside the interface to determine which subtype to use, each implemented subclass should have enum
-//Should be a post-processing step, save until the end of parser
+    //When checking VarRef check if its within local scope, then check the record if it exists, then check global if shared
+    //Class should have a reference to the record of itself containing only variables, use NewType
+    //Interfaces should use an enum inside the interface to determine which subtype to use, each implemented subclass should have enum
+    //Should be a post-processing step, save until the end of parser
 
-//Variable Reference: ensure the correct scope is used and uses record if applicable
-//Class: Should add fields to a record node that is passed to every function to check if variable is in it
-//Interfaces: contain an enum inside the interface for subtype of class, each class has a type - do later
+    //Variable Reference: ensure the correct scope is used and uses record if applicable
+    //Class: Should add fields to a record node that is passed to every function to check if variable is in it
+    //Interfaces: contain an enum inside the interface for subtype of class, each class has a type - do later
     public bool ParseClass()
     {
         var isPublic = handler.MatchAndRemove(TokenType.PRIVATE) == null;
@@ -289,7 +288,7 @@ public class Parser
         return false;
     }
 
-//TODO: double-check the work here
+    //TODO: double-check the work here
     public bool ParseFunction()
     {
         Token? function;
@@ -386,7 +385,7 @@ public class Parser
         return arguments;
     }
 
-//TODO: finish implementing ParseVariableReference()
+    //TODO: finish implementing ParseVariableReference()
     public VariableUsagePlainNode? ParseVariableReference()
     {
         var wordToken = handler.MatchAndRemove(TokenType.WORD);
@@ -409,7 +408,7 @@ public class Parser
         return null;
     }
 
-//TODO: check for other statement types
+    //TODO: check for other statement types
     public ASTNode? ParseStatement()
     {
         var statement =
@@ -478,7 +477,7 @@ public class Parser
         return null;
     }
 
-//TODO: finish implementing ParseReturn()
+    //TODO: finish implementing ParseReturn()
     public StatementNode? ParseReturn()
     {
         return null;
@@ -520,7 +519,7 @@ public class Parser
                     // Return the 'IF' node with 'ELSE IF' or 'ELSE'
                     return new IfNode(
                         condition
-                        ?? throw new InvalidOperationException("In ParseIf, condition is null"),
+                            ?? throw new InvalidOperationException("In ParseIf, condition is null"),
                         block,
                         nextIf
                     );
@@ -531,7 +530,7 @@ public class Parser
                 // return new IfNode(condition, block, new IfNode(elseBlock));
                 return new IfNode(
                     condition
-                    ?? throw new InvalidOperationException("In ParseIf, condition is null"),
+                        ?? throw new InvalidOperationException("In ParseIf, condition is null"),
                     block,
                     new ElseNode(elseBlock)
                 );
@@ -677,9 +676,7 @@ public class Parser
         {
             functionName = functionToken.GetValue();
         }
-        else if (functionName != null)
-        {
-        }
+        else if (functionName != null) { }
         else
         {
             return null;
