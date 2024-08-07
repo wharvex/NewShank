@@ -72,26 +72,32 @@ public class Parser
                 throw new Exception("No class declaration found in file");
             }
 
-        AcceptSeparators();
-        while (handler.MoreTokens())
-        {
             AcceptSeparators();
-
-            if (ParseField() || ParseFunction())
+            while (handler.MoreTokens())
             {
                 AcceptSeparators();
-                continue;
+
+                if (ParseField() || ParseFunction())
+                {
+                    AcceptSeparators();
+                    continue;
+                }
+                throw new Exception("Statement is not a function or field");
             }
-            throw new Exception("Statement is not a function or field");
-        }
-        thisClass.ExportTargetNames = sharedNames;
-        thisClass.UpdateExports();
+            thisClass.ExportTargetNames = sharedNames;
+            thisClass.UpdateExports();
 
             RecordNode record = new RecordNode("this", thisClass.Name, members, null);
             thisClass.AddRecord(record);
             program.AddToModules(thisClass);
 
-            var recordParam = new VariableDeclarationNode(false, record.Type, record.Name, thisClass.Name, false);
+            var recordParam = new VariableDeclarationNode(
+                false,
+                record.Type,
+                record.Name,
+                thisClass.Name,
+                false
+            );
 
             //foreach(FunctionNode function in thisClass.Functions.Values)
             //{

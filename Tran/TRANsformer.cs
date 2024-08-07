@@ -34,7 +34,12 @@ namespace Tran
                                     var member = record.Fields[assignment.Target.Name];
                                     if (member != null)
                                     {
-                                        assignment.Target = new VariableUsagePlainNode(record.Name, assignment.Target, VariableUsagePlainNode.VrnExtType.RecordMember, module.Name);
+                                        assignment.Target = new VariableUsagePlainNode(
+                                            record.Name,
+                                            assignment.Target,
+                                            VariableUsagePlainNode.VrnExtType.RecordMember,
+                                            module.Name
+                                        );
                                         assignment.Target.Type = module.Records["this"].Type;
                                     }
                                 }
@@ -42,7 +47,6 @@ namespace Tran
                         }
                         continue;
                     }
-
                     //else if (function.Name.Equals("start"))
                     //{
                     //    var thisVar = new VariableDeclarationNode(false, module.Records["this"].Type, "this", module.Name, false);

@@ -34,7 +34,7 @@ namespace TranUnitTests
 
         public void RunInterpreter(string file)
         {
-            var files = new List<string>{file};
+            var files = new List<string> { file };
             CreateParser(files);
             InterpretOptions options = new InterpretOptions();
             options.InputFiles = files;
@@ -48,9 +48,9 @@ namespace TranUnitTests
             Interpreter.Modules = program.Modules;
             Interpreter.StartModule = program.GetStartModuleSafe();
             Interpreter.InterpretFunction(
-            program.GetStartModuleSafe().GetStartFunctionSafe(),
-            [],
-            program.GetStartModuleSafe()
+                program.GetStartModuleSafe().GetStartFunctionSafe(),
+                [],
+                program.GetStartModuleSafe()
             );
         }
 
@@ -71,7 +71,7 @@ namespace TranUnitTests
             CreateParser(files);
             InterpretOptions options = new InterpretOptions();
             options.InputFiles = files;
-            
+
             var program = parser.Parse();
 
             program.Modules = TRANsformer.Walk(program.Modules);
@@ -81,15 +81,14 @@ namespace TranUnitTests
             Interpreter.Modules = program.Modules;
             Interpreter.StartModule = program.GetStartModuleSafe();
             Interpreter.InterpretFunction(
-            program.GetStartModuleSafe().GetStartFunctionSafe(),
-            [],
-            program.GetStartModuleSafe()
+                program.GetStartModuleSafe().GetStartFunctionSafe(),
+                [],
+                program.GetStartModuleSafe()
             );
         }
 
         public void RunInterpreter()
         {
-            
             foreach (KeyValuePair<string, ModuleNode> currentModulePair in Interpreter.Modules)
             {
                 var currentModule = currentModulePair.Value;
