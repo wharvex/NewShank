@@ -445,11 +445,15 @@ public class SemanticAnalysis
     {
         var args = functionCallNode.Arguments;
         functionCallNode.FunctionDefinitionModule = fn.parentModuleName!;
+        OutputHelper.DebugPrintTxt(
+            fn.ParameterVariables.Skip(args.Count).Count().ToString(),
+            "defaultValsInspection"
+        );
 
         if (
             args.Count
             != fn.ParameterVariables.Count
-                - fn.ParameterVariables.Take(args.Count)
+                - fn.ParameterVariables.Skip(args.Count)
                     .Count(parameter => parameter.IsDefaultValue)
         )
             throw new SemanticErrorException(
@@ -523,24 +527,33 @@ public class SemanticAnalysis
                 )
             : [];
 
-        // match types given two types (the is first the parameter type, the second is the argument type) attempts to find a substitution for the generics in the parameter type to new types given the fact that the parameter type is a more specific version of the arugment type
+        // Match types given two types (the first is the parameter type, the second is the argument type)
+        // Attempts to find a substitution for the generics in the parameter type to new types,
+        // given the fact that the parameter type is a more specific version of the argument type.
         Option<IEnumerable<(string, Type)>> MatchTypes(Type paramType, Type type) =>
             (paramType, type) switch
             {
-                // if we have some generic type we create a substitution that maps to the generic type to the type (base case)
+                // If we have some generic type we create a substitution that maps the generic type to the type (base case).
                 (GenericType g, _) => MatchTypesGeneric(g, type),
-                // you cannot pass as a parameter a more general type that corresponds to an argument with a more specific type
-                // we know this is a more general argument because the case above catches all generic parameters (even ones with a generic argument)
+
+                // You cannot pass an argument of a more general type that corresponds to a parameter with a more specific type.
+                // We know this is a more general argument because the case above catches all generic parameters
+                // (even ones with a generic argument).
                 (_, GenericType) => Option.None<IEnumerable<(string, Type)>>(),
-                // if we have a reference type and a another reference type we just unify their inner types
+
+                // If we have a reference type and another reference type we just unify their inner types.
                 (ReferenceType param, ReferenceType arg) => MatchTypes(param.Inner, arg.Inner),
-                // // an instantiated type holds two things the actual types and the actual types for any generics in the actual type
-                // to find the substitution for tow instantiated types we first verify that they are the same underlying type the `where ... Equals ...`
+
+                // An instantiated type holds two things: the actual types and the actual types for any generics in the actual types.
+                // To find the substitution for two instantiated types, we first verify that they are the same underlying type.
+                // This verification is what the `when ... Equals ...` below is about.
                 (InstantiatedType param, InstantiatedType arg) when arg.Inner.Equals(param.Inner)
                     => MatchTypesInstantiated(param, arg),
+
                 // TODO: validate ranges
-                // same as ReferenceType but for arrays
+                // Same as ReferenceType but for arrays.
                 (ArrayType param, ArrayType arg) => MatchTypes(param.Inner, arg.Inner),
+
                 ({ } a, { } b)
                     => Option.Some(Enumerable.Empty<(string, Type)>()).Filter(a.Equals(b))
             };
