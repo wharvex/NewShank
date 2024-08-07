@@ -43,7 +43,6 @@ public class SemanticAnalysis
     /// </summary>
     /// <param name="functions">A function-by-name dictionary of the functions to check</param>
     /// <param name="parentModule">The parent module of the given functions</param>
-    /// <remarks>Author: Tim Gudlewski</remarks>
     public static void CheckFunctions(
         Dictionary<string, CallableNode> functions,
         ModuleNode parentModule

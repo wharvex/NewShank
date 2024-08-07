@@ -1,9 +1,6 @@
 ﻿using System.Diagnostics;
-using System.Net.Http.Headers;
 using System.Text;
-using LLVMSharp;
 using Shank.ASTNodes;
-using Shank.AstVisitorsTim;
 using Shank.MathOppable;
 
 namespace Shank;
