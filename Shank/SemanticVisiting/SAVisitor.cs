@@ -1578,7 +1578,7 @@ public class NewFunctionCallVisitor : FunctionCallVisitor
                     + " are required."
             );
         // We then go through all the (parameter, argument) pairs, but we skip any unnecessary default parameters (as we have already done the arity check), and typecheck them.
-        // In our first case we would have [(key: K, "first"), (value: V, false), (map: HashMap K, V, map: HashMap string, number)]. 
+        // In our first case we would have [(key: K, "first"), (value: V, false), (map: HashMap K, V, map: HashMap string, number)].
         // For the second case we have [(var a: A, var x: integer), (var b: A, var y: integer)].
         // The third case is the most interesting as we don't include the last parameter, we get [(name: string, "John"), (greeting: string, "Goodbye")].
         // With the fourth case we get [(b: boolean, 4), (var result: string, var boolString: string)].
