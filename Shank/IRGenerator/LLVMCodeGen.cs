@@ -1,7 +1,7 @@
-using LLVMSharp.Interop;
-using Shank.IRGenerator;
 using System.Diagnostics;
 using LLVMSharp.Interop;
+using LLVMSharp.Interop;
+using Shank.IRGenerator;
 
 namespace Shank;
 
