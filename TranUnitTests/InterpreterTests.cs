@@ -267,6 +267,7 @@ class start
 
     start()
         doStuff(x, y)
+        console.print(x)
 
     doStuff(number a, number b)
         number c
@@ -322,7 +323,7 @@ class start
 class start
     number x
         accessor:
-            value = 100
+            value = x
         mutator:
             x = value
 

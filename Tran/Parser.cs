@@ -1,7 +1,9 @@
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using System.Runtime.ExceptionServices;
 using Shank.ASTNodes;
+using Tran;
 
 namespace Shank.Tran;
 
@@ -75,7 +77,7 @@ public class Parser
             while (handler.MoreTokens())
             {
                 AcceptSeparators();
-                
+
                 if (ParseField() || ParseFunction())
                 {
                     AcceptSeparators();
@@ -97,6 +99,13 @@ public class Parser
                 thisClass.Name,
                 false
             );
+
+            foreach (FunctionNode function in thisClass.Functions.Values)
+            {
+                if (function.Name != "start")
+                    function.ParameterVariables.Add(recordParam);
+                //function.VariablesInScope.Add(recordParam.Name, recordParam);
+            }
             blockLevel++;
         }
         return program;
@@ -156,21 +165,14 @@ public class Parser
             );
             if (propertyType == TokenType.ACCESSOR)
             {
-                property.LocalVariables.Add(value);
+                property.ParameterVariables.Add(value);
                 property.VariablesInScope.Add(value.Name!, value);
-                var retVal = new VariableDeclarationNode(
-                    false,
-                    variable.Type,
-                    "retVal",
-                    thisClass.Name,
-                    false
-                );
-                property.ParameterVariables.Add(retVal);
             }
             else
             {
                 value.IsConstant = true;
                 property.ParameterVariables.Add(value);
+                //property.VariablesInScope.Add(value.Name!, value);
             }
 
             return property;
@@ -187,12 +189,15 @@ public class Parser
             if ((name = handler.MatchAndRemove(TokenType.WORD)) != null)
             {
                 thisClass = new ModuleNode(name.GetValue());
+                //program.AddToModules(thisClass);
+                //RecordNode? record = new RecordNode("interface"+thisClass.Name, thisClass.Name, members, null);
                 RecordNode? record = new RecordNode(
                     thisClass.Name,
                     "interface" + thisClass.Name,
                     members,
                     null
                 );
+                //RecordNode? record = new RecordNode(thisClass.Name, thisClass.Name, members, null);
                 thisClass.AddRecord(record);
                 if (ParseInterfaceFunctions() == false)
                 {
@@ -207,6 +212,15 @@ public class Parser
 
         return false;
     }
+
+    //When checking VarRef check if its within local scope, then check the record if it exists, then check global if shared
+    //Class should have a reference to the record of itself containing only variables, use NewType
+    //Interfaces should use an enum inside the interface to determine which subtype to use, each implemented subclass should have enum
+    //Should be a post-processing step, save until the end of parser
+
+    //Variable Reference: ensure the correct scope is used and uses record if applicable
+    //Class: Should add fields to a record node that is passed to every function to check if variable is in it
+    //Interfaces: contain an enum inside the interface for subtype of class, each class has a type - do later
     public bool ParseClass()
     {
         var isPublic = handler.MatchAndRemove(TokenType.PRIVATE) == null;
@@ -231,6 +245,11 @@ public class Parser
                             if (record != null)
                             {
                                 thisClass.AddRecord(record);
+                                EnumNode eNode = GetEqualNode(otherName.GetValue());
+                                if (eNode != null)
+                                {
+                                    thisClass.Enums.Add(name.GetValue(), eNode);
+                                }
                                 return true;
                             }
                         }
@@ -253,9 +272,25 @@ public class Parser
         return false;
     }
 
+    public EnumNode GetEqualNode(string className)
+    {
+        List<EnumNode> enums = TRANsformer.InterfaceWalk(thisClass);
+        foreach (EnumNode enumNode in enums)
+        {
+            if (className.Equals(enumNode.ParentModuleName))
+            {
+                return enumNode;
+            }
+        }
+
+        return null;
+    }
+
+    //TODO: double-check the work here
     public bool ParseFunction()
     {
         Token? function;
+        //Console.WriteLine("here");
         List<VariableDeclarationNode> parameters;
         var isPublic = handler.MatchAndRemove(TokenType.PRIVATE) == null;
         var isShared = (isPublic && handler.MatchAndRemove(TokenType.SHARED) != null);
@@ -347,6 +382,8 @@ public class Parser
 
         return arguments;
     }
+
+    //TODO: finish implementing ParseVariableReference()
     public VariableUsagePlainNode? ParseVariableReference()
     {
         var wordToken = handler.MatchAndRemove(TokenType.WORD);
@@ -369,10 +406,11 @@ public class Parser
         return null;
     }
 
+    //TODO: check for other statement types
     public ASTNode? ParseStatement()
     {
         var statement =
-            ParseIf() ?? ParseLoop() ?? ParseFunctionCall() ?? ParseAssignment();
+            ParseIf() ?? ParseLoop() ?? ParseReturn() ?? ParseFunctionCall() ?? ParseAssignment();
         return statement;
     }
 
@@ -436,6 +474,13 @@ public class Parser
 
         return null;
     }
+
+    //TODO: finish implementing ParseReturn()
+    public StatementNode? ParseReturn()
+    {
+        return null;
+    }
+
     public StatementNode? ParseLoop()
     {
         if (handler.MatchAndRemove(TokenType.LOOP) != null)
@@ -480,6 +525,7 @@ public class Parser
 
                 // Return the 'IF' node with 'ELSE'
                 var elseBlock = ParseBlock();
+                // return new IfNode(condition, block, new IfNode(elseBlock));
                 return new IfNode(
                     condition
                         ?? throw new InvalidOperationException("In ParseIf, condition is null"),
@@ -570,6 +616,7 @@ public class Parser
 
         return null;
     }
+
     public List<StatementNode> ParseBlock()
     {
         blockLevel++;
@@ -873,6 +920,7 @@ public class Parser
             currentFunction.VariablesInScope.Add(tempVar.Name, tempVar);
             currentFunction.LocalVariables.Add(tempVar);
 
+            //Insert statement to call the function
             var varRef = new VariableUsagePlainNode(tempVar.Name, thisClass.Name);
             varRef.IsInFuncCallWithVar = true;
             varRef.NewIsInFuncCallWithVar = true;

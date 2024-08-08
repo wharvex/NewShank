@@ -170,6 +170,8 @@ public abstract class VariableUsageNodeTemp : ExpressionNode
                         "Only variables in scope can be used. Found: " + p.Name,
                         p
                     );
+                p.NewReferencesGlobalVariable = dec.IsGlobal;
+                p.ReferencesGlobalVariable = dec.IsGlobal;
                 return dec.Type;
             case VariableUsageIndexNode i:
                 var idxTy = exTyGetter(i.Right, dexInScope);

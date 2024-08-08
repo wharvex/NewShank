@@ -425,7 +425,7 @@ class test implements someName
             );
             CreateParser(files);
             parser.Parse();
-            TRANsformer.InterfaceSomething(parser.thisClass);
+            TRANsformer.InterfaceWalk(parser.thisClass);
         }
     }
 }

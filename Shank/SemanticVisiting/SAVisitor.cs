@@ -1,9 +1,7 @@
-using System.Runtime.InteropServices;
-using System.Xml.Serialization;
-using LLVMSharp;
 using Optional;
 using Shank.ASTNodes;
 using Shank.AstVisitorsTim;
+using Shank.Utils;
 
 namespace Shank;
 
@@ -380,6 +378,7 @@ public abstract class SAVisitor
         }
 
         vun.GetPlain().ReferencesGlobalVariable = vdn.IsGlobal;
+        vun.NewReferencesGlobalVariable = vdn.IsGlobal;
         var vtVis = new VunTypeGettingVisitor(vdn.Type, vdnByName);
         vun.Accept(vtVis);
         return vtVis.VunType;
@@ -597,7 +596,7 @@ public class RecordVisitor : SAVisitor
             .ToDictionary();
         if (!usedGenerics.Distinct().SequenceEqual(node.GenericTypeParameterNames))
         {
-            // TODO: make warnnig function for uniformity
+            // TODO: make warning function for uniformity
             throw new SemanticErrorException(
                 $"Generic Type parameter(s) {string.Join(", ", node.GenericTypeParameterNames.Except(usedGenerics.Distinct()))} are unused for record {node.Name}",
                 node
@@ -654,11 +653,11 @@ public class UnknownTypesVisitor : SAVisitor
             );
         }
 
-        // if not all generics are used in the parameters that means those generics cannot be infered, but they could be used for variables which is bad
+        // if not all generics are used in the parameters that means those generics cannot be inferred, but they could be used for variables which is bad
         if (!usedGenerics.Distinct().SequenceEqual(generics))
         {
             throw new SemanticErrorException(
-                $"Generic Type parameter(s) {string.Join(", ", generics.Except(usedGenerics.Distinct()))}  cannot be infered for function {node.Name}",
+                $"Generic Type parameter(s) {string.Join(", ", generics.Except(usedGenerics.Distinct()))}  cannot be inferred for function {node.Name}",
                 node
             );
         }
@@ -674,12 +673,12 @@ public class UnknownTypesVisitor : SAVisitor
     {
         foreach (var variable in variables)
         {
-            // if its a constant then it cannot refer to another constant/variable so the only case for variable is its an emum cohnstant
-            // might need  similiar logic for defaulat values of functions, and weird enum comparissons i.e. red = bar, where red is an enum constant
+            // if it's a constant then it cannot refer to another constant/variable so the only case for variable is it's an enum constant
+            // might need  similar logic for default values of functions, and weird enum comparisons i.e. red = bar, where red is an enum constant
             // because currently we do assume lhs determine type
             if (variable is { IsConstant: true, InitialValue: { } init })
             {
-                // from the parsers pov we should make an enum node, b/c this can't be any random varialbe
+                // from the parsers pov we should make an enum node, b/c this can't be any random variable
                 if (init is StringNode n)
                 {
                     foreach (
@@ -1320,124 +1319,233 @@ public class NewFunctionCallVisitor : FunctionCallVisitor
             Functions.GetValueOrDefault(node.Name)
             ?? BuiltIns.GetValueOrDefault(node.Name)
             ?? throw new SemanticErrorException($"Function {node.Name} not found", node);
-        CheckFunctionCall(node, function);
+        CheckFunctionCall(node, function, Variables);
         return null;
     }
 
-    private void CheckFunctionCall(FunctionCallNode functionCallNode, CallableNode function)
+    // Check if a function call is valid (arguments match parameters, there is a correct overload, ...).
+    // This is public so old Semantic Analysis can still function, but this semantic analysis pass does not need to be update in multiple places each time something need to be changed.
+    public static void CheckFunctionCall(
+        FunctionCallNode functionCallNode,
+        CallableNode function,
+        Dictionary<string, VariableDeclarationNode> variables
+    )
     {
         functionCallNode.FunctionDefinitionModule = function.parentModuleName;
         switch (function)
         {
+            // If it's a call to an overloaded function.
             case OverloadedFunctionNode overloads:
             {
-                // if its a function overload, then test all the overloads
-                var possibleOverloads = overloads.Overloads.Values.Aggregate(
-                    (
-                        Valid: (IEnumerable<(CallableNode, Dictionary<string, Type>)>)[],
-                        Invalid: (IEnumerable<(CallableNode, string)>)[]
-                    ),
-                    (results, overload) =>
-                    {
-                        try
-                        {
-                            (CallableNode Overload, Dictionary<string, Type>) value = (
-                                overload,
-                                CheckIndividualFunctionCall(functionCallNode, overload)
-                            );
-                            // if it is valid for a specific overload, then add it to the list of valid overloads
-                            return results with { Valid = [value, ..results.Valid] };
-                        }
-                        catch (SemanticErrorException e)
-                        {
-                            // and if its not then do the opposite (add the overload and why it was bad to the list of invalid overloads)
-                            return results with
-                            {
-                                Invalid = [(overload, e.Message), ..results.Invalid]
-                            };
-                        }
-                    }
+                // For example:
+                // define coerce(var target: integer, value: integer)
+                //      target := value
+                // define coerce(var target: integer, value: real)
+                //      realToInteger value, var target
+                // define coerce(var target: integer, value: boolean)
+                //      if boolean
+                //          target := 0
+                //      else
+                //          target := 1
+                // define coerce(var target: A, value: A) generic A
+                //      target := value
+                // define start()
+                // variables value: integer
+                //      coerce false, var value
+                // We try each overload, splitting the results into a list of correct overloads, and a list of bad overloads.
+                var possibleOverloads = overloads.Overloads.Values.AggregateEither(
+                    overload =>
+                        CheckFunctionCallInner(functionCallNode, overload, variables)
+                            .Map(correct => (overload, correct))
+                            .MapRight(error => (overload, correct: error))
                 );
-                var overload = possibleOverloads.Valid.ToList() switch
+                var overload = possibleOverloads.Left.ToList() switch
                 {
+                    // if there is only a single overload, then great we found the correct overload.
+                    // This is what happens in our example.
+                    [var validOverload]
+                        => validOverload,
                     // if there are no valid overloads then print all the bad overloads and why they were bad
+                    // Lets say that instead of calling coerce with a boolean we called it with a string `coerce var value, ""`.
+                    // So we would get an error:
+                    // No overload for call to coerce, with arguments integer, string.
+                    // Overload with parameters integer, integer mismatched because: type mismatch.
+                    // ...
+                    // Overload with parameters A, A mismatched because: generic A cannot match integer and string
                     []
                         => throw new SemanticErrorException(
                             $"""
-                             no overload found for call to {functionCallNode.Name}, with arguments {string.Join(",", functionCallNode.Arguments.Select(arg => arg.Type))}
-                             {string.Join("\n", possibleOverloads.Invalid.Select(badOverload => $"Overload with parameters {string.Join(", ", badOverload.Item1.ParameterVariables.Select(parameter => parameter.Type))} mismatched because: {badOverload.Item2} "))}
-                             """,
+                                 No overload found for call to {functionCallNode.Name}, with arguments {string.Join(", ", functionCallNode.Arguments.Select(arg => arg.Type))}.
+                                 {string.Join("\n", possibleOverloads.Right.Select(badOverload => $"Overload with parameters {string.Join(", ", badOverload.Item1.ParameterVariables.Select(parameter => parameter.Type))} mismatched because: {badOverload.Item2}."))}
+                                 """,
                             functionCallNode
                         ),
-                    // if there is only a single overload, then great we found the correct overload
-                    [var validOverload]
-                        => validOverload,
                     // if there are many overloads that are correct, then we cannot determine which one is the most correct, so we spit out the list of all the valid overloads
+                    // (back to our example) If we had called coerce with integer `coerce var value, 5`.
+                    // We would get the error:
+                    // Ambiguous overload for call to coerce, with arguments integer, string.
+                    // Possible valid overloads included:
+                    // Overload with parameters integer, integer.
+                    // Overload with parameters A, A.
                     var validOverloads
                         => throw new SemanticErrorException(
                             $"""
-                                                                            ambiguous overloads for call to {functionCallNode.Name}, with arguments {string.Join(",", functionCallNode.Arguments.Select(arg => arg.Type))}
-                                                                            Possible valid overloads included:
-                                                                            {string.Join("\n", validOverloads.Select(overload => $"Overload with parameters {string.Join(", ", overload.Item1.ParameterVariables.Select(parameter => parameter.Type))}"))}
-                                                                            """,
+                                Ambiguous overloads for call to {functionCallNode.Name}, with arguments {string.Join(", ", functionCallNode.Arguments.Select(arg => arg.Type))}.
+                                Possible valid overloads included:
+                                {string.Join("\n", validOverloads.Select(overload => $"Overload with parameters {string.Join(", ", overload.Item1.ParameterVariables.Select(parameter => parameter.Type))}."))}
+                                """,
                             functionCallNode
                         )
                 };
+                // If we had any generics we mark down what each generic corresponds to (called a substitution).
                 functionCallNode.InstantiatedGenerics = overload.Item2;
+                // We then mark down the correct overload so we don't have to do this again.
                 functionCallNode.Overload = overload.Item1.Overload;
                 break;
             }
             case BuiltInVariadicFunctionNode variadicFunction:
             {
-                // if its a variadic function there are to cases: either all the arguments have to be var or not
+                // So for our example this time:
+                // enum colors = [red, green, blue]
+                // define start()
+                // variables a: integer
+                //      write var a, 4, 5
+                //      write red
+                //      write "hello", "world"
+                // Note: write's parameters must be immutably passed.
+                // if it's a variadic function there are to cases: either all the arguments have to be var or not
                 if (!variadicFunction.AreParametersConstant) // hack to verify that all parameters are passed in as var
+                // We don't have any such functions, so we have no example for this case.
                 {
                     if (
                         functionCallNode.Arguments.Find(
                             node =>
-                                node is not VariableUsageNodeTemp { NewIsInFuncCallWithVar: true }
+                                node
+                                    is not VariableUsageNodeTemp
+                                    {
+                                        // Verifying that the argument is marked as var.
+                                        NewIsInFuncCallWithVar: true
+
+                                        // Since we know that the argument is var, we now verify that the actual variable the argument refersTo is also mutable.
+                                    }
+                                && !variables[
+                                    ((VariableUsageNodeTemp)node).GetPlain().Name
+                                ].IsConstant
                         ) is
                         { } badArgument
                     )
                     {
+                        // TODO: better message, if the problem is the underlying variable not being mutable.
                         throw new SemanticErrorException(
-                            $"cannot call builtin variadic {variadicFunction.Name} with non var argument {badArgument}",
+                            $"Cannot call builtin variadic {variadicFunction.Name} with non var argument {badArgument}.",
                             functionCallNode
                         );
                     }
                 }
-
+                // In our example the first call to write fails here, because we pass in `a` as mutable.
+                else if (
+                    // Verifying that the arguments are not marked as var.
+                    // By finding any arguments that are marked as var, and if there giving an error.
+                    functionCallNode.Arguments.Find(
+                        node => node is VariableUsageNodeTemp { NewIsInFuncCallWithVar: true }
+                    ) is
+                    { } badArgument
+                )
+                {
+                    throw new SemanticErrorException(
+                        $"Cannot call builtin variadic {variadicFunction.Name} with var argument {badArgument}.",
+                        functionCallNode
+                    );
+                }
+                // We mark the function call as being a call to this function with these argument types.
+                // Our second call to start fails because although the users intention was to use the enum constant red, enum special casing does not work unless the parameter type is an enum.
+                // But our third call would succeed, and we would store for monomorphization in InstantiatedVariadics on the function call [string, string].
                 functionCallNode.InstantiatedVariadics = functionCallNode
-                    .Arguments.Select(arg => GetTypeOfExpression(arg, Variables))
+                    .Arguments.Select(arg => GetTypeOfExpression(arg, variables))
                     .ToList();
                 break;
             }
             default:
-                functionCallNode.InstantiatedGenerics = CheckIndividualFunctionCall(
-                    functionCallNode,
-                    function
-                );
+                // We will use this example code:
+                // record HashMap generic K, V
+                //      key: K
+                //      value: V
+                //      next: refersTo HashMap K, V
+                // define AddToHashMap(key: K, value: V, var map: refersTo HashMap K, V) generic K, V
+                // variables newNode: refersTo HashMap K, V
+                //      allocateMemory var newNode
+                //      newNode.key := key
+                //      newNode.value := value
+                //      newNode.next := map
+                //      map := newNode
+                // define Swap(var a: A, var b: A) generic A
+                // variables temp: A
+                //      temp := a
+                //      a := b
+                //      b := temp
+                // define BoolToString(b: boolean, var result: string)
+                //      if b
+                //          result := "true"
+                //      else
+                //          result := "false"
+                // define Greeter(name: string, greeting: string = "Hello", grammar: string = "!" )
+                //      write greeting, (name + grammar)
+                //
+                // define start()
+                // variables map: HashMap string, number
+                // variables boolString: string
+                // variables x, y: integer
+                //      AddToHashMap "first", false, var map { case 1}
+                //      Swap var x, var y { case 2 }
+                //      Greeter "John", "Goodbye" { case 3 }
+                //      BoolToString 4, var boolString { case 4 }
+                //      { TODO: invalid arity case }
+                //      { TODO: var mismatch case }
+                //      { TODO: enum special casing }
+                //
+                // Note: we will only be considering the call in start.
+                functionCallNode.InstantiatedGenerics = CheckFunctionCallInner(
+                        functionCallNode,
+                        function,
+                        variables
+                    )
+                    .OrElseThrow(message => new SemanticErrorException(message, functionCallNode));
+                // At the end the call to AddToHashMap will fail with `generic V cannot match both integer and boolean.
+                // The Swap call is ok, and we will mark for monomorphization that we have a substitution(InstantiatedGenerics) [A=integer].
+                // The call to Greeter is ok, and does not give us any substitution.
+                // The call to BoolToString fails with `types boolean and integer do not match`.
                 break;
         }
     }
 
-    private Dictionary<string, Type> CheckIndividualFunctionCall(
+    private static Either<Dictionary<string, Type>, string> CheckFunctionCallInner(
         FunctionCallNode functionCallNode,
-        CallableNode fn
+        CallableNode fn,
+        Dictionary<string, VariableDeclarationNode> variables
     )
     {
         var args = functionCallNode.Arguments;
-        functionCallNode.FunctionDefinitionModule = fn.parentModuleName;
-
-        // we cannot just autofill all the default values yet, because what if it is a invalid overload
+        functionCallNode.FunctionDefinitionModule = fn.parentModuleName!;
+        // we cannot just autofill all the default values yet, because what if it is an invalid overload
         // so what we do is we trim any extra default parameters out of the parameter count
+        // Back to our example:
+        // For case 1: We have 3 arguments, and 3 parameters (none of which are default parameters).
+        // For the left hand side of the subtraction we first skip the first 3 parameters yielding us a count of 0, since there is no default parameters, we have 3 == 3 - 0, which is good.
+        // For case 2: We have 2 arguments, and 2 parameters (none of which are default parameters).
+        // For the left hand side of the subtraction we first skip the first 2 parameters yielding us a count of 0, since there is no default parameters, we have 2 == 2 - 0, which is good.
+        // Case 3 is the most interesting here: we have 2 arguments, and 3 parameters with two of the being default parameters.
+        // So skipping us the first 2 parameters yields us a list of one parameter, we know that this is a default parameters, so we keep it yielding us again a count of one, so we have 2 == 3 - 1, which is good.
+        // However, if we would've called Greeting with no arguments, we would have well zero arguments, and 3 parameters with two of the being default parameters.
+        // We would skip none of the parameters for the left hand side of the subtraction, and then only count the default ones, yielding us 2, 0 != 3 - 2, which is bad, so we give the error.
+        // For case 4: We have 2 arguments, and 2 parameters (none of which are default parameters).
+        // For the left hand side of the subtraction we first skip the first 2 parameters yielding us a count of 0, since there is no default parameters, we have 2 == 2 - 0, which is good.
         if (
             args.Count
             != fn.ParameterVariables.Count
                 - fn.ParameterVariables.Skip(args.Count)
                     .Count(parameter => parameter.IsDefaultValue)
         )
-            throw new SemanticErrorException(
+            return Either<Dictionary<string, Type>, string>.Right(
                 "For function "
                     + fn.Name
                     + ", "
@@ -1446,39 +1554,72 @@ public class NewFunctionCallVisitor : FunctionCallVisitor
                     + fn.ParameterVariables.Count
                     + " are required."
             );
+        // We then go through all the (parameter, argument) pairs, but we skip any unnecessary default parameters (as we have already done the arity check), and typecheck them.
+        // In our first case we would have [(key: K, "first"), (value: V, false), (map: HashMap K, V, map: HashMap string, number)].
+        // For the second case we have [(var a: A, var x: integer), (var b: A, var y: integer)].
+        // The third case is the most interesting as we don't include the last parameter, we get [(name: string, "John"), (greeting: string, "Goodbye")].
+        // With the fourth case we get [(b: boolean, 4), (var result: string, var boolString: string)].
         var selectMany = fn.ParameterVariables.Take(args.Count)
             .Zip(args)
-            .SelectMany(paramAndArg =>
+            .TryAll(paramAndArg =>
             {
                 var param = paramAndArg.First;
                 var argument = paramAndArg.Second;
-                CheckParameterMutability(param, argument, functionCallNode);
-                return TypeCheckAndInstantiateGenericParameter(param, argument, fn);
+                // For each parameter and argument we check that their mutability matches (their varness).
+                var parameterMutability = CheckParameterMutability(
+                    param,
+                    argument,
+                    variables,
+                    functionCallNode
+                );
+                return parameterMutability.HasValue
+                    ? Either<IEnumerable<(string, Type)>, string>.Right(
+                        parameterMutability.ValueOr("")
+                    )
+                    :
+                    // We then infer any generics while making sure that the types of the parameter and argument match.
+                    // We return the mapping of any inferred generics to their actual type.
+                    TypeCheckAndInstantiateGenericParameter(param, argument, variables, fn);
+                // each argument can return substitutions for many generics, so we mush them all into one list.
             })
-            .Distinct();
+            .Map(substitution => substitution.SelectMany(x => x))
+            // We use distinct in case two (or more) parameters give us back the same generic substitution.
+            // Note: if two (or more) parameters give back different substitutions they are not distinct.
+            .Map(Enumerable.Distinct);
 
-        var dictionary = selectMany
-            .GroupBy(pair => pair.Item1)
-            .FirstOrDefault(group => group.Count() > 1)
-            is { } bad
-            ? throw new SemanticErrorException(
-                $"generic {bad.Key} cannot match {string.Join(" and ", bad.Select(ty => ty.Item2))}",
-                functionCallNode
-            )
-            : selectMany.ToDictionary();
-
-        return dictionary;
+        return
+        // We then group the substitutions by the generic type they are substituting for, and if any of these substitution groups has more than one substitution it means that we have two different substitutions for the same generic, so the generic cannot match both of them, so we give an error.
+        selectMany.FlatMap(
+            inferred =>
+                inferred.GroupBy(pair => pair.Item1).FirstOrDefault(group => group.Count() > 1)
+                    is { } bad
+                    ? Either<Dictionary<string, Type>, string>.Right(
+                        $"Generic {bad.Key} cannot match {string.Join(" and ", bad.Select(ty => ty.Item2))}."
+                    )
+                    : Either<Dictionary<string, Type>, string>.Left(inferred.ToDictionary())
+        );
     }
 
-    private IEnumerable<(string, Type)> TypeCheckAndInstantiateGenericParameter(
+    private static Either<
+        IEnumerable<(string, Type)>,
+        string
+    > TypeCheckAndInstantiateGenericParameter(
         VariableDeclarationNode param,
         ExpressionNode argument,
+        Dictionary<string, VariableDeclarationNode> variables,
         CallableNode fn
     )
     {
         // check that the argument passed in has the right type for its parameter
         // and also if the parameter has any generics try to instate them
-        SemanticAnalysis.CheckRange(param.Name!, param.Type, argument, Variables);
+        try
+        {
+            SemanticAnalysis.CheckRange(param.Name!, param.Type, argument, variables);
+        }
+        catch (SemanticErrorException error)
+        {
+            return Either<IEnumerable<(string, Type)>, string>.Right(error.Message);
+        }
 
         if (
             param.Type is EnumType e
@@ -1486,109 +1627,145 @@ public class NewFunctionCallVisitor : FunctionCallVisitor
             && e.Variants.Contains(v.Name)
         )
         {
-            if (v.ExtensionType != VariableUsagePlainNode.VrnExtType.None)
+            // Enum special casing
+            if (variables.ContainsKey(v.Name))
             {
-                throw new SemanticErrorException($"ambiguous variable name {v.Name}", argument);
+                return Either<IEnumerable<(string, Type)>, string>.Right(
+                    $"Ambiguous variable name {v.Name}."
+                );
             }
 
             argument.Type = param.Type;
-            return [];
+            return Either<IEnumerable<(string, Type)>, string>.Left([]);
         }
 
-        var expressionType = GetTypeOfExpression(argument, Variables);
+        var expressionType = GetTypeOfExpression(argument, variables);
         argument.Type = argument.Type is DefaultType ? expressionType : argument.Type;
         return !param.Type.Equals(expressionType)
             ?
-            // infer instantiated type
+            // Infer generics.
             MatchTypes(param.Type, expressionType)
-                .ValueOr(
-                    () =>
-                        throw new SemanticErrorException(
-                            $"Type mismatch cannot pass to {param.Name!}: {param.Type} {argument}: {expressionType}",
-                            argument
-                        )
+                .MapRight(
+                    mismatch =>
+                        $"Type mismatch cannot pass to {param.Name!}: {param.Type} {argument}: {expressionType}, because: {mismatch}."
                 )
-            : [];
+            : Either<IEnumerable<(string, Type)>, string>.Left([]);
 
-        // match types given two types (the is first the parameter type, the second is the argument type) attempts to find a substitution for the generics in the parameter type to new types given the fact that the parameter type is a more specific version of the arugment type
-        Option<IEnumerable<(string, Type)>> MatchTypes(Type paramType, Type type) =>
-            (paramType, type) switch
+        // Match types given two types (the first is the parameter type, the second is the argument type)
+        // Attempts to find a substitution for the generics in the parameter type to new types,
+        // given the fact that the parameter type is a more specific version of the argument type.
+        // You may wonder why we return Option as opposed to throwing an exception?
+        // It is because we don't want the error when we have a type error to be about some nested type, but rather about a whole parameter argument type mismatch.
+        // Another approach would be to throw an exception and then catch it in TypeCheckAndInstantiateGenericParameter and throw a new error there that says the parameter and argument type do not match, and use the original error as the reason.
+        Either<IEnumerable<(string, Type)>, string> MatchTypes(Type paramType, Type type)
+        {
+            return (paramType, type) switch
             {
-                // if we have some generic type we create a substitution that maps to the generic type to the type (base case)
+                // If we have some generic type we create a substitution that maps the generic type to the type (base case).
                 (GenericType g, _) => MatchTypesGeneric(g, type),
-                // you cannot pass as a parameter a more general type that corresponds to an argument with a more specific type
-                // we know this is a more general argument because the case above catches all generic parameters (even ones with a generic argument)
-                (_, GenericType) => Option.None<IEnumerable<(string, Type)>>(),
-                // if we have a reference type and a another reference type we just unify their inner types
+
+                // You cannot pass an argument of a more general type that corresponds to a parameter with a more specific type.
+                // We know this is a more general argument because the case above catches all generic parameters
+                // (even ones with a generic argument).
+                (_, GenericType)
+                    => Either<IEnumerable<(string, Type)>, string>.Right(
+                        $"The {paramType} is more specific than {type}."
+                    ),
+
+                // If we have a reference type and another reference type we just unify their inner types.
                 (ReferenceType param, ReferenceType arg) => MatchTypes(param.Inner, arg.Inner),
-                // // an instantiated type holds two things the actual types and the actual types for any generics in the actual type
-                // to find the substitution for tow instantiated types we first verify that they are the same underlying type the `where ... Equals ...`
+
+                // An instantiated type holds two things: the actual types and the actual types for any generics in the actual types.
+                // To find the substitution for two instantiated types, we first verify that they are the same underlying type.
+                // This verification is what the `when ... Equals ...` below is about.
                 (InstantiatedType param, InstantiatedType arg) when arg.Inner.Equals(param.Inner)
                     => MatchTypesInstantiated(param, arg),
+
                 // TODO: validate ranges
-                // same as ReferenceType but for arrays
+                // Same as ReferenceType but for arrays.
                 (ArrayType param, ArrayType arg) => MatchTypes(param.Inner, arg.Inner),
+
                 ({ } a, { } b)
-                    => Option.Some(Enumerable.Empty<(string, Type)>()).Filter(a.Equals(b))
+                    => Either<IEnumerable<(string, Type)>, string>
+                        .Left([])
+                        .Filter(a.Equals(b), $"Types {a} and {b} do not match.")
             };
+        }
 
-        Option<IEnumerable<(string, Type)>> MatchTypesGeneric(GenericType g, Type type) =>
-            Option.Some(Enumerable.Repeat((g.Name, type), 1));
+        Either<IEnumerable<(string, Type)>, string> MatchTypesGeneric(GenericType g, Type type) =>
+            Either<IEnumerable<(string, Type)>, string>.Left(Enumerable.Repeat((g.Name, type), 1));
 
-        Option<IEnumerable<(string, Type)>> MatchTypesInstantiated(
+        // Inferring generics and type checking records.
+        Either<IEnumerable<(string, Type)>, string> MatchTypesInstantiated(
             InstantiatedType paramType,
             InstantiatedType type
         ) =>
+            // We do not care about the record fields, we only care about any generics that the record has (and the actual types the user put for each generic, called InstantiatedGenerics or the substitutions for the record).
+            // Another way to think about this is to look at a few types:
+            // record person
+            //      name: string
+            //      age: integer
+            // Two person types will always be equal. Compare this to this type:
+            // record LinkedList generic A
+            //      data: A
+            //      next: refersTo LinkedList A
+            // In this case two different LinkedList can be different if the generic type A is instantiated with a different type, for example LinkedList integer and LinkedList real.
+            // What stays the same is the fields, this is why we just check the InstantiatedGenerics.
+            // You may ask why don't we check that the two underlying records are the same, the answer is we do that in MatchTypes with the `when` clause under the InstantiatedType case.
             paramType
                 .InstantiatedGenerics.Values.Zip(type.InstantiatedGenerics.Values)
                 .Select(pair => MatchTypes(pair.Item1, pair.Item2))
+                // Joining the results together a bit complicated because of the Option.
+                // What happens is we see if the first result is ok (with the flatmap, and if so we check if the second result is ok if it is we join the first and the second result, in any other case we return none (meaning this part of the type failed to type check).
                 .Aggregate((first, second) => first.FlatMap(f => second.Map(f.Union)));
     }
 
-    // assumptions if the arguement is a variable it assumed to be there already from previous check in check function call
-    private void CheckParameterMutability(
+    // assumptions if the argument is a variable it assumed to be there already from previous check in check function call
+    // This function is a bit weird in that if there is a failure it will return Option.Some, and in the case where everything is ok it will return Option.None
+    // Usually we think of None as being the bad case, but not here.
+    private static Option<string> CheckParameterMutability(
         VariableDeclarationNode param,
         ExpressionNode argument,
+        Dictionary<string, VariableDeclarationNode> variables,
         FunctionCallNode fn
     )
     {
         // check that the argument passed in has the right type of mutability for its parameter
         if (argument is VariableUsageNodeTemp variableUsageNodeTemp)
         {
-            var lookedUpArgument = Variables[variableUsageNodeTemp.GetPlain().Name];
+            var lookedUpArgument = variables[variableUsageNodeTemp.GetPlain().Name];
             if (!variableUsageNodeTemp.NewIsInFuncCallWithVar && !param.IsConstant)
             {
-                throw new SemanticErrorException(
-                    $"cannot pass non var argument when you annotate an argument var",
-                    fn
+                return Option.Some(
+                    "Cannot pass non var argument when you annotate an argument var."
                 );
             }
-            else if (param.IsConstant && variableUsageNodeTemp.NewIsInFuncCallWithVar)
+
+            if (param.IsConstant && variableUsageNodeTemp.NewIsInFuncCallWithVar)
             {
-                throw new SemanticErrorException(
-                    $"unused var annotation: argument marked as var, but parameter is not marked as var",
-                    fn
+                return Option.Some(
+                    "Unused var annotation: argument marked as var, but parameter is not marked as var."
                 );
             }
-            else if (
+
+            if (
                 !param.IsConstant
                 && variableUsageNodeTemp.NewIsInFuncCallWithVar
                 && lookedUpArgument.IsConstant
             )
             {
-                throw new SemanticErrorException(
-                    $"you tried to annotate an argument var, even though the variable referenced was not mutable",
-                    fn
+                return Option.Some(
+                    "You tried to annotate an argument var, even though the variable referenced was not mutable."
                 );
             }
         }
         else if (!param.IsConstant)
         {
-            throw new SemanticErrorException(
-                $"cannot pass non var argument when function is expecting it to be var",
-                fn
+            return Option.Some(
+                "Cannot pass non var argument when function is expecting it to be var."
             );
         }
+        return Option.None<string>();
     }
 }
 
@@ -1715,7 +1892,7 @@ public class FunctionCallDefaultVisitor : FunctionCallVisitor
 {
     public override ASTNode? Visit(FunctionCallNode node)
     {
-        // Adds the default values to the funciton call to help with the compiler
+        // Adds the default values to the function call to help with the compiler
         var function =
             Functions.GetValueOrDefault(node.Name)
             ?? BuiltIns.GetValueOrDefault(node.Name)
@@ -1858,7 +2035,7 @@ public class FunctionCallGenericsVariadicsVisitor : FunctionCallVisitor
             : selectMany.ToDictionary();
     }
 
-    // match types given two types (the is first the parameter type, the second is the argument type) attempts to find a substitution for the generics in the parameter type to new types given the fact that the parameter type is a more specific version of the arugment type
+    // match types given two types (the is first the parameter type, the second is the argument type) attempts to find a substitution for the generics in the parameter type to new types given the fact that the parameter type is a more specific version of the argument type
     Option<IEnumerable<(string, Type)>> MatchTypes(Type paramType, Type type) =>
         (paramType, type) switch
         {
@@ -1867,7 +2044,7 @@ public class FunctionCallGenericsVariadicsVisitor : FunctionCallVisitor
             // you cannot pass as a parameter a more general type that corresponds to an argument with a more specific type
             // we know this is a more general argument because the case above catches all generic parameters (even ones with a generic argument)
             (_, GenericType) => Option.None<IEnumerable<(string, Type)>>(),
-            // if we have a reference type and a another reference type we just unify their inner types
+            // if we have a reference type and another reference type we just unify their inner types
             (ReferenceType param, ReferenceType arg) => MatchTypes(param.Inner, arg.Inner),
             // // an instantiated type holds two things the actual types and the actual types for any generics in the actual type
             // to find the substitution for tow instantiated types we first verify that they are the same underlying type the `where ... Equals ...`

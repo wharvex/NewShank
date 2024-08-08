@@ -21,7 +21,7 @@ namespace Tran
                 foreach (FunctionNode functionNode in module.Functions.Values)
                 {
                     function = functionNode;
-                    if (function.Name[0] == '_' && function.Name.Contains("mutator"))
+                    if (function.Name[0] == '_')
                     {
                         for (index = 0; index < function.Statements.Count; index++)
                         {
@@ -34,26 +34,57 @@ namespace Tran
                                     var member = module.Records[record.TypeName].Members[0];
                                     if (member != null)
                                     {
-                                        assignment.Target = new VariableUsagePlainNode(
-                                            record.TypeName,
-                                            assignment.Target,
-                                            VariableUsagePlainNode.VrnExtType.RecordMember,
-                                            module.Name
-                                        );
-                                        assignment.Target.Type = module.Records["this"].Type;
+                                        if (function.Name.Contains("mutator"))
+                                        {
+                                            assignment.Target = new VariableUsagePlainNode(
+                                                record.TypeName,
+                                                assignment.Target,
+                                                VariableUsagePlainNode.VrnExtType.RecordMember,
+                                                module.Name
+                                            );
+                                            assignment.Target.Type = module.Records["this"].Type;
+                                        }
+                                        else if (function.Name.Contains("accessor"))
+                                        {
+                                            //This assumes the expression is setting the member - needs to be specified
+                                            if (
+                                                assignment.Expression
+                                                    is VariableUsagePlainNode variable
+                                                && variable.Name.Equals(member.Name)
+                                            )
+                                            {
+                                                assignment.Expression = new VariableUsagePlainNode(
+                                                    record.TypeName,
+                                                    new VariableUsagePlainNode(
+                                                        member.Name,
+                                                        module.Name
+                                                    ),
+                                                    VariableUsagePlainNode.VrnExtType.RecordMember,
+                                                    module.Name
+                                                );
+                                                assignment.Target.Type = module
+                                                    .Records["this"]
+                                                    .Type;
+                                            }
+                                        }
                                     }
                                 }
                             }
                         }
                         continue;
                     }
-                    //else if (function.Name.Equals("start"))
-                    //{
-                    //    var thisVar = new VariableDeclarationNode(false, new UnknownType("this"), "this", module.Name, false);
-                    //    function.LocalVariables.Add(thisVar);
-                    //    function.VariablesInScope.Add(thisVar.Name, thisVar);
-                    //}
-
+                    else if (function.Name.Equals("start"))
+                    {
+                        var thisVar = new VariableDeclarationNode(
+                            false,
+                            new UnknownType("this"),
+                            "this",
+                            module.Name,
+                            false
+                        );
+                        function.LocalVariables.Add(thisVar);
+                        function.VariablesInScope.Add(thisVar.Name, thisVar);
+                    }
                     else if (function.Name[0] == '_')
                     {
                         continue;
@@ -120,10 +151,13 @@ namespace Tran
                             }
 
                             //TODO: Fix this later, assumes the function call is within the same class
-                            var thisRef = new VariableUsagePlainNode("this", module.Name);
-                            thisRef.NewIsInFuncCallWithVar = true;
-                            thisRef.IsInFuncCallWithVar = true;
-                            //call.Arguments.Add(thisRef);
+                            if (module.Functions.ContainsKey(call.Name))
+                            {
+                                var thisRef = new VariableUsagePlainNode("this", module.Name);
+                                thisRef.NewIsInFuncCallWithVar = true;
+                                thisRef.IsInFuncCallWithVar = true;
+                                call.Arguments.Add(thisRef);
+                            }
                         }
                         else if (statement.GetType() == typeof(WhileNode))
                         {
@@ -230,15 +264,12 @@ namespace Tran
                 {
                     mathOp.Left = retVal;
                 }
-                else
+                retVal = WalkExpression(mathOp.Right, module, ref variableRef);
+                if (retVal == null)
                 {
-                    retVal = WalkExpression(mathOp.Right, module, ref variableRef);
-                    if (retVal == null)
-                    {
-                        return null;
-                    }
-                    mathOp.Right = retVal;
+                    return null;
                 }
+                mathOp.Right = retVal;
                 return mathOp;
             }
             else if (expression.GetType() == typeof(BooleanExpressionNode))
@@ -249,15 +280,12 @@ namespace Tran
                 {
                     boolOp.Left = retVal;
                 }
-                else
+                retVal = WalkExpression(boolOp.Right, module, ref variableRef);
+                if (retVal == null)
                 {
-                    retVal = WalkExpression(boolOp.Right, module, ref variableRef);
-                    if (retVal == null)
-                    {
-                        return boolOp;
-                    }
-                    boolOp.Right = retVal;
+                    return boolOp;
                 }
+                boolOp.Right = retVal;
                 return boolOp;
             }
 
@@ -281,15 +309,21 @@ namespace Tran
 
         //Interfaces should use an enum inside the interface to determine which subtype to use, each implemented subclass should have enum
         //Interfaces: contain an enum inside the interface for subtype of class, each class has a type - do later
-        public static List<EnumNode> InterfaceSomething(ModuleNode module) // todo: change return and method name
+        public static List<EnumNode> InterfaceWalk(ModuleNode module)
         {
             List<EnumNode> enums = new List<EnumNode>();
 
             foreach (var member in module.Records)
             {
-                foreach (char moduleName in member.Key)
+                if (member.Value.ParentModuleName.Contains("interface_"))
                 {
-                    Console.WriteLine("---- in interface -- " + moduleName);
+                    List<String> emptyEnumElements = new List<String>();
+                    EnumNode newEnumNode = new EnumNode(
+                        "interface",
+                        member.Value.Name,
+                        emptyEnumElements
+                    );
+                    enums.Add(newEnumNode);
                 }
             }
 
