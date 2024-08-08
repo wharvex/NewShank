@@ -1460,7 +1460,7 @@ public class NewFunctionCallVisitor : FunctionCallVisitor
                     {
                         // TODO: better message, if the problem is the underlying variable not being mutable.
                         throw new SemanticErrorException(
-                            $"cannot call builtin variadic {variadicFunction.Name} with non var argument {badArgument}",
+                            $"Cannot call builtin variadic {variadicFunction.Name} with non var argument {badArgument}.",
                             functionCallNode
                         );
                     }
@@ -1476,7 +1476,7 @@ public class NewFunctionCallVisitor : FunctionCallVisitor
                 )
                 {
                     throw new SemanticErrorException(
-                        $"cannot call builtin variadic {variadicFunction.Name} with var argument {badArgument}",
+                        $"Cannot call builtin variadic {variadicFunction.Name} with var argument {badArgument}.",
                         functionCallNode
                     );
                 }
@@ -1489,12 +1489,54 @@ public class NewFunctionCallVisitor : FunctionCallVisitor
                 break;
             }
             default:
+                // We will use this example code:
+                // record HashMap generic K, V
+                //      key: K
+                //      value: V
+                //      next: refersTo HashMap K, V
+                // define AddToHashMap(key: K, value: V, var map: refersTo HashMap K, V) generic K, V
+                // variables newNode: refersTo HashMap K, V
+                //      allocateMemory var newNode
+                //      newNode.key := key
+                //      newNode.value := value
+                //      newNode.next := map
+                //      map := newNode
+                // define Swap(var a: A, var b: A) generic A
+                // variables temp: A
+                //      temp := a
+                //      a := b
+                //      b := temp
+                // define BoolToString(b: boolean, var result: string)
+                //      if b
+                //          result := "true"
+                //      else
+                //          result := "false"
+                // define Greeter(name: string, greeting: string = "Hello", grammar: string = "!" )
+                //      write greeting, (name + grammar)
+                //
+                // define start()
+                // variables map: HashMap string, number
+                // variables boolString: string
+                // variables x, y: integer
+                //      AddToHashMap "first", false, var map { case 1}
+                //      Swap var x, var y { case 2 }
+                //      Greeter "John", "Goodbye" { case 3 }
+                //      BoolToString 4, var boolString { case 4 }
+                //      { TODO: invalid arity case }
+                //      { TODO: var mismatch case }
+                //      { TODO: enum special casing }
+                //
+                // Note: we will only be considering the call in start.
                 functionCallNode.InstantiatedGenerics = CheckFunctionCallInner(
                         functionCallNode,
                         function,
                         variables
                     )
                     .OrElseThrow(message => new SemanticErrorException(message, functionCallNode));
+                // At the end the call to AddToHashMap will fail with `generic V cannot match both integer and boolean.
+                // The Swap call is ok, and we will mark for monomorphization that we have a substitution(InstantiatedGenerics) [A=integer].
+                // The call to Greeter is ok, and does not give us any substitution.
+                // The call to BoolToString fails with `types boolean and integer do not match`.
                 break;
         }
     }
@@ -1509,6 +1551,17 @@ public class NewFunctionCallVisitor : FunctionCallVisitor
         functionCallNode.FunctionDefinitionModule = fn.parentModuleName!;
         // we cannot just autofill all the default values yet, because what if it is an invalid overload
         // so what we do is we trim any extra default parameters out of the parameter count
+        // Back to our example:
+        // For case 1: We have 3 arguments, and 3 parameters (none of which are default parameters).
+        // For the left hand side of the subtraction we first skip the first 3 parameters yielding us a count of 0, since there is no default parameters, we have 3 == 3 - 0, which is good.
+        // For case 2: We have 2 arguments, and 2 parameters (none of which are default parameters).
+        // For the left hand side of the subtraction we first skip the first 2 parameters yielding us a count of 0, since there is no default parameters, we have 2 == 2 - 0, which is good.
+        // Case 3 is the most interesting here: we have 2 arguments, and 3 parameters with two of the being default parameters.
+        // So skipping us the first 2 parameters yields us a list of one parameter, we know that this is a default parameters, so we keep it yielding us again a count of one, so we have 2 == 3 - 1, which is good.
+        // However, if we would've called Greeting with no arguments, we would have well zero arguments, and 3 parameters with two of the being default parameters.
+        // We would skip none of the parameters for the left hand side of the subtraction, and then only count the default ones, yielding us 2, 0 != 3 - 2, which is bad, so we give the error.
+        // For case 4: We have 2 arguments, and 2 parameters (none of which are default parameters).
+        // For the left hand side of the subtraction we first skip the first 2 parameters yielding us a count of 0, since there is no default parameters, we have 2 == 2 - 0, which is good.
         if (
             args.Count
             != fn.ParameterVariables.Count
@@ -1524,6 +1577,11 @@ public class NewFunctionCallVisitor : FunctionCallVisitor
                     + fn.ParameterVariables.Count
                     + " are required."
             );
+        // We then go through all the (parameter, argument) pairs, but we skip any unnecessary default parameters (as we have already done the arity check), and typecheck them.
+        // In our first case we would have [(key: K, "first"), (value: V, false), (map: HashMap K, V, map: HashMap string, number)]. 
+        // For the second case we have [(var a: A, var x: integer), (var b: A, var y: integer)].
+        // The third case is the most interesting as we don't include the last parameter, we get [(name: string, "John"), (greeting: string, "Goodbye")].
+        // With the fourth case we get [(b: boolean, 4), (var result: string, var boolString: string)].
         var selectMany = fn.ParameterVariables.Take(args.Count)
             .Zip(args)
             .Aggregate(
@@ -1562,7 +1620,7 @@ public class NewFunctionCallVisitor : FunctionCallVisitor
                 inferred.GroupBy(pair => pair.Item1).FirstOrDefault(group => group.Count() > 1)
                     is { } bad
                     ? Either<Dictionary<string, Type>, string>.Right(
-                        $"generic {bad.Key} cannot match {string.Join(" and ", bad.Select(ty => ty.Item2))}"
+                        $"Generic {bad.Key} cannot match {string.Join(" and ", bad.Select(ty => ty.Item2))}."
                     )
                     : Either<Dictionary<string, Type>, string>.Left(inferred.ToDictionary())
         );
@@ -1596,9 +1654,11 @@ public class NewFunctionCallVisitor : FunctionCallVisitor
         )
         {
             // Enum special casing
-            if (v.ExtensionType != VariableUsagePlainNode.VrnExtType.None)
+            if (variables.ContainsKey(v.Name))
             {
-                throw new SemanticErrorException($"ambiguous variable name {v.Name}", argument);
+                return Either<IEnumerable<(string, Type)>, string>.Right(
+                    $"Ambiguous variable name {v.Name}."
+                );
             }
 
             argument.Type = param.Type;
@@ -1613,7 +1673,7 @@ public class NewFunctionCallVisitor : FunctionCallVisitor
             MatchTypes(param.Type, expressionType)
                 .MapRight(
                     mismatch =>
-                        $"Type mismatch cannot pass to {param.Name!}: {param.Type} {argument}: {expressionType}, because: {mismatch}"
+                        $"Type mismatch cannot pass to {param.Name!}: {param.Type} {argument}: {expressionType}, because: {mismatch}."
                 )
             : Either<IEnumerable<(string, Type)>, string>.Left([]);
 
@@ -1635,7 +1695,7 @@ public class NewFunctionCallVisitor : FunctionCallVisitor
                 // (even ones with a generic argument).
                 (_, GenericType)
                     => Either<IEnumerable<(string, Type)>, string>.Right(
-                        $"{paramType} is more specific than {type}"
+                        $"The {paramType} is more specific than {type}."
                     ),
 
                 // If we have a reference type and another reference type we just unify their inner types.
@@ -1654,7 +1714,7 @@ public class NewFunctionCallVisitor : FunctionCallVisitor
                 ({ } a, { } b)
                     => Either<IEnumerable<(string, Type)>, string>
                         .Left([])
-                        .Filter(a.Equals(b), $"types {a} and {b} do not match")
+                        .Filter(a.Equals(b), $"Types {a} and {b} do not match.")
             };
         }
 
@@ -1703,14 +1763,14 @@ public class NewFunctionCallVisitor : FunctionCallVisitor
             if (!variableUsageNodeTemp.NewIsInFuncCallWithVar && !param.IsConstant)
             {
                 return Option.Some(
-                    $"cannot pass non var argument when you annotate an argument var"
+                    "Cannot pass non var argument when you annotate an argument var."
                 );
             }
 
             if (param.IsConstant && variableUsageNodeTemp.NewIsInFuncCallWithVar)
             {
                 return Option.Some(
-                    $"unused var annotation: argument marked as var, but parameter is not marked as var"
+                    "Unused var annotation: argument marked as var, but parameter is not marked as var."
                 );
             }
 
@@ -1721,14 +1781,14 @@ public class NewFunctionCallVisitor : FunctionCallVisitor
             )
             {
                 return Option.Some(
-                    $"you tried to annotate an argument var, even though the variable referenced was not mutable"
+                    "You tried to annotate an argument var, even though the variable referenced was not mutable."
                 );
             }
         }
         else if (!param.IsConstant)
         {
             return Option.Some(
-                $"cannot pass non var argument when function is expecting it to be var"
+                "Cannot pass non var argument when function is expecting it to be var."
             );
         }
         return Option.None<string>();
