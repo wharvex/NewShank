@@ -102,7 +102,7 @@ public class Parser
 
             foreach (FunctionNode function in thisClass.Functions.Values)
             {
-                if(function.Name != "start")
+                if (function.Name != "start")
                     function.ParameterVariables.Add(recordParam);
                 //function.VariablesInScope.Add(recordParam.Name, recordParam);
             }

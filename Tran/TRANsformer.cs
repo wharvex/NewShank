@@ -37,28 +37,36 @@ namespace Tran
                                         if (function.Name.Contains("mutator"))
                                         {
                                             assignment.Target = new VariableUsagePlainNode(
-                                            record.TypeName,
-                                            assignment.Target,
-                                            VariableUsagePlainNode.VrnExtType.RecordMember,
-                                            module.Name
+                                                record.TypeName,
+                                                assignment.Target,
+                                                VariableUsagePlainNode.VrnExtType.RecordMember,
+                                                module.Name
                                             );
                                             assignment.Target.Type = module.Records["this"].Type;
                                         }
                                         else if (function.Name.Contains("accessor"))
                                         {
                                             //This assumes the expression is setting the member - needs to be specified
-                                            if(assignment.Expression is VariableUsagePlainNode variable && variable.Name.Equals(member.Name))
+                                            if (
+                                                assignment.Expression
+                                                    is VariableUsagePlainNode variable
+                                                && variable.Name.Equals(member.Name)
+                                            )
                                             {
                                                 assignment.Expression = new VariableUsagePlainNode(
-                                                record.TypeName,
-                                                new VariableUsagePlainNode(member.Name, module.Name),
-                                                VariableUsagePlainNode.VrnExtType.RecordMember,
-                                                module.Name
+                                                    record.TypeName,
+                                                    new VariableUsagePlainNode(
+                                                        member.Name,
+                                                        module.Name
+                                                    ),
+                                                    VariableUsagePlainNode.VrnExtType.RecordMember,
+                                                    module.Name
                                                 );
-                                                assignment.Target.Type = module.Records["this"].Type;
+                                                assignment.Target.Type = module
+                                                    .Records["this"]
+                                                    .Type;
                                             }
                                         }
-                                        
                                     }
                                 }
                             }
@@ -67,11 +75,16 @@ namespace Tran
                     }
                     else if (function.Name.Equals("start"))
                     {
-                        var thisVar = new VariableDeclarationNode(false, new UnknownType("this"), "this", module.Name, false);
+                        var thisVar = new VariableDeclarationNode(
+                            false,
+                            new UnknownType("this"),
+                            "this",
+                            module.Name,
+                            false
+                        );
                         function.LocalVariables.Add(thisVar);
                         function.VariablesInScope.Add(thisVar.Name, thisVar);
                     }
-
                     else if (function.Name[0] == '_')
                     {
                         continue;
@@ -145,7 +158,6 @@ namespace Tran
                                 thisRef.IsInFuncCallWithVar = true;
                                 call.Arguments.Add(thisRef);
                             }
-                            
                         }
                         else if (statement.GetType() == typeof(WhileNode))
                         {
