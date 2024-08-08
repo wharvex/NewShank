@@ -10,6 +10,9 @@ public class VariablesGettingVisitor : WalkCompliantVisitor
         get => _currentModuleName ?? throw new InvalidOperationException();
         set => _currentModuleName = value;
     }
+
+    // TODO: better soloution
+    // We currently really on the function name and overload being nullable, so that the global variables of the module are stored VariableDeclarations[(moduleName, null, null)]
     private string? CurrentFunctionName { get; set; }
     private TypeIndex? CurrentFunctionOverload { get; set; }
     private string? CurrentEnumName { get; set; }
@@ -123,6 +126,9 @@ public class VariablesGettingVisitor : WalkCompliantVisitor
             .Select(e => e.First())
             .Select(e => new KeyValuePair<string, VariableDeclarationNode>(e.GetNameSafe(), e))
             .ToDictionary();
+        // clearing the function information so that the global variables of any module after this one do not get stuffed into this functions's variables index.
+        CurrentFunctionName = null;
+        CurrentFunctionOverload = null;
         return n;
     }
 }
