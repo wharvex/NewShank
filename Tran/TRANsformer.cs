@@ -281,15 +281,17 @@ namespace Tran
 
         //Interfaces should use an enum inside the interface to determine which subtype to use, each implemented subclass should have enum
         //Interfaces: contain an enum inside the interface for subtype of class, each class has a type - do later
-        public static List<EnumNode> InterfaceSomething(ModuleNode module) // todo: change return and method name
+        public static List<EnumNode> InterfaceWalk(ModuleNode module)
         {
             List<EnumNode> enums = new List<EnumNode>();
 
             foreach (var member in module.Records)
             {
-                foreach (char moduleName in member.Key)
+                if (member.Value.ParentModuleName.Contains("interface_"))
                 {
-                    Console.WriteLine("---- in interface -- " + moduleName);
+                    List<String> emptyEnumElements = new List<String>();
+                    EnumNode newEnumNode = new EnumNode("interface", member.Value.Name, emptyEnumElements);
+                    enums.Add(newEnumNode);
                 }
             }
 

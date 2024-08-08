@@ -1,7 +1,9 @@
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using System.Runtime.ExceptionServices;
 using Shank.ASTNodes;
+using Tran;
 
 namespace Shank.Tran;
 
@@ -239,6 +241,7 @@ public class Parser
                 thisClass = new ModuleNode(name.GetValue());
                 if (handler.MatchAndRemove(TokenType.IMPLEMENTS) != null)
                 {
+
                     Token? otherName;
                     if ((otherName = handler.MatchAndRemove(TokenType.WORD)) != null)
                     {
@@ -250,6 +253,11 @@ public class Parser
                             if (record != null)
                             {
                                 thisClass.AddRecord(record);
+                                EnumNode eNode = GetEqualNode(otherName.GetValue());
+                                if (eNode != null)
+                                {
+                                    thisClass.Enums.Add(name.GetValue(), eNode);
+                                }
                                 return true;
                             }
                         }
@@ -270,6 +278,20 @@ public class Parser
         }
 
         return false;
+    }
+
+    public EnumNode GetEqualNode(string className)
+    {
+        List<EnumNode> enums = TRANsformer.InterfaceWalk(thisClass);
+        foreach (EnumNode enumNode in enums)
+        {
+            if (className.Equals(enumNode.ParentModuleName))
+            {
+                return enumNode;
+            }
+        }
+
+        return null;
     }
 
     //TODO: double-check the work here
