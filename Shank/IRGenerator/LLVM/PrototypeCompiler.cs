@@ -1,4 +1,3 @@
-using LLVMSharp;
 using LLVMSharp.Interop;
 using Shank.ASTNodes;
 

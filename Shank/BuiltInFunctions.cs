@@ -1,5 +1,4 @@
-﻿using System;
-using Shank.ASTNodes;
+﻿using Shank.ASTNodes;
 
 namespace Shank;
 
@@ -12,7 +11,6 @@ public class BuiltInFunctions
         // Note to the reader - this implementation is different than what I have the students writing in Java.
         // The concepts are the same, but this is more language appropriate. This would be too hard for
         // the students to do in Java.
-        CallableNode.BuiltInCall call = FreeMemory;
         var retVal = new List<BuiltInFunctionNode>
         {
             new BuiltInVariadicFunctionNode("write", Write),
@@ -191,7 +189,7 @@ public class BuiltInFunctions
                 ],
                 AssertIsEqual
             ),
-            new("low", call)
+            new("low", Low)
             {
                 Line = 0,
                 ParameterVariables =
@@ -220,9 +218,8 @@ public class BuiltInFunctions
                     }
                 ],
                 GenericTypeParameterNames = ["T"],
-                Execute = Low
             },
-            new("high", call)
+            new("high", High)
             {
                 Line = 0,
                 ParameterVariables =
@@ -251,9 +248,8 @@ public class BuiltInFunctions
                     }
                 ],
                 GenericTypeParameterNames = ["T"],
-                Execute = High
             },
-            new("allocateMemory", call)
+            new("allocateMemory", AllocateMemory)
             {
                 Line = 0,
                 ParameterVariables =
@@ -275,9 +271,8 @@ public class BuiltInFunctions
                     }
                 ],
                 GenericTypeParameterNames = ["R"],
-                Execute = AllocateMemory
             },
-            new("freeMemory", call)
+            new("freeMemory", FreeMemory)
             {
                 Line = 0,
                 ParameterVariables =
@@ -299,9 +294,8 @@ public class BuiltInFunctions
                     }
                 ],
                 GenericTypeParameterNames = ["R"],
-                Execute = FreeMemory
             },
-            new("isSet", call)
+            new("isSet", IsSet)
             {
                 Line = 0,
                 ParameterVariables =
@@ -329,9 +323,8 @@ public class BuiltInFunctions
                     }
                 ],
                 GenericTypeParameterNames = ["R"],
-                Execute = IsSet
             },
-            new("size", call)
+            new("size", Size)
             {
                 Line = 0,
                 ParameterVariables =
@@ -359,7 +352,6 @@ public class BuiltInFunctions
                     }
                 ],
                 GenericTypeParameterNames = ["R"],
-                Execute = Size
             },
         };
         foreach (var f in retVal)

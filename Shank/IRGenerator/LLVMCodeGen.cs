@@ -1,5 +1,3 @@
-using System.Diagnostics;
-using System.Text;
 using LLVMSharp.Interop;
 using Shank.IRGenerator;
 
