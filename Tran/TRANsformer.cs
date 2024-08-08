@@ -290,7 +290,11 @@ namespace Tran
                 if (member.Value.ParentModuleName.Contains("interface_"))
                 {
                     List<String> emptyEnumElements = new List<String>();
-                    EnumNode newEnumNode = new EnumNode("interface", member.Value.Name, emptyEnumElements);
+                    EnumNode newEnumNode = new EnumNode(
+                        "interface",
+                        member.Value.Name,
+                        emptyEnumElements
+                    );
                     enums.Add(newEnumNode);
                 }
             }

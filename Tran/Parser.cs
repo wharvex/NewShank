@@ -241,7 +241,6 @@ public class Parser
                 thisClass = new ModuleNode(name.GetValue());
                 if (handler.MatchAndRemove(TokenType.IMPLEMENTS) != null)
                 {
-
                     Token? otherName;
                     if ((otherName = handler.MatchAndRemove(TokenType.WORD)) != null)
                     {
