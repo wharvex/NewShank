@@ -126,6 +126,26 @@ class start
         }
 
         [TestMethod]
+        public void InterpreterTestIf()
+        {
+            RunInterpreter(
+                @"
+class start
+    start()
+        number a
+        a = 100
+
+        if a == 50
+            console.print(a)
+        else if a == 100
+            console.print(""Success"")
+
+        console.print(""crazy"")
+        ".Replace("    ", "\t")
+            );
+        }
+
+        [TestMethod]
         public void InterpreterTestFunctionCall()
         {
             RunInterpreter(

@@ -41,6 +41,11 @@ public class TokenHandler
         return null;
     }
 
+    public void AddTokens(List<Token> newTokens)
+    {
+        tokens.InsertRange(0, newTokens);
+    }
+
     public void PrintRemainingTokens()
     {
         int count = 0;

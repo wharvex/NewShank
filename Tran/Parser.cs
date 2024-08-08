@@ -18,7 +18,7 @@ public class Parser
     private int blockLevel;
     private FunctionNode currentFunction;
     private int tempVarNum;
-    private List<StatementNode> statements;
+    private FunctionCallNode? transformedCall;
 
     public Parser(List<Token> tokens)
     {
@@ -30,7 +30,6 @@ public class Parser
         currentFunction = new FunctionNode("default", "default", false);
         thisClass = new ModuleNode("default");
         tempVarNum = 0;
-        statements = new List<StatementNode>();
     }
 
     public Parser(List<List<Token>> tokens)
@@ -43,7 +42,6 @@ public class Parser
         currentFunction = new FunctionNode("default", "default", false);
         thisClass = new ModuleNode("default");
         tempVarNum = 0;
-        statements = new List<StatementNode>();
     }
 
     public bool AcceptSeparators()
@@ -151,7 +149,7 @@ public class Parser
             );
 
             currentFunction = property;
-
+            
             blockLevel++;
             property.Statements = ParseBlock();
             blockLevel--;
@@ -407,7 +405,7 @@ public class Parser
     }
 
     //TODO: check for other statement types
-    public ASTNode? ParseStatement()
+    public StatementNode? ParseStatement()
     {
         var statement =
             ParseIf() ?? ParseLoop() ?? ParseReturn() ?? ParseFunctionCall() ?? ParseAssignment();
@@ -508,7 +506,7 @@ public class Parser
             var condition = ParseExpression() as BooleanExpressionNode;
             var block = ParseBlock();
             AcceptSeparators();
-
+            
             if (handler.MatchAndRemove(TokenType.ELSE) != null)
             {
                 var nextIf = ParseIf() as IfNode;
@@ -533,6 +531,13 @@ public class Parser
                     new ElseNode(elseBlock)
                 );
             }
+            var tokens = new List<Token>();
+            tokens.Add(new Token(TokenType.NEWLINE, 0, 0));
+            for( int i = 0; i < blockLevel; i++)
+            {
+                tokens.Add(new Token(TokenType.TAB, 0, 0));
+            }
+            handler.AddTokens(tokens);
 
             // Return just the 'IF' branch without an 'ELSE'
             return new IfNode(
@@ -621,26 +626,36 @@ public class Parser
     {
         blockLevel++;
         int currentLevel;
-        statements = [];
-        while (handler.MatchAndRemove(TokenType.NEWLINE) != null)
+        List<StatementNode> statements = [];
+
+        while (handler.Peek(0) != null && handler.Peek(0).GetTokenType() == TokenType.NEWLINE)
         {
-            AcceptNewlines();
+            transformedCall = null;
+            int lines = GetNewLines();
             currentLevel = 0;
-            while (handler.MatchAndRemove(TokenType.TAB) != null)
+            while(handler.Peek(lines+currentLevel)!=null && handler.Peek(lines+currentLevel).GetTokenType() == TokenType.TAB)
             {
                 currentLevel++;
             }
-
-            if (currentLevel != blockLevel)
+            if(currentLevel != blockLevel)
             {
                 break;
+            }
+            AcceptNewlines();
+            while (handler.MatchAndRemove(TokenType.TAB) != null)
+            {
             }
 
             var statement = ParseStatement();
 
             if (statement != null)
             {
-                statements.Add((StatementNode)statement);
+                if (transformedCall != null)
+                {
+                    statements.Add(transformedCall);
+                }
+                statements.Add(statement);
+                
             }
             else
             {
@@ -655,6 +670,16 @@ public class Parser
 
         blockLevel--;
         return statements;
+    }
+
+    private int GetNewLines()
+    {
+        int lines = 0;
+        while(handler.Peek(lines) != null && handler.Peek(lines).GetTokenType() == TokenType.NEWLINE)
+        {
+            lines++;
+        }
+        return lines;
     }
 
     public void AcceptNewlines()
@@ -926,7 +951,7 @@ public class Parser
             varRef.NewIsInFuncCallWithVar = true;
             varRef.Type = new UnknownType();
             functionCall.Arguments.Add(varRef);
-            statements.Add(functionCall);
+            transformedCall = functionCall;
 
             tempVarNum++;
             return varRef;
