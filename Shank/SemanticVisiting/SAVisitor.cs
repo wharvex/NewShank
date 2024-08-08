@@ -1352,37 +1352,14 @@ public class NewFunctionCallVisitor : FunctionCallVisitor
                 // define start()
                 // variables value: integer
                 //      coerce false, var value
-                // We try each overload.
-                // Using aggregate allows us to get a list of valid overloads and a list of invalid overloads (as opposed to a list of valid or invalid overloads).
-                // Aggregate takes our initial value (two empty lists, because we have no valid or invalid overloads until we check all the overloads), and for each element (overload) we go do an action (check if the overload is correct).
-                var possibleOverloads = overloads.Overloads.Values.Aggregate(
-                    (
-                        Valid: (IEnumerable<(CallableNode, Dictionary<string, Type>)>)[],
-                        Invalid: (IEnumerable<(CallableNode, string)>)[]
-                    ),
-                    (results, overload) =>
-                        CheckFunctionCallInner(functionCallNode, overload, variables) switch
-                        {
-                            // If we find a good match for the overload we add it to the list of valid overloads for this call.
-                            // Continuing with our example:
-                            // We would find that the overload coerce(var integer, boolean) is valid.
-                            Left<Dictionary<string, Type>, string>(var inferred)
-                                => results with
-                                {
-                                    Valid = [(overload, inferred), .. results.Valid]
-                                },
-                            // If an overload is invalid we add it along with the reason why it failed to the list of invalid overloads.
-                            // Back to our example:
-                            // We would get a bad overload for coerce(var integer, integer), with a type mismatch error and the same thing for coerce(var integer, real).
-                            // For coerce(var A, A) generic A we would get `generic A cannot match integer and boolean`.
-                            Right<Dictionary<string, Type>, string>(var invalid)
-                                => results with
-                                {
-                                    Invalid = [(overload, invalid), .. results.Invalid]
-                                },
-                        }
+                // We try each overload, splitting the results into a list of correct overloads, and a list of bad overloads.
+                var possibleOverloads = overloads.Overloads.Values.AggregateEither(
+                    overload =>
+                        CheckFunctionCallInner(functionCallNode, overload, variables)
+                            .Map(correct => (overload, correct))
+                            .MapRight(error => (overload, correct: error))
                 );
-                var overload = possibleOverloads.Valid.ToList() switch
+                var overload = possibleOverloads.Left.ToList() switch
                 {
                     // if there is only a single overload, then great we found the correct overload.
                     // This is what happens in our example.
@@ -1399,7 +1376,7 @@ public class NewFunctionCallVisitor : FunctionCallVisitor
                         => throw new SemanticErrorException(
                             $"""
                                  No overload found for call to {functionCallNode.Name}, with arguments {string.Join(", ", functionCallNode.Arguments.Select(arg => arg.Type))}.
-                                 {string.Join("\n", possibleOverloads.Invalid.Select(badOverload => $"Overload with parameters {string.Join(", ", badOverload.Item1.ParameterVariables.Select(parameter => parameter.Type))} mismatched because: {badOverload.Item2}."))}
+                                 {string.Join("\n", possibleOverloads.Right.Select(badOverload => $"Overload with parameters {string.Join(", ", badOverload.Item1.ParameterVariables.Select(parameter => parameter.Type))} mismatched because: {badOverload.Item2}."))}
                                  """,
                             functionCallNode
                         ),
@@ -1584,31 +1561,28 @@ public class NewFunctionCallVisitor : FunctionCallVisitor
         // With the fourth case we get [(b: boolean, 4), (var result: string, var boolString: string)].
         var selectMany = fn.ParameterVariables.Take(args.Count)
             .Zip(args)
-            .Aggregate(
-                Either<IEnumerable<(string, Type)>, string>.Left([]),
-                (inferred, paramAndArg) =>
-                    inferred.FlatMap(inferred =>
-                    {
-                        var param = paramAndArg.First;
-                        var argument = paramAndArg.Second;
-                        // For each parameter and argument we check that their mutability matches (their varness).
-                        var parameterMutability = CheckParameterMutability(
-                            param,
-                            argument,
-                            variables,
-                            functionCallNode
-                        );
-                        return parameterMutability.HasValue
-                            ? Either<IEnumerable<(string, Type)>, string>.Right(
-                                parameterMutability.ValueOr("")
-                            )
-                            :
-                            // We then infer any generics while making sure that the types of the parameter and argument match.
-                            // We return the mapping of any inferred generics to their actual type.
-                            TypeCheckAndInstantiateGenericParameter(param, argument, variables, fn)
-                                .Map(inferred.Union);
-                    })
-            )
+            .TryAll(paramAndArg =>
+            {
+                var param = paramAndArg.First;
+                var argument = paramAndArg.Second;
+                // For each parameter and argument we check that their mutability matches (their varness).
+                var parameterMutability = CheckParameterMutability(
+                    param,
+                    argument,
+                    variables,
+                    functionCallNode
+                );
+                return parameterMutability.HasValue
+                    ? Either<IEnumerable<(string, Type)>, string>.Right(
+                        parameterMutability.ValueOr("")
+                    )
+                    :
+                    // We then infer any generics while making sure that the types of the parameter and argument match.
+                    // We return the mapping of any inferred generics to their actual type.
+                    TypeCheckAndInstantiateGenericParameter(param, argument, variables, fn);
+                // each argument can return substitutions for many generics, so we mush them all into one list.
+            })
+            .Map(substitution => substitution.SelectMany(x => x))
             // We use distinct in case two (or more) parameters give us back the same generic substitution.
             // Note: if two (or more) parameters give back different substitutions they are not distinct.
             .Map(Enumerable.Distinct);
