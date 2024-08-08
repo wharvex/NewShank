@@ -100,11 +100,12 @@ public class Parser
                 false
             );
 
-            //foreach (FunctionNode function in thisClass.Functions.Values)
-            //{
-            //    function.ParameterVariables.Add(recordParam);
-            //    //function.VariablesInScope.Add(recordParam.Name, recordParam);
-            //}
+            foreach (FunctionNode function in thisClass.Functions.Values)
+            {
+                if(function.Name != "start")
+                    function.ParameterVariables.Add(recordParam);
+                //function.VariablesInScope.Add(recordParam.Name, recordParam);
+            }
             blockLevel++;
         }
         return program;
@@ -164,16 +165,8 @@ public class Parser
             );
             if (propertyType == TokenType.ACCESSOR)
             {
-                property.LocalVariables.Add(value);
+                property.ParameterVariables.Add(value);
                 property.VariablesInScope.Add(value.Name!, value);
-                var retVal = new VariableDeclarationNode(
-                    false,
-                    variable.Type,
-                    "retVal",
-                    thisClass.Name,
-                    false
-                );
-                property.ParameterVariables.Add(retVal);
             }
             else
             {
