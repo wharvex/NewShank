@@ -1526,9 +1526,7 @@ public class NewFunctionCallVisitor : FunctionCallVisitor
     {
         var args = functionCallNode.Arguments;
         functionCallNode.FunctionDefinitionModule = fn.parentModuleName!;
-        if (
-            CheckArity(fn, args)
-        )
+        if (CheckArity(fn, args))
             return Either<Dictionary<string, Type>, string>.Right(
                 "For function "
                     + fn.Name
@@ -1601,9 +1599,9 @@ public class NewFunctionCallVisitor : FunctionCallVisitor
         // For case 4: We have 2 arguments, and 2 parameters (none of which are default parameters).
         // For the left hand side of the subtraction we first skip the first 2 parameters yielding us a count of 0, since there is no default parameters, we have 2 == 2 - 0, which is good.
         return args.Count
-               != fn.ParameterVariables.Count
-               - fn.ParameterVariables.Skip(args.Count)
-                   .Count(parameter => parameter.IsDefaultValue);
+            != fn.ParameterVariables.Count
+                - fn.ParameterVariables.Skip(args.Count)
+                    .Count(parameter => parameter.IsDefaultValue);
     }
 
     private static Either<
