@@ -149,7 +149,7 @@ public class Parser
             );
 
             currentFunction = property;
-            
+
             blockLevel++;
             property.Statements = ParseBlock();
             blockLevel--;
@@ -506,7 +506,7 @@ public class Parser
             var condition = ParseExpression() as BooleanExpressionNode;
             var block = ParseBlock();
             AcceptSeparators();
-            
+
             if (handler.MatchAndRemove(TokenType.ELSE) != null)
             {
                 var nextIf = ParseIf() as IfNode;
@@ -533,7 +533,7 @@ public class Parser
             }
             var tokens = new List<Token>();
             tokens.Add(new Token(TokenType.NEWLINE, 0, 0));
-            for( int i = 0; i < blockLevel; i++)
+            for (int i = 0; i < blockLevel; i++)
             {
                 tokens.Add(new Token(TokenType.TAB, 0, 0));
             }
@@ -633,18 +633,19 @@ public class Parser
             transformedCall = null;
             int lines = GetNewLines();
             currentLevel = 0;
-            while(handler.Peek(lines+currentLevel)!=null && handler.Peek(lines+currentLevel).GetTokenType() == TokenType.TAB)
+            while (
+                handler.Peek(lines + currentLevel) != null
+                && handler.Peek(lines + currentLevel).GetTokenType() == TokenType.TAB
+            )
             {
                 currentLevel++;
             }
-            if(currentLevel != blockLevel)
+            if (currentLevel != blockLevel)
             {
                 break;
             }
             AcceptNewlines();
-            while (handler.MatchAndRemove(TokenType.TAB) != null)
-            {
-            }
+            while (handler.MatchAndRemove(TokenType.TAB) != null) { }
 
             var statement = ParseStatement();
 
@@ -655,7 +656,6 @@ public class Parser
                     statements.Add(transformedCall);
                 }
                 statements.Add(statement);
-                
             }
             else
             {
@@ -675,7 +675,9 @@ public class Parser
     private int GetNewLines()
     {
         int lines = 0;
-        while(handler.Peek(lines) != null && handler.Peek(lines).GetTokenType() == TokenType.NEWLINE)
+        while (
+            handler.Peek(lines) != null && handler.Peek(lines).GetTokenType() == TokenType.NEWLINE
+        )
         {
             lines++;
         }
