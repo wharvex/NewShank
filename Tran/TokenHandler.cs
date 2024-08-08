@@ -35,7 +35,6 @@ public class TokenHandler
         {
             var matchedToken = tokens[0];
             tokens.RemoveAt(0);
-            //  PrintToken(matchedToken);
             return matchedToken;
         }
         return null;
@@ -51,23 +50,6 @@ public class TokenHandler
             count++;
         }
     }
-
-    /*public List<Token> CombineTokenFiles(List<string> files)
-    {
-        List<Token> allTokens = new List<Token>();
-        foreach (var file in files)
-        {
-            List<Token> fileTokens = ReadTokensFromFile(file);
-            
-            allTokens.AddRange(fileTokens);
-        }
-
-        return allTokens;
-    }
-    private static List<Token> ReadTokensFromFile(string file)
-    {
-        return new List<Token>();
-    }*/
     public Token GetNextToken()
     {
         if (!MoreTokens())
