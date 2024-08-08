@@ -32,4 +32,23 @@ public static class EnumerableExtensions
                         },
                 }
         );
+
+    // Format a list to a string seperated by the delimiter which defaults to `, `, default to using `[`, `]` to surround the list.
+    // Converts each element to a string using the toString function you provide.
+    public static string ToString<TSource>(
+        this IEnumerable<TSource> source,
+        Func<TSource, string> toString,
+        string delimiter = ", ",
+        string open = "[",
+        string close = "]"
+    ) => $"{open}{string.Join(delimiter, source.Select(toString))}{close}";
+
+    // Format a list to a string seperated by the delimiter which defaults to `, `, default to using `[`, `]` to surround the list.
+    // Note: uses ToString to convert each element to a string
+    public static string ToString<TSource>(
+        this IEnumerable<TSource> source,
+        string delimiter = ", ",
+        string open = "[",
+        string close = "]"
+    ) => source.ToString(item => item.ToString(), delimiter, open, close);
 }

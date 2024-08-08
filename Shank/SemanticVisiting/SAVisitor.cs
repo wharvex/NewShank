@@ -1338,26 +1338,26 @@ public class NewFunctionCallVisitor : FunctionCallVisitor
             case OverloadedFunctionNode overloads:
             {
                 // For example:
-                // define coerce(var target: integer, value: integer)
+                // define coerce(var target: integer; value: integer)
                 //      target := value
-                // define coerce(var target: integer, value: real)
+                // define coerce(var target: integer; value: real)
                 //      realToInteger value, var target
-                // define coerce(var target: integer, value: boolean)
-                //      if boolean
+                // define coerce(var target: integer; value: boolean)
+                //      if value then
                 //          target := 0
                 //      else
                 //          target := 1
-                // define coerce(var target: A, value: A) generic A
+                // define coerce(var target: A; value: A) generic A
                 //      target := value
                 // define start()
                 // variables value: integer
-                //      coerce false, var value
+                //      coerce var value, false
                 // We try each overload, splitting the results into a list of correct overloads, and a list of bad overloads.
                 var possibleOverloads = overloads.Overloads.Values.AggregateEither(
                     overload =>
                         CheckFunctionCallInner(functionCallNode, overload, variables)
                             .Map(correct => (overload, correct))
-                            .MapRight(error => (overload, correct: error))
+                            .MapRight(error => (overload, error))
                 );
                 var overload = possibleOverloads.Left.ToList() switch
                 {
@@ -1375,8 +1375,8 @@ public class NewFunctionCallVisitor : FunctionCallVisitor
                     []
                         => throw new SemanticErrorException(
                             $"""
-                                 No overload found for call to {functionCallNode.Name}, with arguments {string.Join(", ", functionCallNode.Arguments.Select(arg => arg.Type))}.
-                                 {string.Join("\n", possibleOverloads.Right.Select(badOverload => $"Overload with parameters {string.Join(", ", badOverload.Item1.ParameterVariables.Select(parameter => parameter.Type))} mismatched because: {badOverload.Item2}."))}
+                                 No overload found for call to {functionCallNode.Name}, with arguments {functionCallNode.Arguments.Select(arg => arg.Type).ToString(open: "(", close: ")")}.
+                                 {possibleOverloads.Right.ToString(badOverload => $"Overload {functionCallNode.Name}{badOverload.overload.ParameterVariables.Select(parameter => parameter.Type).ToString(open: "(", close: ")")} mismatched because: {badOverload.Item2}\n.", delimiter: "", open: "", close: "")}
                                  """,
                             functionCallNode
                         ),
@@ -1390,16 +1390,16 @@ public class NewFunctionCallVisitor : FunctionCallVisitor
                     var validOverloads
                         => throw new SemanticErrorException(
                             $"""
-                                Ambiguous overloads for call to {functionCallNode.Name}, with arguments {string.Join(", ", functionCallNode.Arguments.Select(arg => arg.Type))}.
+                                Ambiguous overloads for call to {functionCallNode.Name}, with arguments {functionCallNode.Arguments.Select(arg => arg.Type).ToString(open: "(", close: ")")}.
                                 Possible valid overloads included:
-                                {string.Join("\n", validOverloads.Select(overload => $"Overload with parameters {string.Join(", ", overload.Item1.ParameterVariables.Select(parameter => parameter.Type))}."))}
+                                {validOverloads.ToString(overload => $"Overload {functionCallNode.Name}{overload.overload.ParameterVariables.Select(parameter => parameter.Type).ToString(open: "(", close: ")")}.\n", delimiter: "", open: "", close: "")}
                                 """,
                             functionCallNode
                         )
                 };
                 // If we had any generics we mark down what each generic corresponds to (called a substitution).
                 functionCallNode.InstantiatedGenerics = overload.Item2;
-                // We then mark down the correct overload so we don't have to do this again.
+                // We then mark down the correct overload, so we don't have to do this again.
                 functionCallNode.Overload = overload.Item1.Overload;
                 break;
             }
@@ -1526,24 +1526,8 @@ public class NewFunctionCallVisitor : FunctionCallVisitor
     {
         var args = functionCallNode.Arguments;
         functionCallNode.FunctionDefinitionModule = fn.parentModuleName!;
-        // we cannot just autofill all the default values yet, because what if it is an invalid overload
-        // so what we do is we trim any extra default parameters out of the parameter count
-        // Back to our example:
-        // For case 1: We have 3 arguments, and 3 parameters (none of which are default parameters).
-        // For the left hand side of the subtraction we first skip the first 3 parameters yielding us a count of 0, since there is no default parameters, we have 3 == 3 - 0, which is good.
-        // For case 2: We have 2 arguments, and 2 parameters (none of which are default parameters).
-        // For the left hand side of the subtraction we first skip the first 2 parameters yielding us a count of 0, since there is no default parameters, we have 2 == 2 - 0, which is good.
-        // Case 3 is the most interesting here: we have 2 arguments, and 3 parameters with two of the being default parameters.
-        // So skipping us the first 2 parameters yields us a list of one parameter, we know that this is a default parameters, so we keep it yielding us again a count of one, so we have 2 == 3 - 1, which is good.
-        // However, if we would've called Greeting with no arguments, we would have well zero arguments, and 3 parameters with two of the being default parameters.
-        // We would skip none of the parameters for the left hand side of the subtraction, and then only count the default ones, yielding us 2, 0 != 3 - 2, which is bad, so we give the error.
-        // For case 4: We have 2 arguments, and 2 parameters (none of which are default parameters).
-        // For the left hand side of the subtraction we first skip the first 2 parameters yielding us a count of 0, since there is no default parameters, we have 2 == 2 - 0, which is good.
         if (
-            args.Count
-            != fn.ParameterVariables.Count
-                - fn.ParameterVariables.Skip(args.Count)
-                    .Count(parameter => parameter.IsDefaultValue)
+            CheckArity(fn, args)
         )
             return Either<Dictionary<string, Type>, string>.Right(
                 "For function "
@@ -1598,6 +1582,28 @@ public class NewFunctionCallVisitor : FunctionCallVisitor
                     )
                     : Either<Dictionary<string, Type>, string>.Left(inferred.ToDictionary())
         );
+    }
+
+    // Checks that the number of arguments `matches` the number of parameters, returning false if they do not match.
+    private static bool CheckArity(CallableNode fn, List<ExpressionNode> args)
+    {
+        // we cannot just autofill all the default values yet, because what if it is an invalid overload
+        // so what we do is we trim any extra default parameters out of the parameter count
+        // Back to our example:
+        // For case 1: We have 3 arguments, and 3 parameters (none of which are default parameters).
+        // For the left hand side of the subtraction we first skip the first 3 parameters yielding us a count of 0, since there is no default parameters, we have 3 == 3 - 0, which is good.
+        // For case 2: We have 2 arguments, and 2 parameters (none of which are default parameters).
+        // For the left hand side of the subtraction we first skip the first 2 parameters yielding us a count of 0, since there is no default parameters, we have 2 == 2 - 0, which is good.
+        // Case 3 is the most interesting here: we have 2 arguments, and 3 parameters with two of the being default parameters.
+        // So skipping us the first 2 parameters yields us a list of one parameter, we know that this is a default parameters, so we keep it yielding us again a count of one, so we have 2 == 3 - 1, which is good.
+        // However, if we would've called Greeting with no arguments, we would have well zero arguments, and 3 parameters with two of the being default parameters.
+        // We would skip none of the parameters for the left hand side of the subtraction, and then only count the default ones, yielding us 2, 0 != 3 - 2, which is bad, so we give the error.
+        // For case 4: We have 2 arguments, and 2 parameters (none of which are default parameters).
+        // For the left hand side of the subtraction we first skip the first 2 parameters yielding us a count of 0, since there is no default parameters, we have 2 == 2 - 0, which is good.
+        return args.Count
+               != fn.ParameterVariables.Count
+               - fn.ParameterVariables.Skip(args.Count)
+                   .Count(parameter => parameter.IsDefaultValue);
     }
 
     private static Either<
