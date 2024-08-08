@@ -50,6 +50,7 @@ public class TokenHandler
             count++;
         }
     }
+
     public Token GetNextToken()
     {
         if (!MoreTokens())
