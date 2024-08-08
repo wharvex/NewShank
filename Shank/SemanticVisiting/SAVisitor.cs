@@ -1337,6 +1337,21 @@ public class NewFunctionCallVisitor : FunctionCallVisitor
             // If it's a call to an overloaded function.
             case OverloadedFunctionNode overloads:
             {
+                // For example:
+                // define coerce(var target: integer, value: integer)
+                //      target := value
+                // define coerce(var target: integer, value: real)
+                //      realToInteger value, var target
+                // define coerce(var target: integer, value: boolean)
+                //      if boolean
+                //          target := 0
+                //      else
+                //          target := 1
+                // define coerce(var target: A, value: A) generic A
+                //      target := value
+                // define start()
+                // variables value: integer
+                //      coerce false, var value
                 // We try each overload.
                 // Using aggregate allows us to get a list of valid overloads and a list of invalid overloads (as opposed to a list of valid or invalid overloads).
                 // Aggregate takes our initial value (two empty lists, because we have no valid or invalid overloads until we check all the overloads), and for each element (overload) we go do an action (check if the overload is correct).
@@ -1348,11 +1363,18 @@ public class NewFunctionCallVisitor : FunctionCallVisitor
                     (results, overload) =>
                         CheckFunctionCallInner(functionCallNode, overload, variables) switch
                         {
+                            // If we find a good match for the overload we add it to the list of valid overloads for this call.
+                            // Continuing with our example:
+                            // We would find that the overload coerce(var integer, boolean) is valid.
                             Left<Dictionary<string, Type>, string>(var inferred)
                                 => results with
                                 {
                                     Valid = [(overload, inferred), .. results.Valid]
                                 },
+                            // If an overload is invalid we add it along with the reason why it failed to the list of invalid overloads.
+                            // Back to our example:
+                            // We would get a bad overload for coerce(var integer, integer), with a type mismatch error and the same thing for coerce(var integer, real).
+                            // For coerce(var A, A) generic A we would get `generic A cannot match integer and boolean`.
                             Right<Dictionary<string, Type>, string>(var invalid)
                                 => results with
                                 {
@@ -1362,37 +1384,61 @@ public class NewFunctionCallVisitor : FunctionCallVisitor
                 );
                 var overload = possibleOverloads.Valid.ToList() switch
                 {
+                    // if there is only a single overload, then great we found the correct overload.
+                    // This is what happens in our example.
+                    [var validOverload]
+                        => validOverload,
                     // if there are no valid overloads then print all the bad overloads and why they were bad
+                    // Lets say that instead of calling coerce with a boolean we called it with a string `coerce var value, ""`.
+                    // So we would get an error:
+                    // No overload for call to coerce, with arguments integer, string.
+                    // Overload with parameters integer, integer mismatched because: type mismatch.
+                    // ...
+                    // Overload with parameters A, A mismatched because: generic A cannot match integer and string
                     []
                         => throw new SemanticErrorException(
                             $"""
-                                 no overload found for call to {functionCallNode.Name}, with arguments {string.Join(",", functionCallNode.Arguments.Select(arg => arg.Type))}
-                                 {string.Join("\n", possibleOverloads.Invalid.Select(badOverload => $"Overload with parameters {string.Join(", ", badOverload.Item1.ParameterVariables.Select(parameter => parameter.Type))} mismatched because: {badOverload.Item2} "))}
+                                 No overload found for call to {functionCallNode.Name}, with arguments {string.Join(", ", functionCallNode.Arguments.Select(arg => arg.Type))}.
+                                 {string.Join("\n", possibleOverloads.Invalid.Select(badOverload => $"Overload with parameters {string.Join(", ", badOverload.Item1.ParameterVariables.Select(parameter => parameter.Type))} mismatched because: {badOverload.Item2}."))}
                                  """,
                             functionCallNode
                         ),
-                    // if there is only a single overload, then great we found the correct overload
-                    [var validOverload]
-                        => validOverload,
                     // if there are many overloads that are correct, then we cannot determine which one is the most correct, so we spit out the list of all the valid overloads
+                    // (back to our example) If we had called coerce with integer `coerce var value, 5`.
+                    // We would get the error:
+                    // Ambiguous overload for call to coerce, with arguments integer, string.
+                    // Possible valid overloads included:
+                    // Overload with parameters integer, integer.
+                    // Overload with parameters A, A.
                     var validOverloads
                         => throw new SemanticErrorException(
                             $"""
-                                                                                ambiguous overloads for call to {functionCallNode.Name}, with arguments {string.Join(",", functionCallNode.Arguments.Select(arg => arg.Type))}
-                                                                                Possible valid overloads included:
-                                                                                {string.Join("\n", validOverloads.Select(overload => $"Overload with parameters {string.Join(", ", overload.Item1.ParameterVariables.Select(parameter => parameter.Type))}"))}
-                                                                                """,
+                                Ambiguous overloads for call to {functionCallNode.Name}, with arguments {string.Join(", ", functionCallNode.Arguments.Select(arg => arg.Type))}.
+                                Possible valid overloads included:
+                                {string.Join("\n", validOverloads.Select(overload => $"Overload with parameters {string.Join(", ", overload.Item1.ParameterVariables.Select(parameter => parameter.Type))}."))}
+                                """,
                             functionCallNode
                         )
                 };
+                // If we had any generics we mark down what each generic corresponds to (called a substitution).
                 functionCallNode.InstantiatedGenerics = overload.Item2;
+                // We then mark down the correct overload so we don't have to do this again.
                 functionCallNode.Overload = overload.Item1.Overload;
                 break;
             }
             case BuiltInVariadicFunctionNode variadicFunction:
             {
+                // So for our example this time:
+                // enum colors = [red, green, blue]
+                // define start()
+                // variables a: integer
+                //      write var a, 4, 5
+                //      write red
+                //      write "hello", "world"
+                // Note: write's parameters must be immutably passed.
                 // if it's a variadic function there are to cases: either all the arguments have to be var or not
                 if (!variadicFunction.AreParametersConstant) // hack to verify that all parameters are passed in as var
+                // We don't have any such functions, so we have no example for this case.
                 {
                     if (
                         functionCallNode.Arguments.Find(
@@ -1400,20 +1446,48 @@ public class NewFunctionCallVisitor : FunctionCallVisitor
                                 node
                                     is not VariableUsageNodeTemp
                                     {
-                                        NewReferencesGlobalVariable: true
+                                        // Verifying that the argument is marked as var.
+                                        NewIsInFuncCallWithVar: true
+
+                                        // Since we know that the argument is var, we now verify that the actual variable the argument refersTo is also mutable.
                                     }
+                                && !variables[
+                                    ((VariableUsageNodeTemp)node).GetPlain().Name
+                                ].IsConstant
                         ) is
                         { } badArgument
                     )
                     {
+                        // TODO: better message, if the problem is the underlying variable not being mutable.
                         throw new SemanticErrorException(
                             $"cannot call builtin variadic {variadicFunction.Name} with non var argument {badArgument}",
                             functionCallNode
                         );
                     }
                 }
-
+                // In our example the first call to write fails here, because we pass in `a` as mutable.
+                else if ( 
+                    // Verifying that the arguments are not marked as var.
+                    // By finding any arguments that are marked as var, and if there giving an error.
+                    functionCallNode.Arguments.Find(
+                        node =>
+                            node
+                                is VariableUsageNodeTemp
+                                {
+                                    NewIsInFuncCallWithVar: true
+                                }
+                    ) is
+                    { } badArgument
+                )
+                {
+                    throw new SemanticErrorException(
+                        $"cannot call builtin variadic {variadicFunction.Name} with var argument {badArgument}",
+                        functionCallNode
+                    );
+                }
                 // We mark the function call as being a call to this function with these argument types.
+                // Our second call to start fails because although the users intention was to use the enum constant red, enum special casing does not work unless the parameter type is an enum.
+                // But our third call would succeed, and we would store for monomorphization in InstantiatedVariadics on the function call [string, string].
                 functionCallNode.InstantiatedVariadics = functionCallNode
                     .Arguments.Select(arg => GetTypeOfExpression(arg, variables))
                     .ToList();
