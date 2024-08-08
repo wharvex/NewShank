@@ -1466,16 +1466,11 @@ public class NewFunctionCallVisitor : FunctionCallVisitor
                     }
                 }
                 // In our example the first call to write fails here, because we pass in `a` as mutable.
-                else if ( 
+                else if (
                     // Verifying that the arguments are not marked as var.
                     // By finding any arguments that are marked as var, and if there giving an error.
                     functionCallNode.Arguments.Find(
-                        node =>
-                            node
-                                is VariableUsageNodeTemp
-                                {
-                                    NewIsInFuncCallWithVar: true
-                                }
+                        node => node is VariableUsageNodeTemp { NewIsInFuncCallWithVar: true }
                     ) is
                     { } badArgument
                 )
