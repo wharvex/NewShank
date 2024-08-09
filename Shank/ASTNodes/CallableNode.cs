@@ -18,8 +18,11 @@ public abstract class CallableNode(
     public void SetOverload() =>
         Overload = new TypeIndex(ParameterVariables.Select(p => p.Type).ToList());
 
+    // TODO: This property is only set, it's never actually used. What should it be used for?
+    // I think it indicates that this function was exported.
     public bool IsPublic { get; set; } = isPublicIn;
 
+    // TODO: Get rid of this since we have ASTNode.Line.
     public int LineNum { get; set; }
 
     public List<VariableDeclarationNode> ParameterVariables { get; set; } = [];

@@ -507,6 +507,7 @@ public class ImportVisitor : SAVisitor
     {
         node.UpdateExports();
 
+        // This is looping over the names of the modules from which we're importing.
         foreach (var import in node.getImportNames().Keys)
         {
             if (Modules.ContainsKey(import))
@@ -541,7 +542,8 @@ public class ImportVisitor : SAVisitor
 
     private void RecursiveImport(ModuleNode currentModule, ModuleNode otherModule)
     {
-        currentModule.updateImports(
+        // Here we're passing in ALL of the other module's functions/enums/records, in addition to its actual exports.
+        currentModule.UpdateImports(
             Modules[otherModule.getName()].getFunctions(),
             Modules[otherModule.getName()].getEnums(),
             Modules[otherModule.getName()].Records,

@@ -147,44 +147,45 @@ public class ModuleNode : ASTNode
             .Select(startKvp => (FunctionNode)startKvp.Value)
             .FirstOrDefault();
 
-    // TODO: This method needs some work.
-    public void updateImports(
-        Dictionary<string, CallableNode> recievedFunctions,
-        Dictionary<string, EnumNode> recievedEnums,
-        Dictionary<string, RecordNode> recievedRecords,
-        Dictionary<string, ASTNode?> recievedExports
+    public void UpdateImports(
+        Dictionary<string, CallableNode> receivedFunctions,
+        Dictionary<string, EnumNode> receivedEnums,
+        Dictionary<string, RecordNode> receivedRecords,
+        Dictionary<string, ASTNode?> receivedExports
     )
     {
-        foreach (var function in recievedFunctions)
+        foreach (var functionKvp in receivedFunctions)
         {
-            if (!Imported.ContainsKey(function.Key))
-                Imported.Add(function.Key, function.Value);
-            if (recievedExports.ContainsKey(function.Key))
+            // Here we're adding to 'Imported' things that are not necessarily exports, which is a little confusing.
+            if (!Imported.TryAdd(functionKvp.Key, functionKvp.Value))
+                throw new SemanticErrorException("Name conflict: " + functionKvp.Key);
+            if (receivedExports.ContainsKey(functionKvp.Key))
             {
-                ((CallableNode)Imported[function.Key]).IsPublic = true;
+                functionKvp.Value.IsPublic = true;
                 continue;
             }
 
-            string pmn =
-                function.Value.parentModuleName
-                ?? throw new Exception("Could not get parent module name while updating imports.");
-            if (ImportTargetNames.ContainsKey(function.Value.parentModuleName))
+            if (ImportTargetNames.ContainsKey(functionKvp.Value.parentModuleName))
             {
-                if (ImportTargetNames[function.Value.parentModuleName] != null)
+                if (ImportTargetNames[functionKvp.Value.parentModuleName] != null)
                 {
-                    if (!ImportTargetNames[function.Value.parentModuleName].Contains(function.Key))
+                    if (
+                        !ImportTargetNames[functionKvp.Value.parentModuleName].Contains(
+                            functionKvp.Key
+                        )
+                    )
                     {
-                        ((CallableNode)Imported[function.Key]).IsPublic = false;
+                        ((CallableNode)Imported[functionKvp.Key]).IsPublic = false;
                     }
                 }
             }
         }
 
-        foreach (var Enum in recievedEnums)
+        foreach (var Enum in receivedEnums)
         {
             if (!Imported.ContainsKey(Enum.Key))
                 Imported.Add(Enum.Key, Enum.Value);
-            if (recievedExports.ContainsKey(Enum.Key))
+            if (receivedExports.ContainsKey(Enum.Key))
             {
                 ((EnumNode)Imported[Enum.Key]).IsPublic = true;
                 continue;
@@ -202,11 +203,11 @@ public class ModuleNode : ASTNode
             }
         }
 
-        foreach (var record in recievedRecords)
+        foreach (var record in receivedRecords)
         {
             if (!Imported.ContainsKey(record.Key))
                 Imported.Add(record.Key, record.Value);
-            if (recievedExports.ContainsKey(record.Key))
+            if (receivedExports.ContainsKey(record.Key))
             {
                 ((RecordNode)Imported[record.Key]).IsPublic = true;
                 continue;

@@ -988,7 +988,7 @@ public class SemanticAnalysis
 
     public static void recursiveImportCheck(ModuleNode m)
     {
-        StartModule.updateImports(
+        StartModule.UpdateImports(
             Modules[m.getName()].getFunctions(),
             Modules[m.getName()].getEnums(),
             Modules[m.getName()].Records,
@@ -1001,7 +1001,7 @@ public class SemanticAnalysis
             {
                 if (Modules.ContainsKey(moduleToBeImported))
                 {
-                    m.updateImports(
+                    m.UpdateImports(
                         Modules[moduleToBeImported].getFunctions(),
                         Modules[moduleToBeImported].getEnums(),
                         Modules[moduleToBeImported].Records,
