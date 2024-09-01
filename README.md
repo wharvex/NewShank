@@ -1,4 +1,4 @@
-# The Shank Programming Langauge V3
+# Shank Programming Langauge V3
 
 ## Required dependencies
 
