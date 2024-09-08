@@ -1,4 +1,4 @@
-ShankTestPaths_main.txt
+ShankTestPaths_main_vuop.txt
 Shank/Shank.csproj
 .shank
 1

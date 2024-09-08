@@ -99,6 +99,9 @@ public class CompileOptions
     [Option("print-llvm", HelpText = "prints LLVM IR to the console")]
     public bool printIR { get; set; }
 
+    [Option('d', "dump-ir", HelpText = "only prints LLVM IR to the console and nothing else")]
+    public bool OnlyPrintIr { get; set; }
+
     [Option(
         'S',
         "compile-off",

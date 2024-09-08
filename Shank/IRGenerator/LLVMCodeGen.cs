@@ -14,11 +14,6 @@ public class LLVMCodeGen
     // to follow this.
     public void CodeGen(CompileOptions compileOptions, MonomorphizedProgramNode programNode)
     {
-        LLVM.InitializeAllTargetInfos();
-        LLVM.InitializeAllTargets();
-        LLVM.InitializeAllTargetMCs();
-        LLVM.InitializeAllAsmPrinters();
-        LLVM.InitializeAllAsmParsers();
         var module = LLVMModuleRef.CreateWithName(
             Path.ChangeExtension(compileOptions.OutFile, ".ll")
         );
@@ -34,6 +29,17 @@ public class LLVMCodeGen
         );
         var compiler = new Compiler(context, builder, module, compileOptions);
         compiler.Compile(programNode);
+        if (compileOptions.OnlyPrintIr)
+        {
+            Console.WriteLine("IR code gen");
+            module.Dump();
+            return;
+        }
+        LLVM.InitializeAllTargetInfos();
+        LLVM.InitializeAllTargets();
+        LLVM.InitializeAllTargetMCs();
+        LLVM.InitializeAllAsmPrinters();
+        LLVM.InitializeAllAsmParsers();
 
         //outputting directly to an object file
         //https://llvm.org/docs/tutorial/MyFirstLanguageFrontend/LangImpl08.html
