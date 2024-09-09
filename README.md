@@ -20,4 +20,4 @@ st
 
 ### Research Poster
 
-
+[Link.](https://github.com/wharvex/NewShank/blob/master/shank_poster.pdf)
